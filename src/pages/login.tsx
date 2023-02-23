@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 import API, { loginUserProps } from "../utils/api";
+import { WebviewWindow } from "@tauri-apps/api/window";
 
 export default function login() {
   const login = () => {
@@ -10,6 +11,8 @@ export default function login() {
     };
     API.login(user).then(async (res) => {
       await invoke("open_login", {});
+      const loginWindow = WebviewWindow.getByLabel("Login");
+      loginWindow?.close()
     });
   };
   return (

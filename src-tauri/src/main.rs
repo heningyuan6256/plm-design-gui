@@ -26,6 +26,17 @@ async fn open_login(handle: tauri::AppHandle) {
         .unwrap();
 }
 
+#[tauri::command]
+async fn exist(handle: tauri::AppHandle) {
+    tauri::WindowBuilder
+        ::new(&handle, "Login", tauri::WindowUrl::App("/login".into()))
+        .inner_size(300.0, 250.0)
+        .title("登陆")
+        .center()
+        .build()
+        .unwrap();
+}
+
 fn main() {
     let quit = CustomMenuItem::new("quit".to_string(), "关闭窗口");
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
@@ -39,7 +50,7 @@ fn main() {
     tauri::Builder
         ::default()
         // .invoke_handler(tauri::generate_handler![open_login])
-        .invoke_handler(tauri::generate_handler![greet, open_login])
+        .invoke_handler(tauri::generate_handler![greet, open_login, exist])
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| menu_handle(app, event))
         .run(tauri::generate_context!())
