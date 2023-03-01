@@ -32,6 +32,7 @@ async fn exist(handle: tauri::AppHandle) {
         ::new(&handle, "Login", tauri::WindowUrl::App("/login".into()))
         .inner_size(300.0, 250.0)
         .title("登陆")
+        .decorations(false)
         .center()
         .build()
         .unwrap();

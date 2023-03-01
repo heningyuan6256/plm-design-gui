@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 import API, { loginUserProps } from "../utils/api";
-import { WebviewWindow } from "@tauri-apps/api/window";
+import { WebviewWindow, TitleBarStyle } from "@tauri-apps/api/window";
 
 export default function login() {
   const login = () => {

@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 
+// import { dealMaterialData } from 'plm-wasm'
+
 const index = () => {
   const exist = async () => {
     await invoke("exist", {});

@@ -1,7 +1,15 @@
-# Tauri + React + Typescript
+# PLM-DESIGN
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+##### **technology stack**
 
-## Recommended IDE Setup
+* react
+* ts
+* tailwind
+* three.js
+* tauri
+* rust
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+RUN
+
+1. yarn
+2. yarn start

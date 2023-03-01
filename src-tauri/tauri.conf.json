@@ -68,10 +68,12 @@
         "title": "plm-design",
         "width": 300,
         "url": "/login",
-        "label": "Login"
+        "label": "Login",
+        "decorations": false,
+        "center": true
       }
     ],
-    "systemTray":{
+    "systemTray": {
       "iconPath": "icons/onchain.png",
       "iconAsTemplate": true
     }
