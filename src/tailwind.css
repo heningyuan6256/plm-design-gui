@@ -7,6 +7,10 @@ body,
 #root {
   height: 100% !important;
   overflow: hidden;
+  font-size: 12px;
+  font-family: PingFang SC, PingFang SC-Regular;
+  font-weight: 400;
+  color: #2c3652;
 }
 
 .second-color {
@@ -28,14 +32,36 @@ body,
 .ant-input-affix-wrapper {
   height: 32px;
 }
+.ant-input {
+  color: #2c3652 !important;
+  font-size: 12px !important;
+}
 .ant-input-affix-wrapper .ant-input-prefix,
 .ant-input::placeholder {
   color: #dfe9f5;
   font-size: 12px;
 }
 
+.ant-select-selection-search-input {
+  font-size: 12px !important;
+}
+.ant-form-item .ant-form-item-explain-error {
+  font-size: 12px !important;
+}
+
 .ant-select-selection-placeholder {
   color: #dfe9f5 !important;
+  font-size: 12px !important;
+}
+.ant-select-selection-item,
+.ant-select-item-option-content {
+  font-size: 12px;
+  color: #2c3652;
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+}
+select{
   font-size: 12px !important;
 }
 

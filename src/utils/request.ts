@@ -19,12 +19,13 @@ class Request {
       });
     },
   };
-  
+
   post = (url: string, data: Record<string, any>) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const requestBody = { ...data, ...this.interceptors.requert.body };
       const requestHeaders = { ...this.interceptors.requert.headers };
       this.interceptors.requert.use();
+      console.log(2)
       http
         .fetch(this.interceptors.baseURL + url, {
           headers: requestHeaders,
@@ -35,6 +36,9 @@ class Request {
         .then((res) => {
           // res为请求成功的回调数据
           resolve(this.interceptors.response(res));
+        })
+        .catch((err) => {
+          reject(err);
         });
     });
   };

@@ -8,8 +8,8 @@ module.exports = {
         '240': '240px'
       },
       colors: {
-        primary: '#398DCA',
-        // secondary: '#00ff00',
+        primary: '#0563B2',
+        secondary: '#dfe9f5',
         // tertiary: '#0000ff',
       },
     },
