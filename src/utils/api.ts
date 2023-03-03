@@ -19,7 +19,6 @@ const API = {
    * 登陆
    * */
   login: (data: loginUserProps) => {
-    console.log(1)
     return NewRequest.post("/sys/user/login", data);
   },
 

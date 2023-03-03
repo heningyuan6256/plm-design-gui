@@ -61,12 +61,12 @@ body,
   align-items: center;
   font-weight: 400;
 }
-select{
+select {
   font-size: 12px !important;
 }
 
 .ant-form-item {
-  margin-bottom: 10px !important;
+  margin-bottom: 18px !important;
 }
 
 /* 字体图标 */

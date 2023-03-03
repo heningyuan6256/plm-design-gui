@@ -15,6 +15,8 @@ class Request {
       return new Promise((rec, rej) => {
         if (response.data.code == 200) {
           rec(response.data);
+        } else {
+          rej(response.data);
         }
       });
     },
@@ -25,7 +27,6 @@ class Request {
       const requestBody = { ...data, ...this.interceptors.requert.body };
       const requestHeaders = { ...this.interceptors.requert.headers };
       this.interceptors.requert.use();
-      console.log(2)
       http
         .fetch(this.interceptors.baseURL + url, {
           headers: requestHeaders,

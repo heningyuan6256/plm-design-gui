@@ -3,11 +3,11 @@
  * Date: 2023/03/02 14:43:56
  * Description: 登陆页面
  */
-import { invoke } from "@tauri-apps/api";
+import { invoke, notification } from "@tauri-apps/api";
 import API, { loginUserProps } from "../utils/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { OnChainForm, OnChainFormItem } from "onchain-ui";
-import { Button, Form } from "antd";
+import { Button, Form, message } from "antd";
 import { PlmFormItemProps } from "onchain-ui/dist/esm/OnChainFormItem";
 import PlmIcon from "../components/PlmIcon";
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
@@ -35,7 +35,9 @@ export default function login() {
         loginWindow?.close();
       })
       .catch((err) => {
-        console.log(err, "err");
+        notification.sendNotification({
+          title: err.message,
+        });
       });
   };
 
@@ -155,7 +157,7 @@ export default function login() {
           ))}
         </OnChainForm>
         <Button
-          className="login-btn mt-12 w-full bg-primary h-12 text-white text-xs hover:text-white rounded-sm"
+          className="login-btn mt-6 w-full bg-primary h-12 text-white text-xs hover:text-white rounded-sm"
           onClick={login}
         >
           登录
