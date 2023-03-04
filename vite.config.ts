@@ -5,17 +5,6 @@ import postcss from 'rollup-plugin-postcss';
 export default defineConfig({
   plugins: [
     react(),
-    postcss({
-      config: {
-        path: './postcss.config.js',
-        ctx: ''
-      },
-      extensions: ['.css'],
-      minimize: true,
-      inject: {
-        insertAt: 'top',
-      },
-    }),
   ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

@@ -1,7 +1,8 @@
+// const defaultTheme = require('tailwindcss/defaultTheme');
+
 module.exports = {
   mode: 'jit',
-  purge: ["./src/**/*.{js,jsx,ts,tsx}", "./index.html"],
-  // darkMode: false, // or 'media' or 'class'
+  purge: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       width: {
@@ -12,7 +13,12 @@ module.exports = {
         secondary: '#dfe9f5',
         // tertiary: '#0000ff',
       },
+      // fontWeight: ['hover', 'focus'],
+      // fontFamily: {
+      //   sans: ['Inter var', ...defaultTheme.fontFamily.sans],
+      // },
     },
   },
-  plugins: [],
+  variants: {},
+  plugins: []
 };
