@@ -30,7 +30,10 @@ export default function login() {
     };
     API.login(user)
       .then(async () => {
-        await invoke("open_login", {});
+        await invoke("open_login", {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
         const loginWindow = WebviewWindow.getByLabel("Login");
         loginWindow?.close();
       })
@@ -143,7 +146,7 @@ export default function login() {
   return (
     <div className="flex h-full overflow-hidden">
       <div className="w-240 bg-primary h-full flex items-center justify-center">
-        <img width={144} src={OnChainLogo} alt="" />
+        <img width={88} src={OnChainLogo} alt="" />
       </div>
       <div className="flex-1 relative" style={{ padding: "55px 50px 10px" }}>
         <OnChainForm name="login" form={form}>
