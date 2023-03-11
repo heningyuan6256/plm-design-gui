@@ -8,15 +8,19 @@ import { WebviewWindow } from "@tauri-apps/api/window";
 import { Fragment } from "react";
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
 import PlmIcon from "../components/PlmIcon";
+import PlmToolBar from "../components/PlmToolBar";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
+
+  // 退出登录
   const exist = async () => {
     await invoke("exist", {});
     const mainWindow = WebviewWindow.getByLabel("Home");
     mainWindow?.close();
   };
 
+  // 拖拽窗体
   const handleMouseDown = (e: { button: number }) => {
     if (e.button === 0) {
       invoke("drag_window");
@@ -40,8 +44,11 @@ const index = () => {
           ></PlmIcon>
         </div>
       </div>
-      <div style={{ height: "calc(100% - 40px)" }} className="w-full">
-        总页面
+      <div
+        style={{ height: "calc(100% - 40px)", padding: "6px" }}
+        className="w-full bg-base"
+      >
+        <PlmToolBar></PlmToolBar>
       </div>
       <div className="flex items-center fixed bottom-0 w-full h-5 justify-between bg-primary px-2">
         <div className="text-xs flex gap-2">
