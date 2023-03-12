@@ -15,13 +15,18 @@ module.exports = {
         littleGrey: "#A7B3C5",
         hoverBg: "#eff2f7",
         baseHover: "#eff2f7",
-        outBorder: '#E9EBED'
+        outBorder: "#E9EBED",
       },
       height: {
-        68: "68px",
+        76: "76px",
       },
       padding: {
         3.5: "10px",
+        3: "6px",
+        0.45: '7px'
+      },
+      gap: {
+        1.5: "6px",
       },
       boxShadow: {
         "1xl": "0px 0px 0px 3px #eff2f7",

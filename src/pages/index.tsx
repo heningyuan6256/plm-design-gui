@@ -12,7 +12,6 @@ import PlmToolBar from "../components/PlmToolBar";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
-
   // 退出登录
   const exist = async () => {
     await invoke("exist", {});
@@ -28,13 +27,13 @@ const index = () => {
   };
 
   return (
-    <Fragment>
+    <div className="h-full w-full flex flex-col">
       <div
         onMouseDown={handleMouseDown}
         className="h-10 bg-primary flex items-center px-4 justify-between"
       >
         <div className="flex gap-1 items-center">
-          <img width={72} src={OnChainLogo} alt="" />{" "}
+          <img width={88} src={OnChainLogo} alt="" />{" "}
           <div className="text-white text-xs self-end flex">DesignFusion</div>
         </div>
         <div onClick={exist}>
@@ -44,19 +43,53 @@ const index = () => {
           ></PlmIcon>
         </div>
       </div>
-      <div
-        style={{ height: "calc(100% - 40px)", padding: "6px" }}
-        className="w-full bg-base"
-      >
+      <div className="w-full bg-base flex-1 flex flex-col px-3 py-3">
         <PlmToolBar></PlmToolBar>
+        <div className="flex-1 flex gap-1.5 pt-1.5">
+          <div
+            style={{ width: "254px" }}
+            className="h-full border border-outBorder"
+          >
+            <div className="pb-1.5 px-1.5 flex flex-col h-full">
+              <div className="h-10 flex justify-between items-center">
+                <div className="text-xs">产品名称</div>
+                <div>
+                  <PlmIcon
+                    name="develop"
+                    className="text-xs scale-90"
+                  ></PlmIcon>
+                </div>
+              </div>
+              <div className="flex-1 bg-white border border-outBorder"></div>
+            </div>
+          </div>
+          <div className="flex-1 h-full border border-outBorder"></div>
+          <div
+            style={{ width: "254px" }}
+            className="h-full border border-outBorder"
+          >
+            <div className="pb-1.5 px-1.5 flex flex-col h-full">
+              <div className="h-10 flex justify-between items-center">
+                <div className="text-xs">产品名称</div>
+                <div>
+                  <PlmIcon
+                    name="develop"
+                    className="text-xs scale-90"
+                  ></PlmIcon>
+                </div>
+              </div>
+              <div className="flex-1 bg-white border border-outBorder"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="flex items-center fixed bottom-0 w-full h-5 justify-between bg-primary px-2">
+      <div className="flex items-center bottom-0 w-full justify-between bg-primary px-2 h-6">
         <div className="text-xs flex gap-2">
           <PlmIcon
             name="link"
             className="text-xs text-white opacity-80"
           ></PlmIcon>{" "}
-          <div className="text-xs text-white opacity-80">
+          <div className="text-xs text-white opacity-80 scale-90">
             SSH: 192.168.0.112
           </div>
         </div>
@@ -68,7 +101,7 @@ const index = () => {
           ></PlmIcon>
         </div>
       </div>
-    </Fragment>
+    </div>
   );
 };
 

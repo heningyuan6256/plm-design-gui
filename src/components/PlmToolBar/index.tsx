@@ -21,13 +21,13 @@ const PlmToolBar: FC = () => {
     return (
       <div className="flex flex-col gap-1 items-center cursor-pointer hover:shadow-1xl hover:bg-hoverBg">
         <img width={16} src={image} alt="" />
-        <div>{txt}</div>
+        <div className="text-xs">{txt}</div>
       </div>
     );
   };
 
   return (
-    <div className="w-full  py-3.5 flex border border-outBorder h-68">
+    <div className="w-full  py-3.5 flex border border-outBorder h-76">
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
           {renderButton(checkout, "签出")}
