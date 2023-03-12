@@ -160,16 +160,18 @@ export default function login() {
           ))}
         </OnChainForm>
         <Button
-          className="login-btn mt-6 w-full bg-primary h-12 text-white text-xs hover:text-white rounded-sm"
+          className="login-btn mt-6 w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm"
           onClick={login}
         >
           登录
         </Button>
         <div
-          className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap"
-          style={{ transform: "translate(-50%, 0)" }}
+          className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap "
+          style={{ transform: "translate(-50%, 0)"}}
         >
-          Copyright @ 2022 武汉大海信息系统科技有限公司.All Rights Reserved
+          <span className="text-xs scale-75 inline-block">
+            Copyright @ 2022 武汉大海信息系统科技有限公司.All Rights Reserved
+          </span>
         </div>
       </div>
     </div>

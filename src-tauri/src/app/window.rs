@@ -11,7 +11,7 @@ pub fn greet(name: &str) -> String {
 pub async fn open_login(handle: tauri::AppHandle) {
     tauri::WindowBuilder
         ::new(&handle, "Home", tauri::WindowUrl::App("/".into()))
-        .inner_size(800.0, 600.0)
+        .inner_size(1440.0, 720.0)
         .title("PLM DESIGNER")
         .decorations(false)
         .center()

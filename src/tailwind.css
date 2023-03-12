@@ -86,3 +86,54 @@ select {
 .login-select .ant-select-selection-search {
   padding-left: 20px;
 }
+
+.basic-attr .ant-form-item {
+  margin-bottom: 12px !important;
+}
+
+.basic-attr .ant-form-item .ant-form-item-label > label::after {
+  right: -12px !important;
+}
+
+.basic-attr .ant-form-item .ant-form-item-label > label {
+  line-height: 22px;
+  text-align: left;
+  width: 100%;
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.ant-input-number,
+.ant-picker {
+  width: 100%;
+}
+.ant-picker-input >input{
+  font-size: 12px !important;
+  color: #646464 !important;
+}
+
+.basic-attr .ant-form-item .ant-form-item-control-input {
+  min-height: 22px;
+}
+.basic-attr .ant-form-item,
+.basic-attr .ant-row,
+.basic-attr .ant-col .basic-attr .ant-form-item-control-input-content,
+.basic-attr .ant-input,
+.basic-attr .ant-select,
+.basic-attr .ant-select-selector,
+.basic-attr .ant-select-selection-search,
+.basic-attr .ant-select-selection-search-input,
+.basic-attr .ant-input-number-input-wrap,
+.basic-attr .ant-input-number-handler-wrap,
+.basic-attr .ant-input-number-input,
+.basic-attr .label,
+.basic-attr .ant-picker,
+.basic-attr .ant-picker-input {
+  height: 22px !important;
+}
+
+.basic-attr .ant-input-number,
+.basic-attr .ant-picker {
+  border-radius: 0px;
+}
