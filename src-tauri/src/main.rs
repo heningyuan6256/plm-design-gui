@@ -32,3 +32,20 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+// #[tauri::command]
+// fn get_active_document() -> Result<String, String> {
+//     let sw_app = match sw_app::get_active_app() {
+//         Ok(app) => app,
+//         Err(e) => return Err(format!("Failed to get SolidWorks app: {}", e)),
+//     };
+//     let doc = match sw_app.get_active_doc() {
+//         Ok(doc) => doc,
+//         Err(e) => return Err(format!("Failed to get active document: {}", e)),
+//     };
+//     let name = match doc.get_name() {
+//         Ok(name) => name,
+//         Err(e) => return Err(format!("Failed to get document name: {}", e)),
+//     };
+//     Ok(name)
+// }

@@ -28,7 +28,7 @@
       "deb": {
         "depends": []
       },
-      "externalBin": [],
+      "externalBin": ["lib/sldworks.dll"],
       "icon": [
         "icons/onchain.png",
         "icons/onchain.png",
