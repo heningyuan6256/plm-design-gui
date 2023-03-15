@@ -114,6 +114,10 @@ select {
 .ant-picker {
   width: 100%;
 }
+.ant-input,
+.ant-input-number-input {
+  -webkit-user-select: text !important;
+}
 .ant-picker-input > input {
   font-size: 12px !important;
   color: #646464 !important;
@@ -238,6 +242,7 @@ select {
 .main ::-webkit-scrollbar-track {
   background: #ecedf0;
   border-radius: 0;
+  padding: 0px;
   box-shadow: 0;
 }
 .main .ant-table-body {
@@ -266,6 +271,6 @@ select {
   border-right: #2c3652 !important;
 }
 
-.main .ant-checkbox-checked .ant-checkbox-inner{
-  background: #0563B2 !important;
+.main .ant-checkbox-checked .ant-checkbox-inner {
+  background: #0563b2 !important;
 }

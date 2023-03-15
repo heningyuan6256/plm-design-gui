@@ -7,7 +7,7 @@ import { invoke, notification } from "@tauri-apps/api";
 import API, { loginUserProps } from "../utils/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { OnChainForm, OnChainFormItem } from "onchain-ui";
-import { Button, Form, message } from "antd";
+import { Button, Form, Input, message } from "antd";
 import { PlmFormItemProps } from "onchain-ui/dist/esm/OnChainFormItem";
 import PlmIcon from "../components/PlmIcon";
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
