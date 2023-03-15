@@ -5,6 +5,7 @@
  */
 import { FC } from "react";
 import PlmIcon from "../components/PlmIcon";
+import userSvg from "../assets/image/user.svg";
 
 const Foot: FC = () => {
   return (
@@ -19,6 +20,7 @@ const Foot: FC = () => {
         </div>
       </div>
       <div className="text-xs flex gap-2">
+        <img src={userSvg} width={12} alt="" />
         {/* <PlmIcon name="user" className="text-xs text-white"></PlmIcon>{" "} */}
         <PlmIcon
           name="notice"

@@ -274,3 +274,39 @@ select {
 .main .ant-checkbox-checked .ant-checkbox-inner {
   background: #0563b2 !important;
 }
+
+.tree-table .ant-table-thead {
+  display: none;
+}
+
+.tree-table .ant-table-wrapper {
+  border: none !important;
+}
+.main .tree-table.ant-table-wrapper {
+  border: none !important;
+}
+
+.main .ant-table-cell {
+  font-size: 12px;
+  font-family: PingFang SC, PingFang SC-Regular;
+  font-weight: 400;
+  /* text-align: left; */
+  color: #2c3652;
+  line-height: 18px;
+}
+
+.main .ant-table-tbody > tr > td {
+  height: 24px;
+}
+
+.anticon {
+  font-size: 10px !important;
+}
+
+.tree-table .ant-table-cell-with-append > div {
+  display: flex;
+}
+
+.tree-table .ant-table-cell {
+  border: none !important;
+}

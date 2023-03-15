@@ -3,19 +3,16 @@
  * Date: 2023/03/02 14:44:05
  * Description: 主页
  */
-import { useSize } from "ahooks";
-import {
-  OnChainForm,
-  OnChainFormItem,
-  OnChainTable,
-  OnChainTextViewer,
-  OnChainViewer,
-} from "onchain-ui";
-import { useEffect, useRef } from "react";
+import { OnChainForm, OnChainFormItem, OnChainTable } from "onchain-ui";
+import { useRef } from "react";
 import PlmIcon from "../components/PlmIcon";
 import PlmToolBar from "../components/PlmToolBar";
 import Foot from "../layout/foot";
 import Head from "../layout/head";
+import materialSvg from "../assets/image/material.svg";
+import cubeSvg from "../assets/image/cube.svg";
+import fileCubeSvg from "../assets/image/fileCube.svg";
+import fileSvg from "../assets/image/file.svg";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
@@ -42,11 +39,69 @@ const index = () => {
                 <div>
                   <PlmIcon
                     name="develop"
-                    className="text-xs scale-90"
+                    className="text-xs scale-85"
                   ></PlmIcon>
                 </div>
               </div>
-              <div className="flex-1 bg-white border border-outBorder"></div>
+              <div className="flex-1 bg-white border border-outBorder">
+                <OnChainTable
+                  rowKey={"id"}
+                  className="tree-table"
+                  bordered={false}
+                  dataSource={[
+                    {
+                      name: "P100001",
+                      id: "123",
+                      hasChildren: true,
+                      children: [
+                        {
+                          name: "P100002",
+                          id: "123-1",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-2",
+                        },
+                      ],
+                    },
+                  ]}
+                  expandable={{
+                    expandIconColumnIndex: 0,
+                  }}
+                  hideFooter
+                  extraHeight={0}
+                  columns={[
+                    {
+                      title: "名称",
+                      dataIndex: "name",
+                      search: {
+                        type: "Input",
+                      },
+                      sorter: true,
+                      render: (text, record: Record<string, any>) => {
+                        return (
+                          <div className="gap-1 inline-flex items-center ml-1">
+                            <img
+                              width={14}
+                              src={
+                                (record.children || []).length
+                                  ? fileCubeSvg
+                                  : fileSvg
+                              }
+                              alt=""
+                            />
+                            <div>{text}</div>
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                  selectedCell={{
+                    dataIndex: "",
+                    record: {},
+                  }}
+                ></OnChainTable>
+              </div>
             </div>
           </div>
 
@@ -60,37 +115,7 @@ const index = () => {
                 }}
                 className="flex-1 h-full border border-outBorder"
               >
-                <div style={{ height: "500px" }}>
-                  {/* asdf */}
-                  {/* <OnChainViewer
-      extensions="docx"
-      url="http://124.71.151.153:8017/api/plm/files/eebe0dc1bc2e5c1bde09c4a84ab64ff7+2fade30c-ffb2-4069-806c-496efff68d58"
-    ></OnChainViewer> */}
-                  {/* <OnChainViewer
-      extensions="txt"
-      url="http://124.71.151.153:8017/api/plm/files/10be42f17229e5ef4b327cea2a5266e7+f70bf83c-86d3-4373-83d1-91fc75fa0a76"
-    ></OnChainViewer> */}
-                  {/* <OnChainViewer
-      extensions="txt"
-      url="/robots.txt"
-    ></OnChainViewer> */}
-                  {/* <OnChainViewer
-        extensions="xlsx"
-        url="http://124.71.151.153:8017/api/plm/files/b6d81132c7a2001cb489351f5e125bc2+20b27c14-b09b-4acd-b69c-f949138e723c"
-      ></OnChainViewer> */}
-                  {/* <OnChainViewer
-        extensions="ts"
-        url="https://cdn.jsdelivr.net/gh/heningyuan6256/staticResource@latest/testFile/typescript.ts"
-      ></OnChainViewer> */}
-                  {/* <OnChainViewer
-                    extensions="pdf"
-                    url="/123.pdf"
-                  ></OnChainViewer> */}
-                  {/* <OnChainViewer
-        extensions="png"
-        url="http://124.71.151.153:8017/api/plm/files/b3423b35beba659fbd9cb984f0556a79+9c603127-5552-45cd-af56-d42fab401d65"
-      ></OnChainViewer> */}
-                </div>
+                <div style={{ height: "500px" }}></div>
               </div>
               {/* 基本信息 */}
               <div
@@ -170,7 +195,7 @@ const index = () => {
               <OnChainTable
                 rowKey={"id"}
                 dataSource={[
-                  { vv: "", id: "123" },
+                  { name: "P10001", id: "123" },
                   { vv: "", id: "2" },
                   { vv: "", id: "3" },
                   { vv: "", id: "4" },
@@ -264,7 +289,161 @@ const index = () => {
                   ></PlmIcon>
                 </div>
               </div>
-              <div className="flex-1 bg-white border border-outBorder"></div>
+              <div className="flex-1 bg-white border border-outBorder">
+                <OnChainTable
+                  rowKey={"id"}
+                  className="tree-table"
+                  bordered={false}
+                  dataSource={[
+                    {
+                      name: "P100001",
+                      id: "123",
+                      hasChildren: true,
+                      children: [
+                        {
+                          name: "P100002",
+                          id: "123-1",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-2",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-3",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-4",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-5",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-6",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-7",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-8",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-9",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-10",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-11",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-12",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-13",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-14",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-15",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-16",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-17",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-18",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-19",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-20",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-21",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-222",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-2122",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-2123123",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-1123123",
+                        },
+                        {
+                          name: "P100002",
+                          id: "123-1231231232",
+                        },
+                      ],
+                    },
+                  ]}
+                  expandable={{
+                    expandIconColumnIndex: 0,
+                  }}
+                  hideFooter
+                  extraHeight={0}
+                  columns={[
+                    {
+                      title: "名称",
+                      dataIndex: "name",
+                      search: {
+                        type: "Input",
+                      },
+                      sorter: true,
+                      render: (text, record: Record<string, any>) => {
+                        return (
+                          <div className="gap-1 inline-flex items-center ml-1">
+                            <img
+                              width={14}
+                              src={
+                                (record.children || []).length
+                                  ? cubeSvg
+                                  : materialSvg
+                              }
+                              alt=""
+                            />
+                            <div>{text}</div>
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                  selectedCell={{
+                    dataIndex: "",
+                    record: {},
+                  }}
+                ></OnChainTable>
+              </div>
             </div>
           </div>
         </div>
