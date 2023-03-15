@@ -97,11 +97,9 @@ const index = () => {
                 className="border border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col"
                 style={{ width: "478px" }}
               >
-                <div className="flex justify-between h-7">
+                <div className="flex justify-between h-7 items-start">
                   <div className="text-xs">基本信息</div>
-                  <div>
-                    <PlmIcon name="edit" className="text-xs"></PlmIcon>
-                  </div>
+                  <PlmIcon name="edit" className="text-xs"></PlmIcon>
                 </div>
                 <div className="flex-1 w-full basic-attr">
                   <OnChainForm
@@ -176,6 +174,9 @@ const index = () => {
                   { vv: "", id: "2" },
                   { vv: "", id: "3" },
                   { vv: "", id: "4" },
+                  { vv: "", id: "5" },
+                  { vv: "", id: "6" },
+                  { vv: "", id: "7" },
                 ]}
                 extraHeight={30}
                 rowSelection={{

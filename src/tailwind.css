@@ -248,6 +248,24 @@ select {
   box-shadow: none !important;
 }
 
-.main .ant-table-cell-scrollbar{
+.main .ant-table-cell-scrollbar {
   border: none;
+}
+
+.main .ant-table-thead > tr > th {
+  background-color: #e9ebed !important;
+  color: #2c3652 !important;
+}
+
+.main .ant-table-wrapper .ant-table-column-sorter,
+.main .ant-table-filter-trigger {
+  color: #bbc8e2;
+}
+
+.main .ant-table-thead > tr > th:nth-last-child(2) {
+  border-right: #2c3652 !important;
+}
+
+.main .ant-checkbox-checked .ant-checkbox-inner{
+  background: #0563B2 !important;
 }
