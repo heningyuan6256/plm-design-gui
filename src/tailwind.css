@@ -11,6 +11,12 @@ body,
   font-family: PingFang SC, PingFang SC-Regular;
   font-weight: 400;
   color: #2c3652;
+  user-select: none;
+}
+
+* ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
 }
 
 .second-color {
@@ -108,7 +114,7 @@ select {
 .ant-picker {
   width: 100%;
 }
-.ant-picker-input >input{
+.ant-picker-input > input {
   font-size: 12px !important;
   color: #646464 !important;
 }
@@ -136,4 +142,112 @@ select {
 .basic-attr .ant-input-number,
 .basic-attr .ant-picker {
   border-radius: 0px;
+}
+
+.table-checkbox .ant-radio-inner {
+  background-color: #d0d0d0 !important;
+  border: none !important;
+  border-style: none !important;
+}
+.table-checkbox .ant-table-row-selected td:not(.ant-table-selection-column) {
+  background-color: #d4eafd !important;
+}
+.table-checkbox .table_row_drag_hoving td {
+  background-color: #d4eafd !important;
+}
+.table-checkbox .ant-table-selection {
+  height: 100%;
+  width: 100%;
+}
+.table-checkbox .ant-checkbox-input:hover {
+  border: none;
+}
+.table-checkbox .ant-checkbox-inner:hover {
+  border: none;
+}
+
+.table-checkbox .ant-checkbox-checked::after {
+  border: 1px solid transparent;
+  content: none;
+}
+.table-checkbox
+  .ant-checkbox-wrapper
+  .ant-checkbox:not(.ant-checkbox-disabled):not(.ant-checkbox-checked)
+  .ant-checkbox-inner {
+  border-color: transparent;
+  background-color: transparent;
+}
+.table-checkbox .ant-checkbox-disabled .ant-checkbox-inner {
+  border-radius: 0px;
+}
+.table-checkbox table tr th.ant-table-selection-column,
+.table-checkbox table tr td.ant-table-selection-column {
+  padding: 0px !important;
+  background-color: #d0d0d0 !important;
+}
+
+.table-checkbox .ant-table-body .ant-checkbox-disabled .ant-checkbox-inner {
+  background-color: #d0d0d0;
+}
+
+.table-checkbox .ant-table-thead .ant-checkbox-disabled .ant-checkbox-inner {
+  background: none;
+}
+
+.table-checkbox .ant-checkbox-checked .ant-checkbox-inner {
+  border-color: transparent;
+  border-radius: 0px;
+}
+
+.table-checkbox .ant-checkbox-indeterminate .ant-checkbox-inner::after {
+  background-color: transparent;
+}
+.table-checkbox .ant-checkbox-checked .ant-checkbox-inner::after {
+  display: none;
+}
+.table-checkbox .ant-table-selection,
+.table-checkbox .ant-checkbox-wrapper,
+.table-checkbox .ant-checkbox,
+.table-checkbox .ant-checkbox-inner {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.main .ant-table-wrapper .ant-table-column-sorter-inner {
+  scale: 0.8;
+}
+
+.main .ant-table-filter-trigger {
+  scale: 0.8;
+  margin-block: 0px;
+  margin-inline: 0px;
+}
+
+.main ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.main ::-webkit-scrollbar-thumb {
+  /* background: #4e8d8f; */
+  background: #cdcdcd;
+  border-radius: 0px;
+}
+.main ::-webkit-scrollbar-track {
+  background: #ecedf0;
+  border-radius: 0;
+  box-shadow: 0;
+}
+.main .ant-table-body {
+  background: #fff;
+}
+
+.main .ant-table-wrapper .ant-table-cell-scrollbar:not([rowspan]) {
+  box-shadow: none !important;
+}
+
+.main .ant-table-cell-scrollbar{
+  border: none;
 }
