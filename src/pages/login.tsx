@@ -19,10 +19,11 @@ import { writeFile, readTextFile } from "@tauri-apps/api/fs";
 import { homeDir } from "@tauri-apps/api/path";
 import PlmLoading from "../components/PlmLoading";
 import { useAsyncEffect, useRequest } from "ahooks";
+import { BasicConfig } from "../constant/config";
+import userSvg from "../assets/image/user.svg";
 
 export default function login() {
   const [form] = Form.useForm();
-  const [selectOptions, setSelectOptions] = useState<DefaultOptionType[]>([]);
 
   const jumpPage = async () => {
     await invoke("open_login", {
@@ -71,7 +72,9 @@ export default function login() {
   useAsyncEffect(async () => {
     const homeDirPath = await homeDir();
     // 从本地获取token，如果能获取到token信息，则直接登录，token信息正确，则登录成功，否则重新输入，清空本地token文件
-    const tokenTxt = await readTextFile(`${homeDirPath}.onChain/token.txt`);
+    const tokenTxt = await readTextFile(
+      `${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`
+    );
     loginSys(tokenTxt);
 
     // 获取所有的产品
@@ -88,9 +91,7 @@ export default function login() {
       content: {
         type: "Input",
         props: {
-          prefix: (
-            <PlmIcon className="second-color" name="front-position"></PlmIcon>
-          ),
+          prefix: <PlmIcon className="second-color" name="address"></PlmIcon>,
           autoComplete: "off",
           placeholder: "请输入地址",
         },
@@ -110,10 +111,8 @@ export default function login() {
           placeholder: "请输入用户名",
           autoComplete: "false",
           prefix: (
-            <PlmIcon
-              className="second-color"
-              name="front-PersonalCenter-user"
-            ></PlmIcon>
+            <img src={userSvg} width={16} alt="" />
+            // <PlmIcon className="second-color" name="address"></PlmIcon>
           ),
         },
       },
@@ -127,15 +126,16 @@ export default function login() {
     {
       name: "psw",
       content: {
-        type: "Input",
+        type: "Input.Password",
         props: {
           placeholder: "请输入登录密码",
-          prefix: (
-            <PlmIcon
-              name="a-front-signinpassword"
-              className="second-color"
-            ></PlmIcon>
-          ),
+          prefix: <PlmIcon name="password" className="second-color"></PlmIcon>,
+          iconRender: (visible: boolean) =>
+            visible ? (
+              <PlmIcon style={{color: '#A7B3C5'}} className="text-base hover:cursor-pointer" name="show" />
+            ) : (
+              <PlmIcon style={{color: '#A7B3C5'}} className="text-base hover:cursor-pointer" name="hide" />
+            ),
         },
       },
       rules: [
@@ -190,7 +190,7 @@ export default function login() {
             ))}
           </OnChainForm>
           <Button
-            className="login-btn mt-6 w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm"
+            className="login-btn w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm mt-12"
             onClick={() => loginSys()}
           >
             登录
@@ -199,7 +199,7 @@ export default function login() {
             className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap "
             style={{ transform: "translate(-50%, 0)" }}
           >
-            <span className="text-xs scale-75 inline-block">
+            <span className="text-xs inline-block">
               Copyright @ 2022 武汉大海信息系统科技有限公司.All Rights Reserved
             </span>
           </div>

@@ -24,7 +24,7 @@ pub async fn open_login(handle: tauri::AppHandle) {
 pub async fn exist(handle: tauri::AppHandle) {
     tauri::WindowBuilder
         ::new(&handle, "Login", tauri::WindowUrl::App("/login".into()))
-        .inner_size(640.0, 354.0)
+        .inner_size(648.0, 347.0)
         .resizable(false)
         .title("登陆")
         .decorations(false)

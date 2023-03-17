@@ -11,12 +11,13 @@ import { WebviewWindow } from "@tauri-apps/api/window";
 import { FC } from "react";
 import PlmIcon from "../components/PlmIcon";
 import { homeDir } from "@tauri-apps/api/path";
+import { BasicConfig } from "../constant/config";
 
 const Head: FC = () => {
   // 退出登录
   const exist = async () => {
     const homeDirPath = await homeDir();
-    await removeFile(`${homeDirPath}.onChain/token.txt`);
+    await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
     const mainWindow = WebviewWindow.getByLabel("Home");
     mainWindow?.close();
     await invoke("exist", {});
