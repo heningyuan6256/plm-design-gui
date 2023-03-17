@@ -14,12 +14,15 @@ import quit from "../../assets/image/quit.svg";
 import encoded from "../../assets/image/encoded.svg";
 import about from "../../assets/image/about.svg";
 import renovate from "../../assets/image/renovate.svg";
-
 const PlmToolBar: FC = () => {
   // 按钮
   const renderButton = (image: string, txt: string) => {
     return (
-      <div className="flex flex-col gap-1 items-center cursor-pointer hover:shadow-1xl hover:bg-hoverBg">
+      <div
+        onClick={async () => {
+        }}
+        className="flex flex-col gap-1 items-center cursor-pointer hover:shadow-1xl hover:bg-hoverBg"
+      >
         <img width={16} src={image} alt="" />
         <div className="text-xs">{txt}</div>
       </div>

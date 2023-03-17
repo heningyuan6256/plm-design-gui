@@ -15,6 +15,8 @@ import { useEffect, useState } from "react";
 import { Utils } from "../utils";
 import { ListCode } from "../constant/listCode";
 import { DefaultOptionType } from "antd/es/select";
+import { writeFile } from "@tauri-apps/api/fs";
+import { homedir } from "os";
 
 export default function login() {
   const [form] = Form.useForm();
@@ -29,7 +31,11 @@ export default function login() {
       userAgent: "macos",
     };
     API.login(user)
-      .then(async () => {
+      .then(async (res: any) => {
+        // 获取hom路径
+        const homeDirPath = await homedir();
+        await writeFile(`${homeDirPath}.onChain/token.txt`, res.result.token);
+
         await invoke("open_login", {
           width: window.innerWidth,
           height: window.innerHeight,
@@ -167,7 +173,7 @@ export default function login() {
         </Button>
         <div
           className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap "
-          style={{ transform: "translate(-50%, 0)"}}
+          style={{ transform: "translate(-50%, 0)" }}
         >
           <span className="text-xs scale-75 inline-block">
             Copyright @ 2022 武汉大海信息系统科技有限公司.All Rights Reserved
