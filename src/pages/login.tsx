@@ -18,7 +18,7 @@ import { DefaultOptionType } from "antd/es/select";
 import { writeFile, readTextFile } from "@tauri-apps/api/fs";
 import { homeDir } from "@tauri-apps/api/path";
 import PlmLoading from "../components/PlmLoading";
-import { useAsyncEffect, useRequest } from "ahooks";
+import { useAsyncEffect, useKeyPress, useRequest } from "ahooks";
 import { BasicConfig } from "../constant/config";
 import userSvg from "../assets/image/user.svg";
 
@@ -132,9 +132,17 @@ export default function login() {
           prefix: <PlmIcon name="password" className="second-color"></PlmIcon>,
           iconRender: (visible: boolean) =>
             visible ? (
-              <PlmIcon style={{color: '#A7B3C5'}} className="text-base hover:cursor-pointer" name="show" />
+              <PlmIcon
+                style={{ color: "#A7B3C5" }}
+                className="text-base hover:cursor-pointer"
+                name="show"
+              />
             ) : (
-              <PlmIcon style={{color: '#A7B3C5'}} className="text-base hover:cursor-pointer" name="hide" />
+              <PlmIcon
+                style={{ color: "#A7B3C5" }}
+                className="text-base hover:cursor-pointer"
+                name="hide"
+              />
             ),
         },
       },
@@ -172,6 +180,10 @@ export default function login() {
     //   ],
     // },
   ];
+
+  useKeyPress(["enter"], () => {
+    loginSys();
+  });
   return (
     <div className="flex h-full w-full overflow-hidden">
       <PlmLoading warrperClassName="flex">
