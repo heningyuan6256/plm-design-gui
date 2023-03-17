@@ -81,7 +81,7 @@
         "resizable": false,
         "title": "plm-design",
         "width": 640,
-        "url": "/",
+        "url": "/login",
         "label": "Login",
         "decorations": false,
         "center": true

@@ -21,7 +21,12 @@ const API = {
   login: (data: loginUserProps) => {
     return NewRequest.post("/sys/user/login", data);
   },
-
+  /**
+   * 根据token获取用户信息
+   * */
+  getUserInfo: (params: Record<string, any>) => {
+    return NewRequest.get("/pdm/user/token", params);
+  },
   /**
    * 获取列表值
    * */

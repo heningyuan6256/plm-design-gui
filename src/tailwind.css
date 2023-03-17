@@ -310,3 +310,18 @@ select {
 .tree-table .ant-table-cell {
   border: none !important;
 }
+
+.plm-loading {
+  left: 50%;
+  top: 50%;
+  box-shadow: 0px 4px 12px 0px rgba(54, 81, 138, 0.3);
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 350px;
+  height: 120px;
+  z-index: 99999999;
+  background: #ffffff;
+  border-radius: 2px;
+}

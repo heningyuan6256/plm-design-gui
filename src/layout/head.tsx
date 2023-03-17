@@ -6,16 +6,20 @@
 
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
 import { invoke } from "@tauri-apps/api";
+import { removeFile } from "@tauri-apps/api/fs";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { FC } from "react";
 import PlmIcon from "../components/PlmIcon";
+import { homeDir } from "@tauri-apps/api/path";
 
 const Head: FC = () => {
   // 退出登录
   const exist = async () => {
-    await invoke("exist", {});
+    const homeDirPath = await homeDir();
+    await removeFile(`${homeDirPath}.onChain/token.txt`);
     const mainWindow = WebviewWindow.getByLabel("Home");
     mainWindow?.close();
+    await invoke("exist", {});
   };
 
   // 拖拽窗体

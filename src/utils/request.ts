@@ -5,7 +5,7 @@ class Request {
   constructor(config: Record<string, any>) {}
 
   interceptors = {
-    baseURL: "http://124.71.151.153:8000/plm",
+    baseURL: "http://192.168.0.101:8000/plm",
     requert: {
       headers: {},
       body: {},
@@ -13,7 +13,7 @@ class Request {
     },
     response: (response: Record<string, any>) => {
       return new Promise((rec, rej) => {
-        if (response.data.code == 200) {
+        if (response.data.success) {
           rec(response.data);
         } else {
           rej(response.data);
@@ -44,7 +44,7 @@ class Request {
     });
   };
   get = (url: string, data: Record<string, any>) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve,reject) => {
       const requestQuery = { ...data, ...this.interceptors.requert.body };
       const requestHeaders = { ...this.interceptors.requert.headers };
       this.interceptors.requert.use();
@@ -58,6 +58,9 @@ class Request {
         .then((res) => {
           // res为请求成功的回调数据
           resolve(this.interceptors.response(res));
+        })
+        .catch((err) => {
+          reject(err);
         });
     });
   };

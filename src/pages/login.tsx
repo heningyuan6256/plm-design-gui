@@ -7,7 +7,7 @@ import { invoke, notification } from "@tauri-apps/api";
 import API, { loginUserProps } from "../utils/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { OnChainForm, OnChainFormItem } from "onchain-ui";
-import { Button, Form, Input, message } from "antd";
+import { Button, Form, Input, message, Spin } from "antd";
 import { PlmFormItemProps } from "onchain-ui/dist/esm/OnChainFormItem";
 import PlmIcon from "../components/PlmIcon";
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
@@ -15,13 +15,36 @@ import { useEffect, useState } from "react";
 import { Utils } from "../utils";
 import { ListCode } from "../constant/listCode";
 import { DefaultOptionType } from "antd/es/select";
-import { writeFile } from "@tauri-apps/api/fs";
-import { homedir } from "os";
+import { writeFile, readTextFile } from "@tauri-apps/api/fs";
+import { homeDir } from "@tauri-apps/api/path";
+import PlmLoading from "../components/PlmLoading";
+import { useAsyncEffect, useRequest } from "ahooks";
 
 export default function login() {
   const [form] = Form.useForm();
   const [selectOptions, setSelectOptions] = useState<DefaultOptionType[]>([]);
-  const login = async () => {
+
+  const jumpPage = async () => {
+    await invoke("open_login", {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    const loginWindow = WebviewWindow.getByLabel("Login");
+    loginWindow?.close();
+  };
+
+  const loginSys = async (token?: string) => {
+    // 判断如果本次有token
+    if (token) {
+      const result: any = await API.getUserInfo({ token: token });
+      if (!result.success) {
+        message.error(result.message);
+      } else {
+        await jumpPage();
+      }
+      return;
+    }
+
     const data = await form.validateFields();
     const { name, psw } = data;
 
@@ -33,15 +56,10 @@ export default function login() {
     API.login(user)
       .then(async (res: any) => {
         // 获取hom路径
-        const homeDirPath = await homedir();
+        const homeDirPath = await homeDir();
         await writeFile(`${homeDirPath}.onChain/token.txt`, res.result.token);
 
-        await invoke("open_login", {
-          width: window.innerWidth,
-          height: window.innerHeight,
-        });
-        const loginWindow = WebviewWindow.getByLabel("Login");
-        loginWindow?.close();
+        await jumpPage();
       })
       .catch((err) => {
         notification.sendNotification({
@@ -50,13 +68,18 @@ export default function login() {
       });
   };
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
+    const homeDirPath = await homeDir();
+    // 从本地获取token，如果能获取到token信息，则直接登录，token信息正确，则登录成功，否则重新输入，清空本地token文件
+    const tokenTxt = await readTextFile(`${homeDirPath}.onChain/token.txt`);
+    loginSys(tokenTxt);
+
     // 获取所有的产品
-    API.getList([{ code: ListCode.ProductList }]).then((res: any) => {
-      const result = res.result || [];
-      const map = Utils.resolveList(result);
-      setSelectOptions(map[ListCode.ProductList]);
-    });
+    // API.getList([{ code: ListCode.ProductList }]).then((res: any) => {
+    //   const result = res.result || [];
+    //   const map = Utils.resolveList(result);
+    //   setSelectOptions(map[ListCode.ProductList]);
+    // });
   }, []);
 
   const formItems: PlmFormItemProps[] = [
@@ -122,64 +145,66 @@ export default function login() {
         },
       ],
     },
-    {
-      name: "product",
-      content: {
-        type: "Select",
-        props: {
-          className: "login-select",
-          options: selectOptions,
-          placeholder: (
-            <div>
-              <PlmIcon
-                style={{ marginInlineEnd: "4px" }}
-                name="front-folder-part"
-                className="second-color"
-              ></PlmIcon>
-              请选择产品
-            </div>
-          ),
-        },
-      },
-      rules: [
-        {
-          required: true,
-          message: "产品不能为空",
-        },
-      ],
-    },
+    // {
+    //   name: "product",
+    //   content: {
+    //     type: "Select",
+    //     props: {
+    //       className: "login-select",
+    //       options: selectOptions,
+    //       placeholder: (
+    //         <div>
+    //           <PlmIcon
+    //             style={{ marginInlineEnd: "4px" }}
+    //             name="front-folder-part"
+    //             className="second-color"
+    //           ></PlmIcon>
+    //           请选择产品
+    //         </div>
+    //       ),
+    //     },
+    //   },
+    //   rules: [
+    //     {
+    //       required: true,
+    //       message: "产品不能为空",
+    //     },
+    //   ],
+    // },
   ];
   return (
-    <div className="flex h-full overflow-hidden">
-      <div className="w-240 bg-primary h-full flex items-center justify-center">
-        <img width={144} src={OnChainLogo} alt="" />
-      </div>
-      <div className="flex-1 relative" style={{ padding: "55px 50px 10px" }}>
-        <OnChainForm name="login" form={form}>
-          {formItems.map((item, index) => (
-            <OnChainFormItem
-              key={"item" + index}
-              name={item.name}
-              content={item.content}
-              rules={item.rules}
-            ></OnChainFormItem>
-          ))}
-        </OnChainForm>
-        <Button
-          className="login-btn mt-6 w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm"
-          onClick={login}
-        >
-          登录
-        </Button>
-        <div
-          className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap "
-          style={{ transform: "translate(-50%, 0)" }}
-        >
-          <span className="text-xs scale-75 inline-block">
-            Copyright @ 2022 武汉大海信息系统科技有限公司.All Rights Reserved
-          </span>
+    <div className="flex h-full w-full overflow-hidden">
+      <PlmLoading warrperClassName="flex">
+        <div className="w-240 bg-primary h-full flex items-center justify-center">
+          <img width={144} src={OnChainLogo} alt="" />
         </div>
-      </div>
+        <div className="flex-1 relative" style={{ padding: "55px 50px 10px" }}>
+          <OnChainForm name="login" form={form}>
+            {formItems.map((item, index) => (
+              <OnChainFormItem
+                key={"item" + index}
+                name={item.name}
+                content={item.content}
+                rules={item.rules}
+              ></OnChainFormItem>
+            ))}
+          </OnChainForm>
+          <Button
+            className="login-btn mt-6 w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm"
+            onClick={() => loginSys()}
+          >
+            登录
+          </Button>
+          <div
+            className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap "
+            style={{ transform: "translate(-50%, 0)" }}
+          >
+            <span className="text-xs scale-75 inline-block">
+              Copyright @ 2022 武汉大海信息系统科技有限公司.All Rights Reserved
+            </span>
+          </div>
+        </div>
+      </PlmLoading>
     </div>
   );
 }
