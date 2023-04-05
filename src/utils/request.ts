@@ -5,7 +5,7 @@ class Request {
   constructor(config: Record<string, any>) {}
 
   interceptors = {
-    baseURL: "http://192.168.0.101:8000/plm",
+    baseURL: "http://124.71.151.153:8000/plm",
     requert: {
       headers: {},
       body: {},

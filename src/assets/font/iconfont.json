@@ -6,6 +6,34 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "34898945",
+      "name": "close",
+      "font_class": "close",
+      "unicode": "e6f4",
+      "unicode_decimal": 59124
+    },
+    {
+      "icon_id": "34541112",
+      "name": "amplify",
+      "font_class": "amplify",
+      "unicode": "e6e6",
+      "unicode_decimal": 59110
+    },
+    {
+      "icon_id": "34541114",
+      "name": "reduce",
+      "font_class": "reduce",
+      "unicode": "e6e8",
+      "unicode_decimal": 59112
+    },
+    {
+      "icon_id": "34541115",
+      "name": "minimize",
+      "font_class": "minimize",
+      "unicode": "e6e9",
+      "unicode_decimal": 59113
+    },
+    {
       "icon_id": "34395252",
       "name": "edit",
       "font_class": "edit",
@@ -81,13 +109,6 @@
       "font_class": "material",
       "unicode": "e6d9",
       "unicode_decimal": 59097
-    },
-    {
-      "icon_id": "34394246",
-      "name": "close",
-      "font_class": "close",
-      "unicode": "e6da",
-      "unicode_decimal": 59098
     },
     {
       "icon_id": "34394248",

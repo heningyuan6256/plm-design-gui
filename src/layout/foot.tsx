@@ -9,7 +9,7 @@ import userSvg from "../assets/image/user.svg";
 
 const Foot: FC = () => {
   return (
-    <div className="flex items-center bottom-0 w-full justify-between bg-primary px-2 h-6">
+    <div style={{minHeight: '24px'}} className="flex items-center w-full justify-between bg-primary px-2 h-6">
       <div className="text-xs flex gap-2">
         <PlmIcon
           name="link"

@@ -1,5 +1,4 @@
 use tauri::{ command, AppHandle, Manager };
-
 // 测试函数
 #[command]
 pub fn greet(name: &str) -> String {

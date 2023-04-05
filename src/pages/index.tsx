@@ -19,7 +19,7 @@ const index = () => {
   const ref = useRef<HTMLDivElement>(null);
   // const size = useSize(ref);
   return (
-    <div className="h-full w-full flex flex-col">
+    <div className="h-full w-full flex flex-col overflow-hidden">
       {/* 头部 */}
       <Head></Head>
 
@@ -106,7 +106,7 @@ const index = () => {
           </div>
 
           {/* 中间详情 */}
-          <div className="flex-1 h-full flex flex-col">
+          <div className="flex-1 h-full flex flex-col overflow-hidden">
             <div className="flex w-full gap-1.5" style={{ height: "307px" }}>
               {/* 缩略图 */}
               <div

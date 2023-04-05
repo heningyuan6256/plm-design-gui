@@ -27,6 +27,7 @@ fn main() {
         .invoke_handler(
             tauri::generate_handler![
                 window::greet,
+                // window::is_window_maximized,
                 window::open_login,
                 window::exist,
                 window::drag_window,

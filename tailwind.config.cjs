@@ -16,6 +16,7 @@ module.exports = {
         hoverBg: "#eff2f7",
         baseHover: "#eff2f7",
         outBorder: "#E9EBED",
+        hoverHeadButton: 'rgba(57,141,202,0.50)'
       },
       height: {
         76: "76px",
@@ -30,6 +31,7 @@ module.exports = {
       },
       boxShadow: {
         "1xl": "0px 0px 0px 3px #eff2f7",
+        "2xl": "0px 0px 0px 6px rgba(57,141,202,0.50)",
       },
       // fontWeight: ['hover', 'focus'],
       // fontFamily: {

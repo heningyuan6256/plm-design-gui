@@ -10,10 +10,12 @@ export interface PlmIconProps {
   style?: CSSProperties;
   name: string;
   className?: string;
+  onClick?: () => void;
 }
 const PlmIcon: FC<PlmIconProps> = (props) => {
   return (
     <i
+      onClick={props.onClick}
       className={`iconfont icon-${props.name} ${props.className}`}
       {...omit(props, "className")}
     ></i>
