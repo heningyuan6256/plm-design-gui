@@ -7,6 +7,7 @@ import ErrorPage from "../pages/err";
 import Login from "../pages/login";
 import Home from "../pages/index";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Info from "../pages/info";
 
 export const RoutesWithSubRoutes = () => {
   const router = createBrowserRouter([
@@ -20,6 +21,12 @@ export const RoutesWithSubRoutes = () => {
     {
       path: "/login",
       element: <Login></Login>,
+    },
+
+    // 关于界面
+    {
+      path: "/info",
+      element: <Info></Info>,
     },
   ]);
   return <RouterProvider router={router} />;

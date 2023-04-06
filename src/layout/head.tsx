@@ -6,15 +6,13 @@
 
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
 import { invoke } from "@tauri-apps/api";
-import { removeFile } from "@tauri-apps/api/fs";
+
 import { WebviewWindow, appWindow, getCurrent } from "@tauri-apps/api/window";
 import { FC, useEffect, useState } from "react";
 import PlmIcon from "../components/PlmIcon";
 import { homeDir } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
 import { exit } from "@tauri-apps/api/process";
-import { listen } from "@tauri-apps/api/event";
-import { useMount } from "ahooks";
 
 const Head: FC = () => {
   const [isMaximized, setisMaximized] = useState<boolean>(false);
@@ -26,15 +24,6 @@ const Head: FC = () => {
   //     // setisMaximized(maxed);
   //   });
   // }, []);
-
-  // 退出登录
-  const logOut = async () => {
-    const homeDirPath = await homeDir();
-    await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
-    const mainWindow = WebviewWindow.getByLabel("Home");
-    mainWindow?.close();
-    await invoke("exist", {});
-  };
 
   const exist = async () => {
     exit();
@@ -51,7 +40,7 @@ const Head: FC = () => {
     console.log(123);
 
     // const resizable = await appWindow.isResizable();
-    // if (!resizable) return;
+    // if (!resizable) return;x
     // await
     await appWindow.toggleMaximize();
     // const maxed = await appWindow.isMaximized();

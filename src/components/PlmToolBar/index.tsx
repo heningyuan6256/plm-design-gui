@@ -14,13 +14,29 @@ import quit from "../../assets/image/quit.svg";
 import encoded from "../../assets/image/encoded.svg";
 import about from "../../assets/image/about.svg";
 import renovate from "../../assets/image/renovate.svg";
+import { homeDir } from "@tauri-apps/api/path";
+import { WebviewWindow } from "@tauri-apps/api/window";
+import { removeFile } from "@tauri-apps/api/fs";
+import { BasicConfig } from "../../constant/config";
+import { invoke } from "@tauri-apps/api";
 const PlmToolBar: FC = () => {
+  const handleClick = async (name: string) => {
+    if (name === "logout") {
+      // 退出登录
+      const homeDirPath = await homeDir();
+      await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
+      const mainWindow = WebviewWindow.getByLabel("Home");
+      mainWindow?.close();
+      await invoke("exist", {});
+    } else if (name === "info") {
+      invoke("open_info", {});
+    }
+  };
   // 按钮
-  const renderButton = (image: string, txt: string) => {
+  const renderButton = (image: string, txt: string, name: string) => {
     return (
       <div
-        onClick={async () => {
-        }}
+        onClick={() => handleClick(name)}
         className="flex flex-col gap-1 items-center cursor-pointer hover:shadow-1xl hover:bg-hoverBg"
       >
         <img width={16} src={image} alt="" />
@@ -33,9 +49,9 @@ const PlmToolBar: FC = () => {
     <div className="w-full  py-3.5 flex border border-outBorder h-76">
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
-          {renderButton(checkout, "签出")}
-          {renderButton(cancelcheckin, "取消签出")}
-          {renderButton(checkin, "签入")}
+          {renderButton(checkout, "签出", "checkout")}
+          {renderButton(cancelcheckin, "取消签出", "cancelcheckout")}
+          {renderButton(checkin, "签入", "cancelcheckin")}
         </div>
         <div className="scale-90 text-xs text-littleGrey text-center">
           签入/签出
@@ -43,17 +59,17 @@ const PlmToolBar: FC = () => {
       </div>
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
-          {renderButton(upload, "上传")}
-          {renderButton(encoded, "分配编码")}
-          {renderButton(renovate, "刷新")}
-          {renderButton(record, "操作日志")}
+          {renderButton(upload, "上传", "upload")}
+          {renderButton(encoded, "分配编码", "allocatenumber")}
+          {renderButton(renovate, "刷新", "refresh")}
+          {renderButton(record, "操作日志", "log")}
         </div>
         <div className="scale-90 text-xs text-littleGrey text-center">操作</div>
       </div>
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
-          {renderButton(quit, "退出")}
-          {renderButton(about, "关于")}
+          {renderButton(quit, "退出", "logout")}
+          {renderButton(about, "关于", "info")}
         </div>
         <div className="scale-90 text-xs text-littleGrey text-center">其他</div>
       </div>

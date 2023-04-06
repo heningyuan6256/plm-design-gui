@@ -18,6 +18,20 @@ pub async fn open_login(handle: tauri::AppHandle) {
         .unwrap();
 }
 
+// 打开关于界面
+#[command]
+pub async fn open_info(handle: tauri::AppHandle) {
+    tauri::WindowBuilder
+        ::new(&handle, "Info", tauri::WindowUrl::App("/info".into()))
+        .inner_size(300.0, 400.0)
+        .title("关于")
+        // .decorations(false)
+        .center()
+        .build()
+        .unwrap();
+}
+
+
 // 退出登录
 #[command]
 pub async fn exist(handle: tauri::AppHandle) {

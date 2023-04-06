@@ -31,6 +31,7 @@ fn main() {
                 window::open_login,
                 window::exist,
                 window::drag_window,
+                window::open_info,
                 // utils::create_chatgpt_prompts,
                 // utils::silent_install,
                 // utils::run_check_update,
