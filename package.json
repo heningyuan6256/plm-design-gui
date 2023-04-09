@@ -10,6 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^1.9.3",
     "@tauri-apps/api": "^1.2.0",
     "ahooks": "^3.7.5",
     "antd": "^5.2.3",
@@ -19,6 +20,7 @@
     "onchain-ui": "^1.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-redux": "^8.0.5",
     "react-router-dom": "^6.8.1",
     "tailwindcss": "^3.2.7"
   },
