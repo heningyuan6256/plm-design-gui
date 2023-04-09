@@ -60,7 +60,7 @@ const PlmToolBar: FC = () => {
         <div className="w-full  py-3.5 flex border border-outBorder h-76">
             <div className="px-4 border-r border-r-outBorder">
                 <div className="flex gap-3 mb-1">
-                    {renderButton(checkout, `签出${count}`, "checkout")}
+                    {renderButton(checkout, `签出`, "checkout")}
                     {renderButton(cancelcheckin, "取消签出", "cancelcheckout")}
                     {renderButton(checkin, "签入", "cancelcheckin")}
                 </div>
