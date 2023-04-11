@@ -38,7 +38,7 @@ const PlmToolBar: FC = () => {
             mainWindow?.close();
             await invoke("exist", {});
         } else if (name === "info") {
-            invoke("open_info", {});
+           await  invoke("open_info", {});
         } else if (name === 'checkout') {
             dispatch(increment())
         }

@@ -21,8 +21,15 @@ import PlmLoading from "../components/PlmLoading";
 import { useAsyncEffect, useKeyPress, useRequest } from "ahooks";
 import { BasicConfig } from "../constant/config";
 import userSvg from "../assets/image/user.svg";
+import { fetchUserByToken } from "../models/user";
+import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
 export default function login() {
+  const dispatch = useDispatch();
+
+  const { loading, value } = useSelector((state: any) => state.user);
+
   const [form] = Form.useForm();
 
   const jumpPage = async () => {
@@ -36,37 +43,30 @@ export default function login() {
 
   const loginSys = async (token?: string) => {
     // 判断如果本次有token
+    // await .unwrap();
     if (token) {
-      const result: any = await API.getUserInfo({ token: token });
-      if (!result.success) {
-        message.error(result.message);
-      } else {
-        await jumpPage();
-      }
-      return;
-    }
-
-    const data = await form.validateFields();
-    const { name, psw } = data;
-
-    const user: loginUserProps = {
-      email: name,
-      password: psw,
-      userAgent: "macos",
-    };
-    API.login(user)
-      .then(async (res: any) => {
-        // 获取hom路径
-        const homeDirPath = await homeDir();
-        await writeFile(`${homeDirPath}.onChain/token.txt`, res.result.token);
-
-        await jumpPage();
-      })
-      .catch((err) => {
-        notification.sendNotification({
-          title: err.message,
+      dispatch(fetchUserByToken(token) as any);
+    } else {
+      const data = await form.validateFields();
+      const { name, psw } = data;
+      const user: loginUserProps = {
+        email: name,
+        password: psw,
+        userAgent: "macos",
+      };
+      API.login(user)
+        .then(async (res: any) => {
+          // 获取hom路径
+          const homeDirPath = await homeDir();
+          await writeFile(`${homeDirPath}.onChain/token.txt`, res.result.token);
+          await jumpPage();
+        })
+        .catch((err) => {
+          notification.sendNotification({
+            title: err.message,
+          });
         });
-      });
+    }
   };
 
   useAsyncEffect(async () => {
@@ -76,13 +76,6 @@ export default function login() {
       `${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`
     );
     loginSys(tokenTxt);
-
-    // 获取所有的产品
-    // API.getList([{ code: ListCode.ProductList }]).then((res: any) => {
-    //   const result = res.result || [];
-    //   const map = Utils.resolveList(result);
-    //   setSelectOptions(map[ListCode.ProductList]);
-    // });
   }, []);
 
   const formItems: PlmFormItemProps[] = [
