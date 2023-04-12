@@ -16,7 +16,8 @@ module.exports = {
         hoverBg: "#eff2f7",
         baseHover: "#eff2f7",
         outBorder: "#E9EBED",
-        hoverHeadButton: 'rgba(57,141,202,0.50)'
+        hoverHeadButton: "rgba(57,141,202,0.50)",
+        tabTitleBg: "#ECEDF0",
       },
       height: {
         76: "76px",
@@ -24,7 +25,7 @@ module.exports = {
       padding: {
         3.5: "10px",
         3: "6px",
-        0.45: '7px'
+        0.45: "7px",
       },
       gap: {
         1.5: "6px",

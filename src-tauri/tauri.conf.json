@@ -77,12 +77,12 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 347,
+        "height": 720,
         "resizable": false,
         "title": "plm-design",
-        "width": 648,
-        "url": "/login",
-        "label": "Login",
+        "width": 1440,
+        "url": "/",
+        "label": "Home",
         "decorations": false,
         "center": true
       }
