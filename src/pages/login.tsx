@@ -3,9 +3,7 @@
  * Date: 2023/03/02 14:43:56
  * Description: 登陆页面
  */
-import { invoke, notification } from "@tauri-apps/api";
 import API, { loginUserProps } from "../utils/api";
-import { WebviewWindow } from "@tauri-apps/api/window";
 import { OnChainForm, OnChainFormItem } from "onchain-ui";
 import { Button, Form, message } from "antd";
 import { PlmFormItemProps } from "onchain-ui/dist/esm/OnChainFormItem";
@@ -18,9 +16,9 @@ import { useKeyPress } from "ahooks";
 import userSvg from "../assets/image/user.svg";
 import { useDispatch } from "react-redux";
 import { writeNetWork } from "../models/network";
-
 import Request from "../utils/request";
 import { fetchUserByToken } from "../models/user";
+import { BasicConfig } from "../constant/config";
 
 export default function login() {
   const dispatch = useDispatch();
@@ -39,7 +37,10 @@ export default function login() {
     const NewRequest = new Request({});
     NewRequest.initAddress(address);
     const homeDirPath = await homeDir();
-    await writeFile(`${homeDirPath}.onChain/network.txt`, address);
+    await writeFile(
+      `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
+      address
+    );
     dispatch(writeNetWork(address));
 
     API.login(user)

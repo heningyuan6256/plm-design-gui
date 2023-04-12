@@ -4,6 +4,7 @@ import { writeFile } from "@tauri-apps/api/fs";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { homeDir } from "@tauri-apps/api/path";
+import { BasicConfig } from "../constant/config";
 
 export const fetchUserByToken = createAsyncThunk<any, string>(
   "users/fetchUserByToken",
@@ -11,15 +12,17 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
     try {
       const response: any = await API.getUserInfo({ token: token });
       const homeDirPath = await homeDir();
-      await writeFile(`${homeDirPath}.onChain/token.txt`, token);
+      await writeFile(
+        `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`,
+        token
+      );
       await invoke("open_login", {
         width: window.innerWidth,
         height: window.innerHeight,
       });
       const loginWindow = WebviewWindow.getByLabel("Login");
       loginWindow?.close();
-
-      return response;
+      return response.result;
     } catch (error) {
       if (!error) {
         throw error;
