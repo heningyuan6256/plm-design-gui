@@ -37,8 +37,6 @@ const Head: FC = () => {
   };
   // 最大化
   const handleWinMax = async () => {
-    console.log(123);
-
     // const resizable = await appWindow.isResizable();
     // if (!resizable) return;x
     // await

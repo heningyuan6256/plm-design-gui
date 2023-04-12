@@ -1,8 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import API from "../utils/api";
 import { writeFile } from "@tauri-apps/api/fs";
-import { invoke } from "@tauri-apps/api";
-import { WebviewWindow } from "@tauri-apps/api/window";
 import { homeDir } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
 
@@ -16,12 +14,6 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
         `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`,
         token
       );
-      await invoke("open_login", {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-      const loginWindow = WebviewWindow.getByLabel("Login");
-      loginWindow?.close();
       return response.result;
     } catch (error) {
       if (!error) {
