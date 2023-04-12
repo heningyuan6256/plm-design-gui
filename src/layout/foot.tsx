@@ -15,7 +15,7 @@ const Foot: FC = () => {
       style={{ minHeight: "24px" }}
       className="flex items-center w-full justify-between bg-primary px-2 h-6"
     >
-      <div className="text-xs flex gap-2">
+      <div className="text-xs flex">
         <PlmIcon
           name="link"
           className="text-xs text-white opacity-80"

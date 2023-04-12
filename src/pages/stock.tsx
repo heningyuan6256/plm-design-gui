@@ -93,26 +93,39 @@ const stock = () => {
             <span className="mr-1">物料库</span> <span className="mr-1">/</span>{" "}
             <span className="text-primary">电子件库</span>
           </div>
-          <div className="mb-4">
+          <div className="mb-4 flex gap-2">
             <Input
               placeholder="请输入编号或描述"
               style={{ width: "360px" }}
             ></Input>
+            <div className="w-7 h-7 rounded-sm bg-secondary flex items-center justify-center">
+              <PlmIcon name="search"></PlmIcon>
+            </div>
           </div>
           <div className="bg-tabTitleBg w-full h-6 text-xs flex items-center pl-2.5 mb-4">
             搜索结果
           </div>
-          <div className="flex-1 bg-white border border-outBorder">
+          <div className="flex-1 bg-white">
             <OnChainTable
               rowKey={"id"}
-              className="tree-table"
-              bordered={false}
-              dataSource={leftTreeData}
+              //   bordered={true}
+              dataSource={[
+                { name: "P10001", id: "123" },
+                { vv: "", id: "2" },
+                { vv: "", id: "3" },
+                { vv: "", id: "4" },
+                { vv: "", id: "5" },
+                { vv: "", id: "6" },
+                { vv: "", id: "7" },
+              ]}
+              rowSelection={{
+                columnWidth: 19,
+              }}
               expandable={{
                 expandIconColumnIndex: 0,
               }}
               hideFooter
-              extraHeight={0}
+              extraHeight={22}
               columns={[
                 {
                   title: "名称",
@@ -121,23 +134,54 @@ const stock = () => {
                     type: "Input",
                   },
                   sorter: true,
-                  render: (text, record: any) => {
-                    console.log(record, "record");
-
-                    return (
-                      <div className="flex items-center">
-                        <PlmIcon
-                          className={"m-0.5 text-primary text-base"}
-                          name={
-                            record.apicode === "ItemAdmin"
-                              ? "a-Materialwarehouse"
-                              : "file"
-                          }
-                        ></PlmIcon>
-                        {text}
-                      </div>
-                    );
+                },
+                {
+                  title: "编号",
+                  dataIndex: "number",
+                  search: {
+                    type: "Input",
                   },
+                  sorter: true,
+                },
+                {
+                  title: "描述",
+                  dataIndex: "insDesc",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                {
+                  title: "类型",
+                  dataIndex: "objectName",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                {
+                  title: "生命周期",
+                  dataIndex: "lifeCycle",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                {
+                  title: "版本",
+                  dataIndex: "insVersion",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                {
+                  title: "生效时间",
+                  dataIndex: "publishTime",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
                 },
               ]}
               selectedCell={{
