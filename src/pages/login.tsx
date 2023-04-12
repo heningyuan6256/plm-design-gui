@@ -7,76 +7,49 @@ import { invoke, notification } from "@tauri-apps/api";
 import API, { loginUserProps } from "../utils/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { OnChainForm, OnChainFormItem } from "onchain-ui";
-import { Button, Form, Input, message, Spin } from "antd";
+import { Button, Form, message } from "antd";
 import { PlmFormItemProps } from "onchain-ui/dist/esm/OnChainFormItem";
 import PlmIcon from "../components/PlmIcon";
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
-import { useEffect, useState } from "react";
-import { Utils } from "../utils";
-import { ListCode } from "../constant/listCode";
-import { DefaultOptionType } from "antd/es/select";
-import { writeFile, readTextFile } from "@tauri-apps/api/fs";
+import { writeFile } from "@tauri-apps/api/fs";
 import { homeDir } from "@tauri-apps/api/path";
 import PlmLoading from "../components/PlmLoading";
-import { useAsyncEffect, useKeyPress, useRequest } from "ahooks";
-import { BasicConfig } from "../constant/config";
+import { useKeyPress } from "ahooks";
 import userSvg from "../assets/image/user.svg";
-import { fetchUserByToken } from "../models/user";
 import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import { writeNetWork } from "../models/network";
+
+import Request from "../utils/request";
+import { fetchUserByToken } from "../models/user";
 
 export default function login() {
   const dispatch = useDispatch();
 
-  const { loading, value } = useSelector((state: any) => state.user);
-
   const [form] = Form.useForm();
+  const loginSys = async () => {
+    const data = await form.validateFields();
+    const { name, psw, address } = data;
+    const user: loginUserProps = {
+      email: name,
+      password: psw,
+      userAgent: "macos",
+    };
 
-  const jumpPage = async () => {
-    await invoke("open_login", {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-    const loginWindow = WebviewWindow.getByLabel("Login");
-    loginWindow?.close();
-  };
-
-  const loginSys = async (token?: string) => {
-    // 判断如果本次有token
-    // await .unwrap();
-    if (token) {
-      dispatch(fetchUserByToken(token) as any);
-    } else {
-      const data = await form.validateFields();
-      const { name, psw } = data;
-      const user: loginUserProps = {
-        email: name,
-        password: psw,
-        userAgent: "macos",
-      };
-      API.login(user)
-        .then(async (res: any) => {
-          // 获取hom路径
-          const homeDirPath = await homeDir();
-          await writeFile(`${homeDirPath}.onChain/token.txt`, res.result.token);
-          await jumpPage();
-        })
-        .catch((err) => {
-          notification.sendNotification({
-            title: err.message,
-          });
-        });
-    }
-  };
-
-  useAsyncEffect(async () => {
+    // 写入address
+    const NewRequest = new Request({});
+    NewRequest.initAddress(address);
     const homeDirPath = await homeDir();
-    // 从本地获取token，如果能获取到token信息，则直接登录，token信息正确，则登录成功，否则重新输入，清空本地token文件
-    const tokenTxt = await readTextFile(
-      `${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`
-    );
-    loginSys(tokenTxt);
-  }, []);
+    await writeFile(`${homeDirPath}.onChain/network.txt`, address);
+    dispatch(writeNetWork(address));
+
+    API.login(user)
+      .then(async (res: any) => {
+        dispatch(fetchUserByToken(res.result.token) as any);
+      })
+      .catch((err) => {
+        message.error(err.message);
+      });
+  };
 
   const formItems: PlmFormItemProps[] = [
     {
@@ -146,37 +119,12 @@ export default function login() {
         },
       ],
     },
-    // {
-    //   name: "product",
-    //   content: {
-    //     type: "Select",
-    //     props: {
-    //       className: "login-select",
-    //       options: selectOptions,
-    //       placeholder: (
-    //         <div>
-    //           <PlmIcon
-    //             style={{ marginInlineEnd: "4px" }}
-    //             name="front-folder-part"
-    //             className="second-color"
-    //           ></PlmIcon>
-    //           请选择产品
-    //         </div>
-    //       ),
-    //     },
-    //   },
-    //   rules: [
-    //     {
-    //       required: true,
-    //       message: "产品不能为空",
-    //     },
-    //   ],
-    // },
   ];
 
   useKeyPress(["enter"], () => {
     loginSys();
   });
+
   return (
     <div className="flex h-full w-full overflow-hidden">
       <PlmLoading warrperClassName="flex">

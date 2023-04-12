@@ -2,7 +2,14 @@
 import { http } from "@tauri-apps/api";
 
 class Request {
-  constructor(config: Record<string, any>) {}
+  static single: Request;
+  constructor(config: Record<string, any>) {
+    if (Request.single) {
+      return Request.single;
+    } else {
+      return (Request.single = this);
+    }
+  }
 
   interceptors = {
     baseURL: "http://124.71.151.153:8000/plm",
@@ -20,6 +27,10 @@ class Request {
         }
       });
     },
+  };
+
+  initAddress = (str: string) => {
+    this.interceptors.baseURL = `http://${str}:8000/plm`;
   };
 
   post = (url: string, data: Record<string, any>) => {
@@ -44,7 +55,7 @@ class Request {
     });
   };
   get = (url: string, data: Record<string, any>) => {
-    return new Promise((resolve,reject) => {
+    return new Promise((resolve, reject) => {
       const requestQuery = { ...data, ...this.interceptors.requert.body };
       const requestHeaders = { ...this.interceptors.requert.headers };
       this.interceptors.requert.use();
