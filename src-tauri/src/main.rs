@@ -33,6 +33,7 @@ fn main() {
                 // utils::silent_install,
                 // utils::run_check_update,
                 utils::gen_cmd,
+                utils::init,
                 // utils::prompt_for_install,
                 utils::chat_root,
                 utils::get_tauri_conf,

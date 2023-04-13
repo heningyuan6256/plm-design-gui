@@ -19,6 +19,15 @@ pub fn chat_root() -> PathBuf {
 }
 
 #[command]
+pub fn init() -> bool {
+    let conf_file = chat_root().join("onChain.conf.json");
+    if !exists(&conf_file) {
+        create_file(&conf_file).unwrap();
+    }
+    return exists(&conf_file);
+}
+
+#[command]
 pub fn get_tauri_conf() -> Option<Config> {
     let config_file = include_str!("../../tauri.conf.json");
     let config: Config = serde_json
