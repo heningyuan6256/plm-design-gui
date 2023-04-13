@@ -12,6 +12,7 @@ body,
   font-weight: 400;
   color: #2c3652;
   user-select: none;
+  color: #2c3652;
 }
 
 * ::-webkit-scrollbar {
@@ -299,6 +300,15 @@ select {
   height: 24px;
 }
 
+.main .tree-table .ant-table-tbody > tr.ant-table-row-selected > td {
+  border: none !important;
+  background: #ecedf0 !important;
+}
+
+.main .ant-table .ant-table-placeholder td{
+  background: #fff;
+}
+
 .anticon {
   font-size: 10px !important;
 }
@@ -326,7 +336,19 @@ select {
   border-radius: 2px;
 }
 
+.anticon-caret-right {
+  color: #cdcdcd;
+}
 
-.anticon-caret-right{
-  color: #CDCDCD;
+td .anticon-caret-right {
+  margin-right: 4px;
+}
+
+td .anticon-caret-down {
+  margin-right: 4px;
+}
+
+
+.ant-spin-dot{
+  font-size: 32px !important;
 }

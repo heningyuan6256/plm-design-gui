@@ -11,10 +11,22 @@ import { useEffect, useState } from "react";
 import API from "../utils/api";
 import PageLayout from "../layout/pageLayout";
 import { Input } from "antd";
+import { useSelector } from "react-redux";
+import { useRequest } from "ahooks";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
   const [leftTreeData, setLeftTreeData] = useState<Record<string, any>[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Record<string, any>[]>([]);
+  const [tableData, setTableData] = useState<Record<string, any>[]>([]);
+  const { value } = useSelector((state: any) => state.user);
+
+  const { run, loading } = useRequest((data) => API.getStockByType(data), {
+    manual: true,
+    onSuccess(data: any) {
+      setTableData(data.result.records);
+    },
+  });
 
   useEffect(() => {
     API.getStock("719").then((res: any) => {
@@ -22,6 +34,21 @@ const stock = () => {
         return item.apicode === "ItemAdmin";
       });
       setLeftTreeData(result);
+      if (result.length > 0) {
+        setSelectedRows([result[0]]);
+        const data = {
+          libraryId: result[0].id,
+          pageNo: 1,
+          pageSize: 50,
+          sort: "",
+          andQuery: "",
+          tenantId: "719",
+          userId: value.id,
+          isAll: false,
+          fields: [{}],
+        };
+        run(data);
+      }
     });
   }, []);
 
@@ -49,7 +76,13 @@ const stock = () => {
                 bordered={false}
                 dataSource={leftTreeData}
                 expandable={{
-                  expandIconColumnIndex: 0,
+                  expandIconColumnIndex: 2,
+                  indentSize: 22,
+                  defaultExpandedRowKeys: selectedRows.map((item) => item.id),
+                }}
+                rowSelection={{
+                  columnWidth: 0,
+                  selectedRowKeys: selectedRows.map((item) => item.id),
                 }}
                 hideFooter
                 extraHeight={0}
@@ -62,12 +95,27 @@ const stock = () => {
                     },
                     sorter: true,
                     render: (text, record: any) => {
-                      console.log(record, "record");
-
                       return (
-                        <div className="flex items-center">
+                        <div
+                          className="cursor-pointer"
+                          onClick={() => {
+                            setSelectedRows([record]);
+                            const data = {
+                              libraryId: record.id,
+                              pageNo: 1,
+                              pageSize: 50,
+                              sort: "",
+                              andQuery: "",
+                              tenantId: "719",
+                              userId: value.id,
+                              isAll: false,
+                              fields: [{}],
+                            };
+                            run(data);
+                          }}
+                        >
                           <PlmIcon
-                            className={"m-0.5 text-primary text-base"}
+                            className={"text-primary text-base mr-1"}
                             name={
                               record.apicode === "ItemAdmin"
                                 ? "a-Materialwarehouse"
@@ -107,17 +155,10 @@ const stock = () => {
           </div>
           <div className="flex-1 bg-white">
             <OnChainTable
-              rowKey={"id"}
+              rowKey={"insId"}
+              loading={loading}
               //   bordered={true}
-              dataSource={[
-                { name: "P10001", id: "123" },
-                { vv: "", id: "2" },
-                { vv: "", id: "3" },
-                { vv: "", id: "4" },
-                { vv: "", id: "5" },
-                { vv: "", id: "6" },
-                { vv: "", id: "7" },
-              ]}
+              dataSource={tableData}
               rowSelection={{
                 columnWidth: 19,
               }}
@@ -127,14 +168,6 @@ const stock = () => {
               hideFooter
               extraHeight={22}
               columns={[
-                {
-                  title: "名称",
-                  dataIndex: "name",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                },
                 {
                   title: "编号",
                   dataIndex: "number",
@@ -161,7 +194,7 @@ const stock = () => {
                 },
                 {
                   title: "生命周期",
-                  dataIndex: "lifeCycle",
+                  dataIndex: "statusName",
                   search: {
                     type: "Input",
                   },
