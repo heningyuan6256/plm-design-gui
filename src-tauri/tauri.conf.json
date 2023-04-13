@@ -15,9 +15,7 @@
       "all": true,
       "fs": {
         "all": true,
-        "scope": [
-          "$HOME/.onChain/**"
-        ],
+        "scope": ["$HOME/.onChain/**"],
         "readFile": true,
         "writeFile": true,
         "readDir": true,
@@ -43,13 +41,7 @@
       "deb": {
         "depends": []
       },
-      "icon": [
-        "icons/onchain.png",
-        "icons/onchain.png",
-        "icons/onchain.png",
-        "icons/onchain.png",
-        "icons/onchain.png"
-      ],
+      "icon": ["icons/onchain.png", "icons/favicon.ico"],
       "identifier": "com.tauri.build",
       "longDescription": "",
       "macOS": {

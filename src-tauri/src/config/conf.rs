@@ -17,34 +17,34 @@ use std::{ fs, path::PathBuf };
 // pub const AWESOME_URL: &str = "https://github.com/lencx/ChatGPT/blob/main/AWESOME.md";
 // pub const GITHUB_PROMPTS_CSV_URL: &str =
 //     "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv";
-pub const DEFAULT_CHAT_CONF: &str =
-    r#"{
-    "stay_on_top": false,
-    "auto_update": "Prompt",
-    "theme": "Light",
-    "titlebar": true,
-    "popup_search": true,
-    "global_shortcut": "",
-    "hide_dock_icon": false,
-    "default_origin": "https://chat.openai.com",
-    "origin": "https://chat.openai.com",
-    "ua_window": "",
-    "ua_tray": ""
-}"#;
-pub const DEFAULT_CHAT_CONF_MAC: &str =
-    r#"{
-    "stay_on_top": false,
-    "auto_update": "Prompt",
-    "theme": "Light",
-    "titlebar": false,
-    "popup_search": true,
-    "global_shortcut": "",
-    "hide_dock_icon": false,
-    "default_origin": "https://chat.openai.com",
-    "origin": "https://chat.openai.com",
-    "ua_window": "",
-    "ua_tray": ""
-}"#;
+// pub const DEFAULT_CHAT_CONF: &str =
+//     r#"{
+//     "stay_on_top": false,
+//     "auto_update": "Prompt",
+//     "theme": "Light",
+//     "titlebar": true,
+//     "popup_search": true,
+//     "global_shortcut": "",
+//     "hide_dock_icon": false,
+//     "default_origin": "https://chat.openai.com",
+//     "origin": "https://chat.openai.com",
+//     "ua_window": "",
+//     "ua_tray": ""
+// }"#;
+// pub const DEFAULT_CHAT_CONF_MAC: &str =
+//     r#"{
+//     "stay_on_top": false,
+//     "auto_update": "Prompt",
+//     "theme": "Light",
+//     "titlebar": false,
+//     "popup_search": true,
+//     "global_shortcut": "",
+//     "hide_dock_icon": false,
+//     "default_origin": "https://chat.openai.com",
+//     "origin": "https://chat.openai.com",
+//     "ua_window": "",
+//     "ua_tray": ""
+// }"#;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct OnChainConfJson {
