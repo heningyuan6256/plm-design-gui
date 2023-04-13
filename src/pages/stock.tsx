@@ -97,7 +97,7 @@ const stock = () => {
                     render: (text, record: any) => {
                       return (
                         <div
-                          className="cursor-pointer"
+                          className="cursor-pointer w-full overflow-hidden text-ellipsis"
                           onClick={() => {
                             setSelectedRows([record]);
                             const data = {
@@ -125,6 +125,60 @@ const stock = () => {
                           {text}
                         </div>
                       );
+                    },
+                  },
+                  {
+                    title: "",
+                    dataIndex: "tool",
+                    width: 72,
+                    sorter: true,
+                    render: (text, record: any) => {
+                      if (record.apicode === "ItemAdmin") {
+                        return (
+                          <div className="flex gap-2 flex-row-reverse pr-1">
+                            <PlmIcon
+                              className="text-xs cursor-pointer hover:shadow-1xl hover:bg-hoverBg"
+                              name="fold"
+                            ></PlmIcon>
+                            <PlmIcon
+                              className="text-xs cursor-pointer"
+                              name="add"
+                            ></PlmIcon>
+                          </div>
+                        );
+                      }
+                      if (!record.isDelete) {
+                        return (
+                          <div className="flex gap-2 flex-row-reverse  pr-1">
+                            <PlmIcon
+                              className="text-xs cursor-pointer"
+                              name="edit"
+                            ></PlmIcon>
+                            <PlmIcon
+                              className="text-xs cursor-pointer"
+                              name="add"
+                            ></PlmIcon>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="flex gap-2 flex-row-reverse  pr-1">
+                            <PlmIcon
+                              className="text-xs cursor-pointer"
+                              name="edit"
+                            ></PlmIcon>
+                            <PlmIcon
+                              className="cursor-pointer text-xs"
+                              name="delete"
+                            ></PlmIcon>
+                            <PlmIcon
+                              className="text-xs cursor-pointer"
+                              name="add"
+                            ></PlmIcon>
+                          </div>
+                        );
+                      }
+                      return <div>12</div>;
                     },
                   },
                 ]}
@@ -229,7 +283,7 @@ const stock = () => {
                     if (text === "Draft") {
                       return "草稿";
                     } else {
-                      return text && text.split(' ')[0];
+                      return text && text.split(" ")[0];
                     }
                   },
                 },
