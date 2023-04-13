@@ -4,24 +4,27 @@
  * Description: 通用布局
  */
 
-
-import React, {Fragment} from "react";
-import {useSelector} from "react-redux";
+import React, { Fragment } from "react";
+import { useSelector } from "react-redux";
 import PlmLoading from "../components/PlmLoading";
-import {Outlet} from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
 interface LayoutProps {
-    children?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
-const PageLayout: React.FC<LayoutProps> = (data => {
-    const {value: user} = useSelector((state: any) => state.user)
+const PageLayout: React.FC<LayoutProps> = (data) => {
+  const { value: user } = useSelector((state: any) => state.user);
 
-    if (!user.id) {
-        return <PlmLoading loading={true}></PlmLoading>
-    }
+  if (!user.id) {
+    return <PlmLoading loading={true}></PlmLoading>;
+  }
 
-    return <Fragment><Outlet></Outlet></Fragment>;
-});
+  return (
+    <Fragment>
+      <Outlet></Outlet>
+    </Fragment>
+  );
+};
 
 export default PageLayout;

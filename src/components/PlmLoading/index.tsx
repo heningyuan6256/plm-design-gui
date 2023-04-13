@@ -20,7 +20,7 @@ const PlmLoading: FC<PlmLoadingProps> =
                 {loading ? (
                     <Fragment>
                         {" "}
-                        <div className={`plm-loading absolute top-0 bg-white ${className}`}>
+                        <div className={`plm-loading absolute bg-white ${className || ''}`}>
                             loading...
                         </div>
                         <div className={`absolute top-0 h-full w-full opacity-60 bg-white`}></div>
