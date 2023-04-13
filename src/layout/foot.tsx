@@ -10,21 +10,19 @@ import { useSelector } from "react-redux";
 import { Dropdown, MenuProps } from "antd";
 
 const Foot: FC = () => {
+  const { value: user } = useSelector((state: any) => state.user);
   const items: MenuProps["items"] = [
     {
       key: "1",
       label: (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://www.antgroup.com"
-        >
-          1st menu item
+        <a target="_blank" rel="noopener noreferrer">
+          {user.name}
         </a>
       ),
     },
   ];
   const { value } = useSelector((state: any) => state.network);
+
   return (
     <div
       style={{ minHeight: "24px" }}

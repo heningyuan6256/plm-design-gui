@@ -3,15 +3,12 @@
 mod app;
 mod config;
 use app::{ window, menu };
-use config::{ conf, utils };
-use conf::OnChainConfJson;
+use config::{ utils };
 
 use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem };
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 fn main() {
-    OnChainConfJson::init();
-
     let quit = CustomMenuItem::new("quit".to_string(), "关闭窗口");
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
     let tray_menu = SystemTrayMenu::new()
