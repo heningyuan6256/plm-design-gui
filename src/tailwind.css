@@ -330,7 +330,7 @@ select {
   border: none !important;
 }
 
-.tree-table .ant-table-cell .ant-table-cell-with-append{
+.tree-table .ant-table-cell .ant-table-cell-with-append {
   border: none !important;
 }
 
@@ -390,10 +390,19 @@ a {
   color: #0563b2;
 }
 
-a:hover{
+a:hover {
   opacity: 0.9;
 }
 
 .tree-table .ant-table-tbody > tr > td:not(:nth-last-child(1)) {
   border: none !important;
+}
+
+.row-tool {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tree-table .ant-table-tbody > tr:hover .row-tool {
+  opacity: 1;
 }

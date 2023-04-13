@@ -135,13 +135,13 @@ const stock = () => {
                     render: (text, record: any) => {
                       if (record.apicode === "ItemAdmin") {
                         return (
-                          <div className="flex gap-2 flex-row-reverse pr-1">
+                          <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
                             <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-1xl hover:bg-hoverBg"
+                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                               name="fold"
                             ></PlmIcon>
                             <PlmIcon
-                              className="text-xs cursor-pointer"
+                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                               name="add"
                             ></PlmIcon>
                           </div>
@@ -149,36 +149,35 @@ const stock = () => {
                       }
                       if (!record.isDelete) {
                         return (
-                          <div className="flex gap-2 flex-row-reverse  pr-1">
+                          <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
                             <PlmIcon
-                              className="text-xs cursor-pointer"
+                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                               name="edit"
                             ></PlmIcon>
                             <PlmIcon
-                              className="text-xs cursor-pointer"
+                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                               name="add"
                             ></PlmIcon>
                           </div>
                         );
                       } else {
                         return (
-                          <div className="flex gap-2 flex-row-reverse  pr-1">
+                          <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
                             <PlmIcon
-                              className="text-xs cursor-pointer"
+                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                               name="edit"
                             ></PlmIcon>
                             <PlmIcon
-                              className="cursor-pointer text-xs"
+                              className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                               name="delete"
                             ></PlmIcon>
                             <PlmIcon
-                              className="text-xs cursor-pointer"
+                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                               name="add"
                             ></PlmIcon>
                           </div>
                         );
                       }
-                      return <div>12</div>;
                     },
                   },
                 ]}
