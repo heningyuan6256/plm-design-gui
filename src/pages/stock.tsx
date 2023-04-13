@@ -19,12 +19,16 @@ import PlmLifeCycle from "../components/PlmLifeCycle";
 const stock = () => {
   const [leftTreeData, setLeftTreeData] = useState<Record<string, any>[]>([]);
   const [selectedRows, setSelectedRows] = useState<Record<string, any>[]>([]);
+  const [tableSelectedRows, setTableSelectedRows] = useState<
+    Record<string, any>[]
+  >([]);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value } = useSelector((state: any) => state.user);
 
   const { run, loading } = useRequest((data) => API.getStockByType(data), {
     manual: true,
     onSuccess(data: any) {
+      setTableSelectedRows([]);
       setTableData(data.result.records);
     },
   });
@@ -214,6 +218,10 @@ const stock = () => {
               dataSource={tableData}
               rowSelection={{
                 columnWidth: 19,
+                selectedRowKeys: tableSelectedRows.map((item) => item.insId),
+                onChange: (keys, rows: any) => {
+                  setTableSelectedRows(rows);
+                },
               }}
               expandable={{
                 expandIconColumnIndex: 0,
