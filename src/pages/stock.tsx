@@ -13,6 +13,7 @@ import PageLayout from "../layout/pageLayout";
 import { Input } from "antd";
 import { useSelector } from "react-redux";
 import { useRequest } from "ahooks";
+import PlmLifeCycle from "../components/PlmLifeCycle";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
@@ -78,7 +79,6 @@ const stock = () => {
                 expandable={{
                   expandIconColumnIndex: 2,
                   indentSize: 22,
-                  defaultExpandedRowKeys: selectedRows.map((item) => item.id),
                 }}
                 rowSelection={{
                   columnWidth: 0,
@@ -186,6 +186,7 @@ const stock = () => {
                     type: "Input",
                   },
                   sorter: true,
+                  ellipsis: true,
                 },
                 {
                   title: "类型",
@@ -202,6 +203,20 @@ const stock = () => {
                     type: "Input",
                   },
                   sorter: true,
+                  render: (text, record: any) => {
+                    return (
+                      <PlmLifeCycle
+                        record={record}
+                        color={
+                          record.lifecycle && record.lifecycle.color
+                            ? record.lifecycle.color
+                            : "1"
+                        }
+                      >
+                        {text}
+                      </PlmLifeCycle>
+                    );
+                  },
                 },
                 {
                   title: "版本",
@@ -210,6 +225,13 @@ const stock = () => {
                     type: "Input",
                   },
                   sorter: true,
+                  render: (text, record) => {
+                    if (text === "Draft") {
+                      return "草稿";
+                    } else {
+                      return text && text.split(' ')[0];
+                    }
+                  },
                 },
                 {
                   title: "生效时间",
