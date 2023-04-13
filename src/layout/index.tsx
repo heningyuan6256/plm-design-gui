@@ -1,3 +1,9 @@
+/**
+ * Author: hny_147
+ * Date: 2023/03/02 14:43:07
+ * Description: 所有页面通用布局
+ */
+
 import { useAsyncEffect } from "ahooks";
 import React, { Fragment } from "react";
 import { homeDir } from "@tauri-apps/api/path";
@@ -16,11 +22,6 @@ import { writeNetWork } from "../models/network";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
 
-/**
- * Author: hny_147
- * Date: 2023/03/02 14:43:07
- * Description: 通用布局
- */
 interface LayoutProps {
   children: React.ReactNode;
 }
