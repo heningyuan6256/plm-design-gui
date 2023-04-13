@@ -175,6 +175,9 @@ const stock = () => {
                     type: "Input",
                   },
                   sorter: true,
+                  render: (text: string) => {
+                    return <a>{text}</a>;
+                  },
                 },
                 {
                   title: "描述",
