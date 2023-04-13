@@ -360,3 +360,26 @@ td .anticon-caret-down {
 .ant-spin-dot{
   font-size: 32px !important;
 }
+
+
+.ant-dropdown .ant-table-filter-dropdown{
+  border-radius: 0px;
+
+}
+
+.ant-dropdown .ant-table-filter-dropdown .ant-btn{
+  border-radius: 0px;
+}
+
+.ant-dropdown .ant-table-filter-dropdown .ant-btn-primary{
+  background: #0563b2;
+}
+
+.ant-dropdown .ant-table-filter-dropdown .ant-btn-primary:hover{
+  background: #0563b2;
+  opacity: 0.8;
+}
+
+.ant-dropdown .ant-table-filter-dropdown .ant-btn >span {
+  display: inline-flex;
+}
