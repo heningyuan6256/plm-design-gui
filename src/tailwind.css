@@ -13,6 +13,8 @@ body,
   color: #2c3652;
   user-select: none;
   color: #2c3652;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
 }
 
 * ::-webkit-scrollbar {
@@ -222,11 +224,17 @@ select {
 }
 
 .main .ant-table-wrapper .ant-table-column-sorter-inner {
-  scale: 0.8;
+  /* scale: 0.8; */
+  margin-block: 0px;
+  margin-inline: 0px;
+}
+
+.main .ant-table-wrapper .ant-table-column-sorter, .main .ant-table-filter-trigger{
+  display: flex;
 }
 
 .main .ant-table-filter-trigger {
-  scale: 0.8;
+  /* scale: 0.8; */
   margin-block: 0px;
   margin-inline: 0px;
 }

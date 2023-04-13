@@ -65,8 +65,8 @@ const stock = () => {
           <div className="pb-1.5 px-1.5 flex flex-col h-full">
             <div className="h-10 flex justify-between items-center">
               <div className="text-xs">
-                搜索{" "}
-                <PlmIcon name="develop" className="text-xs scale-85"></PlmIcon>
+                物料库{" "}
+                {/* <PlmIcon name="develop" className="text-xs scale-85"></PlmIcon> */}
               </div>
             </div>
             <div className="flex-1 bg-white border border-outBorder">
