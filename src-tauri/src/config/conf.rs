@@ -71,15 +71,15 @@ impl OnChainConfJson {
     pub fn init() -> PathBuf {
         info!("onchain_conf_init");
         let conf_file = OnChainConfJson::conf_path();
-        let content = if cfg!(target_os = "macos") {
-            DEFAULT_CHAT_CONF_MAC
-        } else {
-            DEFAULT_CHAT_CONF
-        };
+        // let content = if cfg!(target_os = "macos") {
+        //     DEFAULT_CHAT_CONF_MAC
+        // } else {
+        //     DEFAULT_CHAT_CONF
+        // };
 
         if !exists(&conf_file) {
             create_file(&conf_file).unwrap();
-            fs::write(&conf_file, content).unwrap();
+            // fs::write(&conf_file, content).unwrap();
             return conf_file;
         }
 
@@ -91,7 +91,7 @@ impl OnChainConfJson {
                 if err.to_string() == "invalid type: map, expected unit at line 1 column 0" {
                     return conf_file;
                 }
-                fs::write(&conf_file, content).unwrap();
+                // fs::write(&conf_file, content).unwrap();
             }
         }
 
