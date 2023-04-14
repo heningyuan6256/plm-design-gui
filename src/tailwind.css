@@ -387,7 +387,7 @@ td .anticon-caret-down {
 }
 
 a {
-  color: #0563b2;
+  color: #0563b2 !important;
 }
 
 a:hover {
