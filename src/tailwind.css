@@ -305,8 +305,8 @@ select {
   line-height: 18px;
 }
 
-.main .ant-table-tbody > tr > td {
-  height: 24px;
+.main .ant-table-tbody > tr:not(.ant-table-measure-row) > td {
+  height: 24px !important;
 }
 
 .main .tree-table .ant-table-tbody > tr.ant-table-row-selected > td {
@@ -315,7 +315,7 @@ select {
 }
 
 .main .ant-table .ant-table-placeholder td {
-  background: #fff;
+  background: #fff !important;
 }
 
 .anticon {

@@ -80,7 +80,7 @@
       }
     ],
     "systemTray": {
-      "iconPath": "icons/onchain.png",
+      "iconPath": "icons/20x20托盘图标.png",
       "iconAsTemplate": true
     }
   }
