@@ -406,3 +406,7 @@ a:hover {
 .tree-table .ant-table-tbody > tr:hover .row-tool {
   opacity: 1;
 }
+
+.main .tree-table .ant-table-tbody > tr > td:not(:nth-last-child(1)) {
+  border: none !important;
+}
