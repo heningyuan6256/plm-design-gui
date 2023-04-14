@@ -25,9 +25,9 @@ const Head: FC = () => {
   //   });
   // }, []);
 
-  const exist = async () => {
-    exit();
-  };
+  // const exist = async () => {
+  //   exit();
+  // };
 
   // 拖拽窗体
   const handleMouseDown = (e: { button: number }) => {
@@ -54,8 +54,8 @@ const Head: FC = () => {
 
   return (
     <div
-      // data-tauri-drag-region
-      onMouseDown={handleMouseDown}
+      data-tauri-drag-region
+      // onMouseDown={handleMouseDown}
       onDoubleClick={() => {
         handleWinMax();
       }}
@@ -70,17 +70,17 @@ const Head: FC = () => {
       <div>
         <PlmIcon
           name="minimize"
-          onClick={handleWinMin}
+          onClick={() => appWindow.minimize()}
           className="text-xs text-white cursor-pointer opacity-80 mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
         <PlmIcon
           name={!isMaximized ? "reduce" : "amplify"}
-          onClick={handleWinMax}
+          onClick={() => appWindow.toggleMaximize()}
           className="text-xs text-white cursor-pointer opacity-80 mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
         <PlmIcon
           name="close"
-          onClick={exist}
+          onClick={() => exit()}
           className="text-xs text-white cursor-pointer opacity-80 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
       </div>
