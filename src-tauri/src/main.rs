@@ -4,11 +4,21 @@ mod app;
 mod config;
 use app::{ window, menu };
 use config::{ utils };
+extern crate libloading;
 
 use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem };
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
+fn call_dynamic() -> Result<u32, Box<dyn std::error::Error>> {
+    unsafe {
+        let lib = libloading::Library::new("lib/libmyfirst_rust_dll.dylib")?;
+        let func: libloading::Symbol<unsafe extern fn() -> u32> = lib.get(b"hello_rust")?;
+        Ok(func())
+    }
+}
+
 fn main() {
+    let _a = call_dynamic();
     let quit = CustomMenuItem::new("quit".to_string(), "关闭窗口");
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏窗口");
     let tray_menu = SystemTrayMenu::new()
@@ -45,9 +55,8 @@ fn main() {
                 utils::open_file,
                 // utils::clear_conf,
                 // utils::merge,
-                utils::gen_cmd,
+                utils::gen_cmd
                 // utils::get_data
-
             ]
         )
         .system_tray(system_tray)

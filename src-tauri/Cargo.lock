@@ -2269,6 +2269,7 @@ name = "plm-design"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "libloading",
  "log",
  "regex",
  "reqwest",
