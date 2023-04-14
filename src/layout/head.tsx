@@ -56,7 +56,7 @@ const Head: FC = () => {
     <div
       data-tauri-drag-region
       // onMouseDown={handleMouseDown}
-      onDoubleClick={() => {
+      onDoubleClick={async () => {
         handleWinMax();
       }}
       className="h-10 bg-primary flex items-center px-4 justify-between"
@@ -70,7 +70,12 @@ const Head: FC = () => {
       <div>
         <PlmIcon
           name="minimize"
-          onClick={() => appWindow.minimize()}
+          onClick={async () => {
+            const data = await invoke("call_dynamic");
+
+            console.log(data, 'data');
+            // appWindow.minimize()
+          }}
           className="text-xs text-white cursor-pointer opacity-80 mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
         <PlmIcon

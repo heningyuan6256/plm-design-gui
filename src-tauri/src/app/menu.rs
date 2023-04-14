@@ -2,6 +2,7 @@
 
 use tauri::{ Manager, SystemTrayEvent, command };
 
+
 // 菜单点击事件
 #[command]
 pub fn menu_handle(app_handle: &tauri::AppHandle, event: SystemTrayEvent) {
