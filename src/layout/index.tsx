@@ -21,6 +21,8 @@ import { removeFile } from "@tauri-apps/api/fs";
 import { writeNetWork } from "../models/network";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
+import { Command } from "@tauri-apps/api/shell";
+
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,6 +32,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const dispatch = useDispatch();
 
   useAsyncEffect(async () => {
+    const ffmpeg = Command.sidecar("binaries/OnChain_DesignFusion", ['-t','solidworks','-m','create-cube'], {encoding: "GBK"});
+    ffmpeg.on('error', (...args) => {
+      console.log(args,'error-args');
+    })
+    ffmpeg.on('close', (...args) => {
+      console.log(args,'close-args');
+    })
+
+    ffmpeg.stdout.addListener("data", (data) => console.log("CMD_OUT: " + data))
+    ffmpeg.stderr.addListener("data", (data) => console.log("CMD_ERR: " + data))
+    
+    ffmpeg.execute()
+    // const aa = await ffmpeg.execute();
+
+    // console.log(aa, 'aa')
     await invoke("init");
 
     const homeDirPath = await homeDir();
@@ -38,7 +55,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       networkAddress = await readTextFile(
         `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
       );
-    } catch (error) {}
+    } catch (error) { }
 
     if (networkAddress) {
       // 写入address
@@ -57,7 +74,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         tokenTxt = await readTextFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`
         );
-      } catch (error) {}
+      } catch (error) { }
 
       if (tokenTxt) {
         NewRequest.initAddress(networkAddress, tokenTxt);
@@ -72,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         await removeFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
         );
-      } catch (error) {}
+      } catch (error) { }
       await invoke("exist", {});
       appWindow.close();
     }
