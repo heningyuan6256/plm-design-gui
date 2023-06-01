@@ -4,7 +4,7 @@
     "beforeBuildCommand": "yarn build",
     "devPath": "http://localhost:1420",
     "distDir": "../dist",
-    "withGlobalTauri": true
+    "withGlobalTauri": false
   },
   "package": {
     "productName": "plm-design",
@@ -15,7 +15,10 @@
       "all": true,
       "fs": {
         "all": true,
-        "scope": ["$HOME/.onChain/**"],
+        "scope": [
+          "$RESOURCE/*",
+          "$HOME/.onChain/**"
+        ],
         "readFile": true,
         "writeFile": true,
         "readDir": true,
@@ -26,14 +29,37 @@
         "renameFile": true,
         "exists": true
       },
+      "path": {
+        "all": true
+      },
       "http": {
-        "scope": ["http://**", "https://**"]
+        "scope": [
+          "http://**",
+          "https://**"
+        ]
       },
       "shell": {
-        "all": false,
+        "all": true,
+        "execute": true,
         "open": true,
         "sidecar": true,
-				"scope": [{ "name": "binaries/ffmpeg", "args": true, "sidecar": true },{"name": "binaries/OnChain_DesignFusion", "args":true, "sidecar":true}]
+        "scope": [
+          {
+            "name": "binaries/ffprobe",
+            "args": true,
+            "sidecar": true
+          },{
+            "name": "run-git-commit",
+            "cmd": "D://heningyuan//OnChain_DesignFusion11.exe",
+            "args": true
+          }
+        ]
+      },
+      "protocol": {
+        "asset": true,
+        "assetScope": [
+          "*"
+        ]
       }
     },
     "bundle": {
@@ -43,8 +69,13 @@
       "deb": {
         "depends": []
       },
-      "externalBin": ["binaries/ffmpeg", "binaries/OnChain_DesignFusion"],
-      "icon": ["icons/onchain.png", "icons/favicon.ico"],
+      "externalBin": [
+        "binaries/ffprobe"
+      ],
+      "icon": [
+        "icons/onchain.png",
+        "icons/favicon.ico"
+      ],
       "identifier": "com.tauri.build",
       "longDescription": "",
       "macOS": {

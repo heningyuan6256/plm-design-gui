@@ -4,9 +4,11 @@ mod app;
 mod config;
 use app::{ window, menu, solidworks };
 use config::{ utils };
-// extern crate libloading;
 
-use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem };
+// use tauri::api::process::{Command, CommandEvent};
+// // extern crate libloading;
+
+// use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 fn main() {
@@ -19,6 +21,55 @@ fn main() {
         .add_item(hide);
 
     let system_tray = SystemTray::new().with_menu(tray_menu);
+
+
+    // `new_sidecar()` expects just the filename, NOT the whole path like in JavaScript
+// let (mut rx, mut child) = Command::new_sidecar("OnChain_DesignFusion")
+// .expect("failed to create `my-sidecar` binary command")
+// .args(["-t", "solidworks", "-m", "createcube", "-o", "aaa"])
+// .spawn()
+// .expect("Failed to spawn sidecar");
+
+// tauri::async_runtime::spawn(async move {
+// // read events such as stdout
+// while let Some(event) = rx.recv().await {
+//     // if let CommandEvent::Stdout(line) = event {
+//     //     println!("{}", line);
+//     //     // window
+//     //     //     .emit("message", Some(format!("'{}'", line)))
+//     //     //     .expect("failed to emit event");
+//     //     // // write to stdin
+//     //     child.write("message from Rust\n".as_bytes()).unwrap();
+//     // }
+//     if let CommandEvent::Error(line) = event {
+//         println!("{}", line);
+//         // window
+//         //     .emit("message", Some(format!("'{}'", line)))
+//         //     .expect("failed to emit event");
+//         // // write to stdin
+//         child.write("message from Rust\n".as_bytes()).unwrap();
+//     }
+// }
+
+// while let Some(event) = rx.recv().await {
+//     if let CommandEvent::Stdout(line) = event {
+//         println!("{}", line);
+//         // window
+//         //     .emit("message", Some(format!("'{}'", line)))
+//         //     .expect("failed to emit event");
+//         // // write to stdin
+//         child.write("message from Rust\n".as_bytes()).unwrap();
+//     }
+//     // if let CommandEvent::Error(line) = event {
+//     //     println!("{}", line);
+//     //     // window
+//     //     //     .emit("message", Some(format!("'{}'", line)))
+//     //     //     .expect("failed to emit event");
+//     //     // // write to stdin
+//     //     child.write("message from Rust\n".as_bytes()).unwrap();
+//     // }
+// }
+// });
 
     tauri::Builder
         ::default()
