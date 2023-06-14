@@ -8,7 +8,7 @@ use config::{ utils };
 // use tauri::api::process::{Command, CommandEvent};
 // // extern crate libloading;
 
-// use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
+use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 fn main() {
