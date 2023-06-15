@@ -31,11 +31,37 @@ pub async fn open_info(handle: tauri::AppHandle) {
         .unwrap();
 }
 
-// 打开属性映射洁面
+// 打开主页
+#[command]
+pub async fn open_home(handle: tauri::AppHandle) {
+    tauri::WindowBuilder
+        ::new(&handle, "Home", tauri::WindowUrl::App("/home".into()))
+        .inner_size(1440.0, 720.0)
+        .title("主页")
+        .decorations(false)
+        .center()
+        .build()
+        .unwrap();
+}
+
+// 打开库页面
+#[command]
+pub async fn open_stock(handle: tauri::AppHandle) {
+    tauri::WindowBuilder
+        ::new(&handle, "Stock", tauri::WindowUrl::App("/stock".into()))
+        .inner_size(1440.0, 720.0)
+        .title("库")
+        .decorations(false)
+        .center()
+        .build()
+        .unwrap();
+}
+
+// 打开属性映射界面
 #[command]
 pub async fn open_attr_map(handle: tauri::AppHandle) {
     tauri::WindowBuilder
-        ::new(&handle, "Info", tauri::WindowUrl::App("/att-map".into()))
+        ::new(&handle, "AttrMap", tauri::WindowUrl::App("/att-map".into()))
         .inner_size(580.0, 372.0)
         .resizable(false)
         .title("属性映射")

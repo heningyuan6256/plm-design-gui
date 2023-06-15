@@ -9,23 +9,15 @@ import PlmIcon from "../components/PlmIcon";
 import PlmMappingData from "../components/PlmMappingData";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import {
-  interceptRequest,
-  interceptResponse,
-  publish,
-  subscribe,
-} from "../models/mqtt";
+// import {
+//   interceptRequest,
+//   interceptResponse,
+//   publish,
+//   subscribe,
+// } from "../models/mqtt";
 import { useEffect } from "react";
 
 export default function AttrMap() {
-  const dispatch = useDispatch();
-
-  const { value: mqtt } = useSelector((state: any) => state.mqtt);
-
-  mqtt.on("message", (topic: any, message: any) => {
-    console.log(topic, interceptResponse(message));
-  });
-
   const data = {
     isShowHeader: true,
     leftTableList: [
@@ -315,15 +307,15 @@ export default function AttrMap() {
         <div
           className="flex gap-1 items-center text-xs text-white"
           onClick={() => {
-            dispatch(
-              publish(
-                interceptRequest("mapAttr", {
-                  type: "getProductTypeAtt",
-                  topic: "sw",
-                  version: "2010",
-                })
-              )
-            );
+            // dispatch(
+            //   publish(
+            //     interceptRequest("mapAttr", {
+            //       type: "getProductTypeAtt",
+            //       topic: "sw",
+            //       version: "2010",
+            //     })
+            //   )
+            // );
           }}
         >
           属性映射

@@ -85,7 +85,8 @@ const Head: FC = () => {
         ></PlmIcon>
         <PlmIcon
           name="close"
-          onClick={() => exit()}
+          // onClick={() => exit()}
+          onClick={() => appWindow.close()}
           className="text-xs text-white cursor-pointer opacity-80 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
       </div>

@@ -83,6 +83,8 @@ fn main() {
                 window::drag_window,
                 window::open_info,
                 window::open_attr_map,
+                window::open_home,
+                window::open_stock,
                 // utils::create_chatgpt_prompts,
                 // utils::silent_install,
                 // utils::run_check_update,

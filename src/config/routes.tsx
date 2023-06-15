@@ -28,20 +28,19 @@ export const RoutesWithSubRoutes = () => {
       element: <Info></Info>,
     },
 
-    // 属性映射
-    {
-      path: "/att-map",
-      element: <AttrMap></AttrMap>,
-    },
-
     // 主页
     {
       path: "/",
       errorElement: <ErrorPage />,
       element: <PageLayout></PageLayout>,
       children: [
+        // 属性映射
         {
-          path: "/",
+          path: "/att-map",
+          element: <AttrMap></AttrMap>,
+        },
+        {
+          path: "/stock",
           element: <Stock></Stock>,
         },
         {

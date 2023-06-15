@@ -23,7 +23,7 @@ import { invoke } from "@tauri-apps/api";
 import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
 import { Command } from "@tauri-apps/api/shell";
 import { useSelector } from "react-redux";
-import { interceptResponse, subscribe } from "../models/mqtt";
+// import { interceptResponse, subscribe } from "../models/mqtt";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,7 +32,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const dispatch = useDispatch();
 
-  const { value: mqtt } = useSelector((state: any) => state.mqtt);
+  // const { value: mqtt } = useSelector((state: any) => state.mqtt);
 
   useAsyncEffect(async () => {
     // const command = new Command('run-git-commit', ['-t','solidworks','-m','create-cube'], {cwd: 'D://heningyuan'})

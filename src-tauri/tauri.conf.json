@@ -107,7 +107,8 @@
         "url": "/home",
         "label": "Home",
         "decorations": false,
-        "center": true
+        "center": true,
+        "visible": false
       }
     ],
     "systemTray": {
