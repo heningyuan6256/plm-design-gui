@@ -52,9 +52,7 @@ class MqttService {
       // 如果存在，直接调用
       const callBack = this.callBackMapping[type]; //执行订阅的回调
       if (callBack) {
-        //  if (result.cmd) {
-        callBack.call(this, "123");
-        //  }
+        callBack.call(this, JSON.parse(data));
       }
     });
   }
@@ -68,7 +66,6 @@ class MqttService {
     socketType: string,
     callBack: (data: Record<string, any>) => void
   ) {
-    console.log(socketType, "socketType");
     this.callBackMapping[socketType] = callBack;
   }
 

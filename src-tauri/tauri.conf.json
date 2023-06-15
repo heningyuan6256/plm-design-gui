@@ -108,7 +108,7 @@
         "label": "Home",
         "decorations": false,
         "center": true,
-        "visible": false
+        "visible": true
       }
     ],
     "systemTray": {

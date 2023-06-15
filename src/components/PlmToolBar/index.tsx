@@ -17,7 +17,7 @@ import renovate from "../../assets/image/renovate.svg";
 import { homeDir } from "@tauri-apps/api/path";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { removeFile } from "@tauri-apps/api/fs";
-import { BasicConfig } from "../../constant/config";
+import { BasicConfig, PathConfig } from "../../constant/config";
 import { invoke } from "@tauri-apps/api";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -39,11 +39,9 @@ const PlmToolBar: FC = () => {
       mainWindow?.close();
       await invoke("exist", {});
     } else if (name === "info") {
-      await invoke("open_info", {});
+      await invoke(PathConfig.openInfo, {});
     } else if (name === "checkout") {
       dispatch(increment());
-    } else if (name === "open_attr_map") {
-      await invoke("open_attr_map", {});
     }
   };
   // 按钮

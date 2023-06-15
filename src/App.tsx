@@ -17,12 +17,12 @@ function App() {
   useEffect(() => {
     // 操作路由
     mqttClient.connect(BasicConfig.MqttConnectUrl);
-    mqttClient.registerCallBack(
-      "sw.2010.getProductTypeAtt",
-      async (...args) => {
-        await invoke("open_stock", {});
-      }
-    );
+    mqttClient.registerCallBack("onchain_path", async (args) => {
+      await invoke(args.data, {});
+    });
+    return () => {
+      mqttClient.unRegisterCallBack("onchain_path");
+    };
   }, []);
   return (
     <Provider store={store}>
