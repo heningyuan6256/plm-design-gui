@@ -35,7 +35,9 @@
       "http": {
         "scope": [
           "http://**",
-          "https://**"
+          "https://**",
+          "ws://**",
+          "wss://**"
         ]
       },
       "shell": {
@@ -45,10 +47,6 @@
         "sidecar": true,
         "scope": [
           {
-            "name": "binaries/ffprobe",
-            "args": true,
-            "sidecar": true
-          },{
             "name": "run-git-commit",
             "cmd": "D://heningyuan//OnChain_DesignFusion11.exe",
             "args": true
@@ -70,7 +68,6 @@
         "depends": []
       },
       "externalBin": [
-        "binaries/ffprobe"
       ],
       "icon": [
         "icons/onchain.png",
@@ -107,7 +104,7 @@
         "resizable": true,
         "title": "plm-design",
         "width": 1440,
-        "url": "/",
+        "url": "/home",
         "label": "Home",
         "decorations": false,
         "center": true

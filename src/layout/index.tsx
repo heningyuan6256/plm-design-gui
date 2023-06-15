@@ -22,7 +22,8 @@ import { writeNetWork } from "../models/network";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
 import { Command } from "@tauri-apps/api/shell";
-
+import { useSelector } from "react-redux";
+import { interceptResponse, subscribe } from "../models/mqtt";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,16 +32,18 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const dispatch = useDispatch();
 
-  useAsyncEffect(async () => {
+  const { value: mqtt } = useSelector((state: any) => state.mqtt);
 
-    const command = new Command('run-git-commit', ['-t','solidworks','-m','create-cube'], {cwd: 'D://heningyuan'})
-    command.on('close', data => {
-      console.log(`command finished with code ${data.code} and signal ${data.signal}`)
-    });
-    command.on('error', error => console.error(`command error: "${error}"`));
-    command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
-    command.stderr.on('data', line => console.log(`command stderr: "${line}"`))
-    command.execute()
+  useAsyncEffect(async () => {
+    // const command = new Command('run-git-commit', ['-t','solidworks','-m','create-cube'], {cwd: 'D://heningyuan'})
+    // command.on('close', data => {
+    //   console.log(`command finished with code ${data.code} and signal ${data.signal}`)
+    // });
+    // command.on('error', error => console.error(`command error: "${error}"`));
+    // command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
+    // command.stderr.on('data', line => console.log(`command stderr: "${line}"`))
+    // command.execute()
+
     // const ffmpeg = Command.sidecar("binaries/OnChain_DesignFusion", ['-t','solidworks','-m','create-cube', '-o', '""'], {encoding: "GBK"});
     // ffmpeg.on('error', (...args) => {
     //   console.log(args,'error-args');
@@ -51,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     // ffmpeg.stdout.addListener("data", (data) => console.log("CMD_OUT: " + data))
     // ffmpeg.stderr.addListener("data", (data) => console.log("CMD_ERR: " + data))
-    
+
     // ffmpeg.execute()
     // const aa = await ffmpeg.execute();
 
@@ -63,7 +66,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       networkAddress = await readTextFile(
         `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
       );
-    } catch (error) { }
+    } catch (error) {}
 
     if (networkAddress) {
       // 写入address
@@ -82,7 +85,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         tokenTxt = await readTextFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`
         );
-      } catch (error) { }
+      } catch (error) {}
 
       if (tokenTxt) {
         NewRequest.initAddress(networkAddress, tokenTxt);
@@ -97,7 +100,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         await removeFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
         );
-      } catch (error) { }
+      } catch (error) {}
       await invoke("exist", {});
       appWindow.close();
     }

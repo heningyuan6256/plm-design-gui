@@ -71,10 +71,10 @@ const Head: FC = () => {
         <PlmIcon
           name="minimize"
           onClick={async () => {
-            const data = await invoke("call_dynamic");
+            // const data = await invoke("call_dynamic");
 
-            console.log(data, 'data');
-            // appWindow.minimize()
+            // console.log(data, 'data');
+            appWindow.minimize()
           }}
           className="text-xs text-white cursor-pointer opacity-80 mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>

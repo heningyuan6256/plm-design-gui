@@ -42,6 +42,8 @@ const PlmToolBar: FC = () => {
       await invoke("open_info", {});
     } else if (name === "checkout") {
       dispatch(increment());
+    } else if (name === "open_attr_map") {
+      await invoke("open_attr_map", {});
     }
   };
   // 按钮
@@ -81,7 +83,8 @@ const PlmToolBar: FC = () => {
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
           {renderButton(quit, "退出", "logout")}
-          {renderButton(about, "关于", "info")}
+          {/* info */}
+          {renderButton(about, "关于", "open_attr_map")}
         </div>
         <div className="scale-90 text-xs text-littleGrey text-center">其他</div>
       </div>

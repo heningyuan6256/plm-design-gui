@@ -7,6 +7,11 @@ import { ConfigProvider } from "antd";
 import { Provider } from "react-redux";
 import store from "./models/store";
 import Layout from "./layout";
+import mqtt from "mqtt";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { interceptResponse, subscribe } from "./models/mqtt";
+import { useDispatch } from "react-redux";
 
 function App() {
   return (
@@ -19,7 +24,7 @@ function App() {
         }}
       >
         <Layout>
-          <RoutesWithSubRoutes></RoutesWithSubRoutes>;
+          <RoutesWithSubRoutes></RoutesWithSubRoutes>
         </Layout>
       </ConfigProvider>
     </Provider>

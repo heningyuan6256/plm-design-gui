@@ -82,6 +82,7 @@ fn main() {
                 window::exist,
                 window::drag_window,
                 window::open_info,
+                window::open_attr_map,
                 // utils::create_chatgpt_prompts,
                 // utils::silent_install,
                 // utils::run_check_update,

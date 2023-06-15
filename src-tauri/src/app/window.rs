@@ -31,6 +31,19 @@ pub async fn open_info(handle: tauri::AppHandle) {
         .unwrap();
 }
 
+// 打开属性映射洁面
+#[command]
+pub async fn open_attr_map(handle: tauri::AppHandle) {
+    tauri::WindowBuilder
+        ::new(&handle, "Info", tauri::WindowUrl::App("/att-map".into()))
+        .inner_size(580.0, 372.0)
+        .resizable(false)
+        .title("属性映射")
+        .decorations(false)
+        .center()
+        .build()
+        .unwrap();
+}
 
 // 退出登录
 #[command]
