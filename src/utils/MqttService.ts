@@ -21,7 +21,9 @@ class MqttService {
     this.baseUrl = url;
     this.mqtt = {} as MqttClient;
     this.callBackMapping = {};
-    this.clientId = "";
+    // 生成客户端id
+    const uniqueId = Math.random().toString();
+    this.clientId = `client_onchain_${uniqueId}`;
   }
 
   /**
@@ -30,9 +32,6 @@ class MqttService {
    * @return {*}
    */
   connect(url = BasicConfig.MqttConnectUrl) {
-    // 生成客户端id
-    const uniqueId = Math.random().toString();
-    this.clientId = `client_onchain_${uniqueId}`;
     // 建立连接
     this.mqtt = mqtt.connect(url, {
       clean: true,
