@@ -11,17 +11,23 @@ import mqtt, { MqttClient } from "mqtt";
 import { useEffect, useId } from "react";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
-import { BasicConfig } from "./constant/config";
+import { BasicConfig, CommandConfig } from "./constant/config";
 import { mqttClient } from "./utils/MqttService";
+import { Utils } from "./utils";
 function App() {
   useEffect(() => {
     // 操作路由
     mqttClient.connect(BasicConfig.MqttConnectUrl);
-    mqttClient.registerCallBack("onchain_path", async (args) => {
-      await invoke(args.data, {});
-    });
+    mqttClient.registerCallBack(
+      Utils.instruction(CommandConfig.getProductTypeAtt),
+      async (args) => {
+        console.log(args, "arts");
+      }
+    );
     return () => {
-      mqttClient.unRegisterCallBack("onchain_path");
+      mqttClient.unRegisterCallBack(
+        Utils.instruction(CommandConfig.getProductTypeAtt)
+      );
     };
   }, []);
   return (

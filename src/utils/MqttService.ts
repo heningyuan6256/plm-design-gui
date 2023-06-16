@@ -1,11 +1,13 @@
 import mqtt, { MqttClient } from "mqtt";
 import { BasicConfig } from "../constant/config";
+import { Utils } from ".";
 
 class MqttService {
   /**
    * 单例 保证拿到的都是同一个实例
    */
   static instance: MqttService;
+  clientId: string;
   static get Instance() {
     if (!this.instance) {
       this.instance = new MqttService();
@@ -19,33 +21,31 @@ class MqttService {
     this.baseUrl = url;
     this.mqtt = {} as MqttClient;
     this.callBackMapping = {};
+    this.clientId = "";
   }
 
   /**
-   * @description: 定义连接SSE服务器的方法
+   * @description: 定义连接Mqtt服务器的方法
    * @param  {*}
    * @return {*}
    */
   connect(url = BasicConfig.MqttConnectUrl) {
-    const uniqueId = Math.random.toString();
+    // 生成客户端id
+    const uniqueId = Math.random().toString();
+    this.clientId = `client_onchain_${uniqueId}`;
+    // 建立连接
     this.mqtt = mqtt.connect(url, {
-      //mqtt客户端的id
       clean: true,
       connectTimeout: 4000,
       reconnectPeriod: 1000,
-      clientId: `client_onchain${uniqueId}`,
-      // username: "admin",
-      // password: "public",
+      clientId: this.clientId,
     });
 
-    this.mqtt.subscribe("sw");
+    this.mqtt.subscribe(BasicConfig.onchain_topic);
 
     this.mqtt.on("connect", () => {
-      console.log("连接中");
+      console.log("成功建立连接");
     });
-    // this.es.close = () => {
-    //   console.log("SSE连接失败/关闭");
-    // };
 
     this.mqtt.on("message", (topic, data: any) => {
       const type = JSON.parse(data).type;
@@ -55,6 +55,29 @@ class MqttService {
         callBack.call(this, JSON.parse(data));
       }
     });
+  }
+
+  /**
+   * @description: 发送消息
+   * @param  {*}
+   * @return {*}
+   */
+  publish(data: {
+    type: string;
+    input_data?: Record<string, any>;
+    output_data?: Record<string, any>;
+    extra?: string;
+  }) {
+    const structData = {
+      input_data: {},
+      output_data: {},
+      topic: BasicConfig.pubgin_topic,
+      to: "",
+      from: this.clientId,
+      ...data,
+      type: Utils.instruction(data.type),
+    };
+    this.mqtt.publish(BasicConfig.pubgin_topic, JSON.stringify(structData));
   }
 
   /**

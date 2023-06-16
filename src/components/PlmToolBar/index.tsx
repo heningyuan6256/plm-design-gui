@@ -17,11 +17,13 @@ import renovate from "../../assets/image/renovate.svg";
 import { homeDir } from "@tauri-apps/api/path";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { removeFile } from "@tauri-apps/api/fs";
-import { BasicConfig, PathConfig } from "../../constant/config";
+import { BasicConfig, CommandConfig, PathConfig } from "../../constant/config";
 import { invoke } from "@tauri-apps/api";
 
 import { useSelector, useDispatch } from "react-redux";
 import { increment } from "../../models/count";
+import { mqttClient } from "../../utils/MqttService";
+import { Utils } from "../../utils";
 
 const PlmToolBar: FC = () => {
   const count = useSelector((state: any) => state.counter.value);
@@ -41,7 +43,10 @@ const PlmToolBar: FC = () => {
     } else if (name === "info") {
       await invoke(PathConfig.openInfo, {});
     } else if (name === "checkout") {
-      dispatch(increment());
+      mqttClient.publish({
+        type: CommandConfig.getProductTypeAtt,
+      });
+      // dispatch(increment());
     }
   };
   // 按钮

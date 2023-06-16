@@ -292,7 +292,7 @@ export default function AttrMap() {
       },
     ],
   };
-  
+
   // 最小化
   const handleWinMin = async () => {
     await appWindow.close();
@@ -304,20 +304,7 @@ export default function AttrMap() {
         data-tauri-drag-region
         className="bg-primary flex items-center px-4 justify-between h-8"
       >
-        <div
-          className="flex gap-1 items-center text-xs text-white"
-          onClick={() => {
-            // dispatch(
-            //   publish(
-            //     interceptRequest("mapAttr", {
-            //       type: "getProductTypeAtt",
-            //       topic: "sw",
-            //       version: "2010",
-            //     })
-            //   )
-            // );
-          }}
-        >
+        <div className="flex gap-1 items-center text-xs text-white">
           属性映射
         </div>
         <div></div>

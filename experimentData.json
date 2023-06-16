@@ -1,0 +1,138 @@
+{
+  "getProductAtt": {
+    "input_data": {},
+    "output_data": {
+      "sldasm": [
+        {
+          "name": "Description",
+          "type": "string",
+          "defaultVal": ""
+        },
+        {
+          "name": "Weight",
+          "type": "string",
+          "defaultVal": "\"SW-Mass@assem_top.SLDASM\""
+        },
+        {
+          "name": "质量",
+          "type": "string",
+          "defaultVal": "\"SW-Mass@assem_top.SLDASM\""
+        },
+        {
+          "name": "审定",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "设计",
+          "type": "string",
+          "defaultVal": "   "
+        },
+        {
+          "name": "零件号",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "版本",
+          "type": "string",
+          "defaultVal": "   "
+        },
+        {
+          "name": "图幅",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "备注",
+          "type": "string",
+          "defaultVal": "   "
+        },
+        {
+          "name": "替代",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "代号",
+          "type": "string",
+          "defaultVal": "“图样代号”"
+        },
+        {
+          "name": "名称",
+          "type": "string",
+          "defaultVal": "“图样名称”"
+        },
+        {
+          "name": "共X张",
+          "type": "string",
+          "defaultVal": "1"
+        },
+        {
+          "name": "第X张",
+          "type": "string",
+          "defaultVal": "1"
+        },
+        {
+          "name": "阶段标记S",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "阶段标记A",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "阶段标记B",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "标准审查",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "工艺审查",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "批准",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "日期",
+          "type": "string",
+          "defaultVal": "2007,12,3"
+        },
+        {
+          "name": "校核",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "主管设计",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "审核",
+          "type": "string",
+          "defaultVal": " "
+        },
+        {
+          "name": "校对",
+          "type": "string",
+          "defaultVal": " "
+        }
+      ]
+    },
+    "topic": "sw",
+    "to": "client_onchain_0.8066863001197068",
+    "from": "client_onchain_0.8066863001197068",
+    "type": "sw.2010.getProductTypeAtt"
+  }
+}

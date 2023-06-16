@@ -1,3 +1,4 @@
+import { BasicConfig } from "../constant/config";
 import { ListCode } from "../constant/listCode";
 
 export class Utils {
@@ -47,4 +48,9 @@ export class Utils {
     });
     return map;
   };
+
+  // 生成指令
+  public static instruction(instruction: string) {
+    return `${BasicConfig.pubgin_topic}.${BasicConfig.plugin_version}.${instruction}`;
+  }
 }
