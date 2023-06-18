@@ -199,7 +199,7 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
   return (
     <div className="tableRoot">
       <div className="table">
-        <div className="table_head">导入字段</div>
+        {/* <div className="table_head">导入字段</div> */}
 
         <div className="table_content">
           {leftTableData.map((item: any) => (
@@ -246,7 +246,7 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
       </div>
 
       <div className="table">
-        <div className="table_head">导入字段</div>
+        {/* <div className="table_head">导入字段</div> */}
 
         <div className="table_content">
           {rightTableData.map((rootItem: any) => (
@@ -320,12 +320,13 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
                               </div>
                               <PlmIcon
                                 className="clearMate"
+                                style={{ fontSize: "12px", color: "red" }}
                                 name={"close"}
-                                // onClick={(e) => {
-                                //     e.preventDefault();
-                                //     e.stopPropagation();
-                                //     clearMapping(item);
-                                //   }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  clearMapping(item);
+                                }}
                               />
                             </div>
                           )}

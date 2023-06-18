@@ -7,17 +7,158 @@
 import { appWindow } from "@tauri-apps/api/window";
 import PlmIcon from "../components/PlmIcon";
 import PlmMappingData from "../components/PlmMappingData";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
-// import {
-//   interceptRequest,
-//   interceptResponse,
-//   publish,
-//   subscribe,
-// } from "../models/mqtt";
-import { useEffect } from "react";
+import { CommandConfig } from "../constant/config";
+import { useMqttRegister } from "../hooks/useMqttRegister";
+import { useEffect, useState } from "react";
 
 export default function AttrMap() {
+  const [attrList, setAttrList] = useState<Record<string, any>[]>([]);
+
+  useEffect(() => {
+    const attList = [
+      {
+        name: "Description",
+        type: "string",
+        defaultVal: "",
+      },
+      {
+        name: "Weight",
+        type: "string",
+        defaultVal: '"SW-Mass@assem_top.SLDASM"',
+      },
+      {
+        name: "质量",
+        type: "string",
+        defaultVal: '"SW-Mass@assem_top.SLDASM"',
+      },
+      {
+        name: "审定",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "设计",
+        type: "string",
+        defaultVal: "   ",
+      },
+      {
+        name: "零件号",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "版本",
+        type: "string",
+        defaultVal: "   ",
+      },
+      {
+        name: "图幅",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "备注",
+        type: "string",
+        defaultVal: "   ",
+      },
+      {
+        name: "替代",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "代号",
+        type: "string",
+        defaultVal: "“图样代号”",
+      },
+      {
+        name: "名称",
+        type: "string",
+        defaultVal: "“图样名称”",
+      },
+      {
+        name: "共X张",
+        type: "string",
+        defaultVal: "1",
+      },
+      {
+        name: "第X张",
+        type: "string",
+        defaultVal: "1",
+      },
+      {
+        name: "阶段标记S",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "阶段标记A",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "阶段标记B",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "标准审查",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "工艺审查",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "批准",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "日期",
+        type: "string",
+        defaultVal: "2007,12,3",
+      },
+      {
+        name: "校核",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "主管设计",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "审核",
+        type: "string",
+        defaultVal: " ",
+      },
+      {
+        name: "校对",
+        type: "string",
+        defaultVal: " ",
+      },
+    ];
+    setAttrList(
+      attList.map((item: any) => {
+        return {
+          ...item,
+          filedName: item.name,
+          filed: item.name,
+          meta: "",
+        };
+      })
+    );
+  }, []);
+
+  // 监听属性映射
+  useMqttRegister(CommandConfig.getProductTypeAtt, (res) => {
+    console.log(res, "res");
+  });
+
   const data = {
     isShowHeader: true,
     leftTableList: [
@@ -300,7 +441,7 @@ export default function AttrMap() {
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
-      <div
+      {/* <div
         data-tauri-drag-region
         className="bg-primary flex items-center px-4 justify-between h-8"
       >
@@ -316,14 +457,20 @@ export default function AttrMap() {
             className="text-xs text-white cursor-pointer opacity-80 hover:shadow-2xl hover:bg-hoverHeadButton"
           ></PlmIcon>
         </div>
-      </div>
-      <div>
-        <PlmMappingData
-          isShowHeader={true}
-          onLoading={() => {}}
-          leftTableList={data.leftTableList}
-          rightTableList={data.rightTableList}
-        ></PlmMappingData>
+      </div> */}
+      <div className="flex overflow-hidden h-full">
+        {/* <div style={{ minWidth: "164px" }} className="text-xs px-3 py-3">
+          <div>CAD至PLM</div>
+          <div>PLM至CAD</div>
+        </div> */}
+        <div style={{ height: "100%", width: "100%" }} className="px-3 py-3">
+          <PlmMappingData
+            isShowHeader={false}
+            onLoading={() => {}}
+            leftTableList={attrList}
+            rightTableList={data.rightTableList}
+          ></PlmMappingData>
+        </div>
       </div>
     </div>
   );

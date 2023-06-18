@@ -78,6 +78,28 @@ select {
   margin-bottom: 18px !important;
 }
 
+.ant-collapse-content-box{
+  padding: 0px!important;
+}
+.ant-collapse>.ant-collapse-item >.ant-collapse-header{
+  padding: 0px;
+  height: 30px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+.ant-collapse>.ant-collapse-item:last-child>.ant-collapse-header{
+  border-radius: 0px !important;
+}
+.ant-collapse-expand-icon{
+  padding-right: 8px !important;
+  margin-left: 11px;
+}
+
+.ant-collapse-header{
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
 /* 字体图标 */
 /* .iconfont {
   font-family: "iconfont" !important;
@@ -436,6 +458,7 @@ a:hover {
 }
 .tableRoot .table {
   width: calc(50% - 5px);
+  height: 100%;
 }
 .tableRoot .table .table_head {
   font-size: 12px;
@@ -452,7 +475,7 @@ a:hover {
 }
 .tableRoot .table .table_content {
   width: 100%;
-  height: calc(100% - 30px);
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

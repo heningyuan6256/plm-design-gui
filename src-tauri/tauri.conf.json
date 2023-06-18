@@ -15,10 +15,7 @@
       "all": true,
       "fs": {
         "all": true,
-        "scope": [
-          "$RESOURCE/*",
-          "$HOME/.onChain/**"
-        ],
+        "scope": ["$RESOURCE/*", "$HOME/.onChain/**"],
         "readFile": true,
         "writeFile": true,
         "readDir": true,
@@ -33,12 +30,7 @@
         "all": true
       },
       "http": {
-        "scope": [
-          "http://**",
-          "https://**",
-          "ws://**",
-          "wss://**"
-        ]
+        "scope": ["http://**", "https://**", "ws://**", "wss://**"]
       },
       "shell": {
         "all": true,
@@ -55,9 +47,7 @@
       },
       "protocol": {
         "asset": true,
-        "assetScope": [
-          "*"
-        ]
+        "assetScope": ["*"]
       }
     },
     "bundle": {
@@ -67,12 +57,8 @@
       "deb": {
         "depends": []
       },
-      "externalBin": [
-      ],
-      "icon": [
-        "icons/onchain.png",
-        "icons/favicon.ico"
-      ],
+      "externalBin": [],
+      "icon": ["icons/onchain.png", "icons/favicon.ico"],
       "identifier": "com.tauri.build",
       "longDescription": "",
       "macOS": {

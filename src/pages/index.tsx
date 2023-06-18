@@ -13,15 +13,11 @@ import cubeSvg from "../assets/image/cube.svg";
 import fileCubeSvg from "../assets/image/fileCube.svg";
 import fileSvg from "../assets/image/file.svg";
 import PageLayout from "../layout/pageLayout";
-import { Link } from "react-router-dom";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
-      {/* 头部 */}
-      <Head></Head>
-
       <div className="w-full bg-base flex-1 flex flex-col px-3 py-3 overflow-hidden">
         {/* 操作栏 */}
         <PlmToolBar></PlmToolBar>
@@ -450,9 +446,6 @@ const index = () => {
           </div>
         </div>
       </div>
-
-      {/* 尾部 */}
-      <Foot></Foot>
     </div>
   );
 };

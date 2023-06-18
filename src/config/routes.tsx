@@ -9,13 +9,17 @@ import Home from "../pages/index";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Info from "../pages/info";
 import Stock from "../pages/stock";
+import Query from "../pages/query";
 import PageLayout from "../layout/pageLayout";
 import AttrMap from "../pages/attrMap";
 
 export const RoutesWithSubRoutes = () => {
   const router = createBrowserRouter([
     // 客户端首页
-
+    {
+      path: "/center",
+      element: <></>,
+    },
     // 登陆页
     {
       path: "/login",
@@ -34,18 +38,24 @@ export const RoutesWithSubRoutes = () => {
       errorElement: <ErrorPage />,
       element: <PageLayout></PageLayout>,
       children: [
+        {
+          path: "/home",
+          element: <Home></Home>,
+        },
         // 属性映射
         {
           path: "/att-map",
           element: <AttrMap></AttrMap>,
         },
+        // 物料库
         {
           path: "/stock",
           element: <Stock></Stock>,
         },
+        // 库
         {
-          path: "/home",
-          element: <Home></Home>,
+          path: "/query",
+          element: <Query></Query>,
         },
       ],
     },

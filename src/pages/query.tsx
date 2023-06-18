@@ -7,7 +7,7 @@ import Foot from "../layout/foot";
 import Head from "../layout/head";
 import PlmIcon from "../components/PlmIcon";
 import { OnChainTable } from "onchain-ui";
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import API from "../utils/api";
 import PageLayout from "../layout/pageLayout";
 import { Input } from "antd";
@@ -16,7 +16,7 @@ import { useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
 // import { dealMaterialData } from 'plm-wasm'
 
-const stock = () => {
+const query: FC = () => {
   const [leftTreeData, setLeftTreeData] = useState<Record<string, any>[]>([]);
   const [selectedRows, setSelectedRows] = useState<Record<string, any>[]>([]);
   const [tableSelectedRows, setTableSelectedRows] = useState<
@@ -67,7 +67,7 @@ const stock = () => {
           <div className="pb-1.5 px-1.5 flex flex-col h-full">
             <div className="h-10 flex justify-between items-center">
               <div className="text-xs">
-                物料库{" "}
+                搜索{" "}
                 {/* <PlmIcon name="develop" className="text-xs scale-85"></PlmIcon> */}
               </div>
             </div>
@@ -312,4 +312,4 @@ const stock = () => {
   );
 };
 
-export default stock;
+export default query;
