@@ -17,6 +17,7 @@ export interface MappingTableProps {
   rightTableList: any[];
   isShowHeader: boolean;
   onLoading: (loading: boolean) => void;
+  ref: any;
 }
 
 export interface MappingTableForwardRefProps {
@@ -31,9 +32,7 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
   useImperativeHandle(
     ref,
     (): MappingTableForwardRefProps => ({
-      getTargetData: () => {
-        return getTargetData();
-      },
+      getTargetData: getTargetData,
     })
   );
 

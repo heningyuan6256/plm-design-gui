@@ -9,9 +9,11 @@ import PlmIcon from "../components/PlmIcon";
 import PlmMappingData from "../components/PlmMappingData";
 import { CommandConfig } from "../constant/config";
 import { useMqttRegister } from "../hooks/useMqttRegister";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "antd";
 
 export default function AttrMap() {
+  const mappingRef = useRef<any>();
   const [attrList, setAttrList] = useState<Record<string, any>[]>([]);
 
   useEffect(() => {
@@ -463,8 +465,22 @@ export default function AttrMap() {
           <div>CAD至PLM</div>
           <div>PLM至CAD</div>
         </div> */}
-        <div style={{ height: "100%", width: "100%" }} className="px-3 py-3">
+        <div
+          style={{ height: "calc(100% - 50px)", width: "100%" }}
+          className="px-3 py-3"
+        >
+          <div>
+            <Button
+              onClick={() => {
+                const data = mappingRef?.current?.getTargetData();
+                console.log(data.mappingData, "data");
+              }}
+            >
+              保存
+            </Button>
+          </div>
           <PlmMappingData
+            ref={mappingRef}
             isShowHeader={false}
             onLoading={() => {}}
             leftTableList={attrList}

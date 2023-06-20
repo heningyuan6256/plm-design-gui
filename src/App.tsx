@@ -10,7 +10,7 @@ import Layout from "./layout";
 import { BasicConfig, CommandConfig } from "./constant/config";
 import { mqttClient } from "./utils/MqttService";
 // 连接mqtt
-mqttClient.connect(BasicConfig.MqttConnectUrl);
+// mqttClient.connect(BasicConfig.MqttConnectUrl);
 
 function App() {
   return (

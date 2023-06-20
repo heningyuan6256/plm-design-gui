@@ -31,7 +31,7 @@ class MqttService {
    * @param  {*}
    * @return {*}
    */
-  connect(url = BasicConfig.MqttConnectUrl) {
+  connect(url = BasicConfig.MqttConnectUrl, topic = "") {
     // 建立连接
     this.mqtt = mqtt.connect(url, {
       clean: true,
@@ -40,7 +40,9 @@ class MqttService {
       clientId: this.clientId,
     });
 
-    this.mqtt.subscribe(BasicConfig.onchain_topic);
+    // this.mqtt.subscribe(`${BasicConfig.onchain_topic}${topic}`);
+
+    this.mqtt.subscribe(`${BasicConfig.onchain_topic}`);
 
     this.mqtt.on("connect", () => {
       console.log("成功建立连接");

@@ -50,6 +50,33 @@ const API = {
   getStockByType: (data: Record<string, any>) => {
     return NewRequest.post("/opendata/findItemLibraryIns", data);
   },
+
+  /**
+   * 获取搜索页面左侧文件夹
+   * */
+  getQueryFolder: () => {
+    return NewRequest.get("/pdm/searchFolder/getList", { tenantId: "719" });
+  },
+
+  /**
+   * 搜索dsl
+   * */
+  getConditionDsl: (data: any) => {
+    return NewRequest.post("/pdm/condition/searchDsl", {
+      ...data,
+      tenantId: "719",
+    });
+  },
+  
+  /**
+   * 获取搜索列头
+  */
+  getQueryColumns: (data: any) => {
+    return NewRequest.get("/pdm/condition/getField", {
+      ...data,
+      tenantId: "719",
+    });
+  },
 };
 
 export default API;

@@ -21,6 +21,8 @@ import { removeFile } from "@tauri-apps/api/fs";
 import { writeNetWork } from "../models/network";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
+import { Command } from "@tauri-apps/api/shell";
+import { mqttClient } from "../utils/MqttService";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,14 +32,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const dispatch = useDispatch();
 
   useAsyncEffect(async () => {
-    // const command = new Command('run-git-commit', ['-t','solidworks','-m','create-cube'], {cwd: 'D://heningyuan'})
-    // command.on('close', data => {
-    //   console.log(`command finished with code ${data.code} and signal ${data.signal}`)
-    // });
-    // command.on('error', error => console.error(`command error: "${error}"`));
-    // command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
-    // command.stderr.on('data', line => console.log(`command stderr: "${line}"`))
-    // command.execute()
+    const command = new Command("ifconfig", ["en0"]);
+    command.on("close", (data) => {});
+    command.on("error", (error) => console.error(`command error: "${error}"`));
+    command.stdout.on("data", (line: string) => {
+      if (line.indexOf("ether") != -1) {
+        mqttClient.connect(
+          BasicConfig.MqttConnectUrl,
+          line.split("ether")[1].trim()
+        );
+      }
+    });
+    // command.stderr.on("data", (line) =>
+    //   console.log(`command stderr: "${line}"`)
+    // );
+    command.execute();
 
     // const ffmpeg = Command.sidecar("binaries/OnChain_DesignFusion", ['-t','solidworks','-m','create-cube', '-o', '""'], {encoding: "GBK"});
     // ffmpeg.on('error', (...args) => {

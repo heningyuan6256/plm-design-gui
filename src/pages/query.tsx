@@ -3,17 +3,15 @@
  * Date: 2023/03/02 14:44:05
  * Description: 库
  */
-import Foot from "../layout/foot";
-import Head from "../layout/head";
 import PlmIcon from "../components/PlmIcon";
 import { OnChainTable } from "onchain-ui";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import API from "../utils/api";
-import PageLayout from "../layout/pageLayout";
 import { Input } from "antd";
 import { useSelector } from "react-redux";
 import { useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
+import { OnChainTableColumnProps } from "onchain-ui/dist/esm/OnChainTable";
 // import { dealMaterialData } from 'plm-wasm'
 
 const query: FC = () => {
@@ -24,38 +22,59 @@ const query: FC = () => {
   >([]);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value } = useSelector((state: any) => state.user);
+  const [SearchColumn, setSearchColumn] = useState<Record<string, any>[]>([]);
 
-  const { run, loading } = useRequest((data) => API.getStockByType(data), {
+  const { run, loading } = useRequest(() => API.getQueryFolder(), {
     manual: true,
     onSuccess(data: any) {
-      setTableSelectedRows([]);
-      setTableData(data.result.records);
+      const loop = (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          if (data[i].conditionList && data[i].conditionList.length) {
+            data[i].children = data[i].conditionList;
+          }
+          if (data[i].conditionName) {
+            data[i].name = data[i].conditionName;
+          }
+          if (data[i] && data[i].children && data[i].children.length) {
+            loop(data[i].children);
+          }
+        }
+      };
+      loop(data.result);
+      setLeftTreeData(data.result);
     },
   });
 
   useEffect(() => {
-    API.getStock("719").then((res: any) => {
-      const result = res.result.filter((item: any) => {
-        return item.apicode === "ItemAdmin";
-      });
-      setLeftTreeData(result);
-      if (result.length > 0) {
-        setSelectedRows([result[0]]);
-        const data = {
-          libraryId: result[0].id,
-          pageNo: 1,
-          pageSize: 50,
-          sort: "",
-          andQuery: "",
-          tenantId: "719",
-          userId: value.id,
-          isAll: false,
-          fields: [{}],
-        };
-        run(data);
-      }
+    run();
+  }, []);
+
+  useEffect(() => {
+    API.getQueryColumns({ itemCode: "10001002" }).then((res: any) => {
+      setSearchColumn(res.result);
     });
   }, []);
+
+  const column = useMemo(() => {
+    return SearchColumn.map((item) => {
+      return {
+        ...item,
+        title: item.name,
+        dataIndex: item.apicode,
+        search: {
+          type: "Input",
+        },
+        sorter: true,
+        ellipsis: true,
+        render:
+          item.apicode === "Number" || item.apicode === 'CreateUser'
+            ? (text: string) => {
+                return <a>{text}</a>;
+              }
+            : undefined,
+      };
+    });
+  }, [SearchColumn]);
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -101,86 +120,97 @@ const query: FC = () => {
                           className="cursor-pointer w-full overflow-hidden text-ellipsis"
                           onClick={() => {
                             setSelectedRows([record]);
-                            const data = {
-                              libraryId: record.id,
-                              pageNo: 1,
-                              pageSize: 50,
-                              sort: "",
-                              andQuery: "",
-                              tenantId: "719",
-                              userId: value.id,
-                              isAll: false,
-                              fields: [{}],
-                            };
-                            run(data);
+                            if (!(record.children && record.children.length)) {
+                              API.getConditionDsl({
+                                actionType: "select",
+                                dsl: record.content,
+                                pageNo: 1,
+                                fields: SearchColumn.map((item) => {
+                                  return { ...item, parentTabCode: 10002001 };
+                                }),
+                                pageSize: 100,
+                                itemCode: "10001002",
+                              }).then((res: any) => {
+                                const records = res.result.pageData.records.map(
+                                  (item: any) => {
+                                    let row: any = {};
+                                    item.insAttrs.forEach((v: any) => {
+                                      row[v.apicode] = v.attrValue;
+                                    });
+                                    return row;
+                                  }
+                                );
+                                setTableData(records);
+                              });
+                            }
                           }}
                         >
-                          <PlmIcon
-                            className={"text-primary text-base mr-1"}
-                            name={
-                              record.apicode === "ItemAdmin"
-                                ? "a-Materialwarehouse"
-                                : "file"
-                            }
-                          ></PlmIcon>
+                          {record.children ? (
+                            <PlmIcon
+                              className={"text-primary text-base mr-1"}
+                              name={"file"}
+                            ></PlmIcon>
+                          ) : (
+                            <span className="ml-3"></span>
+                          )}
                           {text}
                         </div>
                       );
                     },
                   },
-                  {
-                    title: "",
-                    dataIndex: "tool",
-                    width: 72,
-                    sorter: true,
-                    render: (text, record: any) => {
-                      if (record.apicode === "ItemAdmin") {
-                        return (
-                          <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="fold"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="add"
-                            ></PlmIcon>
-                          </div>
-                        );
-                      }
-                      if (!record.isDelete) {
-                        return (
-                          <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="edit"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="add"
-                            ></PlmIcon>
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="edit"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="delete"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="add"
-                            ></PlmIcon>
-                          </div>
-                        );
-                      }
-                    },
-                  },
+                  // {
+                  //   title: "",
+                  //   dataIndex: "tool",
+                  //   width: 72,
+                  //   sorter: true,
+                  //   render: (text, record: any) => {
+                  //     if (record.apicode === "ItemAdmin") {
+                  //       return (
+                  //         <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
+                  //           <PlmIcon
+                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //             name="fold"
+                  //           ></PlmIcon>
+                  //           <PlmIcon
+                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //             name="add"
+                  //           ></PlmIcon>
+                  //         </div>
+                  //       );
+                  //     }
+                  //     if (!record.isDelete) {
+                  //       return (
+                  //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+                  //           <PlmIcon
+                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //             name="edit"
+                  //           ></PlmIcon>
+                  //           <PlmIcon
+                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //             name="add"
+                  //           ></PlmIcon>
+                  //         </div>
+                  //       );
+                  //     } else {
+                  //       return (
+                  //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+                  //           <PlmIcon
+                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //             name="edit"
+                  //           ></PlmIcon>
+                  //           <PlmIcon
+                  //             className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //             name="delete"
+                  //           ></PlmIcon>
+                  //           <PlmIcon
+                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //             name="add"
+                  //           ></PlmIcon>
+                  //         </div>
+                  //       );
+                  //     }
+                  //   },
+                  // },
                 ]}
                 selectedCell={{
                   dataIndex: "",
@@ -192,10 +222,11 @@ const query: FC = () => {
         </div>
         <div className="flex-1">
           <div className="bg-tabTitleBg w-full h-6 text-xs flex items-center pl-2.5 mb-4">
-            <span className="mr-1">物料库</span> <span className="mr-1">/</span>{" "}
-            <span className="text-primary">电子件库</span>
+            <span className="mr-1">搜索</span>
+            {/* <span className="mr-1">/</span>{" "}
+            <span className="text-primary">电子件库</span> */}
           </div>
-          <div className="mb-4 flex gap-2">
+          <div className="mb-4 flex gap-2 justify-center">
             <Input
               placeholder="请输入编号或描述"
               style={{ width: "360px" }}
@@ -225,81 +256,7 @@ const query: FC = () => {
               }}
               hideFooter
               extraHeight={22}
-              columns={[
-                {
-                  title: "编号",
-                  dataIndex: "number",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                  render: (text: string) => {
-                    return <a>{text}</a>;
-                  },
-                },
-                {
-                  title: "描述",
-                  dataIndex: "insDesc",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                  ellipsis: true,
-                },
-                {
-                  title: "类型",
-                  dataIndex: "objectName",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                },
-                {
-                  title: "生命周期",
-                  dataIndex: "statusName",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                  render: (text, record: any) => {
-                    return (
-                      <PlmLifeCycle
-                        record={record}
-                        color={
-                          record.lifecycle && record.lifecycle.color
-                            ? record.lifecycle.color
-                            : "1"
-                        }
-                      >
-                        {text}
-                      </PlmLifeCycle>
-                    );
-                  },
-                },
-                {
-                  title: "版本",
-                  dataIndex: "insVersion",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                  render: (text, record) => {
-                    if (text === "Draft") {
-                      return "草稿";
-                    } else {
-                      return text && text.split(" ")[0];
-                    }
-                  },
-                },
-                {
-                  title: "生效时间",
-                  dataIndex: "publishTime",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                },
-              ]}
+              columns={column as OnChainTableColumnProps}
               selectedCell={{
                 dataIndex: "",
                 record: {},

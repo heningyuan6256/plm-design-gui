@@ -65,7 +65,6 @@ class Request {
             const requestQuery = {...data, ...this.interceptors.request.body};
             const requestHeaders = {...this.interceptors.request.headers};
             this.interceptors.request.use();
-
             http
                 .fetch(this.interceptors.baseURL + url, {
                     headers: requestHeaders,
