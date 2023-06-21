@@ -11,6 +11,7 @@ import { CommandConfig } from "../constant/config";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "antd";
+import API from "../utils/api";
 
 export default function AttrMap() {
   const mappingRef = useRef<any>();
@@ -154,6 +155,9 @@ export default function AttrMap() {
         };
       })
     );
+    API.getMapptingAttrs().then((res) => {
+      console.log(res, "resF");
+    });
   }, []);
 
   // 监听属性映射
@@ -474,6 +478,7 @@ export default function AttrMap() {
               onClick={() => {
                 const data = mappingRef?.current?.getTargetData();
                 console.log(data.mappingData, "data");
+                API.postMapptingAttrs({ attrMappingList: data.mappingData });
               }}
             >
               保存

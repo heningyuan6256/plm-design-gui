@@ -6,16 +6,47 @@
 import { OnChainForm, OnChainFormItem, OnChainTable } from "onchain-ui";
 import PlmIcon from "../components/PlmIcon";
 import PlmToolBar from "../components/PlmToolBar";
-import Foot from "../layout/foot";
-import Head from "../layout/head";
 import materialSvg from "../assets/image/material.svg";
 import cubeSvg from "../assets/image/cube.svg";
 import fileCubeSvg from "../assets/image/fileCube.svg";
 import fileSvg from "../assets/image/file.svg";
 import PageLayout from "../layout/pageLayout";
+import { useMqttRegister } from "../hooks/useMqttRegister";
+import { CommandConfig } from "../constant/config";
+import { useEffect, useState } from "react";
+import { mqttClient } from "../utils/MqttService";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
+  const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
+  const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
+  useEffect(() => {
+    mqttClient.publish({
+      type: CommandConfig.getCurrentBOM,
+    });
+  }, []);
+
+  // 监听属性映射
+  useMqttRegister(CommandConfig.getCurrentBOM, (res) => {
+    const flattenData: Record<string, any>[] = [];
+    const loop = (data: any) => {
+      for (let i = 0; i < data.length; i++) {
+        data[i].property.forEach((item: any) => {
+          data[i][item.name] = data[i][item.defaultVal];
+        });
+        flattenData.push(data[i]);
+        if (data[i] && data[i].children && data[i].children.length) {
+          loop(data[i].children);
+          delete data[i].children
+        }
+      }
+    };
+    setCenterData(flattenData);
+    loop([res.output_data]);
+
+    setLeftData([res.output_data]);
+  });
+
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="w-full bg-base flex-1 flex flex-col px-3 py-3 overflow-hidden">
@@ -40,26 +71,10 @@ const index = () => {
               </div>
               <div className="flex-1 bg-white border border-outBorder">
                 <OnChainTable
-                  rowKey={"id"}
+                  rowKey={"node_name"}
                   className="tree-table"
                   bordered={false}
-                  dataSource={[
-                    {
-                      name: "P100001",
-                      id: "123",
-                      hasChildren: true,
-                      children: [
-                        {
-                          name: "P100002",
-                          id: "123-1",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-2",
-                        },
-                      ],
-                    },
-                  ]}
+                  dataSource={leftData}
                   expandable={{
                     expandIconColumnIndex: 0,
                   }}
@@ -68,7 +83,7 @@ const index = () => {
                   columns={[
                     {
                       title: "名称",
-                      dataIndex: "name",
+                      dataIndex: "node_name",
                       search: {
                         type: "Input",
                       },
@@ -189,15 +204,7 @@ const index = () => {
             <div className="mt-2 flex-1">
               <OnChainTable
                 rowKey={"id"}
-                dataSource={[
-                  { name: "P10001", id: "123" },
-                  { vv: "", id: "2" },
-                  { vv: "", id: "3" },
-                  { vv: "", id: "4" },
-                  { vv: "", id: "5" },
-                  { vv: "", id: "6" },
-                  { vv: "", id: "7" },
-                ]}
+                dataSource={centerData}
                 extraHeight={30}
                 rowSelection={{
                   columnWidth: 19,

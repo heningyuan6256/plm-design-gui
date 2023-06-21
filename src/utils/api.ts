@@ -67,12 +67,32 @@ const API = {
       tenantId: "719",
     });
   },
-  
+
   /**
    * 获取搜索列头
-  */
+   */
   getQueryColumns: (data: any) => {
     return NewRequest.get("/pdm/condition/getField", {
+      ...data,
+      tenantId: "719",
+    });
+  },
+
+  /**
+   * 获取映射表
+   */
+
+  getMapptingAttrs: () => {
+    return NewRequest.get("/pdm/cad/mapping/attrs", {
+      tenantId: "719",
+    });
+  },
+
+  /**
+   * 塞入映射表
+   */
+  postMapptingAttrs: (data: any) => {
+    return NewRequest.post("/pdm/cad/mapping/attrs", {
       ...data,
       tenantId: "719",
     });

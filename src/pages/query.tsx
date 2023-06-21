@@ -45,6 +45,21 @@ const query: FC = () => {
     },
   });
 
+  const GetConditionDsl = useRequest((data) => API.getConditionDsl(data), {
+    manual: true,
+    onSuccess(res: any) {
+      const records = res.result.pageData.records.map((item: any) => {
+        let row: any = {};
+        item.insAttrs.forEach((v: any) => {
+          row[v.apicode] = v.attrValue;
+        });
+        row["insId"] = item.id;
+        return row;
+      });
+      setTableData(records);
+    },
+  });
+
   useEffect(() => {
     run();
   }, []);
@@ -67,7 +82,7 @@ const query: FC = () => {
         sorter: true,
         ellipsis: true,
         render:
-          item.apicode === "Number" || item.apicode === 'CreateUser'
+          item.apicode === "Number" || item.apicode === "CreateUser"
             ? (text: string) => {
                 return <a>{text}</a>;
               }
@@ -121,7 +136,7 @@ const query: FC = () => {
                           onClick={() => {
                             setSelectedRows([record]);
                             if (!(record.children && record.children.length)) {
-                              API.getConditionDsl({
+                              GetConditionDsl.run({
                                 actionType: "select",
                                 dsl: record.content,
                                 pageNo: 1,
@@ -130,17 +145,6 @@ const query: FC = () => {
                                 }),
                                 pageSize: 100,
                                 itemCode: "10001002",
-                              }).then((res: any) => {
-                                const records = res.result.pageData.records.map(
-                                  (item: any) => {
-                                    let row: any = {};
-                                    item.insAttrs.forEach((v: any) => {
-                                      row[v.apicode] = v.attrValue;
-                                    });
-                                    return row;
-                                  }
-                                );
-                                setTableData(records);
                               });
                             }
                           }}
@@ -241,7 +245,7 @@ const query: FC = () => {
           <div className="flex-1 bg-white">
             <OnChainTable
               rowKey={"insId"}
-              loading={loading}
+              loading={GetConditionDsl.loading}
               //   bordered={true}
               dataSource={tableData}
               rowSelection={{
