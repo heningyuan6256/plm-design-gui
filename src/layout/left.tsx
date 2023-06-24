@@ -41,14 +41,18 @@ const left: FC = () => {
   ];
   return (
     <div
-      className="bg-base flex flex-col items-center w-10 pt-5"
-      style={{ minWidth: "40px" }}
+      className="bg-base flex flex-col items-center w-10"
+      style={{ minWidth: "40px", paddingTop: "10px" }}
     >
       {leftToolBar.map((item) => {
         return (
           <div
             key={item.path}
-            className="mb-5 cursor-pointer"
+            className={`cursor-pointer w-full flex justify-center ${location.pathname == item.path ? 'leftBorder': ''}`}
+            style={{
+              // borderLeft: location.pathname == item.path ? "3px solid #0563B2" : "",
+              padding: "10px 0px",
+            }}
             onClick={() => {
               setHoverButton(item.path);
               navigate(`${item.path}`);

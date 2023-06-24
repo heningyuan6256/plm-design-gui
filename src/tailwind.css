@@ -614,3 +614,17 @@ img {
 .ant-tabs-nav-wrap{
   margin-left: 8px !important;
 }
+
+.leftBorder{
+  position: relative;
+}
+.leftBorder::before{
+  content: ' ';
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px !important;
+  height: 100%;
+  width: 2px;
+  background-color: #0563B2;
+}
