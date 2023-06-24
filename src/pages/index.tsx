@@ -13,8 +13,13 @@ import fileSvg from "../assets/image/file.svg";
 import PageLayout from "../layout/pageLayout";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { CommandConfig } from "../constant/config";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
+import { Tabs, TabsProps } from "antd";
+import PlmTabToolBar from "../components/PlmTabToolBar";
+import cancelcheckin from "../assets/image/cancelcheckin.svg";
+import checkout from "../assets/image/checkin.svg";
+import checkin from "../assets/image/checkout.svg";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
@@ -24,6 +29,193 @@ const index = () => {
     mqttClient.publish({
       type: CommandConfig.getCurrentBOM,
     });
+  }, []);
+
+  //test
+  useEffect(() => {
+    let res = {
+      input_data: {},
+      output_data: {
+        node_name: "assem_top",
+        pic_path: "",
+        file_path: "D:\\SWFiles\\assem_top.SLDASM",
+        model_type: "assembly",
+        property: [
+          {
+            name: "Description",
+            type: "string",
+            defaultVal: "",
+          },
+          {
+            name: "Weight",
+            type: "string",
+            defaultVal: '"SW-质量@assem_top.SLDASM"',
+          },
+          {
+            name: "质量",
+            type: "string",
+            defaultVal: '"SW-质量@assem_top.SLDASM"',
+          },
+          {
+            name: "审定",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "设计",
+            type: "string",
+            defaultVal: "   ",
+          },
+          {
+            name: "零件号",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "版本",
+            type: "string",
+            defaultVal: "   ",
+          },
+          {
+            name: "图幅",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "备注",
+            type: "string",
+            defaultVal: "   ",
+          },
+          {
+            name: "替代",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "代号",
+            type: "string",
+            defaultVal: "“图样代号”",
+          },
+          {
+            name: "名称",
+            type: "string",
+            defaultVal: "“图样名称”",
+          },
+          {
+            name: "共X张",
+            type: "string",
+            defaultVal: "1",
+          },
+          {
+            name: "第X张",
+            type: "string",
+            defaultVal: "1",
+          },
+          {
+            name: "阶段标记S",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "阶段标记A",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "阶段标记B",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "标准审查",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "工艺审查",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "批准",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "日期",
+            type: "string",
+            defaultVal: "2007,12,3",
+          },
+          {
+            name: "校核",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "主管设计",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "审核",
+            type: "string",
+            defaultVal: " ",
+          },
+          {
+            name: "校对",
+            type: "string",
+            defaultVal: " ",
+          },
+        ],
+        children: [
+          {
+            node_name: "block<1>",
+            pic_path: "",
+            file_path: "D:\\SWFiles\\block.SLDPRT",
+            model_type: "part",
+            property: [
+              {
+                name: "零件号",
+                type: "string",
+                defaultVal: "block",
+              },
+              {
+                name: "VendorNo",
+                type: "string",
+                defaultVal: "1.0",
+              },
+              {
+                name: "attr_name_test",
+                type: "int",
+                defaultVal: "3.140000",
+              },
+            ],
+          },
+        ],
+      },
+      from: "111111",
+      to: "111111",
+      type: "sw.2019.getCurrentBOM",
+      extra: "读取BOM结构",
+      topic: "sw",
+    };
+    const flattenData: Record<string, any>[] = [];
+    const loop = (data: any) => {
+      for (let i = 0; i < data.length; i++) {
+        const flattenedItem = { ...data[i] }; // Create a copy of the current item
+        delete flattenedItem.children; // Remove the "children" property from the copy
+        flattenData.push(flattenedItem);
+
+        if (data[i].children && data[i].children.length) {
+          loop(data[i].children);
+        }
+      }
+    };
+
+    loop([res.output_data]);
+
+    setCenterData(flattenData);
+    setLeftData([res.output_data]);
   }, []);
 
   // 监听属性映射
@@ -37,7 +229,7 @@ const index = () => {
         flattenData.push(data[i]);
         if (data[i] && data[i].children && data[i].children.length) {
           loop(data[i].children);
-          delete data[i].children
+          delete data[i].children;
         }
       }
     };
@@ -46,6 +238,192 @@ const index = () => {
 
     setLeftData([res.output_data]);
   });
+  const items: TabsProps["items"] = [
+    {
+      key: "file",
+      label: `文件清单`,
+      children: (
+        <Fragment>
+          <div className="ml-1">
+            <PlmTabToolBar
+              list={[
+                { name: "签出", icon: checkout },
+                { name: "取消签出", icon: cancelcheckin },
+                { name: "签入", icon: checkin },
+              ]}
+            ></PlmTabToolBar>
+          </div>
+          <OnChainTable
+            key={"file"}
+            rowKey={"node_name"}
+            dataSource={centerData}
+            extraHeight={30}
+            rowSelection={{
+              columnWidth: 19,
+            }}
+            className="table-checkbox"
+            columns={[
+              {
+                title: "名称",
+                dataIndex: "node_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                // render: (text: string) => {
+                //   return <a>{text}</a>;
+                // },
+              },
+              {
+                title: "编号",
+                dataIndex: "number",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "描述",
+                dataIndex: "insDesc",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "类型",
+                dataIndex: "objectName",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "生命周期",
+                dataIndex: "lifeCycle",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "版本",
+                dataIndex: "insVersion",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "生效时间",
+                dataIndex: "publishTime",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+            ]}
+            selectedCell={{
+              dataIndex: "",
+              record: {},
+            }}
+          ></OnChainTable>
+        </Fragment>
+      ),
+    },
+    {
+      key: "material",
+      label: `物料清单`,
+      children: (
+        <Fragment>
+          <div className="ml-1">
+            <PlmTabToolBar
+              list={[
+                { name: "分配编码", icon: "" },
+                { name: "保存", icon: "" },
+              ]}
+            ></PlmTabToolBar>
+          </div>
+
+          <OnChainTable
+            key={"material"}
+            rowKey={"node_name"}
+            dataSource={centerData}
+            extraHeight={30}
+            rowSelection={{
+              columnWidth: 19,
+            }}
+            className="table-checkbox"
+            columns={[
+              {
+                title: "物料名称",
+                dataIndex: "node_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                // render: (text: string) => {
+                //   return <a>{text}</a>;
+                // },
+              },
+              {
+                title: "编号",
+                dataIndex: "number",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "描述",
+                dataIndex: "insDesc",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "类型",
+                dataIndex: "objectName",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "生命周期",
+                dataIndex: "lifeCycle",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "版本",
+                dataIndex: "insVersion",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+              {
+                title: "生效时间",
+                dataIndex: "publishTime",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+              },
+            ]}
+            selectedCell={{
+              dataIndex: "",
+              record: {},
+            }}
+          ></OnChainTable>
+        </Fragment>
+      ),
+    },
+  ];
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -90,7 +468,13 @@ const index = () => {
                       sorter: true,
                       render: (text, record: Record<string, any>) => {
                         return (
-                          <div className="gap-1 inline-flex items-center ml-1">
+                          <div
+                            className={`gap-1 inline-flex items-center ${
+                              !(record.children && record.children.length)
+                                ? "ml-3"
+                                : ""
+                            }`}
+                          >
                             <img
                               width={14}
                               src={
@@ -117,11 +501,12 @@ const index = () => {
 
           {/* 中间详情 */}
           <div className="flex-1 h-full flex flex-col overflow-hidden">
-            <div className="flex w-full gap-1.5" style={{ height: "307px" }}>
+            <div className="flex w-full gap-1.5" style={{ height: "240px" }}>
               {/* 缩略图 */}
               <div
                 style={{
-                  background: "linear-gradient(180deg,#fafbff 8%, #e9f2fe)",
+                  background:
+                    "linear-gradient(180deg,#ffffff 0%, #e8e8e8 100%)",
                 }}
                 className="flex-1 h-full border border-outBorder"
               >
@@ -129,13 +514,13 @@ const index = () => {
               </div>
               {/* 基本信息 */}
               <div
-                className="border border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col"
+                className="border bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col"
                 style={{ width: "478px" }}
               >
-                <div className="flex justify-between h-7 items-start">
+                {/* <div className="flex justify-between h-7 items-start">
                   <div className="text-xs">基本信息</div>
                   <PlmIcon name="edit" className="text-xs"></PlmIcon>
-                </div>
+                </div> */}
                 <div className="flex-1 w-full basic-attr">
                   <OnChainForm
                     layout="horizontal"
@@ -202,80 +587,7 @@ const index = () => {
               </div>
             </div>
             <div className="mt-2 flex-1">
-              <OnChainTable
-                rowKey={"id"}
-                dataSource={centerData}
-                extraHeight={30}
-                rowSelection={{
-                  columnWidth: 19,
-                }}
-                className="table-checkbox"
-                columns={[
-                  {
-                    title: "名称",
-                    dataIndex: "name",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                    render: (text: string) => {
-                      return <a>{text}</a>;
-                    },
-                  },
-                  {
-                    title: "编号",
-                    dataIndex: "number",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                  },
-                  {
-                    title: "描述",
-                    dataIndex: "insDesc",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                  },
-                  {
-                    title: "类型",
-                    dataIndex: "objectName",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                  },
-                  {
-                    title: "生命周期",
-                    dataIndex: "lifeCycle",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                  },
-                  {
-                    title: "版本",
-                    dataIndex: "insVersion",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                  },
-                  {
-                    title: "生效时间",
-                    dataIndex: "publishTime",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                  },
-                ]}
-                selectedCell={{
-                  dataIndex: "",
-                  record: {},
-                }}
-              ></OnChainTable>
+              <Tabs defaultActiveKey="1" items={items} destroyInactiveTabPane />
             </div>
           </div>
 
@@ -284,8 +596,8 @@ const index = () => {
             style={{ width: "254px" }}
             className="h-full border border-outBorder"
           >
-            <div className="pb-1.5 px-1.5 flex flex-col h-full">
-              <div className="h-10 flex justify-between items-center">
+            <div className="bg-white h-full">
+              {/* <div className="h-10 flex justify-between items-center">
                 <div className="text-xs">产品名称</div>
                 <div>
                   <PlmIcon
@@ -293,162 +605,57 @@ const index = () => {
                     className="text-xs scale-90"
                   ></PlmIcon>
                 </div>
-              </div>
-              <div className="flex-1 bg-white border border-outBorder">
-                <OnChainTable
-                  rowKey={"id"}
-                  className="tree-table"
-                  bordered={false}
-                  dataSource={[
-                    {
-                      name: "P100001",
-                      id: "123",
-                      hasChildren: true,
-                      children: [
-                        {
-                          name: "P100002",
-                          id: "123-1",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-2",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-3",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-4",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-5",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-6",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-7",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-8",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-9",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-10",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-11",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-12",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-13",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-14",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-15",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-16",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-17",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-18",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-19",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-20",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-21",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-222",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-2122",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-2123123",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-1123123",
-                        },
-                        {
-                          name: "P100002",
-                          id: "123-1231231232",
-                        },
-                      ],
+              </div> */}
+              {/* <div className="flex-1 bg-white h-full"> */}
+              <OnChainTable
+                rowKey={"id"}
+                style={{ height: "100%" }}
+                className="tree-table"
+                bordered={false}
+                dataSource={leftData}
+                expandable={{
+                  expandIconColumnIndex: 0,
+                }}
+                hideFooter
+                extraHeight={0}
+                columns={[
+                  {
+                    title: "名称",
+                    dataIndex: "node_name",
+                    search: {
+                      type: "Input",
                     },
-                  ]}
-                  expandable={{
-                    expandIconColumnIndex: 0,
-                  }}
-                  hideFooter
-                  extraHeight={0}
-                  columns={[
-                    {
-                      title: "名称",
-                      dataIndex: "name",
-                      search: {
-                        type: "Input",
-                      },
-                      sorter: true,
-                      render: (text, record: Record<string, any>) => {
-                        return (
-                          <div className="gap-1 inline-flex items-center ml-1">
-                            <img
-                              width={14}
-                              src={
-                                (record.children || []).length
-                                  ? cubeSvg
-                                  : materialSvg
-                              }
-                              alt=""
-                            />
-                            <div>{text}</div>
-                          </div>
-                        );
-                      },
+                    sorter: true,
+                    render: (text, record: Record<string, any>) => {
+                      return (
+                        <div
+                          className={`gap-1 inline-flex items-center ${
+                            !(record.children && record.children.length)
+                              ? "ml-3"
+                              : ""
+                          }`}
+                        >
+                          <img
+                            width={14}
+                            src={
+                              (record.children || []).length
+                                ? cubeSvg
+                                : materialSvg
+                            }
+                            alt=""
+                          />
+                          <div>{text}</div>
+                        </div>
+                      );
                     },
-                  ]}
-                  selectedCell={{
-                    dataIndex: "",
-                    record: {},
-                  }}
-                ></OnChainTable>
-              </div>
+                  },
+                ]}
+                selectedCell={{
+                  dataIndex: "",
+                  record: {},
+                }}
+              ></OnChainTable>
+              {/* </div> */}
             </div>
           </div>
         </div>

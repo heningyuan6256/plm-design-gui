@@ -11,11 +11,11 @@ module.exports = {
       colors: {
         primary: "#0563B2",
         secondary: "#dfe9f5",
-        base: "#FAFBFF",
-        littleGrey: "#A7B3C5",
+        base: "#f1f1f1",
+        littleGrey: "#7b7a7a",
         hoverBg: "#eff2f7",
         baseHover: "#eff2f7",
-        outBorder: "#E9EBED",
+        outBorder: "#CDCDCD",
         hoverHeadButton: "rgba(57,141,202,0.50)",
         tabTitleBg: "#ECEDF0",
         hoverBlue: '#ddeffe'

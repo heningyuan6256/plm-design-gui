@@ -4,7 +4,7 @@
  * Description: 标注页头
  */
 
-import OnChainLogo from "../assets/image/OnChainLogo.svg";
+import OnChainLogo from "../assets/image/singlelogo.svg";
 import { invoke } from "@tauri-apps/api";
 
 import { WebviewWindow, appWindow, getCurrent } from "@tauri-apps/api/window";
@@ -59,11 +59,16 @@ const Head: FC = () => {
       onDoubleClick={async () => {
         handleWinMax();
       }}
-      className="h-10 bg-primary flex items-center px-4 justify-between"
+      className="h-10 bg-primary flex items-center pr-4 justify-between"
     >
       <div className="flex gap-1 items-center">
-        <img width={88} src={OnChainLogo} alt="" />{" "}
-        <div className="text-white text-xs self-end flex">DesignFusion</div>
+        <img
+          width={16}
+          style={{ marginLeft: "12px" }}
+          src={OnChainLogo}
+          alt=""
+        />
+        {/* <div className="text-white text-xs self-end flex">DesignFusion</div> */}
       </div>
       <div></div>
       <div></div>
@@ -74,7 +79,7 @@ const Head: FC = () => {
             // const data = await invoke("call_dynamic");
 
             // console.log(data, 'data');
-            appWindow.minimize()
+            appWindow.minimize();
           }}
           className="text-xs text-white cursor-pointer opacity-80 mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
