@@ -97,6 +97,27 @@ const API = {
       tenantId: "719",
     });
   },
+
+  /**
+   * 获取实例属性
+   */
+  getInstanceAttrs: ({
+    itemCode,
+    tabCode,
+  }: {
+    itemCode: string;
+    tabCode: string;
+  }) => {
+    return NewRequest.get("/pdm/attributes", {
+      tenantId: "719",
+      pageNo: '1',
+      pageSize: '1000',
+      itemCode: itemCode,
+      tabCode: tabCode,
+      column: "sort",
+      order: "asc",
+    });
+  },
 };
 
 export default API;

@@ -13,18 +13,28 @@ import fileSvg from "../assets/image/file.svg";
 import PageLayout from "../layout/pageLayout";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { CommandConfig } from "../constant/config";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
 import { Tabs, TabsProps } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import checkout from "../assets/image/checkin.svg";
 import checkin from "../assets/image/checkout.svg";
+import { useAsyncEffect } from "ahooks";
+import API from "../utils/api";
+import { Utils } from "../utils";
+import { BasicsItemCode } from "../constant/itemCode";
+import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
+  const dynamicFormRef = useRef<PlmFormForwardRefProps>();
+  const [Attrs, setAttrs] = useState<Record<string, any>[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<any>([]);
+  const [selectNode, setSelectNode] = useState<Record<string, any>>();
+
   useEffect(() => {
     mqttClient.publish({
       type: CommandConfig.getCurrentBOM,
@@ -32,7 +42,38 @@ const index = () => {
   }, []);
 
   //test
-  useEffect(() => {
+  useAsyncEffect(async () => {
+    const {
+      result: { records: PublicAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.file,
+      tabCode: "10002001",
+    });
+
+    const {
+      result: { records: PrivateAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.file,
+      tabCode: "10002002",
+    });
+
+    // 获取所有属性映射
+    const { result: attrsArray }: any = await API.getMapptingAttrs();
+    const attrsMap = Utils.transformArrayToMap(
+      attrsArray,
+      "sourceAttr",
+      "targetAttr"
+    );
+    const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
+
+    const sourceAttrOnchain = attrsArray.map((item: any) => item.targetAttr);
+
+    const totalAttrs = [...PublicAttrs, ...PrivateAttrs].filter((item) => {
+      return sourceAttrOnchain.includes(item.apicode);
+    });
+
+    setAttrs(totalAttrs);
+
     let res = {
       input_data: {},
       output_data: {
@@ -202,8 +243,15 @@ const index = () => {
     const flattenData: Record<string, any>[] = [];
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
+        data[i].property.forEach((item: any) => {
+          if (sourceAttrPlugin.includes(item.name)) {
+            // data[i][item.name] = item.defaultVal;
+            data[i][attrsMap[item.name]] = item.defaultVal;
+          }
+        });
         const flattenedItem = { ...data[i] }; // Create a copy of the current item
         delete flattenedItem.children; // Remove the "children" property from the copy
+        delete flattenedItem.property;
         flattenData.push(flattenedItem);
 
         if (data[i].children && data[i].children.length) {
@@ -213,10 +261,16 @@ const index = () => {
     };
 
     loop([res.output_data]);
-
+    setSelectNode(res.output_data);
     setCenterData(flattenData);
     setLeftData([res.output_data]);
   }, []);
+
+  useEffect(() => {
+    if (selectNode) {
+      dynamicFormRef.current?.setFieldsValue(selectNode);
+    }
+  }, [selectNode]);
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, (res) => {
@@ -454,7 +508,15 @@ const index = () => {
                   bordered={false}
                   dataSource={leftData}
                   expandable={{
-                    expandIconColumnIndex: 0,
+                    expandIconColumnIndex: 2,
+                    expandedRowKeys: expandedKeys,
+                    onExpandedRowsChange: (expandedKeys) => {
+                      setExpandedKeys(expandedKeys);
+                    },
+                  }}
+                  rowSelection={{
+                    columnWidth: 0,
+                    selectedRowKeys: [selectNode?.node_name],
                   }}
                   hideFooter
                   extraHeight={0}
@@ -469,11 +531,14 @@ const index = () => {
                       render: (text, record: Record<string, any>) => {
                         return (
                           <div
-                            className={`gap-1 inline-flex items-center ${
+                            className={`gap-1 inline-flex items-center cursor-pointer ${
                               !(record.children && record.children.length)
                                 ? "ml-3"
                                 : ""
                             }`}
+                            onClick={() => {
+                              setSelectNode(record);
+                            }}
                           >
                             <img
                               width={14}
@@ -523,6 +588,7 @@ const index = () => {
                 </div> */}
                 <div className="flex-1 w-full basic-attr">
                   <OnChainForm
+                    ref={dynamicFormRef}
                     layout="horizontal"
                     readOnly
                     labelCol={{
@@ -532,55 +598,18 @@ const index = () => {
                     }}
                   >
                     <div className="grid grid-cols-2 gap-x-8">
-                      <OnChainFormItem
-                        colon
-                        label="编号"
-                        name="number"
-                        content={{ type: "Input" }}
-                      ></OnChainFormItem>
-                      <OnChainFormItem
-                        label="描述"
-                        colon
-                        name="description"
-                        content={{ type: "Input" }}
-                      ></OnChainFormItem>
-                      <OnChainFormItem
-                        colon
-                        label="设计文件123123123"
-                        name="number"
-                        content={{ type: "Input" }}
-                      ></OnChainFormItem>
-                      <OnChainFormItem
-                        colon
-                        label="编号"
-                        name="number"
-                        content={{ type: "Input" }}
-                      ></OnChainFormItem>
-                      <OnChainFormItem
-                        colon
-                        label="编号"
-                        name="number"
-                        content={{ type: "Number" }}
-                      ></OnChainFormItem>
-                      <OnChainFormItem
-                        colon
-                        label="编号"
-                        name="number"
-                        content={{
-                          type: "Select",
-                          props: {
-                            options: [{ label: "测试", value: "123" }],
-                          },
-                        }}
-                      ></OnChainFormItem>
-                      <OnChainFormItem
-                        colon
-                        label="日期"
-                        name="number1"
-                        content={{
-                          type: "Date",
-                        }}
-                      ></OnChainFormItem>
+                      {Attrs.map((item) => {
+                        return (
+                          <OnChainFormItem
+                            key={item.apicode}
+                            colon
+                            readOnly
+                            label={item.name}
+                            name={item.apicode}
+                            content={{ type: "Input" }}
+                          ></OnChainFormItem>
+                        );
+                      })}
                     </div>
                   </OnChainForm>
                 </div>
@@ -608,13 +637,21 @@ const index = () => {
               </div> */}
               {/* <div className="flex-1 bg-white h-full"> */}
               <OnChainTable
-                rowKey={"id"}
+                rowKey={"node_name"}
                 style={{ height: "100%" }}
                 className="tree-table"
                 bordered={false}
                 dataSource={leftData}
                 expandable={{
-                  expandIconColumnIndex: 0,
+                  expandIconColumnIndex: 2,
+                  expandedRowKeys: expandedKeys,
+                  onExpandedRowsChange: (expandedKeys) => {
+                    setExpandedKeys(expandedKeys);
+                  },
+                }}
+                rowSelection={{
+                  columnWidth: 0,
+                  selectedRowKeys: [selectNode?.node_name],
                 }}
                 hideFooter
                 extraHeight={0}

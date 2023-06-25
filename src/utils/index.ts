@@ -53,4 +53,20 @@ export class Utils {
   public static instruction(instruction: string) {
     return `${BasicConfig.pubgin_topic}.${BasicConfig.plugin_version}.${instruction}`;
   }
+
+  // 将数组转成map
+  public static transformArrayToMap = (
+    list: Record<string, any>[],
+    key: string,
+    value?: string
+  ) => {
+    return list?.reduce((pre: any, cur: any) => {
+      if (value) {
+        pre[cur[key]] = cur[value];
+      } else {
+        pre[cur[key]] = cur;
+      }
+      return pre;
+    }, {});
+  };
 }
