@@ -31,6 +31,12 @@ const PlmToolBar: FC = () => {
 
   const handleClick = async (name: string) => {
     if (name === "logout") {
+      mqttClient.commonPublish({
+        type: PathConfig.exit,
+        output_data: {
+          result: "1",
+        },
+      });
       // 退出登录
       const homeDirPath = await homeDir();
       await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);

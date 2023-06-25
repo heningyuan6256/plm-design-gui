@@ -82,6 +82,29 @@ class MqttService {
   }
 
   /**
+   * @description: 发送页面消息
+   * @param  {*}
+   * @return {*}
+   */
+  commonPublish(data: {
+    type: string;
+    input_data?: Record<string, any>;
+    output_data?: Record<string, any>;
+    extra?: string;
+  }) {
+    const structData = {
+      input_data: {},
+      output_data: {},
+      topic: BasicConfig.pubgin_topic,
+      to: "",
+      from: this.clientId,
+      ...data,
+      type: data.type,
+    };
+    this.mqtt.publish(BasicConfig.pubgin_topic, JSON.stringify(structData));
+  }
+
+  /**
    * @description: 注册回调函数
    * @param  {*}
    * @return {*}

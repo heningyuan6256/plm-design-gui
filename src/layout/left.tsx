@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { CommandConfig } from "../constant/config";
@@ -9,15 +9,23 @@ import menuSearch from "../assets/image/menuSearch.svg";
 import menuSearchHover from "../assets/image/menuSearch (1).svg";
 import menuUpload from "../assets/image/menuUpload.svg";
 import menuUploadHover from "../assets/image/menuUpload (1).svg";
+import { mqttClient } from "../utils/MqttService";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
   const navigate = useNavigate();
   const location = useLocation();
   // // 监听路由
-  useMqttRegister(CommandConfig.onchain_path, async (res) => {
-    navigate(`/${res.input_data}`);
-  });
+
+  useEffect(() => {
+    mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
+      navigate(`/${res.input_data.split("_")[1]}`);
+    });
+    return () => {
+      mqttClient.unRegisterCallBack(CommandConfig.onchain_path);
+    };
+  }, []);
+
   // 左侧按钮
   const leftToolBar = [
     {
@@ -48,7 +56,9 @@ const left: FC = () => {
         return (
           <div
             key={item.path}
-            className={`cursor-pointer w-full flex justify-center ${location.pathname == item.path ? 'leftBorder': ''}`}
+            className={`cursor-pointer w-full flex justify-center ${
+              location.pathname == item.path ? "leftBorder" : ""
+            }`}
             style={{
               // borderLeft: location.pathname == item.path ? "3px solid #0563B2" : "",
               padding: "10px 0px",

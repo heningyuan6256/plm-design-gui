@@ -18,9 +18,10 @@ import { useDispatch } from "react-redux";
 import { writeNetWork } from "../models/network";
 import Request from "../utils/request";
 import { fetchUserByToken } from "../models/user";
-import { BasicConfig } from "../constant/config";
+import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
+import { mqttClient } from "../utils/MqttService";
 
 export default function login() {
   const dispatch = useDispatch();
@@ -36,6 +37,12 @@ export default function login() {
     };
     API.login(user)
       .then(async (res: any) => {
+        mqttClient.commonPublish({
+          type: PathConfig.login,
+          output_data: {
+            result: "1",
+          },
+        });
         dispatch(writeNetWork(address));
         // 写入address
         const NewRequest = new Request({});
