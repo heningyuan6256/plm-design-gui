@@ -10,7 +10,7 @@ import PlmMappingData from "../components/PlmMappingData";
 import { CommandConfig } from "../constant/config";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "antd";
+import { Button, Tabs, TabsProps } from "antd";
 import API from "../utils/api";
 
 export default function AttrMap() {
@@ -445,8 +445,21 @@ export default function AttrMap() {
     await appWindow.close();
   };
 
+  const items: TabsProps["items"] = [
+    {
+      key: "file",
+      label: `文件清单`,
+    },
+    {
+      key: "material",
+      label: `物料清单`,
+    },
+  ];
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden">
+    <div
+      className="h-full w-full flex flex-col overflow-hidden bg-base"
+      style={{ padding: "12px" }}
+    >
       {/* <div
         data-tauri-drag-region
         className="bg-primary flex items-center px-4 justify-between h-8"
@@ -464,26 +477,16 @@ export default function AttrMap() {
           ></PlmIcon>
         </div>
       </div> */}
+      <Tabs defaultActiveKey="1" items={items} destroyInactiveTabPane />
       <div className="flex overflow-hidden h-full">
         {/* <div style={{ minWidth: "164px" }} className="text-xs px-3 py-3">
           <div>CAD至PLM</div>
           <div>PLM至CAD</div>
         </div> */}
         <div
-          style={{ height: "calc(100% - 50px)", width: "100%" }}
-          className="px-3 py-3"
+          style={{ height: "100%", width: "100%", paddingTop: "8px" }}
+          className="pb-4"
         >
-          <div>
-            <Button
-              onClick={() => {
-                const data = mappingRef?.current?.getTargetData();
-                console.log(data.mappingData, "data");
-                API.postMapptingAttrs({ attrMappingList: data.mappingData });
-              }}
-            >
-              保存
-            </Button>
-          </div>
           <PlmMappingData
             ref={mappingRef}
             isShowHeader={false}
@@ -492,6 +495,17 @@ export default function AttrMap() {
             rightTableList={data.rightTableList}
           ></PlmMappingData>
         </div>
+      </div>
+      <div>
+        <Button
+          onClick={() => {
+            const data = mappingRef?.current?.getTargetData();
+            console.log(data.mappingData, "data");
+            API.postMapptingAttrs({ attrMappingList: data.mappingData });
+          }}
+        >
+          保存
+        </Button>
       </div>
     </div>
   );

@@ -16,24 +16,27 @@ interface LayoutProps {
 }
 const PageLayout: React.FC<LayoutProps> = (data) => {
   const { value: user } = useSelector((state: any) => state.user);
+  const { value: loading } = useSelector((state: any) => state.loading);
 
   if (!user.id) {
     return <PlmLoading loading={true}></PlmLoading>;
   }
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden">
-      {/* 头部 */}
-      <Head></Head>
-      <div className="h-full w-full flex overflow-hidden">
-        <Left></Left>
-        <div className="h-full w-full">
-          <Outlet></Outlet>
+    <PlmLoading loading={loading} warrperClassName="flex">
+      <div className="h-full w-full flex flex-col overflow-hidden">
+        {/* 头部 */}
+        <Head></Head>
+        <div className="h-full w-full flex overflow-hidden">
+          <Left></Left>
+          <div className="h-full w-full">
+            <Outlet></Outlet>
+          </div>
         </div>
+        {/* 尾部 */}
+        <Foot></Foot>
       </div>
-      {/* 尾部 */}
-      <Foot></Foot>
-    </div>
+    </PlmLoading>
   );
 };
 

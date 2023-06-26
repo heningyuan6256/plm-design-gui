@@ -110,13 +110,20 @@ const API = {
   }) => {
     return NewRequest.get("/pdm/attributes", {
       tenantId: "719",
-      pageNo: '1',
-      pageSize: '1000',
+      pageNo: "1",
+      pageSize: "1000",
       itemCode: itemCode,
       tabCode: tabCode,
       column: "sort",
       order: "asc",
     });
+  },
+
+  /**
+   * 分配编码
+   */
+  allcateCode: (data: { numberOfItemCode: string; fileTypeCountMap: Record<string, any> }) => {
+    return NewRequest.post("/pdm/cad/pre/numbers", data);
   },
 };
 

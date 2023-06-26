@@ -25,41 +25,19 @@ import { increment } from "../../models/count";
 import { mqttClient } from "../../utils/MqttService";
 import { Utils } from "../../utils";
 
-const PlmToolBar: FC = () => {
-  const count = useSelector((state: any) => state.counter.value);
-  const dispatch = useDispatch();
+export interface PlmToolBarProps {
+  onClick: (name: string) => void;
+}
 
-  const handleClick = async (name: string) => {
-    if (name === "logout") {
-      mqttClient.commonPublish({
-        type: PathConfig.exit,
-        output_data: {
-          result: "1",
-        },
-      });
-      // 退出登录
-      const homeDirPath = await homeDir();
-      await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
-      await removeFile(
-        `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
-      );
-      const mainWindow = WebviewWindow.getByLabel("Home");
-      mainWindow?.close();
-      await invoke("exist", {});
-    } else if (name === "info") {
-      await invoke(PathConfig.openInfo, {});
-    } else if (name === "checkout") {
-      mqttClient.publish({
-        type: CommandConfig.getProductTypeAtt,
-      });
-      // dispatch(increment());
-    }
-  };
+const PlmToolBar: FC<PlmToolBarProps> = (props) => {
+
   // 按钮
   const renderButton = (image: string, txt: string, name: string) => {
     return (
       <div
-        onClick={() => handleClick(name)}
+        onClick={() => {
+          props.onClick(name);
+        }}
         className="flex flex-col gap-1 items-center cursor-pointer hover:shadow-1xl hover:bg-hoverBg"
       >
         <img width={16} src={image} alt="" />

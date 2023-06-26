@@ -10,9 +10,8 @@ import materialSvg from "../assets/image/material.svg";
 import cubeSvg from "../assets/image/cube.svg";
 import fileCubeSvg from "../assets/image/fileCube.svg";
 import fileSvg from "../assets/image/file.svg";
-import PageLayout from "../layout/pageLayout";
 import { useMqttRegister } from "../hooks/useMqttRegister";
-import { CommandConfig, PathConfig } from "../constant/config";
+import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
 import { Tabs, TabsProps } from "antd";
@@ -25,17 +24,29 @@ import API from "../utils/api";
 import { Utils } from "../utils";
 import { BasicsItemCode } from "../constant/itemCode";
 import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
+import { useDispatch } from "react-redux";
+import { setLoading } from "../models/loading";
+import { homeDir } from "@tauri-apps/api/path";
+import { removeFile } from "@tauri-apps/api/fs";
+import { WebviewWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api";
+import plusImg from "../assets/image/plus.svg";
+import { cloneDeep, groupBy } from "lodash";
 // import { dealMaterialData } from 'plm-wasm'
 
 const index = () => {
+  const [rightData, setRightData] = useState<Record<string, any>[]>([]);
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
   const dynamicFormRef = useRef<PlmFormForwardRefProps>();
   const [Attrs, setAttrs] = useState<Record<string, any>[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<any>([]);
   const [selectNode, setSelectNode] = useState<Record<string, any>>();
+  const [cacheItemNumber, setCacheItemNumber] = useState({});
+  const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(setLoading(true));
     mqttClient.publish({
       type: CommandConfig.getCurrentBOM,
     });
@@ -47,21 +58,28 @@ const index = () => {
     }
   }, [selectNode]);
 
+  useEffect(() => {
+    if (leftData.length) {
+      setRightData(leftData);
+    }
+  }, [leftData]);
+
   const dealCurrentBom = async (res?: any) => {
+    dispatch(setLoading(true));
+    // 查找公有属性
     const {
       result: { records: PublicAttrs },
     }: any = await API.getInstanceAttrs({
       itemCode: BasicsItemCode.file,
       tabCode: "10002001",
     });
-
+    // 查找私有属性
     const {
       result: { records: PrivateAttrs },
     }: any = await API.getInstanceAttrs({
       itemCode: BasicsItemCode.file,
       tabCode: "10002002",
     });
-
     // 获取所有属性映射
     const { result: attrsArray }: any = await API.getMapptingAttrs();
     const attrsMap = Utils.transformArrayToMap(
@@ -70,40 +88,54 @@ const index = () => {
       "targetAttr"
     );
     const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
-
     const sourceAttrOnchain = attrsArray.map((item: any) => item.targetAttr);
-
     const totalAttrs = [...PublicAttrs, ...PrivateAttrs].filter((item) => {
       return sourceAttrOnchain.includes(item.apicode);
     });
-
     setAttrs(totalAttrs);
-
-    const flattenData: Record<string, any>[] = [];
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
+        data[i].itemAttrs = {};
         data[i].property.forEach((item: any) => {
           if (sourceAttrPlugin.includes(item.name)) {
-            // data[i][item.name] = item.defaultVal;
             data[i][attrsMap[item.name]] = item.defaultVal;
           }
         });
-        const flattenedItem = { ...data[i] }; // Create a copy of the current item
-        delete flattenedItem.children; // Remove the "children" property from the copy
-        delete flattenedItem.property;
-        flattenData.push(flattenedItem);
+        if (data[i].model_type === "assembly") {
+          data[i].model_format = "sldasm";
+        } else if (data[i].model_type === "part") {
+          data[i].model_format = "sldprt";
+        }
 
         if (data[i].children && data[i].children.length) {
           loop(data[i].children);
         }
       }
     };
-
     loop([res.output_data]);
     setSelectNode(res.output_data);
-    setCenterData(flattenData);
     setLeftData([res.output_data]);
+    dispatch(setLoading(false));
   };
+
+  useEffect(() => {
+    if (leftData.length) {
+      const flattenData: Record<string, any>[] = [];
+      const loop = (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          const flattenedItem = { ...data[i] }; // Create a copy of the current item
+          delete flattenedItem.children; // Remove the "children" property from the copy
+          delete flattenedItem.property;
+          flattenData.push(flattenedItem);
+          if (data[i].children && data[i].children.length) {
+            loop(data[i].children);
+          }
+        }
+      };
+      loop(leftData);
+      setCenterData(flattenData);
+    }
+  }, [leftData]);
 
   useAsyncEffect(async () => {
     await dealCurrentBom({
@@ -274,9 +306,27 @@ const index = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (cacheItemNumber && leftData.length) {
+      const cloneNumber: any = cloneDeep(cacheItemNumber);
+      const loop = (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          if (cloneNumber[data[i].model_format]) {
+            data[i].itemAttrs["Number"] = cloneNumber[data[i].model_format][0];
+            cloneNumber[data[i].model_format].splice(1);
+          }
+          if (data[i].children && data[i].children.length) {
+            loop(data[i].children);
+          }
+        }
+      };
+      loop(leftData);
+    }
+  }, [cacheItemNumber, leftData]);
+
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
-    await dealCurrentBom();
+    await dealCurrentBom(res);
   });
   const items: TabsProps["items"] = [
     {
@@ -301,10 +351,36 @@ const index = () => {
             rowSelection={{
               columnWidth: 19,
             }}
+            onSubmit={(row, column) => {
+              const loop = (data: any) => {
+                for (let i = 0; i < data.length; i++) {
+                  if (data[i].node_name == row.node_name) {
+                    data[i][column["dataIndex"]] = row[column["dataIndex"]];
+                  }
+                  if (data[i].children && data[i].children.length) {
+                    loop(data[i].children);
+                  }
+                }
+              };
+              loop(leftData);
+              setLeftData([...leftData]);
+            }}
+            hideFooter
             className="table-checkbox"
             columns={[
               {
-                title: "名称",
+                title: "校验",
+                dataIndex: "flag",
+                search: {
+                  type: "Input",
+                },
+                width: 50,
+                render: (text: string) => {
+                  return <img width={12} src={plusImg} alt="" />;
+                },
+              },
+              {
+                title: "文件名称",
                 dataIndex: "node_name",
                 search: {
                   type: "Input",
@@ -323,32 +399,20 @@ const index = () => {
                 sorter: true,
               },
               {
-                title: "描述",
-                dataIndex: "insDesc",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
                 title: "类型",
-                dataIndex: "objectName",
+                dataIndex: "model_format",
                 search: {
                   type: "Input",
                 },
                 sorter: true,
               },
               {
-                title: "生命周期",
-                dataIndex: "lifeCycle",
-                search: {
+                title: "版次",
+                dataIndex: "revision",
+                editable: true,
+                formitem: {
                   type: "Input",
                 },
-                sorter: true,
-              },
-              {
-                title: "版本",
-                dataIndex: "insVersion",
                 search: {
                   type: "Input",
                 },
@@ -393,6 +457,10 @@ const index = () => {
             rowSelection={{
               columnWidth: 19,
             }}
+            onSubmit={(data, column) => {
+              console.log(data, column);
+            }}
+            hideFooter
             className="table-checkbox"
             columns={[
               {
@@ -465,11 +533,53 @@ const index = () => {
     },
   ];
 
+  const handleClick = async (name: string) => {
+    console.log(name, "name");
+    if (name === "allocatenumber") {
+      const centerDataMap = groupBy(centerData, (item) => {
+        return item.model_format;
+      });
+      let paramsMap: any = {};
+      Object.keys(centerDataMap).forEach((item) => {
+        paramsMap[item] = centerDataMap[item].length;
+      });
+      API.allcateCode({
+        numberOfItemCode: "10001001",
+        fileTypeCountMap: paramsMap,
+      }).then((res: any) => {
+        setCacheItemNumber(res.result);
+      });
+    }
+    if (name === "logout") {
+      mqttClient.commonPublish({
+        type: PathConfig.exit,
+        output_data: {
+          result: "1",
+        },
+      });
+      // 退出登录
+      const homeDirPath = await homeDir();
+      await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
+      await removeFile(
+        `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
+      );
+      const mainWindow = WebviewWindow.getByLabel("Home");
+      mainWindow?.close();
+      await invoke("exist", {});
+    } else if (name === "info") {
+      await invoke(PathConfig.openInfo, {});
+    } else if (name === "checkout") {
+      mqttClient.publish({
+        type: CommandConfig.getProductTypeAtt,
+      });
+      // dispatch(increment());
+    }
+  };
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="w-full bg-base flex-1 flex flex-col px-3 py-3 overflow-hidden">
         {/* 操作栏 */}
-        <PlmToolBar></PlmToolBar>
+        <PlmToolBar onClick={handleClick}></PlmToolBar>
 
         <div className="flex-1 flex gap-1.5 pt-1.5">
           {/* 左侧文件 */}
@@ -627,7 +737,7 @@ const index = () => {
                 style={{ height: "100%" }}
                 className="tree-table"
                 bordered={false}
-                dataSource={leftData}
+                dataSource={rightData}
                 expandable={{
                   expandIconColumnIndex: 2,
                   expandedRowKeys: expandedKeys,
@@ -667,7 +777,7 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>{text}</div>
+                          <div>{record.itemAttrs["Number"] ?? text}</div>
                         </div>
                       );
                     },

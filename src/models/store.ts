@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import counterReducer from "./count";
 import userReducer from "./user";
 import networkReducer from "./network";
+import loadingReducer from "./loading";
 // import mqttReducer from "./mqtt";
 
 export default configureStore({
@@ -9,6 +10,7 @@ export default configureStore({
     counter: counterReducer,
     user: userReducer,
     network: networkReducer,
+    loading: loadingReducer,
     // mqtt: mqttReducer,
   },
   middleware: (getDefaultMiddleware) =>
