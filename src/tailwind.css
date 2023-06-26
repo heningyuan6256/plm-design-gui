@@ -47,7 +47,7 @@ body,
 }
 .ant-input-affix-wrapper .ant-input-prefix,
 .ant-input::placeholder {
-  color: #dfe9f5;
+  color: #CDCDCD;
   font-size: 12px;
 }
 

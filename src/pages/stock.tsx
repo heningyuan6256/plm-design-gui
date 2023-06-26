@@ -14,6 +14,7 @@ import { Input } from "antd";
 import { useSelector } from "react-redux";
 import { useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
+import { BasicsItemCode } from "../constant/itemCode";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
@@ -36,7 +37,7 @@ const stock = () => {
   useEffect(() => {
     API.getStock("719").then((res: any) => {
       const result = res.result.filter((item: any) => {
-        return item.apicode === "ItemAdmin";
+        return item.apicode === "ItemAdministrator";
       });
       setLeftTreeData(result);
       if (result.length > 0) {
@@ -47,6 +48,7 @@ const stock = () => {
           pageSize: 50,
           sort: "",
           andQuery: "",
+          itemCode: BasicsItemCode.material,
           tenantId: "719",
           userId: value.id,
           isAll: false,
@@ -191,7 +193,12 @@ const stock = () => {
           </div>
         </div>
         <div className="flex-1">
-          <div className="bg-tabTitleBg w-full h-6 text-xs flex items-center pl-2.5 mb-4">
+          <div
+            style={{
+              background: "linear-gradient(180deg,#f1f1f1 0%, #cdcdcd 100%)",
+            }}
+            className="w-full h-6 text-xs flex items-center pl-2.5 mb-4"
+          >
             <span className="mr-1">物料库</span> <span className="mr-1">/</span>{" "}
             <span className="text-primary">电子件库</span>
           </div>
@@ -200,11 +207,16 @@ const stock = () => {
               placeholder="请输入编号或描述"
               style={{ width: "360px" }}
             ></Input>
-            <div className="w-7 h-7 rounded-sm bg-secondary flex items-center justify-center">
+            <div className="w-7 h-7 cursor-pointer rounded-sm bg-white border-outBorder border flex items-center justify-center">
               <PlmIcon name="search"></PlmIcon>
             </div>
           </div>
-          <div className="bg-tabTitleBg w-full h-6 text-xs flex items-center pl-2.5 mb-4">
+          <div
+            style={{
+              background: "linear-gradient(180deg,#f1f1f1 0%, #cdcdcd 100%)",
+            }}
+            className="w-full h-6 text-xs flex items-center pl-2.5 mb-4"
+          >
             搜索结果
           </div>
           <div className="flex-1 bg-white">

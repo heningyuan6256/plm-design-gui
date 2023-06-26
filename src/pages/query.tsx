@@ -225,7 +225,12 @@ const query: FC = () => {
           </div>
         </div>
         <div className="flex-1">
-          <div className="bg-tabTitleBg w-full h-6 text-xs flex items-center pl-2.5 mb-4">
+          <div
+            style={{
+              background: "linear-gradient(180deg,#f1f1f1 0%, #cdcdcd 100%)",
+            }}
+            className="w-full h-6 text-xs flex items-center pl-2.5 mb-4"
+          >
             <span className="mr-1">搜索</span>
             {/* <span className="mr-1">/</span>{" "}
             <span className="text-primary">电子件库</span> */}
@@ -235,11 +240,16 @@ const query: FC = () => {
               placeholder="请输入编号或描述"
               style={{ width: "360px" }}
             ></Input>
-            <div className="w-7 h-7 rounded-sm bg-secondary flex items-center justify-center">
+            <div className="w-7 h-7 rounded-sm cursor-pointer bg-white border-outBorder border flex items-center justify-center">
               <PlmIcon name="search"></PlmIcon>
             </div>
           </div>
-          <div className="bg-tabTitleBg w-full h-6 text-xs flex items-center pl-2.5 mb-4">
+          <div
+            style={{
+              background: "linear-gradient(180deg,#f1f1f1 0%, #cdcdcd 100%)",
+            }}
+            className="w-full h-6 text-xs flex items-center pl-2.5 mb-4"
+          >
             搜索结果
           </div>
           <div className="flex-1 bg-white">
