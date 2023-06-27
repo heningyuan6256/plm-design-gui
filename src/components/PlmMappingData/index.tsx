@@ -15,6 +15,7 @@ const { Panel } = Collapse;
 export interface MappingTableProps {
   leftTableList: any[];
   rightTableList: any[];
+  mappingData: any[];
   isShowHeader: boolean;
   onLoading: (loading: boolean) => void;
   ref: any;
@@ -26,7 +27,7 @@ export interface MappingTableForwardRefProps {
 const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
   const [leftTableData, setLeftTableData] = useState<any[]>([]);
   const [rightTableData, setRightTableData] = useState<any[]>([]);
-  const [mappingData, setMappingData] = useState<any[]>([]);
+  const [mappingData, setMappingData] = useState<any[]>(props.mappingData);
   const [source, setSource] = useState<any>({});
 
   useImperativeHandle(
@@ -48,7 +49,7 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
     ) {
       initTableData();
     }
-  }, [props.leftTableList, props.rightTableList]);
+  }, [props.leftTableList, props.rightTableList, props.mappingData]);
 
   const initTableData = () => {
     props.onLoading && props.onLoading(true);
@@ -71,27 +72,29 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
             rm.isShow
           ) {
             //如果左边的名称包含右边的,并且mate都为空,则互相关联
-            mappingDataTemp.push({
-              source: lm.filed,
-              target: rm.filed,
-              tabCode: rm.tabCode,
-            });
+            // mappingDataTemp.push({
+            //   source: lm.filed,
+            //   target: rm.filed,
+            //   tabCode: rm.tabCode,
+            // });
           }
         });
       });
     });
 
     //把所有重名的关系对象过滤,避免出现一对多的情况
-    const filterMappingData = mappingDataTemp.filter(
-      (obj: any) =>
-        !mappingDataTemp.some(
-          (otherObj: any) => obj.source === otherObj.source && obj !== otherObj
-        )
-    );
+    // const filterMappingData = mappingDataTemp.filter(
+    //   (obj: any) =>
+    //     !mappingDataTemp.some(
+    //       (otherObj: any) => obj.source === otherObj.source && obj !== otherObj
+    //     )
+    // );
+
+    // console.log(filterMappingData, 'filterMappingData')
 
     setLeftTableData(leftTableDataTemp);
     setRightTableData(rightTableDataTemp);
-    setMappingData(filterMappingData);
+    setMappingData(props.mappingData);
     props.onLoading && props.onLoading(false);
   };
 

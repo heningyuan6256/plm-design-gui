@@ -663,6 +663,7 @@ img {
   font-family: PingFang SC, PingFang SC-Regular !important;
   font-weight: 400 !important;
   color: #000000 !important;
+  cursor: auto !important;
 }
 .ant-table {
   /* border: 1px solid #CDCDCD !important; */
