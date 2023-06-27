@@ -681,3 +681,12 @@ img {
 .ant-select-dropdown {
   border-radius: 0px !important;
 }
+
+.table_content {
+  border: 1px solid #cdcdcd !important;
+  background-color: #fff;
+}
+.table_content .table_item {
+  background-color: #fff;
+  border-bottom: 1px solid #cdcdcd !important;
+}

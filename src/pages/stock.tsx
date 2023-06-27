@@ -6,7 +6,7 @@
 import Foot from "../layout/foot";
 import Head from "../layout/head";
 import PlmIcon from "../components/PlmIcon";
-import { OnChainTable } from "onchain-ui";
+import { OnChainSelect, OnChainTable } from "onchain-ui";
 import { useEffect, useState } from "react";
 import API from "../utils/api";
 import PageLayout from "../layout/pageLayout";
@@ -64,15 +64,23 @@ const stock = () => {
       <div className="w-full bg-base flex-1 flex px-3 py-3 overflow-hidden gap-1.5">
         <div
           style={{ width: "254px" }}
-          className="h-full border border-outBorder"
+          className="h-full"
         >
-          <div className="pb-1.5 px-1.5 flex flex-col h-full">
+          <div className="pb-1.5 flex flex-col h-full">
+            <div className="flex justify-between items-center h-6 mb-1.5">
+              <OnChainSelect
+                size="small"
+                value={"物料库"}
+                clearIcon={false}
+              ></OnChainSelect>
+            </div>
+            {/* 
             <div className="h-10 flex justify-between items-center">
               <div className="text-xs">
                 物料库{" "}
-                {/* <PlmIcon name="develop" className="text-xs scale-85"></PlmIcon> */}
+                <PlmIcon name="develop" className="text-xs scale-85"></PlmIcon>
               </div>
-            </div>
+            </div> */}
             {/* <div className="flex-1 bg-white border border-outBorder"> */}
             <OnChainTable
               rowKey={"id"}
@@ -88,7 +96,7 @@ const stock = () => {
                 selectedRowKeys: selectedRows.map((item) => item.id),
               }}
               hideFooter
-              extraHeight={0}
+              extraHeight={-2}
               columns={[
                 {
                   title: "名称",

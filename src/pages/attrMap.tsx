@@ -448,11 +448,11 @@ export default function AttrMap() {
   const items: TabsProps["items"] = [
     {
       key: "file",
-      label: `文件清单`,
+      label: `CAD至PLM`,
     },
     {
       key: "material",
-      label: `物料清单`,
+      label: `PLM至CAD`,
     },
   ];
   return (
@@ -496,8 +496,17 @@ export default function AttrMap() {
           ></PlmMappingData>
         </div>
       </div>
-      <div>
+      <div style={{ textAlign: "right" }}>
         <Button
+          // style={{ border: "1px solid #cdcdcd" }}
+          className="rounded-sm mr-2 text-xs bg-white"
+          onClick={() => {}}
+        >
+          取消
+        </Button>
+        <Button
+          className="rounded-sm text-xs bg-white"
+          // style={{ border: "1px solid #cdcdcd" }}
           onClick={() => {
             const data = mappingRef?.current?.getTargetData();
             console.log(data.mappingData, "data");

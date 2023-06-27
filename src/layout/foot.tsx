@@ -28,24 +28,41 @@ const Foot: FC = () => {
       style={{ minHeight: "24px" }}
       className="flex items-center w-full justify-between bg-primary px-2 h-6"
     >
-      <div className="text-xs flex">
-        <PlmIcon
+      <div className="text-xs flex text-white">
+        {/* <Dropdown menu={{ items }} placement="top"> */}
+        <div className="flex relative">
+          <div
+            className="absolute top-0"
+            style={{
+              borderRadius: "50%",
+              width: "4px",
+              height: "4px",
+              background: "#0EDF8C",
+              left: "5px",
+            }}
+          ></div>
+          <img src={userSvg} width={12} alt="" />
+        </div>
+        {/* </Dropdown> */}
+        <div className="opacity-80 ml-1">
+          <span className="mr-1">{user?.name}</span>-
+          <span className="ml-1">{value}</span>
+        </div>
+        {/* <PlmIcon
           name="link"
           className="text-xs text-white opacity-80"
         ></PlmIcon>{" "}
         <div className="text-xs text-white opacity-80 scale-90">
           SSH: {value}
-        </div>
+        </div> */}
       </div>
-      <div className="text-xs flex gap-2">
-        <Dropdown menu={{ items }} placement="top">
-          <img src={userSvg} width={12} alt="" />
-        </Dropdown>
+      <div className="text-xs flex gap-2 text-white opacity-80">
+        DESIGNFUSION 1.0.0
         {/* <PlmIcon name="user" className="text-xs text-white"></PlmIcon>{" "} */}
-        <PlmIcon
+        {/* <PlmIcon
           name="notice"
           className="text-xs text-white opacity-80"
-        ></PlmIcon>
+        ></PlmIcon> */}
       </div>
     </div>
   );

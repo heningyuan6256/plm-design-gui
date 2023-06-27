@@ -11,10 +11,12 @@ import {
 } from "onchain-ui";
 import PlmIcon from "../components/PlmIcon";
 import PlmToolBar from "../components/PlmToolBar";
-import materialSvg from "../assets/image/material.svg";
-import cubeSvg from "../assets/image/cube.svg";
-import fileCubeSvg from "../assets/image/fileCube.svg";
-import fileSvg from "../assets/image/file.svg";
+import materialSvg from "../assets/image/childnode.svg";
+import cubeSvg from "../assets/image/rootdirectory.svg";
+import fileCubeSvg from "../assets/image/cube.svg";
+import encodedSvg from "../assets/image/encoded.svg";
+import saveSvg from "../assets/image/save.svg";
+import fileSvg from "../assets/image/threecubes.svg";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useRef, useState } from "react";
@@ -476,8 +478,8 @@ const index = () => {
           <div className="ml-1">
             <PlmTabToolBar
               list={[
-                { name: "分配编码", icon: "" },
-                { name: "保存", icon: "" },
+                { name: "分配编码", icon: encodedSvg },
+                { name: "保存", icon: saveSvg },
               ]}
             ></PlmTabToolBar>
           </div>
@@ -751,11 +753,11 @@ const index = () => {
 
           {/* 右侧BOM */}
           <div style={{ width: "254px" }} className="h-full">
-            <div className="h-full">
+            <div className="h-full pr-2">
               <div className="flex justify-between items-center h-6 mb-1.5">
                 <OnChainSelect
                   size="small"
-                  value={'EBOM'}
+                  value={"EBOM"}
                   onChange={(e) => {
                     setSelectProduct(e);
                   }}

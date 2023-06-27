@@ -241,13 +241,19 @@ const query: FC = () => {
             {/* <span className="mr-1">/</span>{" "}
             <span className="text-primary">电子件库</span> */}
           </div>
-          <div className="mb-4 flex gap-2 justify-center">
+          <div className="mb-4 flex gap-2 justify-center items-center">
             <Input
               placeholder="请输入编号或描述"
               style={{ width: "360px" }}
+              suffix={
+                <PlmIcon name="search" style={{ color: "#CDCDCD" }}></PlmIcon>
+              }
             ></Input>
-            <div className="w-7 h-7 rounded-sm cursor-pointer bg-white border-outBorder border flex items-center justify-center">
-              <PlmIcon name="search"></PlmIcon>
+            <div
+              style={{ height: "30px" }}
+              className="text-xs rounded-sm hover:border hover:border-primary transition-all cursor-pointer bg-white border-outBorder border flex items-center justify-center w-16"
+            >
+              搜索
             </div>
           </div>
           <div
@@ -259,30 +265,34 @@ const query: FC = () => {
             搜索结果
           </div>
           <div className="flex-1 bg-white">
-            <OnChainTable
-              rowKey={"insId"}
-              loading={GetConditionDsl.loading}
-              //   bordered={true}
-              dataSource={tableData}
-              bordered={false}
-              rowSelection={{
-                columnWidth: 19,
-                selectedRowKeys: tableSelectedRows.map((item) => item.insId),
-                onChange: (keys, rows: any) => {
-                  setTableSelectedRows(rows);
-                },
-              }}
-              expandable={{
-                expandIconColumnIndex: 0,
-              }}
-              hideFooter
-              extraHeight={22}
-              columns={column as OnChainTableColumnProps}
-              selectedCell={{
-                dataIndex: "",
-                record: {},
-              }}
-            ></OnChainTable>
+            {column.length ? (
+              <OnChainTable
+                rowKey={"insId"}
+                loading={GetConditionDsl.loading}
+                //   bordered={true}
+                dataSource={tableData}
+                bordered={false}
+                rowSelection={{
+                  columnWidth: 19,
+                  selectedRowKeys: tableSelectedRows.map((item) => item.insId),
+                  onChange: (keys, rows: any) => {
+                    setTableSelectedRows(rows);
+                  },
+                }}
+                expandable={{
+                  expandIconColumnIndex: 0,
+                }}
+                hideFooter
+                extraHeight={22}
+                columns={column as OnChainTableColumnProps}
+                selectedCell={{
+                  dataIndex: "",
+                  record: {},
+                }}
+              ></OnChainTable>
+            ) : (
+              <></>
+            )}
           </div>
         </div>
       </div>
