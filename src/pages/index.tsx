@@ -613,6 +613,9 @@ const index = () => {
                   title: "版次",
                   dataIndex: "revision",
                   sorter: true,
+                  render: () => {
+                    return <span>1</span>;
+                  }
                 },
                 ...fileColumn,
               ]}
