@@ -5,20 +5,22 @@ import { ListCode } from "../constant/listCode";
 export class Utils {
   // 处理返回后的列表数据
   public static adaptListItems: any = (list: Record<string, any>[] = []) => {
-    return (list || []).map((item: any) => {
-      return {
-        label: item.workflowName || item.departName || item.name,
-        value: item.id,
-        disabled: item.disabled,
-        apicode: item.apicode,
-        code: item.code,
-        children:
-          item.children && item.children.length > 0
-            ? this.adaptListItems(item.children)
-            : [],
-        empno: item.empNo,
-      };
-    });
+    return (list || [])
+      .filter((item) => item)
+      .map((item: any) => {
+        return {
+          label: item.workflowName || item.departName || item.name,
+          value: item.id,
+          disabled: item.disabled,
+          apicode: item.apicode,
+          code: item.code,
+          children:
+            item.children && item.children.length > 0
+              ? this.adaptListItems(item.children)
+              : [],
+          empno: item.empNo,
+        };
+      });
   };
 
   //解析列表值

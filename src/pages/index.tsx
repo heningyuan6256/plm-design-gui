@@ -160,7 +160,6 @@ const index = () => {
     );
     const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
     const totalAttrs = [...PublicAttrs, ...PrivateAttrs];
-    console.log(totalAttrs, totalMaterialAttrs, "totalMaterialAttrs");
     setAttrs(totalAttrs);
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
@@ -380,6 +379,7 @@ const index = () => {
       const cloneNumber: any = cloneDeep(cacheItemNumber);
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
+          // todo需要限制如果没有则赋值Number
           if (cloneNumber[data[i].model_format]) {
             data[i].itemAttrs["Number"] = cloneNumber[data[i].model_format][0];
             cloneNumber[data[i].model_format].splice(1);
@@ -390,8 +390,9 @@ const index = () => {
         }
       };
       loop(leftData);
+      setLeftData([...leftData])
     }
-  }, [cacheItemNumber, leftData]);
+  }, [cacheItemNumber]);
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
@@ -491,6 +492,8 @@ const index = () => {
         });
         setMaterialColumn(generalDealAttrs(materialAttrs, map) || []);
       });
+    } else {
+      setFileColumn(generalDealAttrs(materialAttrs, {}) || []);
     }
   }, [materialAttrs]);
 
@@ -506,14 +509,24 @@ const index = () => {
       API.getList(codeList).then((res: any) => {
         const map: any = {};
         const result = res.result || [];
-        console.log(result, 'result')
         result.forEach((item: { listItems: any; code: string }) => {
           map[item.code] = Utils.adaptListItems(item.listItems) || [];
         });
         setFileColumn(generalDealAttrs(Attrs, map) || []);
       });
+    } else {
+      setFileColumn(generalDealAttrs(Attrs, {}) || []);
     }
   }, [Attrs]);
+
+  const materialCenterData: any = useMemo(() => {
+    return centerData.map((item) => {
+      return {
+        ...item,
+        ...item.itemAttrs,
+      };
+    });
+  }, [centerData]);
 
   const items: TabsProps["items"] = [
     {
@@ -632,7 +645,7 @@ const index = () => {
             <OnChainTable
               key={"material"}
               rowKey={"node_name"}
-              dataSource={centerData}
+              dataSource={materialCenterData}
               extraHeight={24}
               rowSelection={{
                 columnWidth: 19,
@@ -642,7 +655,8 @@ const index = () => {
                 const loop = (data: any) => {
                   for (let i = 0; i < data.length; i++) {
                     if (data[i].node_name == row.node_name) {
-                      data[i][column["dataIndex"]] = row[column["dataIndex"]];
+                      data[i].itemAttrs[column["dataIndex"]] =
+                        row[column["dataIndex"]];
                     }
                     if (data[i].children && data[i].children.length) {
                       loop(data[i].children);
@@ -665,7 +679,7 @@ const index = () => {
                 },
                 {
                   title: "编号",
-                  dataIndex: "number",
+                  dataIndex: "Number",
                   search: {
                     type: "Input",
                   },
@@ -685,6 +699,11 @@ const index = () => {
       ),
     },
   ];
+
+  useEffect(() => {
+    console.log(centerData, "centerData");
+  }, [centerData]);
+
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="w-full bg-base flex-1 flex flex-col overflow-hidden">
