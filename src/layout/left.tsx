@@ -95,7 +95,7 @@ const left: FC = () => {
   };
   return (
     <div
-      className="bg-base flex flex-col items-center justify-between w-10"
+      className="bg-base flex flex-col items-center justify-between w-10 border-r border-outBorder"
       style={{ minWidth: "40px", paddingTop: "10px" }}
     >
       <div className="w-full">

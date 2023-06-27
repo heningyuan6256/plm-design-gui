@@ -47,7 +47,7 @@ const PlmToolBar: FC<PlmToolBarProps> = (props) => {
   };
 
   return (
-    <div className="w-full  py-3.5 flex border border-outBorder h-76">
+    <div className="w-full  py-3.5 flex h-76 border-b border-outBorder">
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
           {renderButton(checkout, `签出`, "checkout")}

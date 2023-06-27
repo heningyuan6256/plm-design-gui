@@ -73,123 +73,123 @@ const stock = () => {
                 {/* <PlmIcon name="develop" className="text-xs scale-85"></PlmIcon> */}
               </div>
             </div>
-            <div className="flex-1 bg-white border border-outBorder">
-              <OnChainTable
-                rowKey={"id"}
-                className="tree-table"
-                bordered={false}
-                dataSource={leftTreeData}
-                expandable={{
-                  expandIconColumnIndex: 2,
-                  indentSize: 22,
-                }}
-                rowSelection={{
-                  columnWidth: 0,
-                  selectedRowKeys: selectedRows.map((item) => item.id),
-                }}
-                hideFooter
-                extraHeight={0}
-                columns={[
-                  {
-                    title: "名称",
-                    dataIndex: "name",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                    render: (text, record: any) => {
+            {/* <div className="flex-1 bg-white border border-outBorder"> */}
+            <OnChainTable
+              rowKey={"id"}
+              className="tree-table"
+              bordered={false}
+              dataSource={leftTreeData}
+              expandable={{
+                expandIconColumnIndex: 2,
+                indentSize: 22,
+              }}
+              rowSelection={{
+                columnWidth: 0,
+                selectedRowKeys: selectedRows.map((item) => item.id),
+              }}
+              hideFooter
+              extraHeight={0}
+              columns={[
+                {
+                  title: "名称",
+                  dataIndex: "name",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                  render: (text, record: any) => {
+                    return (
+                      <div
+                        className="cursor-pointer w-full overflow-hidden text-ellipsis"
+                        onClick={() => {
+                          setSelectedRows([record]);
+                          const data = {
+                            libraryId: record.id,
+                            pageNo: 1,
+                            pageSize: 50,
+                            sort: "",
+                            andQuery: "",
+                            tenantId: "719",
+                            userId: value.id,
+                            isAll: false,
+                            fields: [{}],
+                          };
+                          run(data);
+                        }}
+                      >
+                        <PlmIcon
+                          className={"text-primary text-base mr-1"}
+                          name={
+                            record.apicode === "ItemAdmin"
+                              ? "a-Materialwarehouse"
+                              : "file"
+                          }
+                        ></PlmIcon>
+                        {text}
+                      </div>
+                    );
+                  },
+                },
+                {
+                  title: "",
+                  dataIndex: "tool",
+                  width: 72,
+                  sorter: true,
+                  render: (text, record: any) => {
+                    if (record.apicode === "ItemAdmin") {
                       return (
-                        <div
-                          className="cursor-pointer w-full overflow-hidden text-ellipsis"
-                          onClick={() => {
-                            setSelectedRows([record]);
-                            const data = {
-                              libraryId: record.id,
-                              pageNo: 1,
-                              pageSize: 50,
-                              sort: "",
-                              andQuery: "",
-                              tenantId: "719",
-                              userId: value.id,
-                              isAll: false,
-                              fields: [{}],
-                            };
-                            run(data);
-                          }}
-                        >
+                        <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
                           <PlmIcon
-                            className={"text-primary text-base mr-1"}
-                            name={
-                              record.apicode === "ItemAdmin"
-                                ? "a-Materialwarehouse"
-                                : "file"
-                            }
+                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            name="fold"
                           ></PlmIcon>
-                          {text}
+                          <PlmIcon
+                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            name="add"
+                          ></PlmIcon>
                         </div>
                       );
-                    },
+                    }
+                    if (!record.isDelete) {
+                      return (
+                        <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+                          <PlmIcon
+                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            name="edit"
+                          ></PlmIcon>
+                          <PlmIcon
+                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            name="add"
+                          ></PlmIcon>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+                          <PlmIcon
+                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            name="edit"
+                          ></PlmIcon>
+                          <PlmIcon
+                            className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            name="delete"
+                          ></PlmIcon>
+                          <PlmIcon
+                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            name="add"
+                          ></PlmIcon>
+                        </div>
+                      );
+                    }
                   },
-                  {
-                    title: "",
-                    dataIndex: "tool",
-                    width: 72,
-                    sorter: true,
-                    render: (text, record: any) => {
-                      if (record.apicode === "ItemAdmin") {
-                        return (
-                          <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="fold"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="add"
-                            ></PlmIcon>
-                          </div>
-                        );
-                      }
-                      if (!record.isDelete) {
-                        return (
-                          <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="edit"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="add"
-                            ></PlmIcon>
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="edit"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="delete"
-                            ></PlmIcon>
-                            <PlmIcon
-                              className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                              name="add"
-                            ></PlmIcon>
-                          </div>
-                        );
-                      }
-                    },
-                  },
-                ]}
-                selectedCell={{
-                  dataIndex: "",
-                  record: {},
-                }}
-              ></OnChainTable>
-            </div>
+                },
+              ]}
+              selectedCell={{
+                dataIndex: "",
+                record: {},
+              }}
+            ></OnChainTable>
+            {/* </div> */}
           </div>
         </div>
         <div className="flex-1">
@@ -222,6 +222,7 @@ const stock = () => {
           <div className="flex-1 bg-white">
             <OnChainTable
               rowKey={"insId"}
+              bordered={false}
               loading={loading}
               //   bordered={true}
               dataSource={tableData}

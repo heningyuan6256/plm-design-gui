@@ -3,7 +3,12 @@
  * Date: 2023/03/02 14:44:05
  * Description: 主页
  */
-import { OnChainForm, OnChainFormItem, OnChainTable } from "onchain-ui";
+import {
+  OnChainForm,
+  OnChainFormItem,
+  OnChainSelect,
+  OnChainTable,
+} from "onchain-ui";
 import PlmIcon from "../components/PlmIcon";
 import PlmToolBar from "../components/PlmToolBar";
 import materialSvg from "../assets/image/material.svg";
@@ -40,8 +45,11 @@ const index = () => {
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
   const dynamicFormRef = useRef<PlmFormForwardRefProps>();
   const [Attrs, setAttrs] = useState<Record<string, any>[]>([]);
+  const [FormAttrs, setFormAttrs] = useState<Record<string, any>[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<any>([]);
   const [selectNode, setSelectNode] = useState<Record<string, any>>();
+  const [productOptions, setProductOptions] = useState<any[]>();
+  const [selectProduct, setSelectProduct] = useState<string>("");
   const [cacheItemNumber, setCacheItemNumber] = useState({});
   const dispatch = useDispatch();
 
@@ -52,9 +60,33 @@ const index = () => {
     });
   }, []);
 
+  // 获取当前产品数据
+  useEffect(() => {
+    API.getProductList({
+      pageNo: "1",
+      pageSize: "1000",
+      filter: "1",
+      isSensitiveCheck: "true",
+      tenantId: "719",
+    }).then((res: any) => {
+      setProductOptions(
+        res.result.records.map((item: any) => {
+          return {
+            label: item.name,
+            value: item.id,
+          };
+        })
+      );
+      setSelectProduct(res.result.records[0]?.id);
+    });
+  }, []);
+
   useEffect(() => {
     if (selectNode) {
-      dynamicFormRef.current?.setFieldsValue(selectNode);
+      setFormAttrs(selectNode.property);
+      dynamicFormRef.current?.setFieldsValue(
+        Utils.transformArrayToMap(selectNode.property, "name", "defaultVal")
+      );
     }
   }, [selectNode]);
 
@@ -345,9 +377,10 @@ const index = () => {
           </div>
           <OnChainTable
             key={"file"}
+            bordered={false}
             rowKey={"node_name"}
             dataSource={centerData}
-            extraHeight={30}
+            extraHeight={24}
             rowSelection={{
               columnWidth: 19,
             }}
@@ -453,10 +486,11 @@ const index = () => {
             key={"material"}
             rowKey={"node_name"}
             dataSource={centerData}
-            extraHeight={30}
+            extraHeight={24}
             rowSelection={{
               columnWidth: 19,
             }}
+            bordered={false}
             onSubmit={(data, column) => {
               console.log(data, column);
             }}
@@ -577,86 +611,85 @@ const index = () => {
   };
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
-      <div className="w-full bg-base flex-1 flex flex-col px-3 py-3 overflow-hidden">
+      <div className="w-full bg-base flex-1 flex flex-col overflow-hidden">
         {/* 操作栏 */}
         <PlmToolBar onClick={handleClick}></PlmToolBar>
 
-        <div className="flex-1 flex gap-1.5 pt-1.5">
+        <div className="flex-1 flex pt-2 gap-2">
           {/* 左侧文件 */}
-          <div
-            style={{ width: "254px" }}
-            className="h-full border border-outBorder"
-          >
-            <div className="pb-1.5 px-1.5 flex flex-col h-full">
-              <div className="h-10 flex justify-between items-center">
-                <div className="text-xs">产品名称</div>
-                <div>
-                  <PlmIcon
-                    name="develop"
-                    className="text-xs scale-85"
-                  ></PlmIcon>
-                </div>
+          <div style={{ width: "254px" }} className="h-full">
+            <div className="flex flex-col h-full pl-2">
+              <div className="flex justify-between items-center h-6 mb-1.5">
+                <OnChainSelect
+                  size="small"
+                  value={selectProduct}
+                  options={productOptions}
+                  onChange={(e) => {
+                    setSelectProduct(e);
+                  }}
+                  clearIcon={false}
+                ></OnChainSelect>
               </div>
-              <div className="flex-1 bg-white border border-outBorder">
-                <OnChainTable
-                  rowKey={"node_name"}
-                  className="tree-table"
-                  bordered={false}
-                  dataSource={leftData}
-                  expandable={{
-                    expandIconColumnIndex: 2,
-                    expandedRowKeys: expandedKeys,
-                    onExpandedRowsChange: (expandedKeys) => {
-                      setExpandedKeys(expandedKeys);
+              {/* <div className="flex-1 border border-outBorder"> */}
+              <OnChainTable
+                rowKey={"node_name"}
+                className="tree-table"
+                bordered={false}
+                dataSource={leftData}
+                expandable={{
+                  expandIconColumnIndex: 2,
+                  expandedRowKeys: expandedKeys,
+                  onExpandedRowsChange: (expandedKeys) => {
+                    setExpandedKeys(expandedKeys);
+                  },
+                }}
+                rowSelection={{
+                  columnWidth: 0,
+                  selectedRowKeys: [selectNode?.node_name],
+                }}
+                hideFooter
+                extraHeight={0}
+                columns={[
+                  {
+                    title: "名称",
+                    dataIndex: "node_name",
+                    search: {
+                      type: "Input",
                     },
-                  }}
-                  rowSelection={{
-                    columnWidth: 0,
-                    selectedRowKeys: [selectNode?.node_name],
-                  }}
-                  hideFooter
-                  extraHeight={0}
-                  columns={[
-                    {
-                      title: "名称",
-                      dataIndex: "node_name",
-                      search: {
-                        type: "Input",
-                      },
-                      sorter: true,
-                      render: (text, record: Record<string, any>) => {
-                        return (
-                          <div
-                            className={`gap-1 inline-flex items-center cursor-pointer ${
-                              !(record.children && record.children.length)
-                                ? "ml-3"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              setSelectNode(record);
-                            }}
-                          >
-                            <img
-                              width={14}
-                              src={
-                                (record.children || []).length
-                                  ? fileCubeSvg
-                                  : fileSvg
-                              }
-                              alt=""
-                            />
-                            <div>{text}</div>
-                          </div>
-                        );
-                      },
+                    sorter: true,
+                    render: (text, record: Record<string, any>) => {
+                      return (
+                        <div
+                          className={`gap-1 inline-flex items-center cursor-pointer ${
+                            !(record.children && record.children.length)
+                              ? "ml-3"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            setSelectNode(record);
+                          }}
+                        >
+                          <img
+                            width={14}
+                            src={
+                              (record.children || []).length
+                                ? fileCubeSvg
+                                : fileSvg
+                            }
+                            alt=""
+                          />
+                          <div>{text}</div>
+                        </div>
+                      );
                     },
-                  ]}
-                  selectedCell={{
-                    dataIndex: "",
-                    record: {},
-                  }}
-                ></OnChainTable>
-              </div>
+                  },
+                ]}
+                selectedCell={{
+                  dataIndex: "",
+                  record: {},
+                }}
+              ></OnChainTable>
+              {/* </div> */}
             </div>
           </div>
 
@@ -671,11 +704,11 @@ const index = () => {
                 }}
                 className="flex-1 h-full border border-outBorder"
               >
-                <div style={{ height: "500px" }}></div>
+                <div></div>
               </div>
               {/* 基本信息 */}
               <div
-                className="border bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col"
+                className="border bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto"
                 style={{ width: "478px" }}
               >
                 {/* <div className="flex justify-between h-7 items-start">
@@ -694,14 +727,14 @@ const index = () => {
                     }}
                   >
                     <div className="grid grid-cols-2 gap-x-8">
-                      {Attrs.map((item) => {
+                      {FormAttrs.map((item, index) => {
                         return (
                           <OnChainFormItem
-                            key={item.apicode}
+                            key={`${item}${index}`}
                             colon
                             readOnly
                             label={item.name}
-                            name={item.apicode}
+                            name={item.name}
                             content={{ type: "Input" }}
                           ></OnChainFormItem>
                         );
@@ -717,11 +750,20 @@ const index = () => {
           </div>
 
           {/* 右侧BOM */}
-          <div
-            style={{ width: "254px" }}
-            className="h-full border border-outBorder"
-          >
-            <div className="bg-white h-full">
+          <div style={{ width: "254px" }} className="h-full">
+            <div className="h-full">
+              <div className="flex justify-between items-center h-6 mb-1.5">
+                <OnChainSelect
+                  size="small"
+                  value={'EBOM'}
+                  onChange={(e) => {
+                    setSelectProduct(e);
+                  }}
+                  open={false}
+                  clearIcon={false}
+                  showArrow={false}
+                ></OnChainSelect>
+              </div>
               {/* <div className="h-10 flex justify-between items-center">
                 <div className="text-xs">产品名称</div>
                 <div>

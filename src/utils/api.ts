@@ -27,6 +27,13 @@ const API = {
   getUserInfo: (params: Record<string, any>) => {
     return NewRequest.get("/pdm/user/token", params);
   },
+
+  /**
+   * 获取产品数据
+   * */
+  getProductList: (params: Record<string, any>) => {
+    return NewRequest.get("/pdm/product/list", params);
+  },
   /**
    * 获取列表值
    * */
@@ -122,7 +129,10 @@ const API = {
   /**
    * 分配编码
    */
-  allcateCode: (data: { numberOfItemCode: string; fileTypeCountMap: Record<string, any> }) => {
+  allcateCode: (data: {
+    numberOfItemCode: string;
+    fileTypeCountMap: Record<string, any>;
+  }) => {
     return NewRequest.post("/pdm/cad/pre/numbers", data);
   },
 };

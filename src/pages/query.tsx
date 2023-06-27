@@ -4,7 +4,7 @@
  * Description: 库
  */
 import PlmIcon from "../components/PlmIcon";
-import { OnChainTable } from "onchain-ui";
+import { OnChainSelect, OnChainTable } from "onchain-ui";
 import { FC, useEffect, useMemo, useState } from "react";
 import API from "../utils/api";
 import { Input } from "antd";
@@ -94,135 +94,141 @@ const query: FC = () => {
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="w-full bg-base flex-1 flex px-3 py-3 overflow-hidden gap-1.5">
-        <div
-          style={{ width: "254px" }}
-          className="h-full border border-outBorder"
-        >
-          <div className="pb-1.5 px-1.5 flex flex-col h-full">
-            <div className="h-10 flex justify-between items-center">
+        <div style={{ width: "254px" }} className="h-full">
+          {/* <div className="flex flex-col h-full"> */}
+          {/* <div className="h-10 flex justify-between items-center">
               <div className="text-xs">
                 搜索{" "}
-                {/* <PlmIcon name="develop" className="text-xs scale-85"></PlmIcon> */}
               </div>
-            </div>
-            <div className="flex-1 bg-white border border-outBorder">
-              <OnChainTable
-                rowKey={"id"}
-                className="tree-table"
-                bordered={false}
-                dataSource={leftTreeData}
-                expandable={{
-                  expandIconColumnIndex: 2,
-                  indentSize: 22,
-                }}
-                rowSelection={{
-                  columnWidth: 0,
-                  selectedRowKeys: selectedRows.map((item) => item.id),
-                }}
-                hideFooter
-                extraHeight={0}
-                columns={[
-                  {
-                    title: "名称",
-                    dataIndex: "name",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                    render: (text, record: any) => {
-                      return (
-                        <div
-                          className="cursor-pointer w-full overflow-hidden text-ellipsis"
-                          onClick={() => {
-                            setSelectedRows([record]);
-                            if (!(record.children && record.children.length)) {
-                              GetConditionDsl.run({
-                                actionType: "select",
-                                dsl: record.content,
-                                pageNo: 1,
-                                fields: SearchColumn.map((item) => {
-                                  return { ...item, parentTabCode: 10002001 };
-                                }),
-                                pageSize: 100,
-                                itemCode: "10001002",
-                              });
-                            }
-                          }}
-                        >
-                          {record.children ? (
-                            <PlmIcon
-                              className={"text-primary text-base mr-1"}
-                              name={"file"}
-                            ></PlmIcon>
-                          ) : (
-                            <span className="ml-3"></span>
-                          )}
-                          {text}
-                        </div>
-                      );
-                    },
-                  },
-                  // {
-                  //   title: "",
-                  //   dataIndex: "tool",
-                  //   width: 72,
-                  //   sorter: true,
-                  //   render: (text, record: any) => {
-                  //     if (record.apicode === "ItemAdmin") {
-                  //       return (
-                  //         <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
-                  //           <PlmIcon
-                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                  //             name="fold"
-                  //           ></PlmIcon>
-                  //           <PlmIcon
-                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                  //             name="add"
-                  //           ></PlmIcon>
-                  //         </div>
-                  //       );
-                  //     }
-                  //     if (!record.isDelete) {
-                  //       return (
-                  //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                  //           <PlmIcon
-                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                  //             name="edit"
-                  //           ></PlmIcon>
-                  //           <PlmIcon
-                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                  //             name="add"
-                  //           ></PlmIcon>
-                  //         </div>
-                  //       );
-                  //     } else {
-                  //       return (
-                  //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                  //           <PlmIcon
-                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                  //             name="edit"
-                  //           ></PlmIcon>
-                  //           <PlmIcon
-                  //             className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                  //             name="delete"
-                  //           ></PlmIcon>
-                  //           <PlmIcon
-                  //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                  //             name="add"
-                  //           ></PlmIcon>
-                  //         </div>
-                  //       );
-                  //     }
-                  //   },
-                  // },
-                ]}
-                selectedCell={{
-                  dataIndex: "",
-                  record: {},
-                }}
-              ></OnChainTable>
-            </div>
+            </div> */}
+          <div className="flex justify-between items-center h-6 mb-1.5">
+            <OnChainSelect
+              size="small"
+              value={"物料库"}
+              showArrow={false}
+              open={false}
+              clearIcon={false}
+              showSearch={false}
+            ></OnChainSelect>
           </div>
+          {/* <div className="flex-1 bg-white border border-outBorder"> */}
+          <OnChainTable
+            rowKey={"id"}
+            className="tree-table"
+            bordered={false}
+            dataSource={leftTreeData}
+            expandable={{
+              expandIconColumnIndex: 2,
+              indentSize: 22,
+            }}
+            rowSelection={{
+              columnWidth: 0,
+              selectedRowKeys: selectedRows.map((item) => item.id),
+            }}
+            hideFooter
+            extraHeight={-2}
+            columns={[
+              {
+                title: "名称",
+                dataIndex: "name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                render: (text, record: any) => {
+                  return (
+                    <div
+                      className="cursor-pointer w-full overflow-hidden text-ellipsis"
+                      onClick={() => {
+                        setSelectedRows([record]);
+                        if (!(record.children && record.children.length)) {
+                          GetConditionDsl.run({
+                            actionType: "select",
+                            dsl: record.content,
+                            pageNo: 1,
+                            fields: SearchColumn.map((item) => {
+                              return { ...item, parentTabCode: 10002001 };
+                            }),
+                            pageSize: 100,
+                            itemCode: "10001002",
+                          });
+                        }
+                      }}
+                    >
+                      {record.children ? (
+                        <PlmIcon
+                          className={"text-primary text-base mr-1"}
+                          name={"file"}
+                        ></PlmIcon>
+                      ) : (
+                        <span className="ml-3"></span>
+                      )}
+                      {text}
+                    </div>
+                  );
+                },
+              },
+              // {
+              //   title: "",
+              //   dataIndex: "tool",
+              //   width: 72,
+              //   sorter: true,
+              //   render: (text, record: any) => {
+              //     if (record.apicode === "ItemAdmin") {
+              //       return (
+              //         <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
+              //           <PlmIcon
+              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+              //             name="fold"
+              //           ></PlmIcon>
+              //           <PlmIcon
+              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+              //             name="add"
+              //           ></PlmIcon>
+              //         </div>
+              //       );
+              //     }
+              //     if (!record.isDelete) {
+              //       return (
+              //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+              //           <PlmIcon
+              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+              //             name="edit"
+              //           ></PlmIcon>
+              //           <PlmIcon
+              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+              //             name="add"
+              //           ></PlmIcon>
+              //         </div>
+              //       );
+              //     } else {
+              //       return (
+              //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+              //           <PlmIcon
+              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+              //             name="edit"
+              //           ></PlmIcon>
+              //           <PlmIcon
+              //             className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+              //             name="delete"
+              //           ></PlmIcon>
+              //           <PlmIcon
+              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+              //             name="add"
+              //           ></PlmIcon>
+              //         </div>
+              //       );
+              //     }
+              //   },
+              // },
+            ]}
+            selectedCell={{
+              dataIndex: "",
+              record: {},
+            }}
+          ></OnChainTable>
+          {/* </div> */}
+          {/* </div> */}
         </div>
         <div className="flex-1">
           <div
@@ -258,6 +264,7 @@ const query: FC = () => {
               loading={GetConditionDsl.loading}
               //   bordered={true}
               dataSource={tableData}
+              bordered={false}
               rowSelection={{
                 columnWidth: 19,
                 selectedRowKeys: tableSelectedRows.map((item) => item.insId),
