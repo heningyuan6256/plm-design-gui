@@ -72,16 +72,6 @@ export default function AttrMap() {
       });
     };
     API.getMapptingAttrs().then((res: any) => {
-      console.log(
-        res.result.map((item: any) => {
-          return {
-            source: item.sourceAttr,
-            target: item.targetAttr,
-            tabCode: item.tabCode,
-          };
-        }),
-        "123123"
-      );
       setMappingData(
         res.result.map((item: any) => {
           return {

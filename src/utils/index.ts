@@ -1,3 +1,4 @@
+import moment from "moment";
 import { BasicConfig } from "../constant/config";
 import { ListCode } from "../constant/listCode";
 
@@ -68,5 +69,144 @@ export class Utils {
       }
       return pre;
     }, {});
+  };
+
+  // 日期控制禁止选择
+  public static disabledDate = (dateRule: any, current: any) => {
+    // 小于今天
+    if (dateRule === "1") {
+      return current > moment().startOf("day");
+      // 小于等于今天
+    } else if (dateRule === "2") {
+      return current > moment(new Date());
+      // 等于今天
+    } else if (dateRule === "3") {
+      return (
+        moment(current).format("YYYY-MM-DD") !==
+        moment(new Date()).format("YYYY-MM-DD")
+      );
+      // 大于等于今天
+    } else if (dateRule === "4") {
+      //@ts-ignore
+      return current < moment(new Date(new Date() - 24 * 60 * 60 * 1000));
+      // 大于今天
+    } else if (dateRule === "5") {
+      return current < moment().endOf("day");
+    }
+  };
+
+  // 生成动态formitem
+  public static generateFormItemProps = (
+    item: Record<string, any>,
+    listCodeMap: Record<string, any>,
+    extra?: { dateFormatter?: string }
+  ) => {
+    // 对应属性是需要弹出实例窗口
+    const instanceModalApicode = ["Suppliers"];
+    if (item.valueType === "1") {
+      return {
+        maxLength: item.allowLength || item.maxLength,
+        placeholder: item.explanation || "请输入" + item.name,
+      };
+    } else if (item.valueType === "2") {
+      return {
+        autoSize: false,
+        rows: item.fieldHeight,
+        maxLength: item.allowLength || item.maxLength,
+        placeholder: item.explanation || "请输入" + item.name,
+      };
+    } else if (item.valueType === "4") {
+      return {
+        placeholder: item.explanation || "请选择" + item.name,
+        min: item.minValue,
+        max: item.maxValue,
+        formatter:
+          item.displayFormat === "2"
+            ? (value: any) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            : undefined,
+        parser:
+          item.displayFormat === "2"
+            ? (value: any) => value.replace(/\$\s?|(,*)/g, "")
+            : undefined,
+        precision: item.allowDigits ? item.allowDigits : -1,
+        style: {
+          width: "100%",
+        },
+        // maxLength: item.allowLength || item.maxLength,
+      };
+    } else if (item.valueType === "5" && item.listType !== "2") {
+      return {
+        mode: item.allowMultiple ? "multiple" : undefined,
+        showArrow: true,
+        popoverTable: instanceModalApicode.includes(item.apicode),
+        placeholder: item.explanation || "请选择" + item.name,
+        options: listCodeMap[item.listCode],
+      };
+    } else if (item.valueType === "5" && item.listType === "2") {
+      return {
+        showSearch: false,
+        placeholder: item.explanation || "请选择" + item.name,
+        treeData: listCodeMap[item.listCode],
+        treeCheckable: item.allowMultiple || false,
+        virtual: false,
+        treeCheckStrictly: item.allowMultiple || false,
+        allowClear: true,
+        showCheckedStrategy: "SHOW_ALL",
+        dropdownStyle: { maxHeight: 400, overflow: "auto" },
+      };
+    } else if (item.valueType === "6") {
+      return {
+        disabledDate:
+          item.dateRule && this.disabledDate.bind(this, item.dateRule),
+        style: {
+          width: "100%",
+        },
+        showTime: item.dateFormat == "0",
+        format:
+          item.dateFormat == "0"
+            ? extra?.dateFormatter || "YYYY-MM-DD HH:mm:ss"
+            : "YYYY-MM-DD",
+      };
+    } else if (item.valueType === "7") {
+      return {
+        disabledDate:
+          item.dateRule && this.disabledDate.bind(this, item.dateRule),
+        style: {
+          width: "100%",
+        },
+        showTime: item.dateFormat == "0",
+        format:
+          item.dateFormat == "0"
+            ? extra?.dateFormatter || "YYYY-MM-DD HH:mm:ss"
+            : "YYYY-MM-DD",
+      };
+    } else if (item.valueType === "8" || item.valueType === "9") {
+      return {
+        fileLimitSize:
+          item.allowFileSize &&
+          (item.allowFileSize ? item.allowFileSize * 1024 * 1024 : undefined),
+        allowedFileTypes:
+          item.allowFileType &&
+          (item.allowFileType.length !== 0 ? item.allowFileType : undefined),
+      };
+    } else if (item.valueType === "12" || item.valueType === "13") {
+      return {
+        placeholder: item.explanation,
+        min: item.minValue,
+        max: item.maxValue,
+        formatter:
+          item.displayFormat === "2"
+            ? (value: any) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            : undefined,
+        parser:
+          item.displayFormat === "2"
+            ? (value: any) => value.replace(/\$\s?|(,*)/g, "")
+            : undefined,
+        precision: item.allowDigits ? item.allowDigits : -1,
+        style: {
+          width: "100%",
+        },
+      };
+    }
   };
 }

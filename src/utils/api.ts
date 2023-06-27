@@ -37,9 +37,10 @@ const API = {
   /**
    * 获取列表值
    * */
-  getList: (data: listQuery) => {
+  getList: (data: any) => {
     return NewRequest.post("/pdm/listbycodes", {
       warpper: data,
+      tenantId: "719",
     });
   },
   /**

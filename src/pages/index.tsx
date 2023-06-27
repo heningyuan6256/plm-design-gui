@@ -19,7 +19,7 @@ import saveSvg from "../assets/image/save.svg";
 import fileSvg from "../assets/image/threecubes.svg";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
 import { Tabs, TabsProps, message } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
@@ -38,8 +38,21 @@ import { removeFile } from "@tauri-apps/api/fs";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
-import { cloneDeep, groupBy } from "lodash";
+import { cloneDeep, groupBy, remove } from "lodash";
 // import { dealMaterialData } from 'plm-wasm'
+
+export const formItemMap: Record<string, any> = {
+  "1": "Input",
+  "2": "Input.TextArea",
+  "4": "Number",
+  "5": "Select",
+  "6": "Date",
+  "7": "DatePicker.RangePicker",
+  "8": "Image",
+  "9": "File",
+  "12": "CompositeForm",
+  "13": "CompositeForm",
+};
 
 const index = () => {
   const [rightData, setRightData] = useState<Record<string, any>[]>([]);
@@ -47,6 +60,7 @@ const index = () => {
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
   const dynamicFormRef = useRef<PlmFormForwardRefProps>();
   const [Attrs, setAttrs] = useState<Record<string, any>[]>([]);
+  const [materialAttrs, setMaterialAttrs] = useState<Record<string, any>[]>([]);
   const [FormAttrs, setFormAttrs] = useState<Record<string, any>[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<any>([]);
   const [selectNode, setSelectNode] = useState<Record<string, any>>();
@@ -114,6 +128,29 @@ const index = () => {
       itemCode: BasicsItemCode.file,
       tabCode: "10002002",
     });
+
+    // 查找物料公有属性
+    const {
+      result: { records: MaterialPublicAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.material,
+      tabCode: "10002001",
+    });
+    // 查找物料专有属性
+    const {
+      result: { records: MaterialPrivateAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.material,
+      tabCode: "10002002",
+    });
+
+    const totalMaterialAttrs = [
+      ...MaterialPublicAttrs,
+      ...MaterialPrivateAttrs,
+    ];
+
+    setMaterialAttrs(totalMaterialAttrs);
+
     // 获取所有属性映射
     const { result: attrsArray }: any = await API.getMapptingAttrs();
     const attrsMap = Utils.transformArrayToMap(
@@ -122,10 +159,8 @@ const index = () => {
       "targetAttr"
     );
     const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
-    const sourceAttrOnchain = attrsArray.map((item: any) => item.targetAttr);
-    const totalAttrs = [...PublicAttrs, ...PrivateAttrs].filter((item) => {
-      return sourceAttrOnchain.includes(item.apicode);
-    });
+    const totalAttrs = [...PublicAttrs, ...PrivateAttrs];
+    console.log(totalAttrs, totalMaterialAttrs, "totalMaterialAttrs");
     setAttrs(totalAttrs);
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
@@ -362,216 +397,10 @@ const index = () => {
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
     await dealCurrentBom(res);
   });
-  const items: TabsProps["items"] = [
-    {
-      key: "file",
-      label: `文件清单`,
-      children: (
-        <Fragment>
-          <div className="ml-1">
-            <PlmTabToolBar
-              list={[
-                { name: "签出", icon: checkout },
-                { name: "取消签出", icon: cancelcheckin },
-                { name: "签入", icon: checkin },
-              ]}
-            ></PlmTabToolBar>
-          </div>
-          <OnChainTable
-            key={"file"}
-            bordered={false}
-            rowKey={"node_name"}
-            dataSource={centerData}
-            extraHeight={24}
-            rowSelection={{
-              columnWidth: 19,
-            }}
-            onSubmit={(row, column) => {
-              const loop = (data: any) => {
-                for (let i = 0; i < data.length; i++) {
-                  if (data[i].node_name == row.node_name) {
-                    data[i][column["dataIndex"]] = row[column["dataIndex"]];
-                  }
-                  if (data[i].children && data[i].children.length) {
-                    loop(data[i].children);
-                  }
-                }
-              };
-              loop(leftData);
-              setLeftData([...leftData]);
-            }}
-            hideFooter
-            className="table-checkbox"
-            columns={[
-              {
-                title: "校验",
-                dataIndex: "flag",
-                search: {
-                  type: "Input",
-                },
-                width: 50,
-                render: (text: string) => {
-                  return <img width={12} src={plusImg} alt="" />;
-                },
-              },
-              {
-                title: "文件名称",
-                dataIndex: "node_name",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-                // render: (text: string) => {
-                //   return <a>{text}</a>;
-                // },
-              },
-              {
-                title: "编号",
-                dataIndex: "number",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "类型",
-                dataIndex: "model_format",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "版次",
-                dataIndex: "revision",
-                editable: true,
-                formitem: {
-                  type: "Input",
-                },
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "生效时间",
-                dataIndex: "publishTime",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-            ]}
-            selectedCell={{
-              dataIndex: "",
-              record: {},
-            }}
-          ></OnChainTable>
-        </Fragment>
-      ),
-    },
-    {
-      key: "material",
-      label: `物料清单`,
-      children: (
-        <Fragment>
-          <div className="ml-1">
-            <PlmTabToolBar
-              list={[
-                { name: "分配编码", icon: encodedSvg },
-                { name: "保存", icon: saveSvg },
-              ]}
-            ></PlmTabToolBar>
-          </div>
-
-          <OnChainTable
-            key={"material"}
-            rowKey={"node_name"}
-            dataSource={centerData}
-            extraHeight={24}
-            rowSelection={{
-              columnWidth: 19,
-            }}
-            bordered={false}
-            onSubmit={(data, column) => {
-              console.log(data, column);
-            }}
-            hideFooter
-            className="table-checkbox"
-            columns={[
-              {
-                title: "物料名称",
-                dataIndex: "node_name",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-                // render: (text: string) => {
-                //   return <a>{text}</a>;
-                // },
-              },
-              {
-                title: "编号",
-                dataIndex: "number",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "描述",
-                dataIndex: "insDesc",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "类型",
-                dataIndex: "objectName",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "生命周期",
-                dataIndex: "lifeCycle",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "版本",
-                dataIndex: "insVersion",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-              {
-                title: "生效时间",
-                dataIndex: "publishTime",
-                search: {
-                  type: "Input",
-                },
-                sorter: true,
-              },
-            ]}
-            selectedCell={{
-              dataIndex: "",
-              record: {},
-            }}
-          ></OnChainTable>
-        </Fragment>
-      ),
-    },
-  ];
 
   const handleClick = async (name: string) => {
     if (name === "refresh") {
-      dispatch(setLoading(true))
+      dispatch(setLoading(true));
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
       });
@@ -616,6 +445,246 @@ const index = () => {
       // dispatch(increment());
     }
   };
+
+  const generalDealAttrs = (attrs: any[], listCodeMap: any) => {
+    return attrs
+      .filter(
+        (item) => (item.readonly == "0" || item.readonly == "1") && item.status
+      )
+      .map((item) => {
+        return {
+          title: item.name,
+          dataIndex: item.apicode,
+          editable: true,
+          width: 150,
+          formitem: {
+            type: formItemMap[item.valueType],
+            props: Utils.generateFormItemProps(item, listCodeMap),
+          },
+          search: {
+            type: formItemMap[item.valueType],
+            props: Utils.generateFormItemProps(item, listCodeMap),
+          },
+        };
+      });
+  };
+
+  const [materialColumn, setMaterialColumn] = useState<any[]>([]);
+  const [fileColumn, setFileColumn] = useState<any[]>([]);
+
+  // 处理物料列头
+  useAsyncEffect(async () => {
+    const codeList = materialAttrs
+      .filter((item) => item.listCode)
+      .map((item) => {
+        return {
+          code: item.listCode,
+          where: "",
+        };
+      });
+    if (codeList.length) {
+      API.getList(codeList).then((res: any) => {
+        const map: any = {};
+        const result = res.result || [];
+        result.forEach((item: { listItems: any; code: string }) => {
+          map[item.code] = Utils.adaptListItems(item.listItems) || [];
+        });
+        setMaterialColumn(generalDealAttrs(materialAttrs, map) || []);
+      });
+    }
+  }, [materialAttrs]);
+
+  // 处理文件列头
+  useAsyncEffect(async () => {
+    const codeList = Attrs.filter((item) => item.listCode).map((item) => {
+      return {
+        code: item.listCode,
+        where: "",
+      };
+    });
+    if (codeList.length) {
+      API.getList(codeList).then((res: any) => {
+        const map: any = {};
+        const result = res.result || [];
+        console.log(result, 'result')
+        result.forEach((item: { listItems: any; code: string }) => {
+          map[item.code] = Utils.adaptListItems(item.listItems) || [];
+        });
+        setFileColumn(generalDealAttrs(Attrs, map) || []);
+      });
+    }
+  }, [Attrs]);
+
+  const items: TabsProps["items"] = [
+    {
+      key: "file",
+      label: `文件清单`,
+      children: (
+        <Fragment>
+          <div className="ml-1">
+            <PlmTabToolBar
+              list={[
+                { name: "签出", icon: checkout },
+                { name: "取消签出", icon: cancelcheckin },
+                { name: "签入", icon: checkin },
+              ]}
+            ></PlmTabToolBar>
+          </div>
+          {fileColumn.length ? (
+            <OnChainTable
+              key={"file"}
+              bordered={false}
+              rowKey={"node_name"}
+              dataSource={centerData}
+              extraHeight={24}
+              rowSelection={{
+                columnWidth: 19,
+                fixed: true,
+              }}
+              onSubmit={(row, column) => {
+                const loop = (data: any) => {
+                  for (let i = 0; i < data.length; i++) {
+                    if (data[i].node_name == row.node_name) {
+                      data[i][column["dataIndex"]] = row[column["dataIndex"]];
+                    }
+                    if (data[i].children && data[i].children.length) {
+                      loop(data[i].children);
+                    }
+                  }
+                };
+                loop(leftData);
+                setLeftData([...leftData]);
+              }}
+              hideFooter
+              className="table-checkbox"
+              columns={[
+                {
+                  title: "校验",
+                  dataIndex: "flag",
+                  search: {
+                    type: "Input",
+                  },
+                  width: 65,
+                  render: (text: string) => {
+                    return <img width={12} src={plusImg} alt="" />;
+                  },
+                },
+                {
+                  title: "文件名称",
+                  dataIndex: "node_name",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                  // render: (text: string) => {
+                  //   return <a>{text}</a>;
+                  // },
+                },
+                {
+                  title: "编号",
+                  dataIndex: "number",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                {
+                  title: "类型",
+                  dataIndex: "model_format",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                {
+                  title: "版次",
+                  dataIndex: "revision",
+                  sorter: true,
+                },
+                ...fileColumn,
+              ]}
+              selectedCell={{
+                dataIndex: "",
+                record: {},
+              }}
+            ></OnChainTable>
+          ) : (
+            <></>
+          )}
+        </Fragment>
+      ),
+    },
+    {
+      key: "material",
+      label: `物料清单`,
+      children: (
+        <Fragment>
+          <div className="ml-1">
+            <PlmTabToolBar
+              list={[
+                { name: "分配编码", icon: encodedSvg },
+                { name: "保存", icon: saveSvg },
+              ]}
+            ></PlmTabToolBar>
+          </div>
+
+          {materialColumn.length ? (
+            <OnChainTable
+              key={"material"}
+              rowKey={"node_name"}
+              dataSource={centerData}
+              extraHeight={24}
+              rowSelection={{
+                columnWidth: 19,
+              }}
+              bordered={false}
+              onSubmit={(row, column) => {
+                const loop = (data: any) => {
+                  for (let i = 0; i < data.length; i++) {
+                    if (data[i].node_name == row.node_name) {
+                      data[i][column["dataIndex"]] = row[column["dataIndex"]];
+                    }
+                    if (data[i].children && data[i].children.length) {
+                      loop(data[i].children);
+                    }
+                  }
+                };
+                loop(leftData);
+                setLeftData([...leftData]);
+              }}
+              hideFooter
+              className="table-checkbox"
+              columns={[
+                {
+                  title: "物料名称",
+                  dataIndex: "node_name",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                {
+                  title: "编号",
+                  dataIndex: "number",
+                  search: {
+                    type: "Input",
+                  },
+                  sorter: true,
+                },
+                ...materialColumn,
+              ]}
+              selectedCell={{
+                dataIndex: "",
+                record: {},
+              }}
+            ></OnChainTable>
+          ) : (
+            <></>
+          )}
+        </Fragment>
+      ),
+    },
+  ];
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="w-full bg-base flex-1 flex flex-col overflow-hidden">

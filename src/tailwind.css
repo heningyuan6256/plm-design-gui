@@ -691,3 +691,13 @@ img {
   background-color: #fff;
   border-bottom: 1px solid #cdcdcd !important;
 }
+
+.main .ant-table-column-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ant-table-tbody > tr > td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
