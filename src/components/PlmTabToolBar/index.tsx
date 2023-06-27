@@ -10,7 +10,7 @@ const PlmTabToolBar: FC<PlmTabToolBarProps> = (props) => {
   return (
     <div className="h-8 flex items-center">
       {list.map((item, index) => (
-        <div className='mr-5 text-xs flex' key={index}><img width={16} className='mr-1.5' src={item.icon} alt="" /> {item.name}</div>
+        <div className='mr-5 text-xs flex cursor-pointer hover:shadow-1xl hover:bg-hoverBg hover:text-primary' key={index}><img width={16} className='mr-1.5' src={item.icon} alt="" /> {item.name}</div>
       ))}
     </div>
   );

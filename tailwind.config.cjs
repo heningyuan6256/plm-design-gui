@@ -13,7 +13,7 @@ module.exports = {
         secondary: "#dfe9f5",
         base: "#f1f1f1",
         littleGrey: "#7b7a7a",
-        hoverBg: "#eff2f7",
+        hoverBg: "rgba(123,122,122,0.3)",
         baseHover: "#eff2f7",
         outBorder: "#CDCDCD",
         hoverHeadButton: "rgba(57,141,202,0.50)",
@@ -32,7 +32,7 @@ module.exports = {
         1.5: "6px",
       },
       boxShadow: {
-        "1xl": "0px 0px 0px 3px #eff2f7",
+        "1xl": "0px 0px 0px 3px rgba(123,122,122,0.3)",
         "2xl": "0px 0px 0px 6px rgba(57,141,202,0.50)",
         '3xl': '0px 0px 0px 3px #ddeffe'
       },

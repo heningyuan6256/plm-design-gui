@@ -21,7 +21,7 @@ import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
-import { Tabs, TabsProps } from "antd";
+import { Tabs, TabsProps, message } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import checkout from "../assets/image/checkin.svg";
@@ -570,8 +570,12 @@ const index = () => {
   ];
 
   const handleClick = async (name: string) => {
-    console.log(name, "name");
-    if (name === "allocatenumber") {
+    if (name === "refresh") {
+      dispatch(setLoading(true))
+      mqttClient.publish({
+        type: CommandConfig.getCurrentBOM,
+      });
+    } else if (name === "allocatenumber") {
       const centerDataMap = groupBy(centerData, (item) => {
         return item.model_format;
       });
@@ -583,6 +587,7 @@ const index = () => {
         numberOfItemCode: "10001001",
         fileTypeCountMap: paramsMap,
       }).then((res: any) => {
+        message.success("分配编号成功");
         setCacheItemNumber(res.result);
       });
     }
