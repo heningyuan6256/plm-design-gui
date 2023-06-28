@@ -390,7 +390,7 @@ const index = () => {
         }
       };
       loop(leftData);
-      setLeftData([...leftData])
+      setLeftData([...leftData]);
     }
   }, [cacheItemNumber]);
 
@@ -615,7 +615,7 @@ const index = () => {
                   sorter: true,
                   render: () => {
                     return <span>1</span>;
-                  }
+                  },
                 },
                 ...fileColumn,
               ]}
@@ -809,10 +809,19 @@ const index = () => {
                 className="border bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto"
                 style={{ width: "478px" }}
               >
-                {/* <div className="flex justify-between h-7 items-start">
-                  <div className="text-xs">基本信息</div>
-                  <PlmIcon name="edit" className="text-xs"></PlmIcon>
-                </div> */}
+                <div>
+                  <div
+                    className="text-primary mb-1"
+                    style={{ fontSize: "13px", fontWeight: 500 }}
+                  >
+                    属性名称
+                  </div>
+                  <div
+                    className="bg-outBorder w-full mb-1"
+                    style={{ height: "1px" }}
+                  ></div>
+                </div>
+
                 <div className="flex-1 w-full basic-attr">
                   <OnChainForm
                     ref={dynamicFormRef}
