@@ -32,10 +32,11 @@ const Foot: FC = () => {
         {/* <Dropdown menu={{ items }} placement="top"> */}
         <div className="flex relative">
           <div
-            className="absolute top-0"
+            className="absolute"
             style={{
               borderRadius: "50%",
               width: "4px",
+              top: '1px',
               height: "4px",
               background: "#0EDF8C",
               left: "5px",

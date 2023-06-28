@@ -396,6 +396,8 @@ const index = () => {
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
+    console.log(res, 'res');
+    
     await dealCurrentBom(res);
   });
 

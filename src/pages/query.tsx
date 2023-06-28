@@ -65,7 +65,7 @@ const query: FC = () => {
   }, []);
 
   useEffect(() => {
-    API.getQueryColumns({ itemCode: "10001002" }).then((res: any) => {
+    API.getQueryColumns({ itemCode: "10001006" }).then((res: any) => {
       setSearchColumn(res.result);
     });
   }, []);
@@ -150,7 +150,7 @@ const query: FC = () => {
                               return { ...item, parentTabCode: 10002001 };
                             }),
                             pageSize: 100,
-                            itemCode: "10001002",
+                            itemCode: "10001006",
                           });
                         }
                       }}
