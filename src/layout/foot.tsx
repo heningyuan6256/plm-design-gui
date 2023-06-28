@@ -39,7 +39,7 @@ const Foot: FC = () => {
               top: '1px',
               height: "4px",
               background: "#0EDF8C",
-              left: "5px",
+              left: "6px",
             }}
           ></div>
           <img src={userSvg} width={12} alt="" />
