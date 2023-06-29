@@ -95,8 +95,8 @@
         "resizable": true,
         "title": "plm-design",
         "width": 1440,
-        "url": "/home",
-        "label": "Home",
+        "url": "/query",
+        "label": "Query",
         "decorations": false,
         "center": true,
         "visible": true

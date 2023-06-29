@@ -1,6 +1,7 @@
 import mqtt, { MqttClient } from "mqtt";
 import { BasicConfig } from "../constant/config";
 import { Utils } from ".";
+import { getCurrent } from "@tauri-apps/api/window";
 
 class MqttService {
   /**
@@ -49,6 +50,12 @@ class MqttService {
     });
 
     this.mqtt.on("message", (topic, data: any) => {
+      const currentWindow = getCurrent();
+      // console.log(currentWindow, "currentWindow");
+      currentWindow.setAlwaysOnTop(true);
+      setTimeout(() => {
+        currentWindow.setAlwaysOnTop(false);
+      }, 500);
       const type = JSON.parse(data).type;
       // 如果存在，直接调用
       const callBack = this.callBackMapping[type]; //执行订阅的回调

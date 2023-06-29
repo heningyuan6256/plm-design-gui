@@ -205,174 +205,174 @@ const index = () => {
     }
   }, [leftData]);
 
-  useAsyncEffect(async () => {
-    await dealCurrentBom({
-      input_data: {},
-      output_data: {
-        node_name: "assem_top",
-        pic_path: "",
-        file_path: "D:\\SWFiles\\assem_top.SLDASM",
-        model_type: "assembly",
-        property: [
-          {
-            name: "Description",
-            type: "string",
-            defaultVal: "",
-          },
-          {
-            name: "Weight",
-            type: "string",
-            defaultVal: '"SW-质量@assem_top.SLDASM"',
-          },
-          {
-            name: "质量",
-            type: "string",
-            defaultVal: '"SW-质量@assem_top.SLDASM"',
-          },
-          {
-            name: "审定",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "设计",
-            type: "string",
-            defaultVal: "   ",
-          },
-          {
-            name: "零件号",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "版本",
-            type: "string",
-            defaultVal: "   ",
-          },
-          {
-            name: "图幅",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "备注",
-            type: "string",
-            defaultVal: "   ",
-          },
-          {
-            name: "替代",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "代号",
-            type: "string",
-            defaultVal: "“图样代号”",
-          },
-          {
-            name: "名称",
-            type: "string",
-            defaultVal: "“图样名称”",
-          },
-          {
-            name: "共X张",
-            type: "string",
-            defaultVal: "1",
-          },
-          {
-            name: "第X张",
-            type: "string",
-            defaultVal: "1",
-          },
-          {
-            name: "阶段标记S",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "阶段标记A",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "阶段标记B",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "标准审查",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "工艺审查",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "批准",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "日期",
-            type: "string",
-            defaultVal: "2007,12,3",
-          },
-          {
-            name: "校核",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "主管设计",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "审核",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "校对",
-            type: "string",
-            defaultVal: " ",
-          },
-        ],
-        children: [
-          {
-            node_name: "block<1>",
-            pic_path: "",
-            file_path: "D:\\SWFiles\\block.SLDPRT",
-            model_type: "part",
-            property: [
-              {
-                name: "零件号",
-                type: "string",
-                defaultVal: "block",
-              },
-              {
-                name: "VendorNo",
-                type: "string",
-                defaultVal: "1.0",
-              },
-              {
-                name: "attr_name_test",
-                type: "int",
-                defaultVal: "3.140000",
-              },
-            ],
-          },
-        ],
-      },
-      from: "111111",
-      to: "111111",
-      type: "sw.2019.getCurrentBOM",
-      extra: "读取BOM结构",
-      topic: "sw",
-    });
-  }, []);
+  // useAsyncEffect(async () => {
+  //   await dealCurrentBom({
+  //     input_data: {},
+  //     output_data: {
+  //       node_name: "assem_top",
+  //       pic_path: "",
+  //       file_path: "D:\\SWFiles\\assem_top.SLDASM",
+  //       model_type: "assembly",
+  //       property: [
+  //         {
+  //           name: "Description",
+  //           type: "string",
+  //           defaultVal: "",
+  //         },
+  //         {
+  //           name: "Weight",
+  //           type: "string",
+  //           defaultVal: '"SW-质量@assem_top.SLDASM"',
+  //         },
+  //         {
+  //           name: "质量",
+  //           type: "string",
+  //           defaultVal: '"SW-质量@assem_top.SLDASM"',
+  //         },
+  //         {
+  //           name: "审定",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "设计",
+  //           type: "string",
+  //           defaultVal: "   ",
+  //         },
+  //         {
+  //           name: "零件号",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "版本",
+  //           type: "string",
+  //           defaultVal: "   ",
+  //         },
+  //         {
+  //           name: "图幅",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "备注",
+  //           type: "string",
+  //           defaultVal: "   ",
+  //         },
+  //         {
+  //           name: "替代",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "代号",
+  //           type: "string",
+  //           defaultVal: "“图样代号”",
+  //         },
+  //         {
+  //           name: "名称",
+  //           type: "string",
+  //           defaultVal: "“图样名称”",
+  //         },
+  //         {
+  //           name: "共X张",
+  //           type: "string",
+  //           defaultVal: "1",
+  //         },
+  //         {
+  //           name: "第X张",
+  //           type: "string",
+  //           defaultVal: "1",
+  //         },
+  //         {
+  //           name: "阶段标记S",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "阶段标记A",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "阶段标记B",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "标准审查",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "工艺审查",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "批准",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "日期",
+  //           type: "string",
+  //           defaultVal: "2007,12,3",
+  //         },
+  //         {
+  //           name: "校核",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "主管设计",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "审核",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //         {
+  //           name: "校对",
+  //           type: "string",
+  //           defaultVal: " ",
+  //         },
+  //       ],
+  //       children: [
+  //         {
+  //           node_name: "block<1>",
+  //           pic_path: "",
+  //           file_path: "D:\\SWFiles\\block.SLDPRT",
+  //           model_type: "part",
+  //           property: [
+  //             {
+  //               name: "零件号",
+  //               type: "string",
+  //               defaultVal: "block",
+  //             },
+  //             {
+  //               name: "VendorNo",
+  //               type: "string",
+  //               defaultVal: "1.0",
+  //             },
+  //             {
+  //               name: "attr_name_test",
+  //               type: "int",
+  //               defaultVal: "3.140000",
+  //             },
+  //           ],
+  //         },
+  //       ],
+  //     },
+  //     from: "111111",
+  //     to: "111111",
+  //     type: "sw.2019.getCurrentBOM",
+  //     extra: "读取BOM结构",
+  //     topic: "sw",
+  //   });
+  // }, []);
 
   useEffect(() => {
     if (cacheItemNumber && leftData.length) {
