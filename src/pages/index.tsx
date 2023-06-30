@@ -40,6 +40,7 @@ import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import { cloneDeep, groupBy, remove } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
+import threeCubes from "../assets/image/threecubes.svg";
 // import { dealMaterialData } from 'plm-wasm'
 
 export const formItemMap: Record<string, any> = {
@@ -189,13 +190,14 @@ const index = () => {
       const loop = async (data: any) => {
         for (let i = 0; i < data.length; i++) {
           data[i].itemAttrs = {};
+          data[i].id = Utils.generateSnowId()
           data[i].property.forEach((item: any) => {
             if (sourceAttrPlugin.includes(item.name)) {
               data[i][attrsMap[item.name]] = item.defaultVal;
             }
           });
           if (data[i].pic_path != '.bmp') {
-  
+
             const uint8 = await readBinaryFile(data[i].pic_path, {})
             // const base64String = btoa(String.fromCharCode.apply(null, uint8));
             data[i].thumbnail = uint8arrayToBase64(uint8)
@@ -205,7 +207,7 @@ const index = () => {
           } else if (data[i].model_type === "part") {
             data[i].model_format = "sldprt";
           }
-  
+
           if (data[i].children && data[i].children.length) {
             await loop(data[i].children);
           }
@@ -213,9 +215,9 @@ const index = () => {
       };
       await loop([res.output_data])
     } catch (error) {
-      
+
     }
-    
+
 
     setSelectNode(res.output_data);
     setLeftData([res.output_data]);
@@ -230,7 +232,10 @@ const index = () => {
           const flattenedItem = { ...data[i] }; // Create a copy of the current item
           delete flattenedItem.children; // Remove the "children" property from the copy
           delete flattenedItem.property;
-          flattenData.push(flattenedItem);
+          const nodeNames = flattenData.map(item => item.node_name)
+          if (!nodeNames.includes(data[i].node_name)) {
+            flattenData.push(flattenedItem);
+          }
           if (data[i].children && data[i].children.length) {
             loop(data[i].children);
           }
@@ -418,7 +423,7 @@ const index = () => {
           // todo需要限制如果没有则赋值Number
           if (cloneNumber[data[i].model_format]) {
             data[i].itemAttrs["Number"] = cloneNumber[data[i].model_format][0];
-            cloneNumber[data[i].model_format].splice(1);
+            cloneNumber[data[i].model_format] = cloneNumber[data[i].model_format].splice(1);
           }
           if (data[i].children && data[i].children.length) {
             loop(data[i].children);
@@ -440,7 +445,7 @@ const index = () => {
     img.src = src
     img.style.position = 'absolute'
     img.style.opacity = '0'
-    img.style.left='-100000px'
+    img.style.left = '-100000px'
     document.body.appendChild(img)
 
     //背景颜色  白色
@@ -628,7 +633,7 @@ const index = () => {
             <OnChainTable
               key={"file"}
               bordered={false}
-              rowKey={"node_name"}
+              rowKey={"id"}
               dataSource={centerData}
               extraHeight={24}
               rowSelection={{
@@ -734,7 +739,7 @@ const index = () => {
           {materialColumn.length ? (
             <OnChainTable
               key={"material"}
-              rowKey={"node_name"}
+              rowKey={"id"}
               dataSource={materialCenterData}
               extraHeight={24}
               rowSelection={{
@@ -833,7 +838,7 @@ const index = () => {
               </div>
               {/* <div className="flex-1 border border-outBorder"> */}
               <OnChainTable
-                rowKey={"node_name"}
+                rowKey={"id"}
                 className="tree-table"
                 bordered={false}
                 dataSource={leftData}
@@ -846,7 +851,7 @@ const index = () => {
                 }}
                 rowSelection={{
                   columnWidth: 0,
-                  selectedRowKeys: [selectNode?.node_name],
+                  selectedRowKeys: [selectNode?.id],
                 }}
                 hideFooter
                 extraHeight={0}
@@ -862,8 +867,8 @@ const index = () => {
                       return (
                         <div
                           className={`gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
-                              ? "ml-3"
-                              : ""
+                            ? "ml-3"
+                            : ""
                             }`}
                           onClick={() => {
                             setSelectNode(record);
@@ -872,8 +877,8 @@ const index = () => {
                           <img
                             width={14}
                             src={((record.children || []).length
-                              ? childnodecube 
-                              : fileCubeSvg)
+                              ? threeCubes
+                              : childnodecube)
                             }
                             alt=""
                           />
@@ -998,7 +1003,7 @@ const index = () => {
                 }}
                 rowSelection={{
                   columnWidth: 0,
-                  selectedRowKeys: [selectNode?.node_name],
+                  selectedRowKeys: [selectNode?.id],
                 }}
                 hideFooter
                 extraHeight={0}
@@ -1014,8 +1019,8 @@ const index = () => {
                       return (
                         <div
                           className={`gap-1 inline-flex items-center ${!(record.children && record.children.length)
-                              ? "ml-3"
-                              : ""
+                            ? "ml-3"
+                            : ""
                             }`}
                         >
                           <img
@@ -1027,7 +1032,7 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>{record?.itemAttrs && record?.itemAttrs["Number"] ?  record?.itemAttrs["Number"] : text}</div>
+                          <div>{record?.itemAttrs && record?.itemAttrs["Number"] ? record?.itemAttrs["Number"] : <div style={{ height: '22px', width: '140px', background: '#FFC745', opacity: "0.2" }}></div>}</div>
                         </div>
                       );
                     },
