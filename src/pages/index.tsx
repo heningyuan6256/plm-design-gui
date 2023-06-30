@@ -21,7 +21,7 @@ import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
-import { Tabs, TabsProps, message } from "antd";
+import { Tabs, TabsProps, message, Image } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import checkout from "../assets/image/checkin.svg";
@@ -34,11 +34,12 @@ import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { homeDir } from "@tauri-apps/api/path";
-import { removeFile } from "@tauri-apps/api/fs";
-import { WebviewWindow } from "@tauri-apps/api/window";
+import { readBinaryFile, removeFile } from "@tauri-apps/api/fs";
+import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import { cloneDeep, groupBy, remove } from "lodash";
+import childnodecube from "../assets/image/childnodecube.svg";
 // import { dealMaterialData } from 'plm-wasm'
 
 export const formItemMap: Record<string, any> = {
@@ -67,6 +68,7 @@ const index = () => {
   const [productOptions, setProductOptions] = useState<any[]>();
   const [selectProduct, setSelectProduct] = useState<string>("");
   const [cacheItemNumber, setCacheItemNumber] = useState({});
+  const [thumbImage, setThumbImage] = useState('')
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -149,6 +151,27 @@ const index = () => {
       ...MaterialPrivateAttrs,
     ];
 
+    const uint8arrayToBase64 = function (u8Arr: any) {
+      try {
+        let CHUNK_SIZE = 0x8000; //arbitrary number
+        let index = 0;
+        let length = u8Arr.length;
+        let result = '';
+        let slice;
+        while (index < length) {
+          slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
+          result += String.fromCharCode.apply(null, slice);
+          index += CHUNK_SIZE;
+        }
+        // web image base64图片格式: "data:image/png;base64," + b64encoded;
+        return "data:image/png;base64," + btoa(result);
+        //  return btoa(result);
+      }
+      catch (e) {
+        throw e;
+      }
+    }
+
     setMaterialAttrs(totalMaterialAttrs);
 
     // 获取所有属性映射
@@ -161,26 +184,39 @@ const index = () => {
     const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
     const totalAttrs = [...PublicAttrs, ...PrivateAttrs];
     setAttrs(totalAttrs);
-    const loop = (data: any) => {
-      for (let i = 0; i < data.length; i++) {
-        data[i].itemAttrs = {};
-        data[i].property.forEach((item: any) => {
-          if (sourceAttrPlugin.includes(item.name)) {
-            data[i][attrsMap[item.name]] = item.defaultVal;
-          }
-        });
-        if (data[i].model_type === "assembly") {
-          data[i].model_format = "sldasm";
-        } else if (data[i].model_type === "part") {
-          data[i].model_format = "sldprt";
-        }
 
-        if (data[i].children && data[i].children.length) {
-          loop(data[i].children);
+    try {
+      const loop = async (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          data[i].itemAttrs = {};
+          data[i].property.forEach((item: any) => {
+            if (sourceAttrPlugin.includes(item.name)) {
+              data[i][attrsMap[item.name]] = item.defaultVal;
+            }
+          });
+          if (data[i].pic_path != '.bmp') {
+  
+            const uint8 = await readBinaryFile(data[i].pic_path, {})
+            // const base64String = btoa(String.fromCharCode.apply(null, uint8));
+            data[i].thumbnail = uint8arrayToBase64(uint8)
+          }
+          if (data[i].model_type === "assembly") {
+            data[i].model_format = "sldasm";
+          } else if (data[i].model_type === "part") {
+            data[i].model_format = "sldprt";
+          }
+  
+          if (data[i].children && data[i].children.length) {
+            await loop(data[i].children);
+          }
         }
-      }
-    };
-    loop([res.output_data]);
+      };
+      await loop([res.output_data])
+    } catch (error) {
+      
+    }
+    
+
     setSelectNode(res.output_data);
     setLeftData([res.output_data]);
     dispatch(setLoading(false));
@@ -399,6 +435,51 @@ const index = () => {
     await dealCurrentBom(res);
   });
 
+  function removeImgBg(src: any) {
+    const img = document.createElement('img')
+    img.src = src
+    img.style.position = 'absolute'
+    img.style.opacity = '0'
+    img.style.left='-100000px'
+    document.body.appendChild(img)
+
+    //背景颜色  白色
+    const rgba = [255, 255, 255, 255];
+    // 容差大小
+    const tolerance = 100;
+
+    var imgData = null;
+    const [r0, g0, b0, a0] = rgba;
+    var r, g, b, a;
+    const canvas = document.createElement('canvas');
+    const context: any = canvas.getContext('2d');
+    const w = 400;
+    const h = 400;
+    canvas.width = w;
+    canvas.height = h;
+    context.drawImage(img, 0, 0);
+    imgData = context.getImageData(0, 0, w, h);
+
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      r = imgData.data[i];
+      g = imgData.data[i + 1];
+      b = imgData.data[i + 2];
+      a = imgData.data[i + 3];
+      const t = Math.sqrt((r - r0) ** 2 + (g - g0) ** 2 + (b - b0) ** 2 + (a - a0) ** 2);
+      if (t <= tolerance) {
+        imgData.data[i] = 0;
+        imgData.data[i + 1] = 0;
+        imgData.data[i + 2] = 0;
+        imgData.data[i + 3] = 0;
+      }
+    }
+    context.putImageData(imgData, 0, 0);
+    const newBase64 = canvas.toDataURL('image/png');
+    document.body.removeChild(img)
+    // img.src = newBase64;
+    return newBase64
+  }
+
   const handleClick = async (name: string) => {
     if (name === "refresh") {
       dispatch(setLoading(true));
@@ -572,14 +653,20 @@ const index = () => {
               className="table-checkbox"
               columns={[
                 {
-                  title: "校验",
+                  title: <div className="w-full flex justify-center">校验</div>,
                   dataIndex: "flag",
-                  search: {
-                    type: "Input",
-                  },
-                  width: 65,
+                  width: 45,
                   render: (text: string) => {
-                    return <img width={12} src={plusImg} alt="" />;
+                    return <div className="w-full flex justify-center"><img width={12} src={plusImg} alt="" /></div>;
+                  },
+                },
+                {
+                  title: "缩略图",
+                  dataIndex: "thumbnail",
+                  // sorter: true,
+                  width: 50,
+                  render: (text: string) => {
+                    return <Image src={text} width={32} preview={false}></Image>;
                   },
                 },
                 {
@@ -673,6 +760,15 @@ const index = () => {
               className="table-checkbox"
               columns={[
                 {
+                  title: "缩略图",
+                  dataIndex: "thumbnail",
+                  // sorter: true,
+                  width: 50,
+                  render: (text: string) => {
+                    return <Image src={text} width={32} preview={false}></Image>;
+                  },
+                },
+                {
                   title: "物料名称",
                   dataIndex: "node_name",
                   search: {
@@ -706,6 +802,13 @@ const index = () => {
   useEffect(() => {
     console.log(centerData, "centerData");
   }, [centerData]);
+
+  // useEffect(() => {
+  //   if(selectNode?.thumbnail){
+  //     console.log(selectNode?.thumbnail,'selectNode?.thumbnail')
+  //       removeImgBg(document.getElementById('thumbnail'))
+  //   }
+  // }, [selectNode?.thumbnail])
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -758,21 +861,19 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center cursor-pointer ${
-                            !(record.children && record.children.length)
+                          className={`gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
                               ? "ml-3"
                               : ""
-                          }`}
+                            }`}
                           onClick={() => {
                             setSelectNode(record);
                           }}
                         >
                           <img
                             width={14}
-                            src={
-                              (record.children || []).length
-                                ? fileCubeSvg
-                                : fileSvg
+                            src={((record.children || []).length
+                              ? childnodecube 
+                              : fileCubeSvg)
                             }
                             alt=""
                           />
@@ -799,10 +900,11 @@ const index = () => {
                 style={{
                   background:
                     "linear-gradient(180deg,#ffffff 0%, #e8e8e8 100%)",
+                  overflow: 'hidden',
                 }}
                 className="flex-1 h-full border border-outBorder"
               >
-                <div></div>
+                <img id="thumbnail" style={{ margin: '0 auto', height: '100%' }} src={removeImgBg(selectNode?.thumbnail)} alt="" />
               </div>
               {/* 基本信息 */}
               <div
@@ -911,11 +1013,10 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center ${
-                            !(record.children && record.children.length)
+                          className={`gap-1 inline-flex items-center ${!(record.children && record.children.length)
                               ? "ml-3"
                               : ""
-                          }`}
+                            }`}
                         >
                           <img
                             width={14}
@@ -926,7 +1027,7 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>{record.itemAttrs["Number"] ?? text}</div>
+                          <div>{record?.itemAttrs && record?.itemAttrs["Number"] ?  record?.itemAttrs["Number"] : text}</div>
                         </div>
                       );
                     },

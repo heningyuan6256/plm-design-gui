@@ -15,7 +15,7 @@
       "all": true,
       "fs": {
         "all": true,
-        "scope": ["$RESOURCE/*", "$HOME/.onChain/**"],
+        "scope": ["**","$RESOURCE/*", "$HOME/.onChain/**"],
         "readFile": true,
         "writeFile": true,
         "readDir": true,

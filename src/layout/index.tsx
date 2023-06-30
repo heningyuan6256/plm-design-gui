@@ -32,21 +32,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const dispatch = useDispatch();
 
   useAsyncEffect(async () => {
-    const command = new Command("ifconfig", ["en0"]);
-    command.on("close", (data) => {});
-    command.on("error", (error) => console.error(`command error: "${error}"`));
-    command.stdout.on("data", (line: string) => {
-      if (line.indexOf("ether") != -1) {
-        mqttClient.connect(
-          BasicConfig.MqttConnectUrl,
-          line.split("ether")[1].trim()
-        );
-      }
-    });
+    // const command = new Command("ifconfig", ["en0"]);
+    // command.on("close", (data) => {});
+    // command.on("error", (error) => console.error(`command error: "${error}"`));
+    // command.stdout.on("data", (line: string) => {
+    //   if (line.indexOf("ether") != -1) {
+    //     mqttClient.connect(
+    //       BasicConfig.MqttConnectUrl,
+    //       line.split("ether")[1].trim()
+    //     );
+    //   }
+    // });
     // command.stderr.on("data", (line) =>
     //   console.log(`command stderr: "${line}"`)
     // );
-    command.execute();
+    // command.execute();
+
+    mqttClient.connect(
+      BasicConfig.MqttConnectUrl,
+      'test'
+    );
 
     // const ffmpeg = Command.sidecar("binaries/OnChain_DesignFusion", ['-t','solidworks','-m','create-cube', '-o', '""'], {encoding: "GBK"});
     // ffmpeg.on('error', (...args) => {
