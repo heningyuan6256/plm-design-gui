@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "plm-design",
+    "productName": "DESIGNFUSION",
     "version": "0.0.0"
   },
   "tauri": {
@@ -93,7 +93,7 @@
         "fullscreen": false,
         "height": 720,
         "resizable": true,
-        "title": "plm-design",
+        "title": "DESIGNFUSION",
         "width": 1440,
         "url": "/query",
         "label": "Query",

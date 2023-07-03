@@ -18,31 +18,17 @@ const PlmLoading: FC<PlmLoadingProps> = ({
     let progress = process;
     let speed = 1000; // 初始加载速度，单位是毫秒
 
-    const incrementProgress = () => {
-      progress += 1;
-      if (progress >= 100) {
-        clearInterval(interval);
-        return;
-      }
 
-      console.log(`加载进度：${progress}%`);
-      setProcess(progress);
-
-      // 调整加载速度
-      speed += 100; // 增加加载速度的间隔，单位是毫秒
-      setTimeout(incrementProgress, speed);
-    };
-
-    const interval = setInterval(incrementProgress, speed);
+    // const interval = setInterval(incrementProgress, speed);
   };
 
-  useEffect(() => {
-    if (loading) {
-      simulateProgress();
-    } else {
-    //   setProcess(100);
-    }
-  }, [loading]);
+//   useEffect(() => {
+//     if (loading) {
+//       simulateProgress();
+//     } else {
+//     //   setProcess(100);
+//     }
+//   }, [loading]);
 
   return (
     <div className={`h-full w-full opacity-6 ${warrperClassName || ""}`}>
@@ -57,8 +43,8 @@ const PlmLoading: FC<PlmLoadingProps> = ({
                 style={{ fontFamily: "PingFang SC, PingFang SC-Medium" }}
               >
                 <span className="text-primary">
-                  Loading{" "}
-                  <span style={{ fontStyle: "italic" }}>{process}%</span>
+                  Loading...{" "}
+                  {/* <span style={{ fontStyle: "italic" }}>{process}%</span> */}
                 </span>
               </div>
               <div className="flex items-center h-3" style={{ gap: "9px" }}>
@@ -70,7 +56,7 @@ const PlmLoading: FC<PlmLoadingProps> = ({
                     borderRadius: "6px",
                   }}
                 >
-                  {Array.from({ length: 23/100 * process })
+                  {Array.from({ length: 7 })
                     .fill({})
                     .map((item, index) => {
                       return (
@@ -78,7 +64,7 @@ const PlmLoading: FC<PlmLoadingProps> = ({
                           key={index}
                           className={`bg-primary h-2.5 w-2.5 loading_square`}
                           style={{
-                            opacity: (index + 1) * 0.05,
+                            opacity: (index + 1) * 0.15,
                           }}
                         ></div>
                       );

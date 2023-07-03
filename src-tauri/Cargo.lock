@@ -3,6 +3,22 @@
 version = 3
 
 [[package]]
+name = "DESIGNFUSION"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "libloading",
+ "log",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "winit",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2262,22 +2278,6 @@ dependencies = [
  "quick-xml 0.26.0",
  "serde",
  "time",
-]
-
-[[package]]
-name = "plm-design"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "libloading",
- "log",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "winit",
 ]
 
 [[package]]

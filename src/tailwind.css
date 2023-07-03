@@ -405,21 +405,31 @@ select {
   background: #ffffff;
   border-radius: 2px;
 }
-.loading-warpper{
+.loading-warpper {
   padding: 1px;
   overflow: hidden;
 }
-.loading_square:not(:last-child){
+.loading_square:not(:last-child) {
   margin-right: 1px;
 }
-.loading_square:first-child {
-  /* border-radius: 5px 0px 0px 5px; */
+.loading_square {
+  animation: loading-animation 3s infinite linear;
+}
+@keyframes loading-animation {
+  0% {
+    transform: translateX(-230px);
+  }
+  100% {
+    transform: translateX(230px);
+  }
+}
+/* .loading_square:first-child {
+  border-radius: 5px 0px 0px 5px;
 }
 
 .loading_square:last-child{
-  /* border-radius: 0px 5px 5px 0px; */
-}
-
+  border-radius: 0px 5px 5px 0px;
+} */
 
 .anticon-caret-right {
   color: #cdcdcd;

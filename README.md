@@ -3,11 +3,11 @@
 ##### **technology stack**
 
 1. react
-1. ts
-1. tailwind
-1. three.js
-1. tauri
-1. rust
+2. ts
+3. tailwind
+4. three.js
+5. tauri
+6. rust
 
 ##### install dependencies
 
