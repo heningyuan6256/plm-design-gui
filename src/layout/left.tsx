@@ -12,6 +12,7 @@ import menuUploadHover from "../assets/image/menuUpload (1).svg";
 import menuSetting from "../assets/image/menuSetting.svg";
 import menuSettingHover from "../assets/image/menuSetting (1).svg";
 import { mqttClient } from "../utils/MqttService";
+import { appWindow } from "@tauri-apps/api/window";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
@@ -21,7 +22,11 @@ const left: FC = () => {
 
   useEffect(() => {
     mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
-      navigate(`/${res.input_data.split("_")[1]}`);
+      if(res.input_data === 'exit'){
+        appWindow.close()
+      } else {
+        navigate(`/${res.input_data.split("_")[1]}`);
+      }
     });
     return () => {
       mqttClient.unRegisterCallBack(CommandConfig.onchain_path);
@@ -55,7 +60,7 @@ const left: FC = () => {
       title: "属性映射",
       icon: menuSetting,
       hoverIcon: menuSettingHover,
-      path: "/att-map",
+      path: "/preference",
       location: "right",
     },
   ];

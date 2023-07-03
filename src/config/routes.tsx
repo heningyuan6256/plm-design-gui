@@ -44,7 +44,7 @@ export const RoutesWithSubRoutes = () => {
         },
         // 属性映射
         {
-          path: "/att-map",
+          path: "/preference",
           element: <AttrMap></AttrMap>,
         },
         // 物料库

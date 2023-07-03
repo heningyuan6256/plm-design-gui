@@ -74,7 +74,7 @@ const PlmLoading: FC<PlmLoadingProps> = ({
             </div>
           </div>
           <div
-            className={`absolute top-0 h-full w-full opacity-60 bg-white`}
+            className={`absolute top-0 h-full w-full opacity-0 bg-white`}
           ></div>
         </Fragment>
       ) : (

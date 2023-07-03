@@ -241,10 +241,10 @@ const index = () => {
           }
         }
       };
-      loop(leftData);
+      loop([selectNode]);
       setCenterData(flattenData);
     }
-  }, [leftData]);
+  }, [selectNode, leftData]);
 
   // useAsyncEffect(async () => {
   //   await dealCurrentBom({
@@ -989,7 +989,7 @@ const index = () => {
               </div> */}
               {/* <div className="flex-1 bg-white h-full"> */}
               <OnChainTable
-                rowKey={"node_name"}
+                rowKey={"id"}
                 style={{ height: "100%" }}
                 className="tree-table"
                 bordered={false}

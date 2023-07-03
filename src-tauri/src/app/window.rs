@@ -61,7 +61,7 @@ pub async fn open_stock(handle: tauri::AppHandle) {
 #[command]
 pub async fn open_attr_map(handle: tauri::AppHandle) {
     tauri::WindowBuilder
-        ::new(&handle, "AttrMap", tauri::WindowUrl::App("/att-map".into()))
+        ::new(&handle, "AttrMap", tauri::WindowUrl::App("/preference".into()))
         .inner_size(580.0, 372.0)
         .resizable(false)
         .title("属性映射")
