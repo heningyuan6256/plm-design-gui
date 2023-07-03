@@ -18,7 +18,7 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
   const { value: user } = useSelector((state: any) => state.user);
   const { value: loading } = useSelector((state: any) => state.loading);
 
-  if (!user.id) {
+  if (user.id) {
     return <PlmLoading loading={true}></PlmLoading>;
   }
 

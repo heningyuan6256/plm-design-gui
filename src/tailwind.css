@@ -405,6 +405,21 @@ select {
   background: #ffffff;
   border-radius: 2px;
 }
+.loading-warpper{
+  padding: 1px;
+  overflow: hidden;
+}
+.loading_square:not(:last-child){
+  margin-right: 1px;
+}
+.loading_square:first-child {
+  /* border-radius: 5px 0px 0px 5px; */
+}
+
+.loading_square:last-child{
+  /* border-radius: 0px 5px 5px 0px; */
+}
+
 
 .anticon-caret-right {
   color: #cdcdcd;
