@@ -12,5 +12,5 @@ export const useMqttRegister = (
     return () => {
       mqttClient.unRegisterCallBack(Utils.instruction(order));
     };
-  }, [deps]);
+  });
 };

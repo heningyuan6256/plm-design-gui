@@ -90,9 +90,10 @@ const API = {
    * 获取映射表
    */
 
-  getMapptingAttrs: () => {
+  getMapptingAttrs: (data: any) => {
     return NewRequest.get("/pdm/cad/mapping/attrs", {
       tenantId: "719",
+      ...data,
     });
   },
 

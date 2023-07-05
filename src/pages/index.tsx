@@ -41,6 +41,7 @@ import plusImg from "../assets/image/plus.svg";
 import { cloneDeep, groupBy, remove } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
+import { settingType } from "./attrMap";
 // import { dealMaterialData } from 'plm-wasm'
 
 export const formItemMap: Record<string, any> = {
@@ -69,7 +70,7 @@ const index = () => {
   const [productOptions, setProductOptions] = useState<any[]>();
   const [selectProduct, setSelectProduct] = useState<string>("");
   const [cacheItemNumber, setCacheItemNumber] = useState({});
-  const [thumbImage, setThumbImage] = useState('')
+  const [thumbImage, setThumbImage] = useState("");
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -157,7 +158,7 @@ const index = () => {
         let CHUNK_SIZE = 0x8000; //arbitrary number
         let index = 0;
         let length = u8Arr.length;
-        let result = '';
+        let result = "";
         let slice;
         while (index < length) {
           slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
@@ -167,16 +168,19 @@ const index = () => {
         // web image base64图片格式: "data:image/png;base64," + b64encoded;
         return "data:image/png;base64," + btoa(result);
         //  return btoa(result);
-      }
-      catch (e) {
+      } catch (e) {
         throw e;
       }
-    }
+    };
 
     setMaterialAttrs(totalMaterialAttrs);
 
     // 获取所有属性映射
-    const { result: attrsArray }: any = await API.getMapptingAttrs();
+    const { result: attrsArray }: any = await API.getMapptingAttrs({
+      toolName: BasicConfig.pubgin_topic,
+      mappingName: settingType.cadToFile,
+      fileType: "sldprt",
+    });
     const attrsMap = Utils.transformArrayToMap(
       attrsArray,
       "sourceAttr",
@@ -190,17 +194,16 @@ const index = () => {
       const loop = async (data: any) => {
         for (let i = 0; i < data.length; i++) {
           data[i].itemAttrs = {};
-          data[i].id = Utils.generateSnowId()
+          data[i].id = Utils.generateSnowId();
           data[i].property.forEach((item: any) => {
             if (sourceAttrPlugin.includes(item.name)) {
               data[i][attrsMap[item.name]] = item.defaultVal;
             }
           });
-          if (data[i].pic_path != '.bmp') {
-
-            const uint8 = await readBinaryFile(data[i].pic_path, {})
+          if (data[i].pic_path != ".bmp") {
+            const uint8 = await readBinaryFile(data[i].pic_path, {});
             // const base64String = btoa(String.fromCharCode.apply(null, uint8));
-            data[i].thumbnail = uint8arrayToBase64(uint8)
+            data[i].thumbnail = uint8arrayToBase64(uint8);
           }
           if (data[i].model_type === "assembly") {
             data[i].model_format = "sldasm";
@@ -213,11 +216,8 @@ const index = () => {
           }
         }
       };
-      await loop([res.output_data])
-    } catch (error) {
-
-    }
-
+      await loop([res.output_data]);
+    } catch (error) {}
 
     setSelectNode(res.output_data);
     setLeftData([res.output_data]);
@@ -232,7 +232,7 @@ const index = () => {
           const flattenedItem = { ...data[i] }; // Create a copy of the current item
           delete flattenedItem.children; // Remove the "children" property from the copy
           delete flattenedItem.property;
-          const nodeNames = flattenData.map(item => item.node_name)
+          const nodeNames = flattenData.map((item) => item.node_name);
           if (!nodeNames.includes(data[i].node_name)) {
             flattenData.push(flattenedItem);
           }
@@ -423,7 +423,8 @@ const index = () => {
           // todo需要限制如果没有则赋值Number
           if (cloneNumber[data[i].model_format]) {
             data[i].itemAttrs["Number"] = cloneNumber[data[i].model_format][0];
-            cloneNumber[data[i].model_format] = cloneNumber[data[i].model_format].splice(1);
+            cloneNumber[data[i].model_format] =
+              cloneNumber[data[i].model_format].splice(1);
           }
           if (data[i].children && data[i].children.length) {
             loop(data[i].children);
@@ -441,12 +442,12 @@ const index = () => {
   });
 
   function removeImgBg(src: any) {
-    const img = document.createElement('img')
-    img.src = src
-    img.style.position = 'absolute'
-    img.style.opacity = '0'
-    img.style.left = '-100000px'
-    document.body.appendChild(img)
+    const img = document.createElement("img");
+    img.src = src;
+    img.style.position = "absolute";
+    img.style.opacity = "0";
+    img.style.left = "-100000px";
+    document.body.appendChild(img);
 
     //背景颜色  白色
     const rgba = [255, 255, 255, 255];
@@ -456,8 +457,8 @@ const index = () => {
     var imgData = null;
     const [r0, g0, b0, a0] = rgba;
     var r, g, b, a;
-    const canvas = document.createElement('canvas');
-    const context: any = canvas.getContext('2d');
+    const canvas = document.createElement("canvas");
+    const context: any = canvas.getContext("2d");
     const w = 400;
     const h = 400;
     canvas.width = w;
@@ -470,7 +471,9 @@ const index = () => {
       g = imgData.data[i + 1];
       b = imgData.data[i + 2];
       a = imgData.data[i + 3];
-      const t = Math.sqrt((r - r0) ** 2 + (g - g0) ** 2 + (b - b0) ** 2 + (a - a0) ** 2);
+      const t = Math.sqrt(
+        (r - r0) ** 2 + (g - g0) ** 2 + (b - b0) ** 2 + (a - a0) ** 2
+      );
       if (t <= tolerance) {
         imgData.data[i] = 0;
         imgData.data[i + 1] = 0;
@@ -479,10 +482,10 @@ const index = () => {
       }
     }
     context.putImageData(imgData, 0, 0);
-    const newBase64 = canvas.toDataURL('image/png');
-    document.body.removeChild(img)
+    const newBase64 = canvas.toDataURL("image/png");
+    document.body.removeChild(img);
     // img.src = newBase64;
-    return newBase64
+    return newBase64;
   }
 
   const handleClick = async (name: string) => {
@@ -662,7 +665,11 @@ const index = () => {
                   dataIndex: "flag",
                   width: 45,
                   render: (text: string) => {
-                    return <div className="w-full flex justify-center"><img width={12} src={plusImg} alt="" /></div>;
+                    return (
+                      <div className="w-full flex justify-center">
+                        <img width={12} src={plusImg} alt="" />
+                      </div>
+                    );
                   },
                 },
                 {
@@ -671,7 +678,9 @@ const index = () => {
                   // sorter: true,
                   width: 50,
                   render: (text: string) => {
-                    return <Image src={text} width={32} preview={false}></Image>;
+                    return (
+                      <Image src={text} width={32} preview={false}></Image>
+                    );
                   },
                 },
                 {
@@ -770,7 +779,9 @@ const index = () => {
                   // sorter: true,
                   width: 50,
                   render: (text: string) => {
-                    return <Image src={text} width={32} preview={false}></Image>;
+                    return (
+                      <Image src={text} width={32} preview={false}></Image>
+                    );
                   },
                 },
                 {
@@ -866,19 +877,21 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
-                            ? "ml-3"
-                            : ""
-                            }`}
+                          className={`gap-1 inline-flex items-center cursor-pointer ${
+                            !(record.children && record.children.length)
+                              ? "ml-3"
+                              : ""
+                          }`}
                           onClick={() => {
                             setSelectNode(record);
                           }}
                         >
                           <img
                             width={14}
-                            src={((record.children || []).length
-                              ? threeCubes
-                              : childnodecube)
+                            src={
+                              (record.children || []).length
+                                ? threeCubes
+                                : childnodecube
                             }
                             alt=""
                           />
@@ -905,11 +918,16 @@ const index = () => {
                 style={{
                   background:
                     "linear-gradient(180deg,#ffffff 0%, #e8e8e8 100%)",
-                  overflow: 'hidden',
+                  overflow: "hidden",
                 }}
                 className="flex-1 h-full border border-outBorder"
               >
-                <img id="thumbnail" style={{ margin: '0 auto', height: '100%' }} src={removeImgBg(selectNode?.thumbnail)} alt="" />
+                <img
+                  id="thumbnail"
+                  style={{ margin: "0 auto", height: "100%" }}
+                  src={removeImgBg(selectNode?.thumbnail)}
+                  alt=""
+                />
               </div>
               {/* 基本信息 */}
               <div
@@ -1018,10 +1036,11 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center ${!(record.children && record.children.length)
-                            ? "ml-3"
-                            : ""
-                            }`}
+                          className={`gap-1 inline-flex items-center ${
+                            !(record.children && record.children.length)
+                              ? "ml-3"
+                              : ""
+                          }`}
                         >
                           <img
                             width={14}
@@ -1032,7 +1051,21 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>{record?.itemAttrs && record?.itemAttrs["Number"] ? record?.itemAttrs["Number"] : <div style={{ height: '22px', width: '140px', background: '#FFC745', opacity: "0.2" }}></div>}</div>
+                          <div>
+                            {record?.itemAttrs &&
+                            record?.itemAttrs["Number"] ? (
+                              record?.itemAttrs["Number"]
+                            ) : (
+                              <div
+                                style={{
+                                  height: "22px",
+                                  width: "140px",
+                                  background: "#FFC745",
+                                  opacity: "0.2",
+                                }}
+                              ></div>
+                            )}
+                          </div>
                         </div>
                       );
                     },

@@ -7,7 +7,7 @@
 import { appWindow } from "@tauri-apps/api/window";
 import PlmIcon from "../components/PlmIcon";
 import PlmMappingData from "../components/PlmMappingData";
-import { CommandConfig } from "../constant/config";
+import { BasicConfig, CommandConfig } from "../constant/config";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { useEffect, useRef, useState } from "react";
 import { Button, Tabs, TabsProps, message } from "antd";
@@ -16,16 +16,30 @@ import { BasicsItemCode } from "../constant/itemCode";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { cloneDeep } from "lodash";
+import { mqttClient } from "../utils/MqttService";
+import { useUpdateEffect } from "ahooks";
+
+export enum settingType {
+  cadToFile = "cadToFile",
+  cadToItem = "cadToItem",
+  PlmToCad = "PlmToCad",
+  setting = "setting",
+}
+
+export enum templateType {
+  product = "gb_assembly.asmdot",
+  part = "gb_part.prtdo",
+}
 
 export default function AttrMap() {
   const mappingRef = useRef<any>();
   const [attrList, setAttrList] = useState<Record<string, any>[]>([]);
+  const [activeKey, setActiveKey] = useState<string>(settingType.cadToFile);
   const [mappingData, setMappingData] = useState<any[]>([]);
   const [rightTableList, setRightTableList] = useState<Record<string, any>[]>(
     []
   );
   const dispatch = useDispatch();
-  useEffect(() => {}, []);
 
   const dealAttrMap = async (res?: any) => {
     dispatch(setLoading(true));
@@ -33,20 +47,35 @@ export default function AttrMap() {
     const {
       result: { records: PublicAttrs },
     }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
+      itemCode:
+        activeKey === settingType.cadToFile
+          ? BasicsItemCode.file
+          : BasicsItemCode.material,
       tabCode: "10002001",
     });
     // 查找专有属性
     const {
       result: { records: PrivateAttrs },
     }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
+      itemCode:
+        activeKey === settingType.cadToFile
+          ? BasicsItemCode.file
+          : BasicsItemCode.material,
       tabCode: "10002002",
     });
-    const attList = res.output_data["sldasm"];
+    const attList = res.output_data[templateType.product];
+
+    // 使用 reduce 方法进行去重
+    const uniqueArray = attList.reduce((acc: any, obj: any) => {
+      const found = acc.find((item: any) => item.name === obj.name);
+      if (!found) {
+        acc.push(obj);
+      }
+      return acc;
+    }, []);
 
     setAttrList(
-      attList.map((item: any) => {
+      uniqueArray.map((item: any) => {
         return {
           ...item,
           filedName: item.name,
@@ -71,7 +100,11 @@ export default function AttrMap() {
         };
       });
     };
-    API.getMapptingAttrs().then((res: any) => {
+    API.getMapptingAttrs({
+      toolName: BasicConfig.pubgin_topic,
+      mappingName: settingType.cadToFile,
+      fileType: "sldprt",
+    }).then((res: any) => {
       setMappingData(
         res.result.map((item: any) => {
           return {
@@ -99,143 +132,15 @@ export default function AttrMap() {
   };
 
   useEffect(() => {
-    dealAttrMap({
-      input_data: {},
-      output_data: {
-        sldasm: [
-          {
-            name: "Description",
-            type: "string",
-            defaultVal: "",
-          },
-          {
-            name: "Weight",
-            type: "string",
-            defaultVal: '"SW-Mass@assem_top.SLDASM"',
-          },
-          {
-            name: "质量",
-            type: "string",
-            defaultVal: '"SW-Mass@assem_top.SLDASM"',
-          },
-          {
-            name: "审定",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "设计",
-            type: "string",
-            defaultVal: "   ",
-          },
-          {
-            name: "零件号",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "版本",
-            type: "string",
-            defaultVal: "   ",
-          },
-          {
-            name: "图幅",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "备注",
-            type: "string",
-            defaultVal: "   ",
-          },
-          {
-            name: "替代",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "代号",
-            type: "string",
-            defaultVal: "“图样代号”",
-          },
-          {
-            name: "名称",
-            type: "string",
-            defaultVal: "“图样名称”",
-          },
-          {
-            name: "共X张",
-            type: "string",
-            defaultVal: "1",
-          },
-          {
-            name: "第X张",
-            type: "string",
-            defaultVal: "1",
-          },
-          {
-            name: "阶段标记S",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "阶段标记A",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "阶段标记B",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "标准审查",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "工艺审查",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "批准",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "日期",
-            type: "string",
-            defaultVal: "2007,12,3",
-          },
-          {
-            name: "校核",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "主管设计",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "审核",
-            type: "string",
-            defaultVal: " ",
-          },
-          {
-            name: "校对",
-            type: "string",
-            defaultVal: " ",
-          },
-        ],
+    dispatch(setLoading(true));
+    mqttClient.publish({
+      type: CommandConfig.getProductTypeAtt,
+      input_data: {
+        template_path:
+          "C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS 2019\\templates",
       },
-      topic: "sw",
-      to: "client_onchain_0.8066863001197068",
-      from: "client_onchain_0.8066863001197068",
-      type: "sw.2010.getProductTypeAtt",
     });
-  }, []);
+  }, [activeKey]);
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getProductTypeAtt, (res) => {
@@ -244,12 +149,12 @@ export default function AttrMap() {
 
   const items: TabsProps["items"] = [
     {
-      key: "file",
-      label: `CAD至PLM`,
+      key: settingType.cadToFile,
+      label: `CAD至文件`,
     },
     {
-      key: "material",
-      label: `PLM至CAD`,
+      key: settingType.cadToItem,
+      label: `CAD至物料`,
     },
   ];
   return (
@@ -257,22 +162,52 @@ export default function AttrMap() {
       className="h-full w-full flex flex-col overflow-hidden bg-base"
       style={{ padding: "12px" }}
     >
-      <Tabs defaultActiveKey="1" items={items} destroyInactiveTabPane />
-      <div className="flex overflow-hidden h-full">
-        <div
-          style={{ height: "100%", width: "100%", paddingTop: "8px" }}
-          className="pb-4"
-        >
-          <PlmMappingData
-            ref={mappingRef}
-            isShowHeader={false}
-            onLoading={() => {}}
-            mappingData={mappingData}
-            leftTableList={attrList}
-            rightTableList={rightTableList}
-          ></PlmMappingData>
+      <Tabs
+        activeKey={activeKey}
+        items={items}
+        destroyInactiveTabPane
+        onTabClick={(e) => {
+          setActiveKey(e);
+        }}
+      />
+      <div className="overflow-hidden h-full mt-3">
+        <div className="flex text-xs border-l border-outBorder">
+          <div
+            className="bg-white border-r border-t border-outBorder"
+            style={{ padding: "3px 9px" }}
+          >
+            CAD至文件
+          </div>
+          <div
+            className="bg-white border-r border-t border-outBorder"
+            style={{ padding: "3px 9px" }}
+          >
+            CAD至物料
+          </div>
+          <div
+            className="bg-white border-r border-t border-outBorder"
+            style={{ padding: "3px 9px" }}
+          >
+            文件至CAD
+          </div>
+        </div>
+        <div className="flex overflow-hidden h-full">
+          <div
+            style={{ height: "100%", width: "100%" }}
+            className="py-2 bg-white px-2 border border-outBorder"
+          >
+            <PlmMappingData
+              ref={mappingRef}
+              isShowHeader={false}
+              onLoading={() => {}}
+              mappingData={mappingData}
+              leftTableList={attrList}
+              rightTableList={rightTableList}
+            ></PlmMappingData>
+          </div>
         </div>
       </div>
+
       <div style={{ textAlign: "right" }}>
         <Button
           className="rounded-sm mr-2 text-xs bg-white"
@@ -287,12 +222,14 @@ export default function AttrMap() {
           // style={{ border: "1px solid #cdcdcd" }}
           onClick={() => {
             const data = mappingRef?.current?.getTargetData();
-            console.log(data.mappingData, "data");
-            API.postMapptingAttrs({ attrMappingList: data.mappingData }).then(
-              (res) => {
-                message.success("保存成功");
-              }
-            );
+            API.postMapptingAttrs({
+              attrMappingList: data.mappingData,
+              toolName: BasicConfig.pubgin_topic,
+              mappingName: activeKey,
+              fileType: "sldprt",
+            }).then((res) => {
+              message.success("保存成功");
+            });
           }}
         >
           保存
