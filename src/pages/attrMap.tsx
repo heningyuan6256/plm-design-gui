@@ -28,13 +28,14 @@ export enum settingType {
 
 export enum templateType {
   product = "gb_assembly.asmdot",
-  part = "gb_part.prtdo",
+  part = "gb_part.prtdot",
 }
 
 export default function AttrMap() {
   const mappingRef = useRef<any>();
   const [attrList, setAttrList] = useState<Record<string, any>[]>([]);
-  const [activeKey, setActiveKey] = useState<string>(settingType.cadToFile);
+  const [activeKey, setActiveKey] = useState<string>(templateType.part);
+  const [childActiveKey, setChildActiveKey] = useState(settingType.cadToFile)
   const [mappingData, setMappingData] = useState<any[]>([]);
   const [rightTableList, setRightTableList] = useState<Record<string, any>[]>(
     []
@@ -63,8 +64,7 @@ export default function AttrMap() {
           : BasicsItemCode.material,
       tabCode: "10002002",
     });
-    const attList = res.output_data[templateType.product];
-
+    const attList = res.output_data[activeKey] || []; 
     // 使用 reduce 方法进行去重
     const uniqueArray = attList.reduce((acc: any, obj: any) => {
       const found = acc.find((item: any) => item.name === obj.name);
@@ -102,9 +102,10 @@ export default function AttrMap() {
     };
     API.getMapptingAttrs({
       toolName: BasicConfig.pubgin_topic,
-      mappingName: settingType.cadToFile,
-      fileType: "sldprt",
+      mappingName: childActiveKey,
+      fileType: activeKey,
     }).then((res: any) => {
+      console.log(res.result,'res.resul')
       setMappingData(
         res.result.map((item: any) => {
           return {
@@ -132,6 +133,7 @@ export default function AttrMap() {
   };
 
   useEffect(() => {
+    console.log(123123)
     dispatch(setLoading(true));
     mqttClient.publish({
       type: CommandConfig.getProductTypeAtt,
@@ -140,7 +142,7 @@ export default function AttrMap() {
           "C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS 2019\\templates",
       },
     });
-  }, [activeKey]);
+  }, [activeKey, childActiveKey]);
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getProductTypeAtt, (res) => {
@@ -149,12 +151,12 @@ export default function AttrMap() {
 
   const items: TabsProps["items"] = [
     {
-      key: settingType.cadToFile,
-      label: `CAD至文件`,
+      key: templateType.part,
+      label: `SLDPRT`,
     },
     {
-      key: settingType.cadToItem,
-      label: `CAD至物料`,
+      key: templateType.product,
+      label: `SLDASM`,
     },
   ];
   return (
@@ -173,28 +175,36 @@ export default function AttrMap() {
       <div className="overflow-hidden h-full mt-3">
         <div className="flex text-xs border-l border-outBorder">
           <div
-            className="bg-white border-r border-t border-outBorder"
+            className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.cadToFile ? 'text-primary':''}`}
             style={{ padding: "3px 9px" }}
+            onClick={() => {
+              setChildActiveKey(settingType.cadToFile)
+            }}
           >
             CAD至文件
           </div>
           <div
-            className="bg-white border-r border-t border-outBorder"
+            className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.cadToItem ? 'text-primary':''}`}
             style={{ padding: "3px 9px" }}
+            onClick={() => {
+              setChildActiveKey(settingType.cadToItem)
+            }}
           >
             CAD至物料
           </div>
           <div
-            className="bg-white border-r border-t border-outBorder"
+            className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.PlmToCad ? 'text-primary':''}`}
             style={{ padding: "3px 9px" }}
+            onClick={() => {
+              setChildActiveKey(settingType.PlmToCad)
+            }}
           >
             文件至CAD
           </div>
         </div>
-        <div className="flex overflow-hidden h-full">
+        <div className="flex overflow-hidden" style={{ height: "calc(100% - 36px)", width: "100%" }}>
           <div
-            style={{ height: "100%", width: "100%" }}
-            className="py-2 bg-white px-2 border border-outBorder"
+            className="h-full w-full py-2 bg-white px-2 border border-outBorder"
           >
             <PlmMappingData
               ref={mappingRef}
@@ -215,7 +225,7 @@ export default function AttrMap() {
             setMappingData(cloneDeep(mappingData));
           }}
         >
-          取消
+          还原
         </Button>
         <Button
           className="rounded-sm text-xs bg-white"
@@ -225,8 +235,8 @@ export default function AttrMap() {
             API.postMapptingAttrs({
               attrMappingList: data.mappingData,
               toolName: BasicConfig.pubgin_topic,
-              mappingName: activeKey,
-              fileType: "sldprt",
+              mappingName: childActiveKey,
+              fileType: activeKey,
             }).then((res) => {
               message.success("保存成功");
             });

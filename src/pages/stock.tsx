@@ -200,7 +200,7 @@ const stock = () => {
             {/* </div> */}
           </div>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 overflow-hidden">
           <div
             style={{
               background: "linear-gradient(180deg,#f1f1f1 0%, #cdcdcd 100%)",

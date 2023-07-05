@@ -228,11 +228,11 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
                   <PlmIcon
                     style={{
                       color: "#0563b2",
-                      fontSize: "14px",
+                      fontSize: "12px",
                       transform: "rotate(180deg)",
                       cursor: "pointer",
                     }}
-                    name={"arrow-left"}
+                    name={"arrow"}
                   />
                   <div
                     className="mateText"
@@ -305,10 +305,10 @@ const PlmMappingData: React.FC<MappingTableProps> = forwardRef((props, ref) => {
                               <PlmIcon
                                 style={{
                                   color: "#0563b2",
-                                  fontSize: "14px",
+                                  fontSize: "12px",
                                   cursor: "pointer",
                                 }}
-                                name={"arrow-left"}
+                                name={"arrow"}
                               />
                               <div
                                 className="mateText"
