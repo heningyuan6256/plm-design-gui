@@ -23,7 +23,6 @@ import { invoke } from "@tauri-apps/api";
 import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
 import { Command } from "@tauri-apps/api/shell";
 import { mqttClient } from "../utils/MqttService";
-
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -47,8 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     //   console.log(`command stderr: "${line}"`)
     // );
     // command.execute();
-
-    mqttClient.connect(
+    mqttClient?.connect(
       BasicConfig.MqttConnectUrl,
       'test'
     );

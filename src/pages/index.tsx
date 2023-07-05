@@ -42,6 +42,7 @@ import { cloneDeep, groupBy, remove } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType } from "./attrMap";
+import PlmModal from "../components/PlmModal";
 // import { dealMaterialData } from 'plm-wasm'
 
 export const formItemMap: Record<string, any> = {
@@ -489,7 +490,9 @@ const index = () => {
   }
 
   const handleClick = async (name: string) => {
-    if (name === "refresh") {
+    if(name==='log'){
+      
+    } else if (name === "refresh") {
       dispatch(setLoading(true));
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
@@ -828,6 +831,7 @@ const index = () => {
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
+      {/* <PlmModal></PlmModal> */}
       <div className="w-full bg-base flex-1 flex flex-col overflow-hidden">
         {/* 操作栏 */}
         <PlmToolBar onClick={handleClick}></PlmToolBar>

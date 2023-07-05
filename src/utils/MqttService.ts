@@ -40,7 +40,6 @@ class MqttService {
       reconnectPeriod: 1000,
       clientId: this.clientId,
     });
-
     // this.mqtt.subscribe(`${BasicConfig.onchain_topic}${topic}`);
 
     this.mqtt.subscribe(`${BasicConfig.onchain_topic}`);

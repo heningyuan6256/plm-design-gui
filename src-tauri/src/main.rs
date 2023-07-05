@@ -5,10 +5,18 @@ mod config;
 use app::{ window, menu, solidworks };
 use config::{ utils };
 
+
 // use tauri::api::process::{Command, CommandEvent};
 // // extern crate libloading;
 
 use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
+use tauri::{utils::config::AppUrl, window::WindowBuilder, WindowUrl};
+
+
+#[cfg(debug_assertions)]
+const USE_LOCALHOST_SERVER: bool = false;
+#[cfg(not(debug_assertions))]
+const USE_LOCALHOST_SERVER: bool = true;
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 fn main() {
@@ -70,9 +78,33 @@ fn main() {
 //     // }
 // }
 // });
+let port = 1420;
 
-    tauri::Builder
-        ::default()
+let window_url = if USE_LOCALHOST_SERVER {
+    WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap())
+} else {
+    WindowUrl::App("index.html".into())
+};
+
+let mut context = tauri::generate_context!();
+let mut builder = tauri::Builder::default();
+
+
+if USE_LOCALHOST_SERVER {
+    // rewrite the config so the IPC is enabled on this URL
+    context.config_mut().build.dist_dir = AppUrl::Url(window_url.clone());
+    context.config_mut().build.dev_path = AppUrl::Url(window_url.clone());
+    builder = builder.plugin(tauri_plugin_localhost::Builder::new(port).build());
+}
+
+    builder
+        // .setup(move |app| {
+        //     WindowBuilder::new(app, "main".to_string(), window_url)
+        //       .title("Localhost Example")
+        //       .build()?;
+        //     Ok(())
+        //   })
+
         // .invoke_handler(tauri::generate_handler![open_login])
         .invoke_handler(
             tauri::generate_handler![
@@ -108,7 +140,7 @@ fn main() {
         )
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| menu::menu_handle(app, event))
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }
 
