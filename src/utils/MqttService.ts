@@ -17,13 +17,15 @@ class MqttService {
   }
   baseUrl: string;
   mqtt: MqttClient;
+  publishTopic: string;
   callBackMapping: Record<string, any>;
-  pid:string;
+  pid: string;
   constructor(url: string = BasicConfig.MqttConnectUrl) {
     this.baseUrl = url;
     this.mqtt = {} as MqttClient;
     this.callBackMapping = {};
     this.pid = ''
+    this.publishTopic = BasicConfig.pubgin_topic
     // 生成客户端id
     const uniqueId = Math.random().toString();
     this.clientId = `client_onchain_${uniqueId}`;
@@ -43,7 +45,6 @@ class MqttService {
       clientId: this.clientId,
     });
     this.mqtt.subscribe(`${BasicConfig.onchain_topic + (topic ? `_${topic}` : '')}`);
-
     this.mqtt.on("connect", () => {
       console.log("成功建立连接");
     });
@@ -53,10 +54,10 @@ class MqttService {
       console.log(JSON.parse(data), '收到消息')
       // 如果存在，直接调用
       const callBack = this.callBackMapping[type]; //执行订阅的回调
-      this.pid = JSON.parse(data).pid
       if (callBack) {
         const currentWindow = getCurrent();
         currentWindow.setFocus()
+        this.pid = JSON.parse(data).pid
         callBack.call(this, JSON.parse(data));
       }
     });
@@ -76,7 +77,7 @@ class MqttService {
     const structData = {
       input_data: {},
       output_data: {},
-      topic: BasicConfig.pubgin_topic,
+      topic: this.publishTopic,
       to: "",
       pid: this.pid,
       from: this.clientId,
@@ -84,7 +85,7 @@ class MqttService {
       type: Utils.instruction(data.type),
     };
     console.log('发送消息')
-    this.mqtt.publish(BasicConfig.pubgin_topic, JSON.stringify(structData));
+    this.mqtt.publish(this.publishTopic, JSON.stringify(structData));
   }
 
   /**
@@ -108,7 +109,7 @@ class MqttService {
       pid: this.pid,
       type: data.type,
     };
-    this.mqtt.publish(BasicConfig.pubgin_topic, JSON.stringify(structData));
+    this.mqtt.publish(this.publishTopic JSON.stringify(structData));
   }
 
   /**
