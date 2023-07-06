@@ -1,19 +1,24 @@
-#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
 
 mod app;
 mod config;
-use app::{ window, menu, solidworks };
-use config::{ utils };
-
-
-
+use app::{menu, solidworks, window};
+use config::utils;
 
 // use tauri::api::process::{Command, CommandEvent};
 // // extern crate libloading;
 
-use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
 use tauri::{utils::config::AppUrl, window::WindowBuilder, WindowUrl};
+use tauri::{CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
 
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    args: Vec<String>,
+    cwd: String,
+}
 
 #[cfg(debug_assertions)]
 const USE_LOCALHOST_SERVER: bool = false;
@@ -32,72 +37,77 @@ fn main() {
 
     let system_tray = SystemTray::new().with_menu(tray_menu);
 
-
     // `new_sidecar()` expects just the filename, NOT the whole path like in JavaScript
-// let (mut rx, mut child) = Command::new_sidecar("OnChain_DesignFusion")
-// .expect("failed to create `my-sidecar` binary command")
-// .args(["-t", "solidworks", "-m", "createcube", "-o", "aaa"])
-// .spawn()
-// .expect("Failed to spawn sidecar");
+    // let (mut rx, mut child) = Command::new_sidecar("OnChain_DesignFusion")
+    // .expect("failed to create `my-sidecar` binary command")
+    // .args(["-t", "solidworks", "-m", "createcube", "-o", "aaa"])
+    // .spawn()
+    // .expect("Failed to spawn sidecar");
 
-// tauri::async_runtime::spawn(async move {
-// // read events such as stdout
-// while let Some(event) = rx.recv().await {
-//     // if let CommandEvent::Stdout(line) = event {
-//     //     println!("{}", line);
-//     //     // window
-//     //     //     .emit("message", Some(format!("'{}'", line)))
-//     //     //     .expect("failed to emit event");
-//     //     // // write to stdin
-//     //     child.write("message from Rust\n".as_bytes()).unwrap();
-//     // }
-//     if let CommandEvent::Error(line) = event {
-//         println!("{}", line);
-//         // window
-//         //     .emit("message", Some(format!("'{}'", line)))
-//         //     .expect("failed to emit event");
-//         // // write to stdin
-//         child.write("message from Rust\n".as_bytes()).unwrap();
-//     }
-// }
+    // tauri::async_runtime::spawn(async move {
+    // // read events such as stdout
+    // while let Some(event) = rx.recv().await {
+    //     // if let CommandEvent::Stdout(line) = event {
+    //     //     println!("{}", line);
+    //     //     // window
+    //     //     //     .emit("message", Some(format!("'{}'", line)))
+    //     //     //     .expect("failed to emit event");
+    //     //     // // write to stdin
+    //     //     child.write("message from Rust\n".as_bytes()).unwrap();
+    //     // }
+    //     if let CommandEvent::Error(line) = event {
+    //         println!("{}", line);
+    //         // window
+    //         //     .emit("message", Some(format!("'{}'", line)))
+    //         //     .expect("failed to emit event");
+    //         // // write to stdin
+    //         child.write("message from Rust\n".as_bytes()).unwrap();
+    //     }
+    // }
 
-// while let Some(event) = rx.recv().await {
-//     if let CommandEvent::Stdout(line) = event {
-//         println!("{}", line);
-//         // window
-//         //     .emit("message", Some(format!("'{}'", line)))
-//         //     .expect("failed to emit event");
-//         // // write to stdin
-//         child.write("message from Rust\n".as_bytes()).unwrap();
-//     }
-//     // if let CommandEvent::Error(line) = event {
-//     //     println!("{}", line);
-//     //     // window
-//     //     //     .emit("message", Some(format!("'{}'", line)))
-//     //     //     .expect("failed to emit event");
-//     //     // // write to stdin
-//     //     child.write("message from Rust\n".as_bytes()).unwrap();
-//     // }
-// }
-// });
-let port = 1420;
+    // while let Some(event) = rx.recv().await {
+    //     if let CommandEvent::Stdout(line) = event {
+    //         println!("{}", line);
+    //         // window
+    //         //     .emit("message", Some(format!("'{}'", line)))
+    //         //     .expect("failed to emit event");
+    //         // // write to stdin
+    //         child.write("message from Rust\n".as_bytes()).unwrap();
+    //     }
+    //     // if let CommandEvent::Error(line) = event {
+    //     //     println!("{}", line);
+    //     //     // window
+    //     //     //     .emit("message", Some(format!("'{}'", line)))
+    //     //     //     .expect("failed to emit event");
+    //     //     // // write to stdin
+    //     //     child.write("message from Rust\n".as_bytes()).unwrap();
+    //     // }
+    // }
+    // });
+    let port = 1420;
 
-let window_url = if USE_LOCALHOST_SERVER {
-    WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap())
-} else {
-    WindowUrl::App("index.html".into())
-};
+    let window_url = if USE_LOCALHOST_SERVER {
+        WindowUrl::External(format!("http://localhost:{}", port).parse().unwrap())
+    } else {
+        WindowUrl::App("index.html".into())
+    };
 
-let mut context = tauri::generate_context!();
-let mut builder = tauri::Builder::default();
+    let mut context = tauri::generate_context!();
+    let mut builder = tauri::Builder::default();
 
+    if USE_LOCALHOST_SERVER {
+        // rewrite the config so the IPC is enabled on this URL
+        context.config_mut().build.dist_dir = AppUrl::Url(window_url.clone());
+        context.config_mut().build.dev_path = AppUrl::Url(window_url.clone());
+        builder = builder
+            .plugin(tauri_plugin_localhost::Builder::new(port).build())
+            .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+                println!("{}, {argv:?}, {cwd}", app.package_info().name);
 
-if USE_LOCALHOST_SERVER {
-    // rewrite the config so the IPC is enabled on this URL
-    context.config_mut().build.dist_dir = AppUrl::Url(window_url.clone());
-    context.config_mut().build.dev_path = AppUrl::Url(window_url.clone());
-    builder = builder.plugin(tauri_plugin_localhost::Builder::new(port).build());
-}
+                // app.emit_all("single-instance", Payload { args: argv, cwd })
+                //     .unwrap();
+            }));
+    }
 
     builder
         // .setup(move |app| {
@@ -106,40 +116,36 @@ if USE_LOCALHOST_SERVER {
         //       .build()?;
         //     Ok(())
         //   })
-
         // .invoke_handler(tauri::generate_handler![open_login])
-        .invoke_handler(
-            tauri::generate_handler![
-                window::greet,
-                // window::is_window_maximized,
-                window::open_login,
-                window::exist,
-                window::drag_window,
-                window::open_info,
-                window::open_attr_map,
-                window::open_home,
-                window::open_stock,
-                // utils::create_chatgpt_prompts,
-                // utils::silent_install,
-                // utils::run_check_update,
-                utils::gen_cmd,
-                utils::init,
-                // utils::prompt_for_install,
-                utils::chat_root,
-                utils::get_tauri_conf,
-                utils::exists,
-                // utils::create_file,
-                // utils::create_chatgpt_prompts,
-                // utils::script_path,
-                // utils::user_script,
-                utils::open_file,
-                // utils::clear_conf,
-                // utils::merge,
-                utils::gen_cmd,
-                solidworks::call_dynamic
-                // utils::get_data
-            ]
-        )
+        .invoke_handler(tauri::generate_handler![
+            window::greet,
+            // window::is_window_maximized,
+            window::open_login,
+            window::exist,
+            window::drag_window,
+            window::open_info,
+            window::open_attr_map,
+            window::open_home,
+            window::open_stock,
+            // utils::create_chatgpt_prompts,
+            // utils::silent_install,
+            // utils::run_check_update,
+            utils::gen_cmd,
+            utils::init,
+            // utils::prompt_for_install,
+            utils::chat_root,
+            utils::get_tauri_conf,
+            utils::exists,
+            // utils::create_file,
+            // utils::create_chatgpt_prompts,
+            // utils::script_path,
+            // utils::user_script,
+            utils::open_file,
+            // utils::clear_conf,
+            // utils::merge,
+            utils::gen_cmd,
+            solidworks::call_dynamic // utils::get_data
+        ])
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| menu::menu_handle(app, event))
         .run(context)
