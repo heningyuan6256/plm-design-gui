@@ -133,7 +133,6 @@ export default function AttrMap() {
   };
 
   useEffect(() => {
-    console.log(123123)
     dispatch(setLoading(true));
     mqttClient.publish({
       type: CommandConfig.getProductTypeAtt,

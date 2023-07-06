@@ -18,10 +18,12 @@ class MqttService {
   baseUrl: string;
   mqtt: MqttClient;
   callBackMapping: Record<string, any>;
+  pid:string;
   constructor(url: string = BasicConfig.MqttConnectUrl) {
     this.baseUrl = url;
     this.mqtt = {} as MqttClient;
     this.callBackMapping = {};
+    this.pid = ''
     // 生成客户端id
     const uniqueId = Math.random().toString();
     this.clientId = `client_onchain_${uniqueId}`;
@@ -51,6 +53,7 @@ class MqttService {
       console.log(JSON.parse(data), '收到消息')
       // 如果存在，直接调用
       const callBack = this.callBackMapping[type]; //执行订阅的回调
+      this.pid = JSON.parse(data).pid
       if (callBack) {
         const currentWindow = getCurrent();
         currentWindow.setFocus()
@@ -75,6 +78,7 @@ class MqttService {
       output_data: {},
       topic: BasicConfig.pubgin_topic,
       to: "",
+      pid: this.pid,
       from: this.clientId,
       ...data,
       type: Utils.instruction(data.type),
@@ -101,6 +105,7 @@ class MqttService {
       to: "",
       from: this.clientId,
       ...data,
+      pid: this.pid,
       type: data.type,
     };
     this.mqtt.publish(BasicConfig.pubgin_topic, JSON.stringify(structData));

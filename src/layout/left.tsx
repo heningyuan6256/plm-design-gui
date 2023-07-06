@@ -13,6 +13,7 @@ import menuSetting from "../assets/image/menuSetting.svg";
 import menuSettingHover from "../assets/image/menuSetting (1).svg";
 import { mqttClient } from "../utils/MqttService";
 import { appWindow } from "@tauri-apps/api/window";
+import { writePlugin } from "../models/plugin";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
@@ -22,7 +23,8 @@ const left: FC = () => {
 
   useEffect(() => {
     mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
-      if(res.input_data === 'exit'){
+      if(res.input_data==='cad_start'){
+      } else if(res.input_data === 'exit'){
         appWindow.close()
       } else {
         navigate(`/${res.input_data.split("_")[1]}`);

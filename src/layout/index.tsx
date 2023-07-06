@@ -41,7 +41,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       if(dynamicTopic){
         mqttClient?.connect(
           BasicConfig.MqttConnectUrl,
-          dynamicTopic
+          ''
         );
     
         // const ffmpeg = Command.sidecar("binaries/OnChain_DesignFusion", ['-t','solidworks','-m','create-cube', '-o', '""'], {encoding: "GBK"});
