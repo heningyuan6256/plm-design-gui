@@ -109,7 +109,7 @@ class MqttService {
       pid: this.pid,
       type: data.type,
     };
-    this.mqtt.publish(this.publishTopic JSON.stringify(structData));
+    this.mqtt.publish(this.publishTopic, JSON.stringify(structData));
   }
 
   /**
