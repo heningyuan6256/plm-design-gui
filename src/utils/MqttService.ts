@@ -1,7 +1,7 @@
 import mqtt, { MqttClient } from "mqtt";
 import { BasicConfig } from "../constant/config";
 import { Utils } from ".";
-import { getCurrent,appWindow } from "@tauri-apps/api/window";
+import { getCurrent, appWindow } from "@tauri-apps/api/window";
 
 class MqttService {
   /**
@@ -40,16 +40,13 @@ class MqttService {
       reconnectPeriod: 1000,
       clientId: this.clientId,
     });
-    // this.mqtt.subscribe(`${BasicConfig.onchain_topic}${topic}`);
-
-    this.mqtt.subscribe(`${BasicConfig.onchain_topic}`);
+    this.mqtt.subscribe(`${BasicConfig.onchain_topic + (topic ? `_${topic}` : '')}`);
 
     this.mqtt.on("connect", () => {
       console.log("成功建立连接");
     });
 
     this.mqtt.on("message", (topic, data: any) => {
-      console.log(data, '收到消息')
       const type = JSON.parse(data).type;
       console.log(JSON.parse(data), '收到消息')
       // 如果存在，直接调用

@@ -44,8 +44,8 @@
             "args": true
           },
           {
-            "name": "ifconfig",
-            "cmd": "ifconfig",
+            "name": "reg",
+            "cmd": "reg",
             "args": true
           }
         ]
@@ -73,12 +73,15 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": ["Config.ini"],
       "shortDescription": "",
       "targets": "all",
       "windows": {
-        "webviewInstallMode":{
-          "type":"offlineInstaller"
+        "wix": {
+          "language": "zh-CN"
+        },
+        "webviewInstallMode": {
+          "type": "offlineInstaller"
         },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
