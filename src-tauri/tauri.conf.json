@@ -64,7 +64,7 @@
       },
       "externalBin": [],
       "icon": ["icons/onchain.png", "icons/favicon.ico"],
-      "identifier": "com.tauri.build",
+      "identifier": "com.ONCHAIN.build",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
