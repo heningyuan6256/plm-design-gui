@@ -897,7 +897,7 @@ const index = () => {
                                   height: "22px",
                                   width: "140px",
                                   background: "#FFC745",
-                                  opacity: "0.2",
+                                  opacity: "0.5",
                                 }}
                               ></div>
                             )}

@@ -8,6 +8,7 @@ import PlmIcon from "../components/PlmIcon";
 import userSvg from "../assets/image/user.svg";
 import { useSelector } from "react-redux";
 import { Dropdown, MenuProps } from "antd";
+import { mqttClient } from "../utils/MqttService";
 
 const Foot: FC = () => {
   const { value: user } = useSelector((state: any) => state.user);
@@ -28,7 +29,7 @@ const Foot: FC = () => {
       style={{ minHeight: "24px" }}
       className="flex items-center w-full justify-between bg-primary px-2 h-6"
     >
-      <div className="text-xs flex text-white">
+      <div className="text-xs flex text-white h-full items-center">
         {/* <Dropdown menu={{ items }} placement="top"> */}
         <div className="flex relative">
           <div
@@ -36,7 +37,7 @@ const Foot: FC = () => {
             style={{
               borderRadius: "50%",
               width: "4px",
-              top: '1px',
+              top: "1px",
               height: "4px",
               background: "#0EDF8C",
               left: "6px",
@@ -49,7 +50,17 @@ const Foot: FC = () => {
           <span className="mr-1">{user?.name}</span>-
           <span className="ml-1">{value}</span>
         </div>
-        <div className='px-1 ml-2 bg-primary opacity-40' style={{ paddingTop: '1px', paddingBottom: '1px' }}></div>
+        <div
+          className="px-1 ml-2 h-full items-center flex"
+          style={{
+            paddingTop: "1px",
+            paddingBottom: "1px",
+            background: "#69A1D1",
+          }}
+        >
+          {mqttClient.publishTopic +
+            (mqttClient.pid ? ` (${mqttClient.pid})` : "")}
+        </div>
         {/* <PlmIcon
           name="link"
           className="text-xs text-white opacity-80"

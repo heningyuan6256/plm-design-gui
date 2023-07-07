@@ -24,7 +24,7 @@ class MqttService {
     this.baseUrl = url;
     this.mqtt = {} as MqttClient;
     this.callBackMapping = {};
-    this.pid = ''
+    this.pid = '0101'
     this.publishTopic = BasicConfig.pubgin_topic
     // 生成客户端id
     const uniqueId = Math.random().toString();
@@ -52,12 +52,13 @@ class MqttService {
     this.mqtt.on("message", (topic, data: any) => {
       const type = JSON.parse(data).type;
       console.log(JSON.parse(data), '收到消息')
+      this.pid = JSON.parse(data).pid
+      this.publishTopic = JSON.parse(data).topic
       // 如果存在，直接调用
       const callBack = this.callBackMapping[type]; //执行订阅的回调
       if (callBack) {
         const currentWindow = getCurrent();
         currentWindow.setFocus()
-        this.pid = JSON.parse(data).pid
         callBack.call(this, JSON.parse(data));
       }
     });
@@ -78,9 +79,7 @@ class MqttService {
       input_data: {},
       output_data: {},
       topic: this.publishTopic,
-      to: "",
       pid: this.pid,
-      from: this.clientId,
       ...data,
       type: Utils.instruction(data.type),
     };
@@ -103,8 +102,6 @@ class MqttService {
       input_data: {},
       output_data: {},
       topic: BasicConfig.pubgin_topic,
-      to: "",
-      from: this.clientId,
       ...data,
       pid: this.pid,
       type: data.type,
