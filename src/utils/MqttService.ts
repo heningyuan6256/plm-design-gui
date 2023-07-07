@@ -101,7 +101,13 @@ class MqttService {
     const structData = {
       input_data: {},
       output_data: {},
+<<<<<<< HEAD
       topic: BasicConfig.pubgin_topic,
+=======
+      topic: this.publishTopic,
+      to: "",
+      from: this.clientId,
+>>>>>>> 56180eb190cad4cdcdbeaa92ad1a401a74562c02
       ...data,
       pid: this.pid,
       type: data.type,

@@ -27,6 +27,8 @@ export enum PathConfig {
   openInfo = "open_info",
   /**首选项*/
   preference = "open_preference",
+  /**登录状态改变 */
+  loginStatusChanged = "loginStatusChanged"
 }
 
 export enum CommandConfig {

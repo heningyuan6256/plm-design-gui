@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMqttRegister } from "../hooks/useMqttRegister";
-import { CommandConfig } from "../constant/config";
+import { CommandConfig, PathConfig } from "../constant/config";
 import PlmIcon from "../components/PlmIcon";
 import menuMaterial from "../assets/image/menuMaterial.svg";
 import menuMaterialHover from "../assets/image/menuMaterial (1).svg";
@@ -13,7 +13,6 @@ import menuSetting from "../assets/image/menuSetting.svg";
 import menuSettingHover from "../assets/image/menuSetting (1).svg";
 import { mqttClient } from "../utils/MqttService";
 import { appWindow } from "@tauri-apps/api/window";
-import { writePlugin } from "../models/plugin";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
@@ -23,8 +22,19 @@ const left: FC = () => {
 
   useEffect(() => {
     mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
-      if(res.input_data==='cad_start'){
-      } else if(res.input_data === 'exit'){
+      console.log(location, 'location')
+      if (res.input_data === 'cad_start') {
+      } else if (res.input_data === PathConfig.login) {
+        if (location.pathname !== '/login') {
+          mqttClient.commonPublish({
+            type: PathConfig.login,
+            output_data: {
+              result: "ok",
+            },
+          });
+        } else {
+        }
+      } else if (res.input_data === 'exit') {
         appWindow.close()
       } else {
         navigate(`/${res.input_data.split("_")[1]}`);
@@ -70,9 +80,8 @@ const left: FC = () => {
     return (
       <div
         key={item.path}
-        className={`cursor-pointer w-full flex justify-center ${
-          location.pathname == item.path ? "leftBorder" : ""
-        }`}
+        className={`cursor-pointer w-full flex justify-center ${location.pathname == item.path ? "leftBorder" : ""
+          }`}
         style={{
           // borderLeft: location.pathname == item.path ? "3px solid #0563B2" : "",
           padding: "10px 0px",
