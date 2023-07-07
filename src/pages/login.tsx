@@ -40,7 +40,7 @@ export default function login() {
         mqttClient.commonPublish({
           type: PathConfig.login,
           output_data: {
-            result: "1",
+            result: "ok",
           },
         });
         dispatch(writeNetWork(address));

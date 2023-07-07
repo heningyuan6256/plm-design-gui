@@ -8,6 +8,7 @@ import PlmIcon from "../components/PlmIcon";
 import userSvg from "../assets/image/user.svg";
 import { useSelector } from "react-redux";
 import { Dropdown, MenuProps } from "antd";
+import { mqttClient } from "../utils/MqttService";
 
 const Foot: FC = () => {
   const { value: user } = useSelector((state: any) => state.user);
@@ -49,7 +50,7 @@ const Foot: FC = () => {
           <span className="mr-1">{user?.name}</span>-
           <span className="ml-1">{value}</span>
         </div>
-        <div className='px-1 ml-2 bg-primary opacity-40' style={{ paddingTop: '1px', paddingBottom: '1px' }}></div>
+        <div className='px-1 ml-2 bg-primary opacity-40' style={{ paddingTop: '1px', paddingBottom: '1px' }}>{mqttClient.publishTopic}</div>
         {/* <PlmIcon
           name="link"
           className="text-xs text-white opacity-80"
