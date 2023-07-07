@@ -46,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     command.stdout.on("data", async (line: string) => {
       const dynamicTopic = line.split(/\s+/)[3];
       if (dynamicTopic) {
-        mqttClient?.connect(BasicConfig.MqttConnectUrl, "");
+        mqttClient?.connect(BasicConfig.MqttConnectUrl, dynamicTopic);
 
         const ffmpeg = Command.sidecar(
           "binaries/OnChain_DesignFusion",

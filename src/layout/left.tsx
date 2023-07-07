@@ -22,7 +22,6 @@ const left: FC = () => {
 
   useEffect(() => {
     mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
-      console.log(location, 'location')
       if (res.input_data === 'cad_start') {
       } else if (res.input_data === PathConfig.login) {
         if (location.pathname !== '/login') {

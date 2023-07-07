@@ -80,9 +80,6 @@
         "wix": {
           "language": "zh-CN"
         },
-        "webviewInstallMode": {
-          "type": "offlineInstaller"
-        },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": ""

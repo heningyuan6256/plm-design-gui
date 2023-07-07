@@ -22,7 +22,7 @@ export enum PathConfig {
   /**退出*/
   exit = "exit",
   /**登陆*/
-  login = "login",
+  login = "open_login",
   /**关于*/
   openInfo = "open_info",
   /**首选项*/

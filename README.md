@@ -21,3 +21,12 @@
 ##### run tauri
 
 1. yarn tauri dev
+
+##### webview2
+
+tauri/bundle/windows/增加
+  "webviewInstallMode": {
+    "type": "offlineInstaller"
+  },
+
+
