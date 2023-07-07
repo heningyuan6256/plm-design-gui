@@ -50,7 +50,6 @@ const Foot: FC = () => {
           <span className="mr-1">{user?.name}</span>-
           <span className="ml-1">{value}</span>
         </div>
-<<<<<<< HEAD
         <div
           className="px-1 ml-2 h-full items-center flex"
           style={{
@@ -62,9 +61,6 @@ const Foot: FC = () => {
           {mqttClient.publishTopic +
             (mqttClient.pid ? ` (${mqttClient.pid})` : "")}
         </div>
-=======
-        <div className='px-1 ml-2 bg-primary opacity-40' style={{ paddingTop: '1px', paddingBottom: '1px' }}>{mqttClient.publishTopic}</div>
->>>>>>> 56180eb190cad4cdcdbeaa92ad1a401a74562c02
         {/* <PlmIcon
           name="link"
           className="text-xs text-white opacity-80"
