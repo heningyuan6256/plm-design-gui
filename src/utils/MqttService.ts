@@ -97,7 +97,7 @@ class MqttService {
    */
   commonPublish(data: {
     type: string;
-    input_data?: Record<string, any>;
+    input_data?: Record<string, any> | string;
     output_data?: Record<string, any>;
     extra?: string;
   }) {

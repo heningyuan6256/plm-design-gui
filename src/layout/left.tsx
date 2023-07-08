@@ -26,7 +26,8 @@ const left: FC = () => {
       } else if (res.input_data === PathConfig.login) {
         if (location.pathname !== '/login') {
           mqttClient.commonPublish({
-            type: PathConfig.login,
+            type: CommandConfig.onchain_path,
+            input_data: PathConfig.login,
             output_data: {
               result: "ok",
             },

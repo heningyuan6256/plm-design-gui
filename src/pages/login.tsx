@@ -38,7 +38,8 @@ export default function login() {
     API.login(user)
       .then(async (res: any) => {
         mqttClient.commonPublish({
-          type: PathConfig.login,
+          type: CommandConfig.onchain_path,
+          input_data: PathConfig.login,
           output_data: {
             result: "ok",
           },
