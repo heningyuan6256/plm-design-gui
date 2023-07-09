@@ -137,6 +137,13 @@ const API = {
   }) => {
     return NewRequest.post("/pdm/cad/pre/numbers", data);
   },
+
+    /**
+   * 获取cad类型对应的文件
+   */
+  getAllCadFileTypeMap: () => {
+    return NewRequest.get("/pdm/cad/formats", {pageNo:'1', pageSize:'500'});
+  },
 };
 
 export default API;

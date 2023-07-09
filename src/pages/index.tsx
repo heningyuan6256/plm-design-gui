@@ -34,14 +34,14 @@ import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { homeDir } from "@tauri-apps/api/path";
-import { readBinaryFile, removeFile } from "@tauri-apps/api/fs";
+import { readBinaryFile, readDir, readTextFile, removeFile } from "@tauri-apps/api/fs";
 import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import { cloneDeep, groupBy, remove } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
-import { settingType } from "./attrMap";
+import { settingType, templateType } from "./attrMap";
 import PlmModal from "../components/PlmModal";
 // import { dealMaterialData } from 'plm-wasm'
 
@@ -119,6 +119,11 @@ const index = () => {
 
   const dealCurrentBom = async (res?: any) => {
     dispatch(setLoading(true));
+
+    const {result: { records: cadFileData }}:any = await API.getAllCadFileTypeMap()
+    const cadFileMap = Utils.transformArrayToMap(cadFileData, 'fileSuffix', 'fileType')
+    console.log(cadFileData,'cadFileData');
+    
     // 查找公有属性
     const {
       result: { records: PublicAttrs },
@@ -133,6 +138,9 @@ const index = () => {
       itemCode: BasicsItemCode.file,
       tabCode: "10002002",
     });
+
+
+    const apicodeIdMap = Utils.transformArrayToMap(PublicAttrs, 'apicode', 'id')
 
     // 查找物料公有属性
     const {
@@ -180,7 +188,7 @@ const index = () => {
     const { result: attrsArray }: any = await API.getMapptingAttrs({
       toolName: BasicConfig.pubgin_topic,
       mappingName: settingType.cadToFile,
-      fileType: "sldprt",
+      fileType: templateType.product,
     });
     const attrsMap = Utils.transformArrayToMap(
       attrsArray,
@@ -189,6 +197,7 @@ const index = () => {
     );
     const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
     const totalAttrs = [...PublicAttrs, ...PrivateAttrs];
+
     setAttrs(totalAttrs);
 
     try {
@@ -196,6 +205,7 @@ const index = () => {
         for (let i = 0; i < data.length; i++) {
           data[i].itemAttrs = {};
           data[i].id = Utils.generateSnowId();
+          // 处理设计工具给的值
           data[i].property.forEach((item: any) => {
             if (sourceAttrPlugin.includes(item.name)) {
               data[i][attrsMap[item.name]] = item.defaultVal;
@@ -206,19 +216,23 @@ const index = () => {
             // const base64String = btoa(String.fromCharCode.apply(null, uint8));
             data[i].thumbnail = uint8arrayToBase64(uint8);
           }
-          if (data[i].model_type === "assembly") {
-            data[i].model_format = "sldasm";
-          } else if (data[i].model_type === "part") {
-            data[i].model_format = "sldprt";
-          }
 
+          const contents = await readBinaryFile(data[i].file_path);
+          const fileNameWithFormat = data[i].file_path.substring(data[i].file_path.lastIndexOf('\\') + 1)
+          const fileSize = contents.length
+          const fileName = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
+          const fileFormat = fileNameWithFormat.substring(fileNameWithFormat.lastIndexOf('.') + 1)
+          data[i]['Description'] = fileName
+          data[i]['FileFormat'] = fileFormat
+          data[i]['FileSize'] = fileSize
+          data[i]['Category'] = cadFileMap[fileFormat]
           if (data[i].children && data[i].children.length) {
             await loop(data[i].children);
           }
         }
       };
       await loop([res.output_data]);
-    } catch (error) {}
+    } catch (error) { }
 
     setSelectNode(res.output_data);
     setLeftData([res.output_data]);
@@ -254,10 +268,10 @@ const index = () => {
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
           // todo需要限制如果没有则赋值Number
-          if (cloneNumber[data[i].model_format]) {
-            data[i].itemAttrs["Number"] = cloneNumber[data[i].model_format][0];
-            cloneNumber[data[i].model_format] =
-              cloneNumber[data[i].model_format].splice(1);
+          if (cloneNumber[data[i].Category]) {
+            data[i].itemAttrs["Number"] = cloneNumber[data[i].Category][0];
+            cloneNumber[data[i].Category] =
+              cloneNumber[data[i].Category].splice(1);
           }
           if (data[i].children && data[i].children.length) {
             loop(data[i].children);
@@ -322,8 +336,8 @@ const index = () => {
   }
 
   const handleClick = async (name: string) => {
-    if(name==='log'){
-      
+    if (name === 'log') {
+
     } else if (name === "refresh") {
       dispatch(setLoading(true));
       mqttClient.publish({
@@ -331,7 +345,7 @@ const index = () => {
       });
     } else if (name === "allocatenumber") {
       const centerDataMap = groupBy(centerData, (item) => {
-        return item.model_format;
+        return item.Category;
       });
       let paramsMap: any = {};
       Object.keys(centerDataMap).forEach((item) => {
@@ -374,7 +388,7 @@ const index = () => {
   const generalDealAttrs = (attrs: any[], listCodeMap: any) => {
     return attrs
       .filter(
-        (item) => (item.readonly == "0" || item.readonly == "1") && item.status
+        (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat') && item.status
       )
       .map((item) => {
         return {
@@ -384,12 +398,18 @@ const index = () => {
           width: 150,
           formitem: {
             type: formItemMap[item.valueType],
-            props: Utils.generateFormItemProps(item, listCodeMap),
+            props: {
+              ...Utils.generateFormItemProps(item, listCodeMap),
+              disabled: item.apicode === 'Category' || item.apicode === 'FileSize' || item.apicode === 'FileFormat',
+            },
           },
           search: {
             type: formItemMap[item.valueType],
             props: Utils.generateFormItemProps(item, listCodeMap),
           },
+          render: item.apicode === 'FileSize' ? (text:string) => {
+            return Utils.converBytes(Number(text))
+          } : undefined
         };
       });
   };
@@ -417,7 +437,7 @@ const index = () => {
         setMaterialColumn(generalDealAttrs(materialAttrs, map) || []);
       });
     } else {
-      setFileColumn(generalDealAttrs(materialAttrs, {}) || []);
+      setMaterialColumn(generalDealAttrs(materialAttrs, {}) || []);
     }
   }, [materialAttrs]);
 
@@ -525,6 +545,7 @@ const index = () => {
                     type: "Input",
                   },
                   sorter: true,
+                  width: 100,
                   // render: (text: string) => {
                   //   return <a>{text}</a>;
                   // },
@@ -535,20 +556,14 @@ const index = () => {
                   search: {
                     type: "Input",
                   },
-                  sorter: true,
-                },
-                {
-                  title: "类型",
-                  dataIndex: "model_format",
-                  search: {
-                    type: "Input",
-                  },
+                  width: 100,
                   sorter: true,
                 },
                 {
                   title: "版次",
                   dataIndex: "revision",
                   sorter: true,
+                  width: 100,
                   render: () => {
                     return <span>1</span>;
                   },
@@ -625,6 +640,7 @@ const index = () => {
                   search: {
                     type: "Input",
                   },
+                  width: 100,
                   sorter: true,
                 },
                 {
@@ -633,6 +649,7 @@ const index = () => {
                   search: {
                     type: "Input",
                   },
+                  width: 100,
                   sorter: true,
                 },
                 ...materialColumn,
@@ -670,7 +687,7 @@ const index = () => {
 
         <div className="flex-1 flex pt-2 gap-2">
           {/* 左侧文件 */}
-          <div style={{ width: "254px" }} className="h-full">
+          <div style={{ minWidth: "254px", width: "254px" }} className="h-full">
             <div className="flex flex-col h-full pl-2">
               <div className="flex justify-between items-center h-6 mb-1.5">
                 <OnChainSelect
@@ -713,11 +730,10 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center cursor-pointer ${
-                            !(record.children && record.children.length)
+                          className={`gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
                               ? "ml-3"
                               : ""
-                          }`}
+                            }`}
                           onClick={() => {
                             setSelectNode(record);
                           }}
@@ -812,13 +828,13 @@ const index = () => {
                 </div>
               </div>
             </div>
-            <div className="mt-2 flex-1">
+            <div className="mt-2 flex-1 overflow-hidden">
               <Tabs defaultActiveKey="1" items={items} destroyInactiveTabPane />
             </div>
           </div>
 
           {/* 右侧BOM */}
-          <div style={{ width: "254px" }} className="h-full">
+          <div style={{ width: "254px", minWidth: "254px" }} className="h-full">
             <div className="h-full pr-2">
               <div className="flex justify-between items-center h-6 mb-1.5">
                 <OnChainSelect
@@ -872,11 +888,10 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center ${
-                            !(record.children && record.children.length)
+                          className={`gap-1 inline-flex items-center ${!(record.children && record.children.length)
                               ? "ml-3"
                               : ""
-                          }`}
+                            }`}
                         >
                           <img
                             width={14}
@@ -889,7 +904,7 @@ const index = () => {
                           />
                           <div>
                             {record?.itemAttrs &&
-                            record?.itemAttrs["Number"] ? (
+                              record?.itemAttrs["Number"] ? (
                               record?.itemAttrs["Number"]
                             ) : (
                               <div

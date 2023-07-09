@@ -108,6 +108,28 @@
     "systemTray": {
       "iconPath": "icons/20x20托盘图标.png",
       "iconAsTemplate": true
+    },
+    "cli": {
+      "description": "",
+      "longDescription": "",
+      "beforeHelp": "",
+      "afterHelp": "",
+      "args": [
+        {
+          "name": "topic",
+          "index": 1,
+          "takesValue": true
+        },
+        {
+          "name": "pid",
+          "index": 2,
+          "takesValue": true
+        }
+      ],
+      "subcommands": {
+        "subcommand-name": {
+        }
+      }
     }
   }
 }

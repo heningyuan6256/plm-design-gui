@@ -3,7 +3,7 @@
  * Date: 2023/03/12 15:35:44
  * Description: 标准页尾
  */
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import PlmIcon from "../components/PlmIcon";
 import userSvg from "../assets/image/user.svg";
 import { useSelector } from "react-redux";
@@ -11,6 +11,13 @@ import { Dropdown, MenuProps } from "antd";
 import { mqttClient } from "../utils/MqttService";
 
 const Foot: FC = () => {
+  const [pid, setPid] = useState(mqttClient.pid)
+  useEffect(() =>{
+    mqttClient.event.updatePid.add(setPid)
+    return ()=> {
+      mqttClient.event.updatePid.delete(setPid)
+    } 
+  } ,[])
   const { value: user } = useSelector((state: any) => state.user);
   const items: MenuProps["items"] = [
     {
@@ -59,7 +66,7 @@ const Foot: FC = () => {
           }}
         >
           {mqttClient.publishTopic +
-            (mqttClient.pid ? ` (${mqttClient.pid})` : "")}
+            (pid ? ` (${pid})` : "")}
         </div>
         {/* <PlmIcon
           name="link"

@@ -29,7 +29,7 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
         <Head></Head>
         <div className="h-full w-full flex overflow-hidden">
           <Left></Left>
-          <div className="h-full w-full">
+          <div className="h-full w-full overflow-hidden">
             <Outlet></Outlet>
           </div>
         </div>
