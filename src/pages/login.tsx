@@ -9,10 +9,10 @@ import { Button, Form, message } from "antd";
 import { PlmFormItemProps } from "onchain-ui/dist/esm/OnChainFormItem";
 import PlmIcon from "../components/PlmIcon";
 import OnChainLogo from "../assets/image/OnChainLogo.svg";
-import { BaseDirectory, createDir, writeFile } from "@tauri-apps/api/fs";
+import { BaseDirectory, createDir, readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { homeDir } from "@tauri-apps/api/path";
 import PlmLoading from "../components/PlmLoading";
-import { useKeyPress } from "ahooks";
+import { useAsyncEffect, useKeyPress, useMount } from "ahooks";
 import userSvg from "../assets/image/user.svg";
 import { useDispatch } from "react-redux";
 import { writeNetWork } from "../models/network";
@@ -22,6 +22,7 @@ import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { mqttClient } from "../utils/MqttService";
+import { useEffect } from "react";
 
 export default function login() {
   const dispatch = useDispatch();
@@ -33,7 +34,7 @@ export default function login() {
     const user: loginUserProps = {
       email: name,
       password: psw,
-      userAgent: "macos",
+      userAgent: "windows",
     };
     API.login(user)
       .then(async (res: any) => {
@@ -53,6 +54,8 @@ export default function login() {
           `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
           address
         );
+        await writeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
+        `${name}---${psw}`)
         const data = await dispatch(
           fetchUserByToken(res.result.token) as any
         ).unwrap();
@@ -145,6 +148,22 @@ export default function login() {
   useKeyPress(["enter"], () => {
     loginSys();
   });
+
+  useMount(async() => {
+    const homeDirPath = await homeDir();
+    const contents = await readTextFile(
+      `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
+    );
+    const newWorkContent = await readTextFile(
+      `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
+    );
+    form.setFieldsValue({
+      name: contents.split('---')[0] || '',
+      psw: contents.split('---')[1] || '',
+      address:newWorkContent
+    })
+    console.log(contents, 'contents')
+  })
 
   return (
     <div className="flex h-full w-full overflow-hidden">

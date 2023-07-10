@@ -94,12 +94,12 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 720,
-        "resizable": true,
-        "title": "DESIGNFUSION",
-        "width": 1440,
-        "url": "/query",
-        "label": "Query",
+        "height": 347,
+        "resizable": false,
+        "title": "OnChain-DesignFusion",
+        "width": 648,
+        "url": "/login",
+        "label": "Login",
         "decorations": false,
         "center": true,
         "visible": true

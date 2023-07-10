@@ -20,7 +20,6 @@ const Head: FC = () => {
   useEffect(() => {
     const win = getCurrent();
     win.listen("tauri://resize", async (e) => {
-       console.log(e, 'eeee')
       const maxed = await appWindow.isMaximized();
       setisMaximized(maxed);
     });

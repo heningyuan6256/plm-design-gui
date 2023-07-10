@@ -44,7 +44,7 @@ const Foot: FC = () => {
             style={{
               borderRadius: "50%",
               width: "4px",
-              top: "1px",
+              top: "0px",
               height: "4px",
               background: "#0EDF8C",
               left: "6px",

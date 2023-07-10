@@ -537,9 +537,10 @@ const index = () => {
               className="table-checkbox"
               columns={[
                 {
-                  title: <div className="w-full flex justify-center">校验</div>,
+                  title: <div className="w-full flex justify-center"><PlmIcon name="listcheck"></PlmIcon></div>,
                   dataIndex: "flag",
                   width: 45,
+                  sort: true,
                   render: (text: string) => {
                     return (
                       <div className="w-full flex justify-center">
@@ -553,6 +554,7 @@ const index = () => {
                   dataIndex: "thumbnail",
                   // sorter: true,
                   width: 50,
+                  sort: true,
                   render: (text: string) => {
                     return (
                       <Image src={text} width={32} preview={false}></Image>
@@ -645,7 +647,7 @@ const index = () => {
               className="table-checkbox"
               columns={[
                 {
-                  title: "缩略图",
+                  title: <PlmIcon name="listphoto"></PlmIcon>,
                   dataIndex: "thumbnail",
                   // sorter: true,
                   width: 50,
