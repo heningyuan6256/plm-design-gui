@@ -43,6 +43,7 @@ import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType, templateType } from "./attrMap";
 import PlmModal from "../components/PlmModal";
+import { useSelector } from "react-redux";
 // import { dealMaterialData } from 'plm-wasm'
 
 export const formItemMap: Record<string, any> = {
@@ -59,6 +60,7 @@ export const formItemMap: Record<string, any> = {
 };
 
 const index = () => {
+  const { value: user } = useSelector((state: any) => state.user);
   const [rightData, setRightData] = useState<Record<string, any>[]>([]);
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
@@ -120,10 +122,10 @@ const index = () => {
   const dealCurrentBom = async (res?: any) => {
     dispatch(setLoading(true));
 
-    const {result: { records: cadFileData }}:any = await API.getAllCadFileTypeMap()
+    const { result: { records: cadFileData } }: any = await API.getAllCadFileTypeMap()
     const cadFileMap = Utils.transformArrayToMap(cadFileData, 'fileSuffix', 'fileType')
-    console.log(cadFileData,'cadFileData');
-    
+    console.log(cadFileData, 'cadFileData');
+
     // 查找公有属性
     const {
       result: { records: PublicAttrs },
@@ -336,29 +338,48 @@ const index = () => {
   }
 
   const handleClick = async (name: string) => {
-    if (name === 'log') {
+    if (name === 'upload') {
+      centerData.map((item, index) => {
+        return {
+          fileIndex: index,
+          itemCode: BasicsItemCode.file,
+          ObjectId: item.Category,
+          workspaceId: selectProduct,
+          tenantId:"719",
+          verifyCode: '200',
+          user: user.id,
+          insAttrs: Attrs.map(v => {
+            return {
+              ...v,
+              value: item[v.apicode]
+            }
+          })
+        }
+      })
+    } else
+      if (name === 'log') {
 
-    } else if (name === "refresh") {
-      dispatch(setLoading(true));
-      mqttClient.publish({
-        type: CommandConfig.getCurrentBOM,
-      });
-    } else if (name === "allocatenumber") {
-      const centerDataMap = groupBy(centerData, (item) => {
-        return item.Category;
-      });
-      let paramsMap: any = {};
-      Object.keys(centerDataMap).forEach((item) => {
-        paramsMap[item] = centerDataMap[item].length;
-      });
-      API.allcateCode({
-        numberOfItemCode: "10001001",
-        fileTypeCountMap: paramsMap,
-      }).then((res: any) => {
-        message.success("分配编号成功");
-        setCacheItemNumber(res.result);
-      });
-    }
+      } else if (name === "refresh") {
+        dispatch(setLoading(true));
+        mqttClient.publish({
+          type: CommandConfig.getCurrentBOM,
+        });
+      } else if (name === "allocatenumber") {
+        const centerDataMap = groupBy(centerData, (item) => {
+          return item.Category;
+        });
+        let paramsMap: any = {};
+        Object.keys(centerDataMap).forEach((item) => {
+          paramsMap[item] = centerDataMap[item].length;
+        });
+        API.allcateCode({
+          numberOfItemCode: "10001001",
+          fileTypeCountMap: paramsMap,
+        }).then((res: any) => {
+          message.success("分配编号成功");
+          setCacheItemNumber(res.result);
+        });
+      }
     if (name === "logout") {
       mqttClient.commonPublish({
         type: PathConfig.exit,
@@ -407,7 +428,7 @@ const index = () => {
             type: formItemMap[item.valueType],
             props: Utils.generateFormItemProps(item, listCodeMap),
           },
-          render: item.apicode === 'FileSize' ? (text:string) => {
+          render: item.apicode === 'FileSize' ? (text: string) => {
             return Utils.converBytes(Number(text))
           } : undefined
         };
@@ -731,8 +752,8 @@ const index = () => {
                       return (
                         <div
                           className={`gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
-                              ? "ml-3"
-                              : ""
+                            ? "ml-3"
+                            : ""
                             }`}
                           onClick={() => {
                             setSelectNode(record);
@@ -889,8 +910,8 @@ const index = () => {
                       return (
                         <div
                           className={`gap-1 inline-flex items-center ${!(record.children && record.children.length)
-                              ? "ml-3"
-                              : ""
+                            ? "ml-3"
+                            : ""
                             }`}
                         >
                           <img

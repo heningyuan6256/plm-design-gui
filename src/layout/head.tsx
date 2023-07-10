@@ -17,13 +17,14 @@ import { exit } from "@tauri-apps/api/process";
 const Head: FC = () => {
   const [isMaximized, setisMaximized] = useState<boolean>(false);
 
-  // useEffect(() => {
-  //   const win = getCurrent();
-  //   win.listen("tauri://resize", async (e) => {
-  //     // const maxed = await appWindow.isMaximized();
-  //     // setisMaximized(maxed);
-  //   });
-  // }, []);
+  useEffect(() => {
+    const win = getCurrent();
+    win.listen("tauri://resize", async (e) => {
+       console.log(e, 'eeee')
+      const maxed = await appWindow.isMaximized();
+      setisMaximized(maxed);
+    });
+  }, []);
 
   // const exist = async () => {
   //   exit();
@@ -84,7 +85,7 @@ const Head: FC = () => {
           className="text-xs text-white cursor-pointer opacity-80 mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
         <PlmIcon
-          name={!isMaximized ? "reduce" : "amplify"}
+          name={isMaximized ? "reduce" : "amplify"}
           onClick={() => appWindow.toggleMaximize()}
           className="text-xs text-white cursor-pointer opacity-80 mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
