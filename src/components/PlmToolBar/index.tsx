@@ -14,6 +14,7 @@ import record from "../../assets/image/toprecord.svg";
 import encoded from "../../assets/image/topencoded.svg";
 // import about from "../../assets/image/topabout.svg";
 import renovate from "../../assets/image/toprenovate.svg";
+import topupdate from "../../assets/image/topupdate.svg";
 import { homeDir } from "@tauri-apps/api/path";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { removeFile } from "@tauri-apps/api/fs";
@@ -58,7 +59,7 @@ const PlmToolBar: FC<PlmToolBarProps> = (props) => {
       </div>
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
-        {renderButton(checkout, `更新`, "checkout")}
+        {renderButton(topupdate, `更新`, "update")}
           {renderButton(checkout, `签出`, "checkout")}
           {renderButton(cancelcheckin, "取消签出", "cancelcheckout")}
           {renderButton(checkin, "签入", "cancelcheckin")}

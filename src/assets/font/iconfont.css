@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 3929567 */
-  src: url('iconfont.woff2?t=1680691168563') format('woff2'),
-       url('iconfont.woff?t=1680691168563') format('woff'),
-       url('iconfont.ttf?t=1680691168563') format('truetype');
+  src: url('iconfont.woff2?t=1688956017168') format('woff2'),
+       url('iconfont.woff?t=1688956017168') format('woff'),
+       url('iconfont.ttf?t=1688956017168') format('truetype');
 }
 
 .iconfont {
@@ -13,16 +13,132 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-close:before {
-  content: "\e6f4";
+.icon-topupdate:before {
+  content: "\e730";
+}
+
+.icon-menuMaterial:before {
+  content: "\e72f";
+}
+
+.icon-moveUD:before {
+  content: "\e72d";
+}
+
+.icon-moveLR:before {
+  content: "\e72e";
+}
+
+.icon-filldown:before {
+  content: "\e72b";
+}
+
+.icon-fillup:before {
+  content: "\e72c";
+}
+
+.icon-listcheck:before {
+  content: "\e728";
+}
+
+.icon-listcheckout:before {
+  content: "\e729";
+}
+
+.icon-listphoto:before {
+  content: "\e72a";
+}
+
+.icon-childnodecube:before {
+  content: "\e726";
+}
+
+.icon-rootdirectorycube:before {
+  content: "\e727";
+}
+
+.icon-minus:before {
+  content: "\e719";
+}
+
+.icon-childnode:before {
+  content: "\e71a";
+}
+
+.icon-rootdirectory:before {
+  content: "\e71b";
+}
+
+.icon-topcheckin:before {
+  content: "\e71c";
+}
+
+.icon-setting:before {
+  content: "\e71d";
+}
+
+.icon-topcancelcheckin:before {
+  content: "\e71e";
+}
+
+.icon-plus:before {
+  content: "\e71f";
+}
+
+.icon-topcheckout:before {
+  content: "\e720";
+}
+
+.icon-topupload:before {
+  content: "\e721";
+}
+
+.icon-toprenovate:before {
+  content: "\e722";
+}
+
+.icon-warning:before {
+  content: "\e723";
+}
+
+.icon-toprecord:before {
+  content: "\e724";
+}
+
+.icon-topencoded:before {
+  content: "\e725";
+}
+
+.icon-menuSetting:before {
+  content: "\e718";
+}
+
+.icon-menuSearch:before {
+  content: "\e715";
+}
+
+.icon-menuUpload:before {
+  content: "\e716";
+}
+
+.icon-reduce:before {
+  content: "\e6e8";
 }
 
 .icon-amplify:before {
   content: "\e6e6";
 }
 
-.icon-reduce:before {
-  content: "\e6e8";
+.icon-save:before {
+  content: "\e712";
+}
+
+.icon-front-content-openmode:before {
+  content: "\e6f8";
+}
+
+.icon-close:before {
+  content: "\e6f4";
 }
 
 .icon-minimize:before {
