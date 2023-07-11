@@ -11,12 +11,33 @@ import { Outlet } from "react-router-dom";
 import Head from "./head";
 import Foot from "./foot";
 import Left from "./left";
+import { TauriEvent } from "@tauri-apps/api/event"
+import { mqttClient } from "../utils/MqttService";
+import { CommandConfig, PathConfig } from "../constant/config";
+import { getCurrent } from "@tauri-apps/api/window";
 interface LayoutProps {
   children?: React.ReactNode;
 }
 const PageLayout: React.FC<LayoutProps> = (data) => {
   const { value: user } = useSelector((state: any) => state.user);
   const { value: loading } = useSelector((state: any) => state.loading);
+
+  useEffect(() => {
+    const currentWindow = getCurrent();
+    currentWindow.listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async (e) => {
+      mqttClient.commonPublish({
+        type: CommandConfig.onchain_path,
+        input_data: PathConfig.login,
+        output_data: {
+          result: "exit",
+        },
+      });
+
+      setTimeout(() => {
+        currentWindow?.close()
+      }, 200)
+    });
+  },[])
 
   if (!user.id) {
     return <PlmLoading loading={true}></PlmLoading>;

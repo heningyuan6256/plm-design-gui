@@ -39,8 +39,8 @@
         "sidecar": true,
         "scope": [
           {
-            "name": "run-git-commit",
-            "cmd": "D://heningyuan//OnChain_DesignFusion11.exe",
+            "name": "runDesign",
+            "cmd": "",
             "args": true
           },
           {

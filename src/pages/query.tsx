@@ -12,6 +12,13 @@ import { useSelector } from "react-redux";
 import { useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
 import { OnChainTableColumnProps } from "onchain-ui/dist/esm/OnChainTable";
+import { Utils } from "../utils";
+import { createDir, writeBinaryFile } from "@tauri-apps/api/fs";
+import { homeDir } from "@tauri-apps/api/path";
+import { BasicConfig } from "../constant/config";
+import { useDispatch } from "react-redux";
+import { setLoading } from "../models/loading";
+import { Command } from "@tauri-apps/api/shell";
 // import { dealMaterialData } from 'plm-wasm'
 
 const query: FC = () => {
@@ -21,8 +28,9 @@ const query: FC = () => {
     Record<string, any>[]
   >([]);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
-  const { value } = useSelector((state: any) => state.user);
+  const { value: user } = useSelector((state: any) => state.user);
   const [SearchColumn, setSearchColumn] = useState<Record<string, any>[]>([]);
+  const dispatch = useDispatch();
 
   const { run, loading } = useRequest(() => API.getQueryFolder(), {
     manual: true,
@@ -66,6 +74,7 @@ const query: FC = () => {
 
   useEffect(() => {
     API.getQueryColumns({ itemCode: "10001006" }).then((res: any) => {
+      console.log(res.result, 'result')
       setSearchColumn(res.result);
     });
   }, []);
@@ -84,8 +93,8 @@ const query: FC = () => {
         render:
           item.apicode === "Number" || item.apicode === "CreateUser"
             ? (text: string) => {
-                return <a>{text}</a>;
-              }
+              return <a>{text}</a>;
+            }
             : undefined,
       };
     });
@@ -281,6 +290,42 @@ const query: FC = () => {
                 }}
                 expandable={{
                   expandIconColumnIndex: 0,
+                }}
+                onRow={(row: any) => {
+                  return {
+                    onDoubleClick: () => {
+                      dispatch(setLoading(true))
+                      API.getInstanceInfoById({
+                        instanceId: row.insId,
+                        authType: 'read',
+                        tabCode: '10002001',
+                        tenantId: '719',
+                        userId: user.id
+                      }).then((res: any) => {
+                        const attrMap = Utils.transformArrayToMap(res.result.pdmAttributeCustomizedVoList, 'apicode', 'id')
+                        const instance = res.result.readInstanceVo
+                        const fileUrl = instance.attributes[attrMap['FileUrl']]
+                        const fileName = instance.attributes[attrMap['Description']]
+                        API.downloadFile(fileUrl.split('/plm')[1]).then(res => {
+                        }).catch(async (res) => {
+                          const homeDirPath = await homeDir();
+                          await createDir(`${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}`, { recursive: true })
+                          writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${instance.insDesc}`, contents: res })
+                          dispatch(setLoading(false))
+                          console.log(homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'1')
+                          const command = new Command(
+                            "runDesign",
+                            [
+                              homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,
+                            ],
+                          );
+                          command.execute()
+                        })
+                      }).catch(() => {
+                        dispatch(setLoading(false))
+                      })
+                    }
+                  }
                 }}
                 hideFooter
                 extraHeight={22}

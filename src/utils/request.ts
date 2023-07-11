@@ -60,7 +60,7 @@ class Request {
                 });
         });
     };
-    get = (url: string, data: Record<string, any>) => {
+    get = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
         return new Promise((resolve, reject) => {
             const requestQuery = {...data, ...this.interceptors.request.body};
             const requestHeaders = {...this.interceptors.request.headers};
@@ -71,9 +71,9 @@ class Request {
                     method: "GET",
                     // 常规的json格式请求体发送
                     query: requestQuery,
+                    ...headers
                 })
                 .then((res) => {
-                    // res为请求成功的回调数据
                     resolve(this.interceptors.response(res));
                 })
                 .catch((err) => {

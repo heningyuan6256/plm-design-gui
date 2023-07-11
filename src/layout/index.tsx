@@ -5,7 +5,7 @@
  */
 
 import { useAsyncEffect } from "ahooks";
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import {
   writeFile,
@@ -13,14 +13,14 @@ import {
   createDir,
   BaseDirectory,
 } from "@tauri-apps/api/fs";
-import { BasicConfig, CommandConfig } from "../constant/config";
+import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { fetchUserByToken } from "../models/user";
 import { useDispatch } from "react-redux";
 import Request from "../utils/request";
 import { removeFile } from "@tauri-apps/api/fs";
 import { writeNetWork } from "../models/network";
 import { invoke } from "@tauri-apps/api";
-import { WebviewWindow, appWindow } from "@tauri-apps/api/window";
+import {  appWindow, } from "@tauri-apps/api/window";
 import { Command } from "@tauri-apps/api/shell";
 import { mqttClient } from "../utils/MqttService";
 interface LayoutProps {

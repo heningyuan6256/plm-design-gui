@@ -1,12 +1,12 @@
 import mqtt, { MqttClient } from "mqtt";
-import { BasicConfig } from "../constant/config";
+import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Utils } from ".";
 import { getCurrent, appWindow } from "@tauri-apps/api/window";
 import { getMatches } from '@tauri-apps/api/cli'
 
 type EventFn = () => void;
 interface Event {
-  updatePid: Set<(pid:string) => void>
+  updatePid: Set<(pid: string) => void>
 }
 interface CallbackType {
   (data: ReturnType<MqttService['formatData']>): void;
@@ -26,7 +26,7 @@ class MqttService {
   baseUrl: string;
   mqtt: MqttClient;
   publishTopic: string;
-  callBackMapping: Record<string, CallbackType|null>;
+  callBackMapping: Record<string, CallbackType | null>;
   machineId: string;
   pid: string;
   event: Event;
@@ -60,19 +60,19 @@ class MqttService {
     });
     getMatches().then((matches) => {
 
-      console.log(matches,'matches')
+      console.log(matches, 'matches')
       // do something with the { args, subcommand } matches
       this.machineId = topic ? `_${topic}` : ''
-      const pid:any = matches?.args?.pid?.value || ''
-      const tc:any = matches?.args?.topic?.value || ''
-      console.log(pid, tc, 'tcccc');
+      const pid: any = matches?.args?.pid?.value || ''
+      const tc: any = matches?.args?.topic?.value || ''
       this.pid = pid
       this.publishTopic = tc
+      // this.pid = '16796'
+      // this.publishTopic = 'sw'
       this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
       this.mqtt.on("connect", () => {
         console.log("成功建立连接");
       });
-
       this.mqtt.on("message", (topic, data: any) => {
         const value = this.formatData(data)
         console.log(value, '收到消息')
@@ -92,13 +92,13 @@ class MqttService {
     })
   }
 
-  formatData(data:string):{type:string,pid:string,[k:string]: any} {
+  formatData(data: string): { type: string, pid: string, [k: string]: any } {
     return JSON.parse(data)
   }
 
   updatePid(data: string) {
     this.pid = JSON.parse(data).pid
-    this.event.updatePid.forEach(i =>i(this.pid))
+    this.event.updatePid.forEach(i => i(this.pid))
   }
 
   /**
@@ -111,6 +111,7 @@ class MqttService {
     input_data?: Record<string, any>;
     output_data?: Record<string, any>;
     extra?: string;
+    [k: string]: any
   }) {
     const structData = {
       input_data: {},

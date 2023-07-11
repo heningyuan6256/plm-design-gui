@@ -290,6 +290,22 @@ const index = () => {
     await dealCurrentBom(res);
   });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   function removeImgBg(src: any) {
     const img = document.createElement("img");
     img.src = src;
@@ -308,8 +324,8 @@ const index = () => {
     var r, g, b, a;
     const canvas = document.createElement("canvas");
     const context: any = canvas.getContext("2d");
-    const w = 400;
-    const h = 400;
+    const w = img.width || 400;
+    const h = img.height || 400;
     canvas.width = w;
     canvas.height = h;
     context.drawImage(img, 0, 0);
@@ -345,7 +361,7 @@ const index = () => {
           itemCode: BasicsItemCode.file,
           ObjectId: item.Category,
           workspaceId: selectProduct,
-          tenantId:"719",
+          tenantId: "719",
           verifyCode: '200',
           user: user.id,
           insAttrs: Attrs.map(v => {
@@ -356,6 +372,28 @@ const index = () => {
           })
         }
       })
+
+      // 修改文件编号
+      const pluginUpdateNumber = centerData.map((item, index) => {
+        return {
+          product_name: item.node_name,
+          "extra": "属性设置",
+          product_attrs: [
+            {
+              "attr_name": "编号",
+              "attr_type": "string",
+              "attr_value": `测试`
+            }
+          ]
+        }
+      })
+
+      mqttClient.publish({
+        type: CommandConfig.setProductAttVal,
+        attr_set: pluginUpdateNumber
+      });
+
+
     } else
       if (name === 'log') {
 

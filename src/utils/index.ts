@@ -83,7 +83,7 @@ export class Utils {
 
   // 生成指令
   public static instruction(instruction: string) {
-    return `${BasicConfig.pubgin_topic}.${BasicConfig.plugin_version}.${instruction}`;
+    return `${instruction}`;
   }
 
   // 将数组转成map

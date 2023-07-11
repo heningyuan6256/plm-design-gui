@@ -59,6 +59,14 @@ const API = {
     return NewRequest.post("/opendata/findItemLibraryIns", data);
   },
 
+
+  /**
+ * 根据实例Id获取实例详情
+ * */
+  getInstanceInfoById: (data: Record<string, any>) => {
+    return NewRequest.get("/opendata/instance", data);
+  },
+
   /**
    * 获取搜索页面左侧文件夹
    * */
@@ -138,11 +146,18 @@ const API = {
     return NewRequest.post("/pdm/cad/pre/numbers", data);
   },
 
-    /**
-   * 获取cad类型对应的文件
-   */
+  /**
+ * 获取cad类型对应的文件
+ */
   getAllCadFileTypeMap: () => {
-    return NewRequest.get("/pdm/cad/formats", {pageNo:'1', pageSize:'500'});
+    return NewRequest.get("/pdm/cad/formats", { pageNo: '1', pageSize: '500' });
+  },
+
+  /**
+* 下载文件
+*/
+  downloadFile: (url:string,) => {
+    return NewRequest.get(url, {}, {responseType: 3});
   },
 };
 
