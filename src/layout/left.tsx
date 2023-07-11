@@ -35,7 +35,16 @@ const left: FC = () => {
         } else {
         }
       } else if (res.input_data === 'exit') {
-        appWindow.close()
+        mqttClient.commonPublish({
+          type: CommandConfig.onchain_path,
+          input_data: PathConfig.login,
+          output_data: {
+            result: "exit",
+          },
+        });
+        setTimeout(() => {
+          appWindow.close()
+        },200)
       } else {
         navigate(`/${res.input_data.split("_")[1]}`);
       }

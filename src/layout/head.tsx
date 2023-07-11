@@ -11,8 +11,9 @@ import { WebviewWindow, appWindow, getCurrent } from "@tauri-apps/api/window";
 import { FC, useEffect, useState } from "react";
 import PlmIcon from "../components/PlmIcon";
 import { homeDir } from "@tauri-apps/api/path";
-import { BasicConfig } from "../constant/config";
+import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { exit } from "@tauri-apps/api/process";
+import { mqttClient } from "../utils/MqttService";
 
 const Head: FC = () => {
   const [isMaximized, setisMaximized] = useState<boolean>(false);
@@ -91,7 +92,18 @@ const Head: FC = () => {
         <PlmIcon
           name="close"
           // onClick={() => exit()}
-          onClick={() => appWindow.close()}
+          onClick={() =>  {
+            mqttClient.commonPublish({
+              type: CommandConfig.onchain_path,
+              input_data: PathConfig.login,
+              output_data: {
+                result: "exit",
+              },
+            });
+            setTimeout(() => {
+              appWindow.close()
+            },200)
+          }}
           className="text-xs text-white cursor-pointer opacity-80 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
       </div>
