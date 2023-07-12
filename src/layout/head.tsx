@@ -93,7 +93,7 @@ const Head: FC = () => {
           name="close"
           // onClick={() => exit()}
           onClick={() =>  {
-            mqttClient.commonPublish({
+            mqttClient.publish({
               type: CommandConfig.onchain_path,
               input_data: PathConfig.login,
               output_data: {

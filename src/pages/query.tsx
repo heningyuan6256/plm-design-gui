@@ -18,7 +18,7 @@ import { homeDir } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
-import { Command } from "@tauri-apps/api/shell";
+import { Command,open } from "@tauri-apps/api/shell";
 // import { dealMaterialData } from 'plm-wasm'
 
 const query: FC = () => {
@@ -306,20 +306,60 @@ const query: FC = () => {
                         const instance = res.result.readInstanceVo
                         const fileUrl = instance.attributes[attrMap['FileUrl']]
                         const fileName = instance.attributes[attrMap['Description']]
+                        
                         API.downloadFile(fileUrl.split('/plm')[1]).then(res => {
                         }).catch(async (res) => {
                           const homeDirPath = await homeDir();
                           await createDir(`${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}`, { recursive: true })
-                          writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${instance.insDesc}`, contents: res })
+                          await writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${instance.insDesc}`, contents: res })
                           dispatch(setLoading(false))
-                          console.log(homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'1')
-                          const command = new Command(
-                            "runDesign",
+                          // console.log(homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'1')
+                          const regCommand = new Command(
+                            "reg",
                             [
-                              homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,
+                              "query",
+                              `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
+                              "/v",
+                              "SolidWorks Folder",
                             ],
+                            { encoding: "GBK" }
                           );
-                          command.execute()
+                          // const homeDirPath = await homeDir();
+                          regCommand.stdout.on("data", async (line: string) => {
+                            const installDir = line.replace('REG_SZ', '').replace('SolidWorks Folder', '').trim()
+                            if(installDir && installDir.indexOf("HKEY_LOCAL_MACHINE") == -1){
+                              // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
+                              
+
+                              // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
+                              // command.execute()
+                              const command = new Command(
+                                "rundesign",
+                                [
+                                  // installDir + "SOLIDWORKS.exe",
+                                  // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
+                                  homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,
+                                ],
+                                // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
+                                // { encoding: "GBK" }
+                              );
+                              command.stderr.on("data",(args) => {
+                                console.log('args',...args);
+                                
+                              })
+
+                              command.stdout.on("data", async (line: string) => {
+                                console.log('line',...line);
+                              })
+                              command.execute()
+                            }
+                          })
+                          regCommand.execute()
+
+
+
+
+               
                         })
                       }).catch(() => {
                         dispatch(setLoading(false))

@@ -22,10 +22,15 @@ const left: FC = () => {
 
   useEffect(() => {
     mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
-      if (res.input_data === 'cad_start') {
-      } else if (res.input_data === PathConfig.login) {
+      if ((res.input_data === 'cad_start') || (res.input_data === CommandConfig.cadShutDown)) {
+        return
+      } 
+      
+      
+      
+      if (res.input_data === PathConfig.login) {
         if (location.pathname !== '/login') {
-          mqttClient.commonPublish({
+          mqttClient.publish({
             type: CommandConfig.onchain_path,
             input_data: PathConfig.login,
             output_data: {
@@ -35,7 +40,7 @@ const left: FC = () => {
         } else {
         }
       } else if (res.input_data === 'exit') {
-        mqttClient.commonPublish({
+        mqttClient.publish({
           type: CommandConfig.onchain_path,
           input_data: PathConfig.login,
           output_data: {

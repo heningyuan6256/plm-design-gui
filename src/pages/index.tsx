@@ -124,8 +124,6 @@ const index = () => {
 
     const { result: { records: cadFileData } }: any = await API.getAllCadFileTypeMap()
     const cadFileMap = Utils.transformArrayToMap(cadFileData, 'fileSuffix', 'fileType')
-    console.log(cadFileData, 'cadFileData');
-
     // 查找公有属性
     const {
       result: { records: PublicAttrs },
@@ -419,7 +417,7 @@ const index = () => {
         });
       }
     if (name === "logout") {
-      mqttClient.commonPublish({
+      mqttClient.publish({
         type: PathConfig.exit,
         output_data: {
           result: "1",

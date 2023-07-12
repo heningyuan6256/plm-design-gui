@@ -25,7 +25,7 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
   useEffect(() => {
     const currentWindow = getCurrent();
     currentWindow.listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async (e) => {
-      mqttClient.commonPublish({
+      mqttClient.publish({
         type: CommandConfig.onchain_path,
         input_data: PathConfig.login,
         output_data: {

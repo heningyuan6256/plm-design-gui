@@ -67,7 +67,7 @@ class MqttService {
       const tc: any = matches?.args?.topic?.value || ''
       this.pid = pid
       this.publishTopic = tc
-      // this.pid = '16796'
+      // this.pid = '18992'
       // this.publishTopic = 'sw'
       this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
       this.mqtt.on("connect", () => {
@@ -76,6 +76,22 @@ class MqttService {
       this.mqtt.on("message", (topic, data: any) => {
         const value = this.formatData(data)
         console.log(value, '收到消息')
+        // 判断当前是设计工具退出的命令，并且当前发送的pid等于当前存储的pid
+        if ((value.input_data === CommandConfig.cadShutDown) && (value.pid == this.pid)) {
+          const currentWindow = getCurrent();
+          currentWindow.close()
+        }
+
+        // 判断当前发过来的进程pid不等于当前已经存在的pid,则原先的pid解除绑定
+        if (value.pid != this.pid) {
+          this.publish({
+            type: CommandConfig.onchain_path,
+            input_data: PathConfig.login,
+            output_data: {
+              result: "exit",
+            },
+          })
+        }
 
         const type = value.type;
         this.publishTopic = value.topic
@@ -92,7 +108,7 @@ class MqttService {
     })
   }
 
-  formatData(data: string): { type: string, pid: string, [k: string]: any } {
+  formatData(data: string): { type: string, pid: string, input_data: Record<string, any> | string, [k: string]: any } {
     return JSON.parse(data)
   }
 
@@ -108,7 +124,7 @@ class MqttService {
    */
   publish(data: {
     type: string;
-    input_data?: Record<string, any>;
+    input_data?: Record<string, any> | string;
     output_data?: Record<string, any>;
     extra?: string;
     [k: string]: any
@@ -139,7 +155,7 @@ class MqttService {
     const structData = {
       input_data: {},
       output_data: {},
-      topic: BasicConfig.pubgin_topic,
+      topic: this.publishTopic,
       ...data,
       pid: this.pid,
       type: data.type,

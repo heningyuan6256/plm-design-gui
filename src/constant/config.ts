@@ -29,7 +29,7 @@ export enum PathConfig {
   /**首选项*/
   preference = "open_preference",
   /**登录状态改变 */
-  loginStatusChanged = "loginStatusChanged"
+  loginStatusChanged = "loginStatusChanged",
 }
 
 export enum CommandConfig {
@@ -45,7 +45,9 @@ export enum CommandConfig {
    */
   getCurrentBOM = "getCurrentBOM",
   /**传入ID往文件写入属性值，如若文件没有属性值则添加属性再赋值*/
-  setProductAttVal = "setProductAttVal",
+  setProductAttVal = "setProductAttrVal",
   /**将基础库中的零件插入到选中节点中*/
   insertPart = "insertPart",
+  /**solidworks进程退出登录*/
+  cadShutDown = "cad_shutdown"
 }
