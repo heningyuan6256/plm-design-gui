@@ -4,7 +4,7 @@
  * Description: 通用布局
  */
 
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import PlmLoading from "../components/PlmLoading";
 import { Outlet } from "react-router-dom";
@@ -18,6 +18,7 @@ import { getCurrent } from "@tauri-apps/api/window";
 interface LayoutProps {
   children?: React.ReactNode;
 }
+
 const PageLayout: React.FC<LayoutProps> = (data) => {
   const { value: user } = useSelector((state: any) => state.user);
   const { value: loading } = useSelector((state: any) => state.loading);
@@ -38,6 +39,14 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
       }, 200)
     });
   },[])
+
+  const dataState = useRef(loading)
+  dataState.current = loading;
+
+
+  useEffect(() => {
+    mqttClient.loading = dataState
+  }, [])
 
   if (!user.id) {
     return <PlmLoading loading={true}></PlmLoading>;

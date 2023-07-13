@@ -3,6 +3,7 @@ import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Utils } from ".";
 import { getCurrent, appWindow } from "@tauri-apps/api/window";
 import { getMatches } from '@tauri-apps/api/cli'
+import { message } from "antd";
 
 type EventFn = () => void;
 interface Event {
@@ -25,6 +26,7 @@ class MqttService {
   }
   baseUrl: string;
   mqtt: MqttClient;
+  loading: React.MutableRefObject<any>;
   publishTopic: string;
   callBackMapping: Record<string, CallbackType | null>;
   machineId: string;
@@ -36,6 +38,7 @@ class MqttService {
     this.callBackMapping = {};
     this.pid = ''
     this.machineId = ''
+    this.loading = { current: false }
     this.event = {
       updatePid: new Set()
     }
@@ -84,13 +87,21 @@ class MqttService {
 
         // 判断当前发过来的进程pid不等于当前已经存在的pid,则原先的pid解除绑定
         if (value.pid != this.pid) {
-          this.publish({
-            type: CommandConfig.onchain_path,
-            input_data: PathConfig.login,
-            output_data: {
-              result: "exit",
-            },
-          })
+          // 判断当前不在loading中
+          if (!this.loading.current) {
+            this.publish({
+              type: CommandConfig.onchain_path,
+              input_data: PathConfig.login,
+              output_data: {
+                result: "exit",
+              },
+            })
+          } else {
+            const currentWindow = getCurrent();
+            currentWindow.setFocus()
+            message.info("当前任务进行中，请等待")
+            return
+          }
         }
 
         const type = value.type;
