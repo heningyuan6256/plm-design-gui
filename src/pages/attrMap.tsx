@@ -105,7 +105,6 @@ export default function AttrMap() {
       mappingName: childActiveKey,
       fileType: activeKey,
     }).then((res: any) => {
-      console.log(res.result,'res.resul')
       setMappingData(
         res.result.map((item: any) => {
           return {
