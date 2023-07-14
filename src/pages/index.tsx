@@ -76,8 +76,40 @@ const index = () => {
   const [cacheItemNumber, setCacheItemNumber] = useState({});
   const [fileSelectRows, setFileSelectRows] = useState<any[]>([])
   const [materialSelectRows, setMaterialSelectRows] = useState<any>([])
-  const [thumbImage, setThumbImage] = useState("");
+
+  // const [onChainAttr] = useState<{ [k: string]: { origin: {}, material: { onChain: any, attr: any }, file: { onChain: any, attr: any } } }>()
+  const [pluginAttr] = useState<any>({})
   const dispatch = useDispatch();
+
+  // 获取所有的属性
+  const getAllAttr = async (itemCode: string) => {
+    // 查找公有属性
+    const {
+      result: { records: PublicAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.file,
+      tabCode: "10002001",
+    });
+    // 查找私有属性
+    const {
+      result: { records: PrivateAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.file,
+      tabCode: "10002002",
+    });
+
+    const totalAttrs = [
+      ...PublicAttrs,
+      ...PrivateAttrs,
+    ];
+    return [totalAttrs, PublicAttrs, PrivateAttrs]
+  }
+  // 获取cad属性映射的规则
+  const getCadAttrMapRule = async () => {
+    const { result: { records: cadFileData } }: any = await API.getAllCadFileTypeMap()
+    const cadFileMap = Utils.transformArrayToMap(cadFileData, 'fileSuffix', 'fileType')
+    return cadFileMap
+  }
 
   useEffect(() => {
     dispatch(setLoading(true));
@@ -124,68 +156,15 @@ const index = () => {
 
   const dealCurrentBom = async (res?: any) => {
     dispatch(setLoading(true));
-
-    const { result: { records: cadFileData } }: any = await API.getAllCadFileTypeMap()
-    const cadFileMap = Utils.transformArrayToMap(cadFileData, 'fileSuffix', 'fileType')
-    // 查找公有属性
-    const {
-      result: { records: PublicAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
-      tabCode: "10002001",
-    });
-    // 查找私有属性
-    const {
-      result: { records: PrivateAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
-      tabCode: "10002002",
-    });
-
-
-    const apicodeIdMap = Utils.transformArrayToMap(PublicAttrs, 'apicode', 'id')
-
-    // 查找物料公有属性
-    const {
-      result: { records: MaterialPublicAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.material,
-      tabCode: "10002001",
-    });
-    // 查找物料专有属性
-    const {
-      result: { records: MaterialPrivateAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.material,
-      tabCode: "10002002",
-    });
-
-    const totalMaterialAttrs = [
-      ...MaterialPublicAttrs,
-      ...MaterialPrivateAttrs,
-    ];
-
-    const uint8arrayToBase64 = function (u8Arr: any) {
-      try {
-        let CHUNK_SIZE = 0x8000; //arbitrary number
-        let index = 0;
-        let length = u8Arr.length;
-        let result = "";
-        let slice;
-        while (index < length) {
-          slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
-          result += String.fromCharCode.apply(null, slice);
-          index += CHUNK_SIZE;
-        }
-        // web image base64图片格式: "data:image/png;base64," + b64encoded;
-        return "data:image/png;base64," + btoa(result);
-        //  return btoa(result);
-      } catch (e) {
-        throw e;
-      }
-    };
-
+    const cadFileMap = await getCadAttrMapRule()
+    const [totalAttrs] = await getAllAttr(BasicsItemCode.file)
+    const [totalMaterialAttrs] = await getAllAttr(BasicsItemCode.material)
     setMaterialAttrs(totalMaterialAttrs);
+    setAttrs(totalAttrs);
+
+
+
+
 
     // 获取所有属性映射
     const { result: attrsArray }: any = await API.getMapptingAttrs({
@@ -199,12 +178,11 @@ const index = () => {
       "targetAttr"
     );
     const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
-    const totalAttrs = [...PublicAttrs, ...PrivateAttrs];
 
-    setAttrs(totalAttrs);
 
     // 扁平化数组
     const flattenData: Record<string, any>[] = [];
+
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
         const flattenedItem = { ...data[i] }; // Create a copy of the current item
@@ -232,12 +210,12 @@ const index = () => {
     try {
       const loop = async (data: any) => {
         for (let i = 0; i < data.length; i++) {
-          data[i].itemAttrs = {};
+          // onChainAttr
           data[i].id = Utils.generateSnowId();
           const fileNameWithFormat = data[i].file_path.substring(data[i].file_path.lastIndexOf('\\') + 1)
           // 处理OnChain给的值 判读系统中存在则赋值
           if (judgeFileResult.result) {
-            totalAttrs.filter(item => item.status).forEach(item => {
+            totalAttrs.filter((item: any) => item.status).forEach((item: any) => {
               if (nameInstanceMap[fileNameWithFormat]) {
                 data[i].flag = "exist"
                 data[i].insId = nameInstanceMap[fileNameWithFormat].insId
@@ -251,7 +229,7 @@ const index = () => {
             if (data[i].pic_path != ".bmp") {
               const uint8 = await readBinaryFile(data[i].pic_path, {});
               // const base64String = btoa(String.fromCharCode.apply(null, uint8));
-              data[i].thumbnail = uint8arrayToBase64(uint8);
+              data[i].thumbnail = Utils.uint8arrayToBase64(uint8);
             }
           } catch (error) {
 
@@ -847,13 +825,6 @@ const index = () => {
   useEffect(() => {
     console.log(centerData, "centerData");
   }, [centerData]);
-
-  // useEffect(() => {
-  //   if(selectNode?.thumbnail){
-  //     console.log(selectNode?.thumbnail,'selectNode?.thumbnail')
-  //       removeImgBg(document.getElementById('thumbnail'))
-  //   }
-  // }, [selectNode?.thumbnail])
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
