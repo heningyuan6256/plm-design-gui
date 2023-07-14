@@ -38,6 +38,7 @@ import { readBinaryFile, readDir, readTextFile, removeFile } from "@tauri-apps/a
 import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
+import settingSvg from "../assets/image/setting.svg";
 import { cloneDeep, groupBy, remove } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
@@ -73,6 +74,8 @@ const index = () => {
   const [productOptions, setProductOptions] = useState<any[]>();
   const [selectProduct, setSelectProduct] = useState<string>("");
   const [cacheItemNumber, setCacheItemNumber] = useState({});
+  const [fileSelectRows, setFileSelectRows] = useState<any[]>([])
+  const [materialSelectRows, setMaterialSelectRows] = useState<any>([])
   const [thumbImage, setThumbImage] = useState("");
   const dispatch = useDispatch();
 
@@ -200,25 +203,63 @@ const index = () => {
 
     setAttrs(totalAttrs);
 
+    // 扁平化数组
+    const flattenData: Record<string, any>[] = [];
+    const loop = (data: any) => {
+      for (let i = 0; i < data.length; i++) {
+        const flattenedItem = { ...data[i] }; // Create a copy of the current item
+        delete flattenedItem.children; // Remove the "children" property from the copy
+        delete flattenedItem.property;
+        const nodeNames = flattenData.map((item) => item.node_name);
+        if (!nodeNames.includes(data[i].node_name)) {
+          flattenData.push(flattenedItem);
+        }
+        if (data[i].children && data[i].children.length) {
+          loop(data[i].children);
+        }
+      }
+    };
+    loop([res.output_data]);
+
+    const nameList = [...new Set(flattenData.map(item => item.file_path.substring(item.file_path.lastIndexOf('\\') + 1)))]
+
+
+    const judgeFileResult: any = await API.judgeFileExist({ productId: selectProduct, fileNameList: nameList, itemCodes: [BasicsItemCode.file], userId: user.id })
+
+    const nameInstanceMap = Utils.transformArrayToMap(judgeFileResult.result || [], 'insDesc')
+
+
     try {
       const loop = async (data: any) => {
         for (let i = 0; i < data.length; i++) {
           data[i].itemAttrs = {};
           data[i].id = Utils.generateSnowId();
-          // 处理设计工具给的值
-          data[i].property.forEach((item: any) => {
-            if (sourceAttrPlugin.includes(item.name)) {
-              data[i][attrsMap[item.name]] = item.defaultVal;
-            }
-          });
-          if (data[i].pic_path != ".bmp") {
-            const uint8 = await readBinaryFile(data[i].pic_path, {});
-            // const base64String = btoa(String.fromCharCode.apply(null, uint8));
-            data[i].thumbnail = uint8arrayToBase64(uint8);
+          const fileNameWithFormat = data[i].file_path.substring(data[i].file_path.lastIndexOf('\\') + 1)
+          // 处理OnChain给的值 判读系统中存在则赋值
+          if (judgeFileResult.result) {
+            totalAttrs.filter(item => item.status).forEach(item => {
+              if (nameInstanceMap[fileNameWithFormat]) {
+                data[i].flag = "exist"
+                data[i].insId = nameInstanceMap[fileNameWithFormat].insId
+                data[i].checkOut = nameInstanceMap[fileNameWithFormat].checkout
+                data[i][item.apicode] = nameInstanceMap[fileNameWithFormat].attributes[item.id]
+              }
+            })
           }
 
+          try {
+            if (data[i].pic_path != ".bmp") {
+              const uint8 = await readBinaryFile(data[i].pic_path, {});
+              // const base64String = btoa(String.fromCharCode.apply(null, uint8));
+              data[i].thumbnail = uint8arrayToBase64(uint8);
+            }
+          } catch (error) {
+
+          }
+
+
+          // 处理公共额外属性
           const contents = await readBinaryFile(data[i].file_path);
-          const fileNameWithFormat = data[i].file_path.substring(data[i].file_path.lastIndexOf('\\') + 1)
           const fileSize = contents.length
           const fileName = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
           const fileFormat = fileNameWithFormat.substring(fileNameWithFormat.lastIndexOf('.') + 1)
@@ -226,18 +267,50 @@ const index = () => {
           data[i]['FileFormat'] = fileFormat
           data[i]['FileSize'] = fileSize
           data[i]['Category'] = cadFileMap[fileFormat]
+
+
+
+          // 处理设计工具给的值
+          data[i].property.forEach((item: any) => {
+            if (sourceAttrPlugin.includes(item.name)) {
+              data[i][attrsMap[item.name]] = item.defaultVal;
+            }
+          });
+
+
           if (data[i].children && data[i].children.length) {
             await loop(data[i].children);
           }
         }
       };
       await loop([res.output_data]);
-    } catch (error) { }
+    } catch (error) {
+      console.log(error, 'err')
+    }
 
     setSelectNode(res.output_data);
     setLeftData([res.output_data]);
     dispatch(setLoading(false));
   };
+
+  const checkoutData = ({ row }: { row: any }) => {
+    API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.node_name }).then(res => {
+      console.log(res, 're')
+    })
+  }
+
+  const cancelCheckoutData = ({ row }: { row: any }) => {
+    API.cancelCheckout({ insId: row.insId }).then(res => {
+      console.log(res, 're')
+    })
+  }
+
+
+  const checkInData = ({ row }: { row: any }) => {
+    API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.node_name }).then(res => {
+      console.log(res, 're')
+    })
+  }
 
   useEffect(() => {
     if (leftData.length) {
@@ -289,21 +362,6 @@ const index = () => {
   });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   function removeImgBg(src: any) {
     const img = document.createElement("img");
     img.src = src;
@@ -353,23 +411,47 @@ const index = () => {
 
   const handleClick = async (name: string) => {
     if (name === 'upload') {
-      centerData.map((item, index) => {
+      // 根据所选的产品去查询第一个型谱的id
+      const spectrumReturnV: any = await API.getProductSpectrumList(selectProduct)
+      const spectrum = spectrumReturnV.result[0].id
+
+      const setVal = ((row: any, col: any) => {
+        if (col.apicode === 'ProductModel') {
+          return spectrum
+        } else if (col.apicode === 'Product') {
+          return selectProduct
+        } else if (col.apicode === 'FileUrl') {
+          return ''
+        } else if (col.apicode === 'Thumbnail') {
+          return ''
+        } else {
+          return row[col.apicode] || ''
+        }
+      })
+      // 上传文件
+      const dealData = centerData.map((item, index) => {
         return {
           fileIndex: index,
           itemCode: BasicsItemCode.file,
-          ObjectId: item.Category,
+          objectId: item.Category,
           workspaceId: selectProduct,
           tenantId: "719",
           verifyCode: '200',
           user: user.id,
-          insAttrs: Attrs.map(v => {
+          insAttrs: Attrs.filter(item => item.status).map(v => {
             return {
               ...v,
-              value: item[v.apicode]
+              value: setVal(item, v)
             }
           })
         }
       })
+      console.log(dealData, 'dealData')
+
+      const successInstances = await API.createInstances(dealData)
+
+      console.log(successInstances, 'successInstances')
+
 
       // 修改文件编号
       const pluginUpdateNumber = centerData.map((item, index) => {
@@ -445,7 +527,7 @@ const index = () => {
   const generalDealAttrs = (attrs: any[], listCodeMap: any) => {
     return attrs
       .filter(
-        (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat') && item.status
+        (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate') && item.status
       )
       .map((item) => {
         return {
@@ -457,7 +539,7 @@ const index = () => {
             type: formItemMap[item.valueType],
             props: {
               ...Utils.generateFormItemProps(item, listCodeMap),
-              disabled: item.apicode === 'Category' || item.apicode === 'FileSize' || item.apicode === 'FileFormat',
+              disabled: item.apicode === 'Category' || item.apicode === 'FileSize' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate',
             },
           },
           search: {
@@ -537,10 +619,21 @@ const index = () => {
         <Fragment>
           <div className="ml-1">
             <PlmTabToolBar
+              onClick={(item) => {
+                console.log(fileSelectRows[0], 'fileSelectRows[0]');
+
+                if (item.tag === 'checkout') {
+                  fileSelectRows.length && checkoutData({ row: fileSelectRows[0] })
+                } else if (item.tag === 'cancelCheckout') {
+                  fileSelectRows.length && cancelCheckoutData({ row: fileSelectRows[0] })
+                } else if (item.tag === 'checkIn') {
+                  fileSelectRows.length && checkInData({ row: fileSelectRows[0] })
+                }
+              }}
               list={[
-                { name: "签出", icon: checkout },
-                { name: "取消签出", icon: cancelcheckin },
-                { name: "签入", icon: checkin },
+                { name: "签出", icon: checkout, tag: 'checkout' },
+                { name: "取消签出", icon: cancelcheckin, tag: 'cancelCheckout' },
+                { name: "签入", icon: checkin, tag: 'checkIn' },
               ]}
             ></PlmTabToolBar>
           </div>
@@ -554,6 +647,9 @@ const index = () => {
               rowSelection={{
                 columnWidth: 19,
                 fixed: true,
+                onChange: (selectRowKeys, selectRows) => {
+                  setFileSelectRows([selectRows.pop()])
+                }
               }}
               onSubmit={(row, column) => {
                 const loop = (data: any) => {
@@ -575,25 +671,43 @@ const index = () => {
                 {
                   title: <div className="w-full flex justify-center"><PlmIcon name="listcheck"></PlmIcon></div>,
                   dataIndex: "flag",
-                  width: 45,
+                  width: 40,
                   sort: true,
-                  render: (text: string) => {
+                  render: (text: string, record: any) => {
                     return (
                       <div className="w-full flex justify-center">
-                        <img width={12} src={plusImg} alt="" />
+                        <img width={12} src={(record.flag === 'exist') ? settingSvg : plusImg} alt="" />
                       </div>
                     );
                   },
                 },
                 {
-                  title: "缩略图",
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listcheckout"></PlmIcon></div>,
+                  dataIndex: "checkOut",
+                  // sorter: true,
+                  width: 40,
+                  sort: true,
+                  render: (text: string) => {
+                    if (text) {
+                      return (
+                        <div className="flex items-center justify-center">
+                          <div className='h-1 w-1 bg-primary' style={{ borderRadius: '50%' }}></div>
+                        </div>
+                      );
+                    } else {
+                      return <></>
+                    }
+                  },
+                },
+                {
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listphoto"></PlmIcon></div>,
                   dataIndex: "thumbnail",
                   // sorter: true,
-                  width: 50,
+                  width: 40,
                   sort: true,
                   render: (text: string) => {
                     return (
-                      <Image src={text} width={32} preview={false}></Image>
+                      <div className="flex items-center justify-center"><Image src={text} width={32} preview={false}></Image></div>
                     );
                   },
                 },
@@ -611,7 +725,7 @@ const index = () => {
                 },
                 {
                   title: "编号",
-                  dataIndex: "number",
+                  dataIndex: "Number",
                   search: {
                     type: "Input",
                   },
@@ -623,8 +737,12 @@ const index = () => {
                   dataIndex: "revision",
                   sorter: true,
                   width: 100,
-                  render: () => {
-                    return <span>1</span>;
+                  render: (text: string, record: any) => {
+                    if (record.flag == 'exist') {
+                      return record.Revision
+                    } else {
+                      return <span>1</span>;
+                    }
                   },
                 },
                 ...fileColumn,
@@ -683,13 +801,13 @@ const index = () => {
               className="table-checkbox"
               columns={[
                 {
-                  title: <PlmIcon name="listphoto"></PlmIcon>,
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listphoto"></PlmIcon></div>,
                   dataIndex: "thumbnail",
                   // sorter: true,
-                  width: 50,
+                  width: 40,
                   render: (text: string) => {
                     return (
-                      <Image src={text} width={32} preview={false}></Image>
+                      <div className="flex items-center justify-center"><Image src={text} width={32} preview={false}></Image></div>
                     );
                   },
                 },
@@ -789,7 +907,7 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
+                          className={`w-full gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
                             ? "ml-3"
                             : ""
                             }`}

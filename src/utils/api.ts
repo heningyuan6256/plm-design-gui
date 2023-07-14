@@ -156,9 +156,49 @@ const API = {
   /**
 * 下载文件
 */
-  downloadFile: (url:string,) => {
-    return NewRequest.get(url, {}, {responseType: 3});
+  downloadFile: (url: string,) => {
+    return NewRequest.get(url, {}, { responseType: 3 });
   },
+
+  /**
+  * 根据产品查询型谱
+  */
+  getProductSpectrumList: (rootNodeId: string) => {
+    return NewRequest.get('/pdm/productSpectrumList/getList', { tenantId: '719', rootNodeId: rootNodeId });
+  },
+
+  /**
+  * 批量创建实例
+  */
+  createInstances: (instances: any) => {
+    return NewRequest.post('/pdm/instances', { tenantId: '719', instances: instances });
+  },
+
+  /**
+ * 根据产品和文件名判断文件是否存在
+ */
+  judgeFileExist: ({ productId, fileNameList, userId, itemCodes }: { productId: string, fileNameList: string[], userId: string, itemCodes: string[] }) => {
+    return NewRequest.post('/opendata/cad/exist/files', { tenantId: '719', productId: productId, fileNameList: fileNameList, userId: userId, itemCodes: itemCodes });
+  },
+  /**
+  * 取消签出
+  */
+  cancelCheckout: ({ insId }: { insId: string }) => {
+    return NewRequest.put('/pdm/affected/cancel/checkout', { tenantId: '719', insId: insId });
+  },
+  /**
+  * 签出
+  */
+  checkout: ({ insId, insSize, insName, checkoutBy }: { insId: string, insSize: string, insName: string, checkoutBy: string }) => {
+    return NewRequest.put('/pdm/affected/checkout', { tenantId: '719', insId: insId, insSize: insSize, insName: insName, checkoutBy: checkoutBy });
+  },
+  /**
+* 签入
+*/
+  checkIn: ({ insId, insSize, insName, insUrl }: { insId: string, insSize: string, insName: string, insUrl: string }) => {
+    console.log(insId, 'insId');
+    return NewRequest.put('/pdm/affected/checkin', { tenantId: '719', insId: insId, insSize: insSize, insName: insName, insUrl: insUrl });
+  }
 };
 
 export default API;
