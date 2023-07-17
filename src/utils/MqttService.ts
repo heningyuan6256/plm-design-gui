@@ -87,7 +87,7 @@ class MqttService {
         }
 
         // 判断当前发过来的进程pid不等于当前已经存在的pid,则原先的pid解除绑定
-        if (value.pid != this.pid) {
+        if (value.pid != this.pid && value.input_data != 'cad_start') {
           // 判断当前不在loading中
           if (!this.loading.current) {
             this.publish({
