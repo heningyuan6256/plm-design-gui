@@ -1,7 +1,6 @@
 {
   "build": {
     "beforeDevCommand": "yarn dev",
-    "beforeBuildCommand": "yarn build",
     "devPath": "http://localhost:1420",
     "distDir": "../dist",
     "withGlobalTauri": true
@@ -15,7 +14,7 @@
       "all": true,
       "fs": {
         "all": true,
-        "scope": ["**","$RESOURCE/*", "$HOME/.onChain/**"],
+        "scope": ["**", "$RESOURCE/*", "$HOME/.onChain/**"],
         "readFile": true,
         "writeFile": true,
         "readDir": true,
@@ -41,12 +40,12 @@
           {
             "name": "rundesign",
             "cmd": "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
-            "args": true 
+            "args": true
           },
           {
             "name": "reg",
             "cmd": "reg",
-            "args": true 
+            "args": true
           }
         ]
       },
@@ -89,7 +88,10 @@
       "csp": null
     },
     "updater": {
-      "active": false
+      "active": true,
+      "dialog": true,
+      "endpoints": ["https://lencx.github.io/OhMyBox/install.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg1RUQzNUQzRDNCOTQzQzAKUldUQVE3blQwelh0aGFFTzRjZEFkbnhQSXMwZ2U5R1lkZ2hDNW82QU81SGJvWVdJMC9GSnA3a3cK"
     },
     "windows": [
       {
@@ -127,8 +129,7 @@
         }
       ],
       "subcommands": {
-        "subcommand-name": {
-        }
+        "subcommand-name": {}
       }
     }
   }
