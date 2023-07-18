@@ -41,7 +41,7 @@ async function release() {
   // execSync(`git commit -m "v${nextVersion}"`);
   execSync(`git tag -a v${nextVersion} -m "v${nextVersion}"`);
   execSync(`git push`);
-  execSync(`git push origin v${nextVersion}`);
+  execSync(`git push origin2 v${nextVersion}`);
   console.log(`Publish Successfully...`);
 }
 
