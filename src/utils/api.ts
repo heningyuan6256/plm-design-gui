@@ -196,9 +196,21 @@ const API = {
 * 签入
 */
   checkIn: ({ insId, insSize, insName, insUrl }: { insId: string, insSize: string, insName: string, insUrl: string }) => {
-    console.log(insId, 'insId');
     return NewRequest.put('/pdm/affected/checkin', { tenantId: '719', insId: insId, insSize: insSize, insName: insName, insUrl: insUrl });
-  }
+  },
+
+  /**
+* 批量修改
+*/
+  batchUpdate: (data: any) => {
+    return NewRequest.postPut('/pdm/instances', data);
+  },
+  /**
+  * 批量创建实例结构
+  */
+  batchCreateStructure: (data: any) => {
+    return NewRequest.post('/pdm/instances/tab', data);
+  },
 };
 
 export default API;

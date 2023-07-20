@@ -1,6 +1,14 @@
 //  request.js
 import { http } from "@tauri-apps/api";
 
+const getUrl = (str: string) => {
+    if (str.startsWith('/opendata')) {
+        return 'http://192.168.0.66:19220/plm' + str
+    } else {
+        return 'http://192.168.0.66:18080/plm' + str
+    }
+}
+
 class Request {
     static single: Request;
 
@@ -61,7 +69,6 @@ class Request {
         });
     };
 
-
     put = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
         return new Promise((resolve, reject) => {
             const requestQuery = { ...data, ...this.interceptors.request.body };
@@ -73,6 +80,29 @@ class Request {
                     method: "PUT",
                     // 常规的json格式请求体发送
                     query: requestQuery,
+                    ...headers
+                })
+                .then((res) => {
+                    resolve(this.interceptors.response(res));
+                })
+                .catch((err) => {
+                    reject(err);
+                });
+        });
+    };
+
+    postPut = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
+        return new Promise((resolve, reject) => {
+            const requestQuery = { ...data, ...this.interceptors.request.body };
+            const requestHeaders = { ...this.interceptors.request.headers };
+            this.interceptors.request.use();
+            http
+                .fetch(this.interceptors.baseURL + url, {
+                    headers: requestHeaders,
+                    method: "PUT",
+                    // 常规的json格式请求体发送
+                    body: http.Body.json(requestQuery),
+                    // query: requestQuery,
                     ...headers
                 })
                 .then((res) => {

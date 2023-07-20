@@ -192,9 +192,9 @@ export default function login() {
             className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap "
             style={{ transform: "translate(-50%, 0)" }}
           >
-            <span className="text-xs inline-block">
+            {/* <span className="text-xs inline-block">
               Copyright @ 2022 武汉大海信息系统科技有限公司.All Rights Reserved
-            </span>
+            </span> */}
           </div>
         </div>
       </PlmLoading>

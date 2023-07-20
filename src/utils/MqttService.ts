@@ -4,6 +4,7 @@ import { Utils } from ".";
 import { getCurrent, appWindow } from "@tauri-apps/api/window";
 import { getMatches } from '@tauri-apps/api/cli'
 import { message } from "antd";
+// import CryptoJS from "crypto-js"
 
 type EventFn = () => void;
 interface Event {
@@ -45,6 +46,11 @@ class MqttService {
     this.publishTopic = `${BasicConfig.pubgin_topic}`
     // 生成客户端id
     const uniqueId = Math.random().toString();
+
+
+
+
+
     this.clientId = `client_onchain_${uniqueId}`;
   }
 
@@ -54,12 +60,21 @@ class MqttService {
    * @return {*}
    */
   connect(url = BasicConfig.MqttConnectUrl, topic = "") {
+
+    // console.log(CryptoJS.AES.encrypt,'CryptoJS')
+    // var userSecret = CryptoJS.AES.encrypt('onchain', '0123456789abcdef0123456789abcdef').toString();
+
+    // var bytes = CryptoJS.SHA256.decrypt(userSecret, '0123456789abcdef0123456789abcdef');
+    // var originalText = bytes.toString(CryptoJS.enc.Utf8);
+    // console.log(originalText, 'originalText')
     // 建立连接
     this.mqtt = mqtt.connect(url, {
       clean: true,
       connectTimeout: 4000,
       reconnectPeriod: 1000,
       clientId: this.clientId,
+      username: 'onchain',
+      password: 'onchain111'
     });
     getMatches().then((matches) => {
 
@@ -70,7 +85,7 @@ class MqttService {
       const tc: any = matches?.args?.topic?.value || ''
       this.pid = pid
       this.publishTopic = tc
-      // this.pid = '18992'
+      // this.pid = '12336'
       // this.publishTopic = 'sw'
       this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
       this.mqtt.on("connect", () => {
@@ -78,7 +93,7 @@ class MqttService {
       });
       this.mqtt.on("message", (topic, data: any) => {
         const value = this.formatData(data)
-        console.log(value,value.pid,this.pid, '收到消息')
+        console.log(value, value.pid, this.pid, '收到消息')
         // 判断当前是设计工具退出的命令，并且当前发送的pid等于当前存储的pid
         if ((value.input_data === CommandConfig.cadShutDown) && (value.pid == this.pid)) {
           console.log('退出');
@@ -108,7 +123,7 @@ class MqttService {
         const type = value.type;
         this.publishTopic = value.topic
 
-        if(value.input_data !== CommandConfig.cadShutDown){
+        if (value.input_data !== CommandConfig.cadShutDown) {
           this.updatePid(data)
         }
         // 如果存在，直接调用
