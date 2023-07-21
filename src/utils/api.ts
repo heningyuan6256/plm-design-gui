@@ -209,7 +209,7 @@ const API = {
   * 批量创建实例结构
   */
   batchCreateStructure: (data: any) => {
-    return NewRequest.post('/pdm/instances/tab', data);
+    return NewRequest.postPut('/pdm/instances/tab', data);
   },
 };
 

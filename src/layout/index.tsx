@@ -23,6 +23,8 @@ import { invoke } from "@tauri-apps/api";
 import {  appWindow, } from "@tauri-apps/api/window";
 import { Command } from "@tauri-apps/api/shell";
 import { mqttClient } from "../utils/MqttService";
+// import CryptoJS from "crypto-js"
+
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -46,6 +48,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     command.stdout.on("data", async (line: string) => {
       const dynamicTopic = line.split(/\s+/)[3];
       if (dynamicTopic) {
+        // console.log(CryptoJS,'CryptoJS.SHA256')
+        // let decData = CryptoJS.enc.Base64.parse('jhEtAVEMxHPA1RgQmQiK1gAAAAAAAAA=').toString(CryptoJS.enc.Utf8)
+        // var bytes = CryptoJS.AES.decrypt(decData, '0123456789abcdef0123456789abcdef').toString(CryptoJS.enc.Utf8);
+        // console.log(JSON.parse(bytes),'bytes');
+        
+        // var originalText = bytes.toString(CryptoJS.enc.Utf8)
+        // console.log(originalText,'originalText')
         mqttClient?.connect(BasicConfig.MqttConnectUrl, dynamicTopic);
         const ffmpeg = Command.sidecar(
           "binaries/OnChain_DesignFusion",

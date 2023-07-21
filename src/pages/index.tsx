@@ -39,7 +39,7 @@ import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import settingSvg from "../assets/image/setting.svg";
-import { cloneDeep, groupBy, remove } from "lodash";
+import { cloneDeep, groupBy, pick, remove } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType, templateType } from "./attrMap";
@@ -47,6 +47,7 @@ import Tus from '@uppy/tus';
 import Uppy from '@uppy/core';
 import PlmModal from "../components/PlmModal";
 import { useSelector } from "react-redux";
+// import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
 
 export const formItemMap: Record<string, any> = {
@@ -63,6 +64,8 @@ export const formItemMap: Record<string, any> = {
 };
 
 const index = () => {
+
+  // AES密码解密
   const { value: user } = useSelector((state: any) => state.user);
   const [rightData, setRightData] = useState<Record<string, any>[]>([]);
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
@@ -132,16 +135,23 @@ const index = () => {
     return item.file_path.substring(item.file_path.lastIndexOf('\\') + 1)
   }
 
-  // const uniqueArrayByAttr = (arr:any, key:string) => {
-  //   const m = new Map()
-  //   for(const item of arr){
-  //     const nodeName = item[key].split('<')[0]
-  //     if(!m.has(nodeName) || m.has(nodeName) && ){
-  //       m.set(nodeName, item)
-  //     }
-  //   }
-  //   return [...m.values()]
-  // }
+  const uniqueArrayByAttr = (arr: any, key: string) => {
+    const m = new Map()
+    const mCount: any = {}
+    for (const item of arr) {
+      const nodeName = item[key].split('<')[0]
+      if (!m.has(nodeName) && !item.InternalModelFlag) {
+        m.set(nodeName, item)
+        mCount[nodeName] = 1
+      } else {
+        mCount[nodeName] = mCount[nodeName] + 1
+      }
+    }
+    return {
+      array: [...m.values()],
+      map: mCount
+    }
+  }
 
   useEffect(() => {
     if (selectProduct) {
@@ -269,7 +279,6 @@ const index = () => {
     }
 
     setExpandedKeys(flattenData.map(item => item.id));
-
 
     const copyLeftData = [res.output_data]
     setSelectNode(res.output_data);
@@ -487,11 +496,46 @@ const index = () => {
         attr_set: pluginUpdateNumber
       });
       // 批量创建文件结构
-      const structureData = leftData
-      API.batchCreateStructure({
+      // 查找公有属性
+      const {
+        result: { records: structureAttrs },
+      }: any = await API.getInstanceAttrs({
+        itemCode: BasicsItemCode.file,
+        tabCode: "10002016",
+      });
+      const structureAttrsMap = Utils.transformArrayToMap(structureAttrs, 'apicode', 'id')
+      const structureData = cloneDeep(leftData)
 
+      const loop = (struct: any, dealArray: any) => {
+        for (let i = 0; i < struct.length; i++) {
+          console.log(struct[i], nameNumberMap, 'dealArray.map')
+          struct[i].attrMap = {}
+          struct[i].insId = struct[i].file.onChain.flag != 'exist' ? nameNumberMap[struct[i].file.plugin?.Description]?.instanceId : struct[i].file.onChain.insId
+          if(struct[i].node_name != leftData[0].node_name) {
+            struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[struct[i].file.plugin.Description]
+          }
+          struct[i] = pick(struct[i], ['insId', 'attrMap', 'children'])
+          if (struct[i].children && struct[i].children.length) {
+            struct[i].copyChildren = [...struct[i].children]
+            struct[i].children = uniqueArrayByAttr(struct[i].children, 'node_name').array
+            loop(struct[i].children, uniqueArrayByAttr(struct[i].copyChildren, 'node_name'));
+            delete struct[i].copyChildren
+          }
+        }
+      };
+      loop(structureData, uniqueArrayByAttr(structureData, 'node_name'));
+      console.log(structureData, 'structureData');
+
+      API.batchCreateStructure({
+        tenantId: '719',
+        userId: user.id,
+        itemCode: BasicsItemCode.file,
+        tabCode: '10002016',
+        instances: structureData
       })
-      // 批量上传文件
+
+      message.success('创建结构成功')
+      // // 批量上传文件
       const uppy = new Uppy({
         meta: {},
         debug: false,
@@ -529,7 +573,9 @@ const index = () => {
           tenantId: '719'
         }
       })
-      await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
+      if (updateInstances.length) {
+        await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
+      }
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
       });
