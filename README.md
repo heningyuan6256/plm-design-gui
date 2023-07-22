@@ -30,3 +30,13 @@ tauri/bundle/windows/增加
   },
 
 
+
+### Progblem
+1 Failed to connect to static.crates.io port 443 after 21029 ms
+切换镜像源
+[source.crates-io]
+registry = "https://github.com/rust-lang/crates.io-index"
+# 指定镜像
+replace-with = 'ustc' # 如：tuna、sjtu、ustc，或者 rustcc
+[source.ustc]
+registry = "https://mirrors.ustc.edu.cn/crates.io-index"

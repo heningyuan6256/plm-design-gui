@@ -21,12 +21,12 @@ import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
-import { Tabs, TabsProps, message, Image } from "antd";
+import { Tabs, TabsProps, message, Image, Button } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import checkout from "../assets/image/checkin.svg";
 import checkin from "../assets/image/checkout.svg";
-import { useAsyncEffect } from "ahooks";
+import { useAsyncEffect, useLatest } from "ahooks";
 import API from "../utils/api";
 import { Utils } from "../utils";
 import { BasicsItemCode } from "../constant/itemCode";
@@ -63,10 +63,16 @@ export const formItemMap: Record<string, any> = {
   "13": "CompositeForm",
 };
 
+export interface logItemType {
+  log: string;
+  dateTime: string
+}
+
 const index = () => {
 
   // AES密码解密
   const { value: user } = useSelector((state: any) => state.user);
+  const { value: loading } = useSelector((state: any) => state.loading);
   const [rightData, setRightData] = useState<Record<string, any>[]>([]);
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
@@ -81,6 +87,10 @@ const index = () => {
   const [cacheItemNumber, setCacheItemNumber] = useState({});
   const [fileSelectRows, setFileSelectRows] = useState<any[]>([])
   const [materialSelectRows, setMaterialSelectRows] = useState<any>([])
+  const [logVisible, setLogVisbile] = useState(false)
+  const [logData, setLogData] = useState<{ dateTime: string, log: string }[]>([])
+
+  const lastestLogData = useLatest(logData)
 
   const [InstanceAttrsMap] = useState<{ [k: string]: { origin: any, material: { onChain: any, plugin: any }, file: { onChain: any, plugin: any } } }>({})
   const [pluginAttr] = useState<any>({})
@@ -133,6 +143,10 @@ const index = () => {
   // 获取文件全名
   const getFileNameWithFormat = (item: any) => {
     return item.file_path.substring(item.file_path.lastIndexOf('\\') + 1)
+  }
+
+  const getCurrentTime = () => {
+    return `${(new Date().toLocaleDateString())} ${(new Date().toLocaleTimeString())}`
   }
 
   const uniqueArrayByAttr = (arr: any, key: string) => {
@@ -257,11 +271,10 @@ const index = () => {
       // 树状结构是设计工具给的，每一个节点都有设计工具给的属性
       // 处理公共额外属性
       // try {
-      const contents = await readBinaryFile(item.file_path);
+      const [contents, img_contents] = await Promise.all([readBinaryFile(item.file_path), readBinaryFile(item.pic_path)])
       const fileSize = contents.length
       const fileName = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
       const fileFormat = fileNameWithFormat.substring(fileNameWithFormat.lastIndexOf('.') + 1)
-      const img_contents = await readBinaryFile(item.pic_path);
       // 处理设计工具给的值
       item.property.forEach((attr: any) => {
         if (Object.keys(attrsMap).includes(attr.name)) {
@@ -338,9 +351,10 @@ const index = () => {
 
   // 监听设置属性
   useMqttRegister(CommandConfig.setProductAttVal, async (res) => {
-    mqttClient.publish({
-      type: CommandConfig.getCurrentBOM,
-    });
+    setLogData([...lastestLogData.current, { dateTime: getCurrentTime(), log: '属性回写模型成功!' }])
+    // mqttClient.publish({
+    //   type: CommandConfig.getCurrentBOM,
+    // });
   });
 
 
@@ -394,6 +408,7 @@ const index = () => {
 
   const handleClick = async (name: string) => {
     if (name === 'upload') {
+      setLogVisbile(true)
       dispatch(setLoading(true));
       // 根据所选的产品去查询第一个型谱的id
       const spectrumReturnV: any = await API.getProductSpectrumList(selectProduct)
@@ -441,6 +456,13 @@ const index = () => {
       const successInstances: any = await API.createInstances(dealData)
 
       console.log(successInstances, 'successInstances')
+      const createLogArray: logItemType[] = []
+      successInstances.result.forEach((item: any) => {
+        if (item && item.name) {
+          createLogArray.push({ log: `${item.name} 创建成功， 编号:${item.number}`, dateTime: getCurrentTime() })
+        }
+      })
+      setLogData([...lastestLogData.current, ...createLogArray])
 
       const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
 
@@ -478,25 +500,25 @@ const index = () => {
 
       }
 
-      console.log(FileArray, 'FileArray')
+      // console.log(FileArray, 'FileArray')
 
-      // const FileArray = .map((item)=> {
-      //   return {
-      //     name: getFileNameWithFormat(item), // file name
-      //     // type: , // file type
-      //     data: item, // file blob
-      //     source: 'Local',
-      //     isRemote: false,
-      //   }
-      // })
+      // // const FileArray = .map((item)=> {
+      // //   return {
+      // //     name: getFileNameWithFormat(item), // file name
+      // //     // type: , // file type
+      // //     data: item, // file blob
+      // //     source: 'Local',
+      // //     isRemote: false,
+      // //   }
+      // // })
 
 
       mqttClient.publish({
         type: CommandConfig.setProductAttVal,
         attr_set: pluginUpdateNumber
       });
-      // 批量创建文件结构
-      // 查找公有属性
+      // // 批量创建文件结构
+      // // 查找公有属性
       const {
         result: { records: structureAttrs },
       }: any = await API.getInstanceAttrs({
@@ -511,7 +533,7 @@ const index = () => {
           console.log(struct[i], nameNumberMap, 'dealArray.map')
           struct[i].attrMap = {}
           struct[i].insId = struct[i].file.onChain.flag != 'exist' ? nameNumberMap[struct[i].file.plugin?.Description]?.instanceId : struct[i].file.onChain.insId
-          if(struct[i].node_name != leftData[0].node_name) {
+          if (struct[i].node_name != leftData[0].node_name) {
             struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[struct[i].file.plugin.Description]
           }
           struct[i] = pick(struct[i], ['insId', 'attrMap', 'children'])
@@ -534,7 +556,7 @@ const index = () => {
         instances: structureData
       })
 
-      message.success('创建结构成功')
+      setLogData([...lastestLogData.current, { log: '批量创建结构成功!', dateTime: getCurrentTime() }])
       // // 批量上传文件
       const uppy = new Uppy({
         meta: {},
@@ -552,6 +574,7 @@ const index = () => {
           allowedMetaFields: null,
         })
         .on('upload-success', (file: any, response: any) => {
+          console.log('模型上传成功!')
           // ProductService.toPostFileRecord({ file, response, type: '0' });
         });
       uppy.addFiles(FileArray);
@@ -567,7 +590,7 @@ const index = () => {
           insAttrs: Attrs.filter(attr => attr.apicode === 'FileUrl').map(attr => {
             return {
               ...attr,
-              value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(item)].uploadURL.split('/plm/files')[1]}`
+              value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(item)].uploadURL.split('/plm/files')[1]}?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize}&extension=${item.file.plugin?.FileFormat}`
             }
           }),
           tenantId: '719'
@@ -575,6 +598,7 @@ const index = () => {
       })
       if (updateInstances.length) {
         await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
+        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功', dateTime: getCurrentTime() }])
       }
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
@@ -582,7 +606,7 @@ const index = () => {
 
     } else
       if (name === 'log') {
-
+        setLogVisbile(true)
       } else if (name === "refresh") {
         dispatch(setLoading(true));
         mqttClient.publish({
@@ -811,9 +835,9 @@ const index = () => {
                   // sorter: true,
                   width: 40,
                   sort: true,
-                  render: (text: string) => {
+                  render: (text: string, record: any) => {
                     return (
-                      <div className="flex items-center justify-center"><Image src={text} width={32} preview={false}></Image></div>
+                      <div className="flex items-center justify-center"><Image src={record.file.plugin.thumbnail} width={32} preview={false}></Image></div>
                     );
                   },
                 },
@@ -911,9 +935,9 @@ const index = () => {
                   dataIndex: "thumbnail",
                   // sorter: true,
                   width: 40,
-                  render: (text: string) => {
+                  render: (text: string, record: any) => {
                     return (
-                      <div className="flex items-center justify-center"><Image src={text} width={32} preview={false}></Image></div>
+                      <div className="flex items-center justify-center"><Image src={record.file.plugin.thumbnail} width={32} preview={false}></Image></div>
                     );
                   },
                 },
@@ -1208,6 +1232,32 @@ const index = () => {
               {/* </div> */}
             </div>
           </div>
+          <PlmModal width={582} open={logVisible} onCancel={() => {
+            if (loading) {
+              message.error({
+                content: '上传中，请稍后',
+              })
+            } else {
+              setLogVisbile(false)
+            }
+          }}>
+            <div style={{ padding: '12px 13px', background: '#f1f1f1' }}>
+              <div className={"w-full border border-outBorder overflow-auto bg-white"} style={{ height: '365px', padding: '12px' }}>
+                {
+                  logData.map((item: any, index: number) => {
+                    return <div key={index} className="flex text-xs">
+                      <div style={{ marginRight: '10px', marginBottom: '4px' }}>{item.dateTime}</div>
+                      <div>{item.log}</div>
+                    </div>
+                  })
+                }
+              </div>
+            </div>
+            <div className='h-12 flex justify-end mt-1'>
+              <Button style={{ borderRadius: '2px', borderColor: '#57a8ed', marginRight: '8px' }}>下载错误日志</Button>
+              <Button style={{ marginRight: '13px', borderRadius: '2px', borderColor: '#57a8ed' }}>下载日志</Button>
+            </div>
+          </PlmModal>
         </div>
       </div>
     </div>
