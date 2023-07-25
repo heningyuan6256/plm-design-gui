@@ -29,7 +29,7 @@ import checkin from "../assets/image/checkout.svg";
 import { useAsyncEffect, useLatest } from "ahooks";
 import API from "../utils/api";
 import { Utils } from "../utils";
-import { BasicsItemCode } from "../constant/itemCode";
+import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
@@ -76,6 +76,7 @@ const index = () => {
   const [rightData, setRightData] = useState<Record<string, any>[]>([]);
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
+  const [materialCenterData, setMaterialCenterData] = useState<Record<string, any>[]>([]);
   const dynamicFormRef = useRef<PlmFormForwardRefProps>();
   const [Attrs, setAttrs] = useState<Record<string, any>[]>([]);
   const [materialAttrs, setMaterialAttrs] = useState<Record<string, any>[]>([]);
@@ -103,14 +104,14 @@ const index = () => {
     const {
       result: { records: PublicAttrs },
     }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
+      itemCode: itemCode,
       tabCode: "10002001",
     });
     // 查找私有属性
     const {
       result: { records: PrivateAttrs },
     }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
+      itemCode: itemCode,
       tabCode: "10002002",
     });
 
@@ -119,6 +120,12 @@ const index = () => {
       ...PrivateAttrs,
     ];
     return [totalAttrs, PublicAttrs, PrivateAttrs]
+  }
+  // 根据文件类型判断所对应的物料的类型
+  const getMaterialTypeMap = async () => {
+    const { result: { records: fileObjectRecords } }: any = await API.getMaterialTypeMap({ itemCode: BasicsItemCode.file })
+    const fileObjectMap = Utils.transformArrayToMap((fileObjectRecords || []), 'id', 'materialObject')
+    return fileObjectMap
   }
   // 获取cad文件类型映射的规则
   const getCadFileMapRule = async () => {
@@ -217,6 +224,7 @@ const index = () => {
     const cadFileMap = await getCadFileMapRule()
     const [totalAttrs] = await getAllAttr(BasicsItemCode.file)
     const [totalMaterialAttrs] = await getAllAttr(BasicsItemCode.material)
+    const fileObjectMap = await getMaterialTypeMap()
     setMaterialAttrs(totalMaterialAttrs);
     setAttrs(totalAttrs);
     // cad属性映射文件属性
@@ -246,13 +254,18 @@ const index = () => {
     const judgeFileResult: any = await API.judgeFileExist({ productId: selectProduct, fileNameList: nameList, itemCodes: [BasicsItemCode.file], userId: user.id })
     const nameInstanceMap = Utils.transformArrayToMap(judgeFileResult.result || [], 'insDesc')
 
+    console.log(nameInstanceMap, 'nameInstanceMap')
 
+    const PromiseData: any[] = []
+    const PromiseImgData: any[] = []
     for (const item of flattenData) {
       item.id = Utils.generateSnowId();
       const fileNameWithFormat = getFileNameWithFormat(item)
       const onChainAttrs = InstanceAttrsMap[item.node_name].file.onChain
       const pluginAttrs = InstanceAttrsMap[item.node_name].file.plugin
-      const originAttrs = InstanceAttrsMap[item.node_name].origin
+
+      const materialOnChainAttrs = InstanceAttrsMap[item.node_name].material.onChain
+      const materialPluginAttrs = InstanceAttrsMap[item.node_name].material.plugin
 
 
       // 为每一个赋值id属性
@@ -263,16 +276,43 @@ const index = () => {
           if (nameInstanceMap[fileNameWithFormat]) {
             onChainAttrs[attr.apicode] = nameInstanceMap[fileNameWithFormat].attributes[attr.id]
             onChainAttrs.insId = nameInstanceMap[fileNameWithFormat].insId
-            onChainAttrs.checkOut = nameInstanceMap[fileNameWithFormat].checkOut
+            onChainAttrs.checkOut = nameInstanceMap[fileNameWithFormat].checkout
             onChainAttrs.flag = "exist"
           }
         })
+
+        // 判断文件有对应的物料存在
+        const materialDataMap = nameInstanceMap[fileNameWithFormat]?.tabCodeInsMap
+
+        if (materialDataMap && materialDataMap['10002044'] && materialDataMap['10002044'].length) {
+          materialOnChainAttrs.insId = materialDataMap['10002044'][0].insId
+          materialOnChainAttrs.checkOut = materialDataMap['10002044'][0].checkout
+          materialOnChainAttrs.flag = "exist"
+          totalMaterialAttrs.filter((attr: any) => attr.status).forEach((attr: any) => {
+            materialOnChainAttrs[attr.apicode] = materialDataMap['10002044'][0].attributes[attr.id]
+          })
+        }
       }
+
       // 树状结构是设计工具给的，每一个节点都有设计工具给的属性
       // 处理公共额外属性
       // try {
-      const [contents, img_contents] = await Promise.all([readBinaryFile(item.file_path), readBinaryFile(item.pic_path)])
-      const fileSize = contents.length
+
+
+      PromiseData.push(new Promise((resolve, reject) => {
+        readBinaryFile(item.file_path).then(contents => {
+          pluginAttrs['FileSize'] = contents.length
+          resolve({})
+        })
+      }))
+      PromiseImgData.push(new Promise((resolve, reject) => {
+        readBinaryFile(item.pic_path).then(contents => {
+          pluginAttrs['thumbnail'] = Utils.uint8arrayToBase64(contents);
+          resolve({})
+        })
+      }))
+      // const [contents, img_contents] = await Promise.all([readBinaryFile(item.file_path), readBinaryFile(item.pic_path)])
+      // const fileSize = contents.length
       const fileName = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
       const fileFormat = fileNameWithFormat.substring(fileNameWithFormat.lastIndexOf('.') + 1)
       // 处理设计工具给的值
@@ -281,15 +321,19 @@ const index = () => {
           pluginAttrs[attrsMap[attr.name]] = attr.defaultVal;
         }
       });
-      pluginAttrs['thumbnail'] = Utils.uint8arrayToBase64(img_contents);
       pluginAttrs['fileNameWithFormat'] = fileNameWithFormat
       pluginAttrs['Description'] = fileName
       pluginAttrs['FileFormat'] = fileFormat
-      pluginAttrs['FileSize'] = fileSize
+      // pluginAttrs['FileSize'] = fileSize
       onChainAttrs['Category'] = cadFileMap[fileFormat]
+
+      materialOnChainAttrs['Category'] = fileObjectMap[cadFileMap[fileFormat]]
       // } catch (error) {
       // }
     }
+
+    await Promise.all(PromiseData)
+    await Promise.all(PromiseImgData)
 
     setExpandedKeys(flattenData.map(item => item.id));
 
@@ -299,23 +343,83 @@ const index = () => {
     dispatch(setLoading(false));
   };
 
-  const checkoutData = ({ row }: { row: any }) => {
-    API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.node_name }).then(res => {
-      console.log(res, 're')
+  const judgeFileCheckout = (row: any) => {
+    if (row.file.onChain.Revision == 1) {
+      return false
+    } else {
+      return row.file.onChain.checkOut
+    }
+  }
+
+  const updateSingleData = (row: any) => {
+    API.getInstanceInfoById({ instanceId: row.insId, authType: 'read', tabCode: '10002001', userId: user.id, tenantId: '719' }).then((res: any) => {
+      res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
+        InstanceAttrsMap[row.node_name].file.onChain[item.apicode] = res.result.readInstanceVo.attributes[item.id]
+        InstanceAttrsMap[row.node_name].file.onChain.checkOut = res.result.readInstanceVo.checkout
+        setLeftData([...leftData])
+      })
     })
   }
 
+
+
+  const upadteData = ({ row }: { row: any }) => {
+    // 判断当前文件是否签出
+    if (judgeFileCheckout(row)) {
+      message.error('当前文件已签出')
+    } else {
+      dispatch(setLoading(true))
+      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.node_name }).then(() => {
+        API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.node_name }).then(res => {
+          updateSingleData(row)
+          dispatch(setLoading(false))
+        })
+      })
+    }
+  }
+
+  const checkoutData = ({ row }: { row: any }) => {
+    // 判断当前文件是否签出
+    if (judgeFileCheckout(row)) {
+      message.error('当前文件已签出')
+    } else {
+      dispatch(setLoading(true))
+      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.node_name }).then(() => {
+        updateSingleData(row)
+        dispatch(setLoading(false))
+      }).catch(() => {
+        dispatch(setLoading(false))
+      })
+    }
+  }
+
   const cancelCheckoutData = ({ row }: { row: any }) => {
-    API.cancelCheckout({ insId: row.insId }).then(res => {
-      console.log(res, 're')
-    })
+    if (!judgeFileCheckout(row)) {
+      message.error('当前文件还未签出')
+    } else {
+      dispatch(setLoading(true))
+      API.cancelCheckout({ insId: row.insId }).then(res => {
+        updateSingleData(row)
+        dispatch(setLoading(false))
+      }).catch(() => {
+        dispatch(setLoading(false))
+      })
+    }
   }
 
 
   const checkInData = ({ row }: { row: any }) => {
-    API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.node_name }).then(res => {
-      console.log(res, 're')
-    })
+    if (!judgeFileCheckout(row)) {
+      message.error('当前文件还未签出')
+    } else {
+      dispatch(setLoading(true))
+      API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.node_name }).then(res => {
+        updateSingleData(row)
+        dispatch(setLoading(false))
+      }).catch(() => {
+        dispatch(setLoading(false))
+      })
+    }
   }
 
   // 取出所有的属性
@@ -342,6 +446,34 @@ const index = () => {
       setCenterData(flattenData);
     }
   }, [selectNode, leftData]);
+
+  // 取出所有的属性
+  useEffect(() => {
+    if (leftData.length) {
+      const flattenData: Record<string, any>[] = [];
+      const loop = (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          const flattenedItem = { ...data[i], ...data[i].material.onChain }; // Create a copy of the current item
+          delete flattenedItem.children; // Remove the "children" property from the copy
+          delete flattenedItem.property;
+          const nodeNames = flattenData.map((item) => {
+            return item.file.plugin.fileNameWithFormat
+          });
+          if (!nodeNames.includes(data[i].file.plugin.fileNameWithFormat) && !data[i].InternalModelFlag) {
+            flattenData.push(flattenedItem);
+          }
+          if (data[i].children && data[i].children.length) {
+            loop(data[i].children);
+          }
+        }
+      };
+      loop([selectNode]);
+      console.log(flattenData, 'flattenData');
+
+      setMaterialCenterData(flattenData);
+    }
+  }, [selectNode, leftData]);
+
 
 
   // 监听属性映射
@@ -406,15 +538,16 @@ const index = () => {
     return newBase64;
   }
 
-  const handleClick = async (name: string) => {
-    if (name === 'upload') {
-      setLogVisbile(true)
-      dispatch(setLoading(true));
-      // 根据所选的产品去查询第一个型谱的id
-      const spectrumReturnV: any = await API.getProductSpectrumList(selectProduct)
-      const spectrum = spectrumReturnV.result[0].id
+  /**
+   * 创建实例
+   */
+  const createInstance = async ({ itemCode }: { itemCode: string }) => {
+    // 根据所选的产品去查询第一个型谱的id
+    const spectrumReturnV: any = await API.getProductSpectrumList(selectProduct)
+    const spectrum = spectrumReturnV.result[0].id
 
-      const setVal = ((row: any, col: any) => {
+    const setVal = ((row: any, col: any) => {
+      if (ItemCode.isFile(itemCode)) {
         if (col.apicode === 'ProductModel') {
           return spectrum
         } else if (col.apicode === 'Product') {
@@ -434,35 +567,102 @@ const index = () => {
         } else {
           return row[col.apicode] || ''
         }
-      })
-      // 上传文件
-      const dealData = centerData.filter(item => item.file.onChain.flag != 'exist').map((item, index) => {
-        return {
-          fileIndex: index,
-          itemCode: BasicsItemCode.file,
-          objectId: item.file.onChain.Category,
-          workspaceId: selectProduct,
-          tenantId: "719",
-          verifyCode: '200',
-          user: user.id,
-          insAttrs: Attrs.filter(item => item.status).map(v => {
-            return {
-              ...v,
-              value: setVal(item, v)
-            }
-          })
+      } else {
+        if (col.apicode === 'ProductModel') {
+          return spectrum
+        } else if (col.apicode === 'Product') {
+          return selectProduct
+        } else if (col.apicode === 'Category') {
+          return row.material.onChain.Category
+        } else {
+          return row[col.apicode] || ''
         }
-      })
-      const successInstances: any = await API.createInstances(dealData)
+      }
 
-      console.log(successInstances, 'successInstances')
-      const createLogArray: logItemType[] = []
-      successInstances.result.forEach((item: any) => {
-        if (item && item.name) {
-          createLogArray.push({ log: `${item.name} 创建成功， 编号:${item.number}`, dateTime: getCurrentTime() })
+    })
+    const dealData = centerData.filter(item => item.file.onChain.flag != 'exist').map((item, index) => {
+      const Category = ItemCode.isFile(itemCode) ? item.file.onChain.Category : item.material.onChain.Category
+      return {
+        fileIndex: index,
+        itemCode: itemCode,
+        objectId: Category,
+        workspaceId: selectProduct,
+        tenantId: "719",
+        verifyCode: '200',
+        user: user.id,
+        insAttrs: Attrs.filter(item => item.status).map(v => {
+          return {
+            ...v,
+            value: setVal(item, v)
+          }
+        })
+      }
+    })
+
+    console.log(dealData, 'dealData');
+
+    const successInstances: any = await API.createInstances(dealData)
+    console.log(dealData, successInstances, 'successInstances');
+
+    const createLogArray: logItemType[] = []
+    successInstances.result.forEach((item: any) => {
+      if (item && item.name) {
+        createLogArray.push({ log: `${item.name} 创建成功， 编号:${item.number}`, dateTime: getCurrentTime() })
+      }
+    })
+    setLogData([...lastestLogData.current, ...createLogArray])
+    return successInstances
+  }
+
+  const createStructure = async ({ nameNumberMap, itemCode, tabCode }: { nameNumberMap?: any; itemCode: string; tabCode: string }) => {
+    // // 批量创建文件结构
+    // // 查找公有属性
+    const {
+      result: { records: structureAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: itemCode,
+      tabCode: tabCode,
+    });
+    const structureAttrsMap = Utils.transformArrayToMap(structureAttrs, 'apicode', 'id')
+    const structureData = cloneDeep(leftData)
+
+    const loop = (struct: any, dealArray: any) => {
+      for (let i = 0; i < struct.length; i++) {
+        struct[i].attrMap = {}
+        const folder = ItemCode.isFile(itemCode) ? 'file' : 'material'
+        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[struct[i][folder].plugin?.Description]?.instanceId : struct[i][folder].onChain.insId
+        if (struct[i].node_name != leftData[0].node_name) {
+          struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[struct[i][folder].plugin.Description]
         }
-      })
-      setLogData([...lastestLogData.current, ...createLogArray])
+        struct[i] = pick(struct[i], ['insId', 'attrMap', 'children'])
+        if (struct[i].children && struct[i].children.length) {
+          struct[i].copyChildren = [...struct[i].children]
+          struct[i].children = uniqueArrayByAttr(struct[i].children, 'node_name').array
+          loop(struct[i].children, uniqueArrayByAttr(struct[i].copyChildren, 'node_name'));
+          delete struct[i].copyChildren
+        }
+      }
+    };
+    loop(structureData, uniqueArrayByAttr(structureData, 'node_name'));
+
+    API.batchCreateStructure({
+      tenantId: '719',
+      userId: user.id,
+      itemCode: itemCode,
+      tabCode: tabCode,
+      instances: structureData
+    })
+
+    setLogData([...lastestLogData.current, { log: ItemCode.isFile(itemCode) ? '批量创建结构成功!' : '批量创建BOM成功!', dateTime: getCurrentTime() }])
+  }
+
+  const handleClick = async (name: string) => {
+    if (name === 'upload') {
+      setLogVisbile(true)
+      dispatch(setLoading(true));
+
+      // 创建实例
+      const successInstances: any = await createInstance({ itemCode: BasicsItemCode.file })
 
       const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
 
@@ -486,6 +686,7 @@ const index = () => {
 
 
       const FileArray = []
+      const FileThumbArray = []
       for (let item of centerData) {
         if (item.file.onChain.flag != 'exist') {
           FileArray.push(
@@ -496,67 +697,23 @@ const index = () => {
               isRemote: false,
             }
           )
+          FileThumbArray.push(
+            {
+              name: item.pic_path.substring(item.pic_path.lastIndexOf('\\') + 1),
+              data: new Blob([await readBinaryFile(item.pic_path)]),
+              source: 'Local',
+              isRemote: false,
+            }
+          )
         }
-
       }
-
-      // console.log(FileArray, 'FileArray')
-
-      // // const FileArray = .map((item)=> {
-      // //   return {
-      // //     name: getFileNameWithFormat(item), // file name
-      // //     // type: , // file type
-      // //     data: item, // file blob
-      // //     source: 'Local',
-      // //     isRemote: false,
-      // //   }
-      // // })
-
 
       mqttClient.publish({
         type: CommandConfig.setProductAttVal,
         attr_set: pluginUpdateNumber
       });
       // // 批量创建文件结构
-      // // 查找公有属性
-      const {
-        result: { records: structureAttrs },
-      }: any = await API.getInstanceAttrs({
-        itemCode: BasicsItemCode.file,
-        tabCode: "10002016",
-      });
-      const structureAttrsMap = Utils.transformArrayToMap(structureAttrs, 'apicode', 'id')
-      const structureData = cloneDeep(leftData)
-
-      const loop = (struct: any, dealArray: any) => {
-        for (let i = 0; i < struct.length; i++) {
-          console.log(struct[i], nameNumberMap, 'dealArray.map')
-          struct[i].attrMap = {}
-          struct[i].insId = struct[i].file.onChain.flag != 'exist' ? nameNumberMap[struct[i].file.plugin?.Description]?.instanceId : struct[i].file.onChain.insId
-          if (struct[i].node_name != leftData[0].node_name) {
-            struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[struct[i].file.plugin.Description]
-          }
-          struct[i] = pick(struct[i], ['insId', 'attrMap', 'children'])
-          if (struct[i].children && struct[i].children.length) {
-            struct[i].copyChildren = [...struct[i].children]
-            struct[i].children = uniqueArrayByAttr(struct[i].children, 'node_name').array
-            loop(struct[i].children, uniqueArrayByAttr(struct[i].copyChildren, 'node_name'));
-            delete struct[i].copyChildren
-          }
-        }
-      };
-      loop(structureData, uniqueArrayByAttr(structureData, 'node_name'));
-      console.log(structureData, 'structureData');
-
-      API.batchCreateStructure({
-        tenantId: '719',
-        userId: user.id,
-        itemCode: BasicsItemCode.file,
-        tabCode: '10002016',
-        instances: structureData
-      })
-
-      setLogData([...lastestLogData.current, { log: '批量创建结构成功!', dateTime: getCurrentTime() }])
+      createStructure({ nameNumberMap, itemCode: BasicsItemCode.file, tabCode: '10002016' })
       // // 批量上传文件
       const uppy = new Uppy({
         meta: {},
@@ -574,23 +731,54 @@ const index = () => {
           allowedMetaFields: null,
         })
         .on('upload-success', (file: any, response: any) => {
-          console.log('模型上传成功!')
+          setLogData([...lastestLogData.current, { log: `${file.name}模型上传成功！`, dateTime: getCurrentTime() }])
+          // ProductService.toPostFileRecord({ file, response, type: '0' });
+        });
+
+      const thumbres = new Uppy({
+        meta: {},
+        debug: false,
+        autoProceed: true,
+      });
+      thumbres
+        .use(Tus, {
+          endpoint: `http://192.168.0.101:8000/plm/files`,
+          headers: {
+            // Authorization: `${StorageController.token.get()}`,
+          },
+          chunkSize: 1 * 1024 * 1024,
+          overridePatchMethod: false,
+          allowedMetaFields: null,
+        })
+        .on('upload-success', (file: any, response: any) => {
+          setLogData([...lastestLogData.current, { log: `${file.name}缩略图上传成功！`, dateTime: getCurrentTime() }])
           // ProductService.toPostFileRecord({ file, response, type: '0' });
         });
       uppy.addFiles(FileArray);
       const res = await uppy.upload();
+      console.log(FileThumbArray, 'FileThumbArray')
+      thumbres.addFiles(FileThumbArray)
+      const thumbRes = await thumbres.upload();
+      const nameThumbMap = Utils.transformArrayToMap(thumbRes.successful, 'name', 'response')
       const nameFileUrlMap = Utils.transformArrayToMap(res.successful, 'name', 'response')
-
+      console.log(nameThumbMap, 'nameThumbMap')
       //批量更新文件地址
       const updateInstances = centerData.filter(item => item.file.onChain.flag != 'exist').map(item => {
         return {
           id: nameNumberMap[item.file.plugin?.Description].instanceId,
           itemCode: BasicsItemCode.file,
           tabCode: '10002001',
-          insAttrs: Attrs.filter(attr => attr.apicode === 'FileUrl').map(attr => {
-            return {
-              ...attr,
-              value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(item)].uploadURL.split('/plm/files')[1]}?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize}&extension=${item.file.plugin?.FileFormat}`
+          insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
+            if (attr.apicode === 'FileUrl') {
+              return {
+                ...attr,
+                value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(item)].uploadURL.split('/plm/files')[1]}?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize}&extension=${item.file.plugin?.FileFormat}`
+              }
+            } else {
+              return {
+                ...attr,
+                value: nameThumbMap[`${item.file.plugin?.Description}.bmp`]?.uploadURL
+              }
             }
           }),
           tenantId: '719'
@@ -598,8 +786,9 @@ const index = () => {
       })
       if (updateInstances.length) {
         await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
-        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功', dateTime: getCurrentTime() }])
+        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime() }])
       }
+      setLogData([...lastestLogData.current, { log: '模型上传成功！', dateTime: getCurrentTime() }])
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
       });
@@ -628,30 +817,47 @@ const index = () => {
           setCacheItemNumber(res.result);
         });
       }
-    if (name === "logout") {
-      mqttClient.publish({
-        type: PathConfig.exit,
-        output_data: {
-          result: "1",
-        },
-      });
-      // 退出登录
-      const homeDirPath = await homeDir();
-      await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
-      await removeFile(
-        `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
-      );
-      const mainWindow = WebviewWindow.getByLabel("Home");
-      mainWindow?.close();
-      await invoke("exist", {});
-    } else if (name === "info") {
-      await invoke(PathConfig.openInfo, {});
-    } else if (name === "checkout") {
-      mqttClient.publish({
-        type: CommandConfig.getProductTypeAtt,
-      });
-      // dispatch(increment());
-    }
+      else if (name === "logout") {
+        mqttClient.publish({
+          type: PathConfig.exit,
+          output_data: {
+            result: "1",
+          },
+        });
+        // 退出登录
+        const homeDirPath = await homeDir();
+        await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
+        await removeFile(
+          `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
+        );
+        const mainWindow = WebviewWindow.getByLabel("Home");
+        mainWindow?.close();
+        await invoke("exist", {});
+      } else if (name === "info") {
+        await invoke(PathConfig.openInfo, {});
+      } else if (name === 'update') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          upadteData({ row: row })
+        }
+
+      } else if (name === 'checkout') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          checkoutData({ row: row })
+        }
+
+      } else if (name === 'cancelcheckout') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          cancelCheckoutData({ row: row })
+        }
+      } else if (name === 'checkin') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          checkInData({ row: row })
+        }
+      }
   };
 
   const generalDealAttrs = (attrs: any[], listCodeMap: any) => {
@@ -660,6 +866,17 @@ const index = () => {
         (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate') && item.status
       )
       .map((item) => {
+        const renderData:any = {
+          'FileSize': (text: string, record: any) => {
+            return Utils.converBytes(Number(record.file.plugin.FileSize))
+          },
+          'FileFormat': (text: string, record: any) => {
+            return record.file.plugin.FileFormat
+          },
+        }
+        const specificRender = () => {
+          return renderData[item.apicode]
+        }
         return {
           title: item.name,
           dataIndex: item.apicode,
@@ -676,10 +893,8 @@ const index = () => {
             type: formItemMap[item.valueType],
             props: Utils.generateFormItemProps(item, listCodeMap),
           },
-          render: item.apicode === 'FileSize' ? (text: string) => {
-            return Utils.converBytes(Number(text))
-          } : undefined
-        };
+          render: specificRender()
+        }
       });
   };
 
@@ -732,14 +947,14 @@ const index = () => {
     }
   }, [Attrs]);
 
-  const materialCenterData: any = useMemo(() => {
-    return centerData.map((item) => {
-      return {
-        ...item,
-        ...item.itemAttrs,
-      };
-    });
-  }, [centerData]);
+  // const materialCenterData: any = useMemo(() => {
+  //   return centerData.map((item) => {
+  //     return {
+  //       ...item,
+  //       ...item.material.onChain
+  //     };
+  //   });
+  // }, [centerData]);
 
   const items: TabsProps["items"] = [
     {
@@ -750,13 +965,12 @@ const index = () => {
           <div className="ml-1">
             <PlmTabToolBar
               onClick={(item) => {
-                console.log(fileSelectRows[0], 'fileSelectRows[0]');
-
                 if (item.tag === 'checkout') {
                   fileSelectRows.length && checkoutData({ row: fileSelectRows[0] })
                 } else if (item.tag === 'cancelCheckout') {
                   fileSelectRows.length && cancelCheckoutData({ row: fileSelectRows[0] })
                 } else if (item.tag === 'checkIn') {
+                  console.log(fileSelectRows, 'fileSelectRows');
                   fileSelectRows.length && checkInData({ row: fileSelectRows[0] })
                 }
               }}
@@ -777,6 +991,7 @@ const index = () => {
               rowSelection={{
                 columnWidth: 19,
                 fixed: true,
+                selectedRowKeys: fileSelectRows.length ? fileSelectRows.map(item => item?.id) : [],
                 onChange: (selectRowKeys, selectRows) => {
                   setFileSelectRows([selectRows.pop()])
                 }
@@ -802,6 +1017,7 @@ const index = () => {
                   title: <div className="w-full flex justify-center"><PlmIcon name="listcheck"></PlmIcon></div>,
                   dataIndex: "flag",
                   width: 40,
+                  fixed: true,
                   sort: true,
                   render: (text: string, record: any) => {
                     return (
@@ -815,10 +1031,11 @@ const index = () => {
                   title: <div className="flex items-center justify-center"><PlmIcon name="listcheckout"></PlmIcon></div>,
                   dataIndex: "checkOut",
                   // sorter: true,
+                  fixed: true,
                   width: 40,
                   sort: true,
-                  render: (text: string) => {
-                    if (text) {
+                  render: (text: string, record: any) => {
+                    if (record.file.onChain.checkOut) {
                       return (
                         <div className="flex items-center justify-center">
                           <div className='h-1 w-1 bg-primary' style={{ borderRadius: '50%' }}></div>
@@ -834,6 +1051,7 @@ const index = () => {
                   dataIndex: "thumbnail",
                   // sorter: true,
                   width: 40,
+                  fixed: true,
                   sort: true,
                   render: (text: string, record: any) => {
                     return (
@@ -847,6 +1065,7 @@ const index = () => {
                   search: {
                     type: "Input",
                   },
+                  fixed: true,
                   sorter: true,
                   width: 100,
                   // render: (text: string) => {
@@ -895,9 +1114,27 @@ const index = () => {
         <Fragment>
           <div className="ml-1">
             <PlmTabToolBar
+              onClick={(item) => {
+                console.log(fileSelectRows[0], 'fileSelectRows[0]');
+                if (item.tag === 'checkout') {
+                  materialSelectRows.length && checkoutData({ row: materialSelectRows[0] })
+                } else if (item.tag === 'cancelCheckout') {
+                  materialSelectRows.length && cancelCheckoutData({ row: materialSelectRows[0] })
+                } else if (item.tag === 'checkIn') {
+                  materialSelectRows.length && checkInData({ row: materialSelectRows[0] })
+                } else if (item.tag === 'createIntance') {
+                  createInstance({ itemCode: BasicsItemCode.material })
+                } else if (item.tag === 'createBom') {
+                  // // 批量创建Bom结构
+                  createStructure({ itemCode: BasicsItemCode.file, tabCode: '10002016' })
+                }
+              }}
               list={[
-                { name: "分配编码", icon: encodedSvg },
-                { name: "保存", icon: saveSvg },
+                { name: "创建编码", icon: encodedSvg, tag: 'createIntance' },
+                { name: "创建EBOM", icon: encodedSvg, tag: 'createBom' },
+                { name: "签出", icon: checkout, tag: 'checkout' },
+                { name: "取消签出", icon: cancelcheckin, tag: 'cancelCheckout' },
+                { name: "签入", icon: checkin, tag: 'checkIn' },
               ]}
             ></PlmTabToolBar>
           </div>
@@ -931,10 +1168,44 @@ const index = () => {
               className="table-checkbox"
               columns={[
                 {
+                  title: <div className="w-full flex justify-center"><PlmIcon name="listcheck"></PlmIcon></div>,
+                  dataIndex: "flag",
+                  width: 40,
+                  sort: true,
+                  fixed: true,
+                  render: (text: string, record: any) => {
+                    return (
+                      <div className="w-full flex justify-center">
+                        <img width={12} src={(record.flag === 'exist') ? settingSvg : plusImg} alt="" />
+                      </div>
+                    );
+                  },
+                },
+                {
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listcheckout"></PlmIcon></div>,
+                  dataIndex: "checkOut",
+                  // sorter: true,
+                  width: 40,
+                  fixed: true,
+                  sort: true,
+                  render: (text: string, record: any) => {
+                    if (record.material.onChain.checkOut) {
+                      return (
+                        <div className="flex items-center justify-center">
+                          <div className='h-1 w-1 bg-primary' style={{ borderRadius: '50%' }}></div>
+                        </div>
+                      );
+                    } else {
+                      return <></>
+                    }
+                  },
+                },
+                {
                   title: <div className="flex items-center justify-center"><PlmIcon name="listphoto"></PlmIcon></div>,
                   dataIndex: "thumbnail",
                   // sorter: true,
                   width: 40,
+                  fixed: true,
                   render: (text: string, record: any) => {
                     return (
                       <div className="flex items-center justify-center"><Image src={record.file.plugin.thumbnail} width={32} preview={false}></Image></div>
@@ -942,8 +1213,9 @@ const index = () => {
                   },
                 },
                 {
-                  title: "物料名称",
+                  title: "文件名称",
                   dataIndex: "node_name",
+                  fixed: true,
                   search: {
                     type: "Input",
                   },
@@ -953,11 +1225,25 @@ const index = () => {
                 {
                   title: "编号",
                   dataIndex: "Number",
+                  fixed: true,
                   search: {
                     type: "Input",
                   },
                   width: 100,
                   sorter: true,
+                },
+                {
+                  title: "版次",
+                  dataIndex: "revision",
+                  sorter: true,
+                  width: 100,
+                  render: (text: string, record: any) => {
+                    if (record.flag == 'exist') {
+                      return record.Revision
+                    } else {
+                      return <span>1</span>;
+                    }
+                  },
                 },
                 ...materialColumn,
               ]}
@@ -1131,7 +1417,10 @@ const index = () => {
               </div>
             </div>
             <div className="mt-2 flex-1 overflow-hidden">
-              <Tabs defaultActiveKey="1" items={items} destroyInactiveTabPane />
+              <Tabs onTabClick={() => {
+                setFileSelectRows([])
+                setMaterialSelectRows([])
+              }} defaultActiveKey="1" items={items} destroyInactiveTabPane />
             </div>
           </div>
 
@@ -1205,9 +1494,8 @@ const index = () => {
                             alt=""
                           />
                           <div>
-                            {record?.itemAttrs &&
-                              record?.itemAttrs["Number"] ? (
-                              record?.itemAttrs["Number"]
+                            {record?.material?.onChain?.Number ? (
+                              record?.material?.onChain?.Number
                             ) : (
                               <div
                                 style={{
