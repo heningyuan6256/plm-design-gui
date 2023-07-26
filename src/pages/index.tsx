@@ -384,7 +384,7 @@ const index = () => {
       message.error('当前文件已签出')
     } else {
       dispatch(setLoading(true))
-      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.node_name }).then(() => {
+      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(() => {
         updateSingleData(row)
         dispatch(setLoading(false))
       }).catch(() => {
@@ -413,7 +413,7 @@ const index = () => {
       message.error('当前文件还未签出')
     } else {
       dispatch(setLoading(true))
-      API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.node_name }).then(res => {
+      API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
         updateSingleData(row)
         dispatch(setLoading(false))
       }).catch(() => {
@@ -574,23 +574,30 @@ const index = () => {
           return selectProduct
         } else if (col.apicode === 'Category') {
           return row.material.onChain.Category
+        } else if (col.apicode === 'Description') {
+          return ''
+        } else if (col.apicode === 'Number') {
+          return ''
         } else {
           return row[col.apicode] || ''
         }
       }
 
     })
-    const dealData = centerData.filter(item => item.file.onChain.flag != 'exist').map((item, index) => {
-      const Category = ItemCode.isFile(itemCode) ? item.file.onChain.Category : item.material.onChain.Category
+
+    const ItemCodeFolder = ItemCode.isFile(itemCode) ? 'file' : 'material'
+    const dealData = centerData.filter(item => item[ItemCodeFolder].onChain.flag != 'exist').map((item, index) => {
+      const Category = item[ItemCodeFolder].onChain.Category
       return {
         fileIndex: index,
         itemCode: itemCode,
         objectId: Category,
         workspaceId: selectProduct,
+        node_name: item.node_name,
         tenantId: "719",
         verifyCode: '200',
         user: user.id,
-        insAttrs: Attrs.filter(item => item.status).map(v => {
+        insAttrs: (ItemCode.isFile(itemCode) ? Attrs : materialAttrs).filter(item => item.status).map(v => {
           return {
             ...v,
             value: setVal(item, v)
@@ -599,10 +606,12 @@ const index = () => {
       }
     })
 
-    console.log(dealData, 'dealData');
+    console.log(dealData, '创建参数');
+
 
     const successInstances: any = await API.createInstances(dealData)
-    console.log(dealData, successInstances, 'successInstances');
+
+    console.log(successInstances, '创建返回');
 
     const createLogArray: logItemType[] = []
     successInstances.result.forEach((item: any) => {
@@ -611,7 +620,19 @@ const index = () => {
       }
     })
     setLogData([...lastestLogData.current, ...createLogArray])
-    return successInstances
+    if (ItemCode.isFile(itemCode)) {
+      return successInstances
+    } else {
+      const successInstancesMap: any = {}
+      console.log(successInstances, 'successInstances');
+
+      successInstances.result.forEach((item: any, index: number) => {
+        if (item.code == 2000) {
+          successInstancesMap[dealData[index].node_name] = item.instanceId
+        }
+      })
+      return successInstancesMap
+    }
   }
 
   const createStructure = async ({ nameNumberMap, itemCode, tabCode }: { nameNumberMap?: any; itemCode: string; tabCode: string }) => {
@@ -632,7 +653,7 @@ const index = () => {
         const folder = ItemCode.isFile(itemCode) ? 'file' : 'material'
         struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[struct[i][folder].plugin?.Description]?.instanceId : struct[i][folder].onChain.insId
         if (struct[i].node_name != leftData[0].node_name) {
-          struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[struct[i][folder].plugin.Description]
+          struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[struct[i].file.plugin.Description]
         }
         struct[i] = pick(struct[i], ['insId', 'attrMap', 'children'])
         if (struct[i].children && struct[i].children.length) {
@@ -730,10 +751,15 @@ const index = () => {
           overridePatchMethod: false,
           allowedMetaFields: null,
         })
-        .on('upload-success', (file: any, response: any) => {
-          setLogData([...lastestLogData.current, { log: `${file.name}模型上传成功！`, dateTime: getCurrentTime() }])
-          // ProductService.toPostFileRecord({ file, response, type: '0' });
-        });
+        .on('upload-progress', (...e) => {
+          if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
+            setLogData([...lastestLogData.current, { log: `${e[0]?.name}模型上传成功！`, dateTime: getCurrentTime() }])
+          }
+        })
+      // .on('upload-success', (file: any, response: any) => {
+      //   setLogData([...lastestLogData.current, { log: `${file.name}模型上传成功！`, dateTime: getCurrentTime() }])
+      //   // ProductService.toPostFileRecord({ file, response, type: '0' });
+      // });
 
       const thumbres = new Uppy({
         meta: {},
@@ -750,10 +776,15 @@ const index = () => {
           overridePatchMethod: false,
           allowedMetaFields: null,
         })
-        .on('upload-success', (file: any, response: any) => {
-          setLogData([...lastestLogData.current, { log: `${file.name}缩略图上传成功！`, dateTime: getCurrentTime() }])
-          // ProductService.toPostFileRecord({ file, response, type: '0' });
-        });
+        .on('upload-progress', (...e) => {
+          if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
+            setLogData([...lastestLogData.current, { log: `${e[0]?.name}缩略图上传成功！`, dateTime: getCurrentTime() }])
+          }
+        })
+      // .on('upload-success', (file: any, response: any) => {
+      //   setLogData([...lastestLogData.current, { log: `${file.name}缩略图上传成功！`, dateTime: getCurrentTime() }])
+      //   // ProductService.toPostFileRecord({ file, response, type: '0' });
+      // });
       uppy.addFiles(FileArray);
       const res = await uppy.upload();
       console.log(FileThumbArray, 'FileThumbArray')
@@ -866,7 +897,7 @@ const index = () => {
         (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate') && item.status
       )
       .map((item) => {
-        const renderData:any = {
+        const renderData: any = {
           'FileSize': (text: string, record: any) => {
             return Utils.converBytes(Number(record.file.plugin.FileSize))
           },
@@ -1020,9 +1051,12 @@ const index = () => {
                   fixed: true,
                   sort: true,
                   render: (text: string, record: any) => {
+                    if (record.flag === 'exist') {
+                      return <></>
+                    }
                     return (
                       <div className="w-full flex justify-center">
-                        <img width={12} src={(record.flag === 'exist') ? settingSvg : plusImg} alt="" />
+                        <img width={12} src={plusImg} alt="" />
                       </div>
                     );
                   },
@@ -1035,7 +1069,7 @@ const index = () => {
                   width: 40,
                   sort: true,
                   render: (text: string, record: any) => {
-                    if (record.file.onChain.checkOut) {
+                    if (record.file.onChain.checkOut && record.file.onChain.Revision != '1') {
                       return (
                         <div className="flex items-center justify-center">
                           <div className='h-1 w-1 bg-primary' style={{ borderRadius: '50%' }}></div>
@@ -1068,9 +1102,9 @@ const index = () => {
                   fixed: true,
                   sorter: true,
                   width: 100,
-                  // render: (text: string) => {
-                  //   return <a>{text}</a>;
-                  // },
+                  render: (text: string, record:any) => {
+                    return <>{record.file.plugin.Description}</>;
+                  },
                 },
                 {
                   title: "编号",
@@ -1114,8 +1148,7 @@ const index = () => {
         <Fragment>
           <div className="ml-1">
             <PlmTabToolBar
-              onClick={(item) => {
-                console.log(fileSelectRows[0], 'fileSelectRows[0]');
+              onClick={async (item) => {
                 if (item.tag === 'checkout') {
                   materialSelectRows.length && checkoutData({ row: materialSelectRows[0] })
                 } else if (item.tag === 'cancelCheckout') {
@@ -1123,10 +1156,64 @@ const index = () => {
                 } else if (item.tag === 'checkIn') {
                   materialSelectRows.length && checkInData({ row: materialSelectRows[0] })
                 } else if (item.tag === 'createIntance') {
-                  createInstance({ itemCode: BasicsItemCode.material })
+                  dispatch(setLoading(true));
+                  const successInstances = await createInstance({ itemCode: BasicsItemCode.material })
+                  const {
+                    result: { records: designTabAttrs },
+                  }: any = await API.getInstanceAttrs({
+                    itemCode: BasicsItemCode.material,
+                    tabCode: "10002028",
+                  });
+
+                  const setVal = ((row: any, col: any) => {
+                    if (col.apicode === 'ID') {
+                      return row.file.onChain.insId
+                    } else if (col.apicode === 'CorrespondingVersion') {
+                      return row.file.onChain.Version || ''
+                    } else {
+                      return ''
+                    }
+                  })
+                  const dealParams = Object.keys(successInstances).map(item => {
+                    return {
+                      affectedInstanceIds: InstanceAttrsMap[item].file.onChain.insId,
+                      id: successInstances[item],
+                      itemCode: BasicsItemCode.material,
+                      tabCode: 10002028,
+                      tenantId: '719',
+                      userId: user.id,
+                      versionNumber: 'Draft',
+                      rowList: [{
+                        insAttrs: designTabAttrs.filter((attr: any) => {
+                          return ['ID', 'CorrespondingVersion', 'From']
+                        }).map((attr: any) => {
+                          return {
+                            apicode: attr.apicode,
+                            id: attr.id,
+                            valueType: attr.valueType,
+                            value: setVal(InstanceAttrsMap[item], attr)
+                          }
+                        })
+                      }]
+                    }
+                  })
+                  API.bindFileAndMaterial({
+                    tenantId: '719',
+                    userId: user.id,
+                    saveVos: dealParams,
+                  }).then((res) => {
+                    dispatch(setLoading(true));
+                    mqttClient.publish({
+                      type: CommandConfig.getCurrentBOM,
+                    });
+                  })
                 } else if (item.tag === 'createBom') {
+                  dispatch(setLoading(true));
                   // // 批量创建Bom结构
-                  createStructure({ itemCode: BasicsItemCode.file, tabCode: '10002016' })
+                  createStructure({ itemCode: BasicsItemCode.material, tabCode: '10002003' })
+                  mqttClient.publish({
+                    type: CommandConfig.getCurrentBOM,
+                  });
                 }
               }}
               list={[
@@ -1174,9 +1261,12 @@ const index = () => {
                   sort: true,
                   fixed: true,
                   render: (text: string, record: any) => {
+                    if (record.flag === 'exist') {
+                      return <></>
+                    }
                     return (
                       <div className="w-full flex justify-center">
-                        <img width={12} src={(record.flag === 'exist') ? settingSvg : plusImg} alt="" />
+                        <img width={12} src={plusImg} alt="" />
                       </div>
                     );
                   },
@@ -1189,7 +1279,7 @@ const index = () => {
                   fixed: true,
                   sort: true,
                   render: (text: string, record: any) => {
-                    if (record.material.onChain.checkOut) {
+                    if (record.material.onChain.checkOut && record.material.onChain.Revision != '1') {
                       return (
                         <div className="flex items-center justify-center">
                           <div className='h-1 w-1 bg-primary' style={{ borderRadius: '50%' }}></div>
@@ -1221,6 +1311,9 @@ const index = () => {
                   },
                   width: 100,
                   sorter: true,
+                  render: (text:string, record:any) => {
+                    return <>{record.file.plugin.Description}</>;
+                  }
                 },
                 {
                   title: "编号",
@@ -1501,10 +1594,39 @@ const index = () => {
                                 style={{
                                   height: "22px",
                                   width: "140px",
-                                  background: "#FFC745",
+                                  // background: "#FFC745",
                                   opacity: "0.5",
                                 }}
-                              ></div>
+                              >
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) == 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) != 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) == 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) != 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                              </div>
                             )}
                           </div>
                         </div>

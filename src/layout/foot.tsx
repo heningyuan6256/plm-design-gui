@@ -12,12 +12,12 @@ import { mqttClient } from "../utils/MqttService";
 
 const Foot: FC = () => {
   const [pid, setPid] = useState(mqttClient.pid)
-  useEffect(() =>{
+  useEffect(() => {
     mqttClient.event.updatePid.add(setPid)
-    return ()=> {
+    return () => {
       mqttClient.event.updatePid.delete(setPid)
-    } 
-  } ,[])
+    }
+  }, [])
   const { value: user } = useSelector((state: any) => state.user);
   const items: MenuProps["items"] = [
     {
@@ -30,6 +30,7 @@ const Foot: FC = () => {
     },
   ];
   const { value } = useSelector((state: any) => state.network);
+  const { value: loading } = useSelector((state: any) => state.loading);
 
   return (
     <div
@@ -76,8 +77,11 @@ const Foot: FC = () => {
           SSH: {value}
         </div> */}
       </div>
-      <div className="text-xs flex gap-2 text-white opacity-80">
-        DESIGNFUSION 1.0.0
+      <div className="text-xs flex text-white opacity-80">
+        {
+          loading ? <div style={{ marginRight: '10px' }}>读取中 ...</div> : <></>
+        }
+        <div>DESIGNFUSION 1.0.0</div>
         {/* <PlmIcon name="user" className="text-xs text-white"></PlmIcon>{" "} */}
         {/* <PlmIcon
           name="notice"

@@ -217,6 +217,12 @@ const API = {
   getMaterialTypeMap: (params: {itemCode: string }) => {
     return NewRequest.get('/pdm/objects', { ...params, tenantId: '719', pageNo: '1', pageSize: '500' });
   },
+  /**
+  * 绑定物料和设计文件
+  */
+  bindFileAndMaterial: (data:any) => {
+    return NewRequest.postPut('/pdm/instances/bind/files', data);
+  },
 };
 
 export default API;

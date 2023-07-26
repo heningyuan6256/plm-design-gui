@@ -64,7 +64,7 @@ export default function AttrMap() {
           : BasicsItemCode.material,
       tabCode: "10002002",
     });
-    const attList = res.output_data[activeKey] || []; 
+    const attList = res.output_data[activeKey] || [];
     // 使用 reduce 方法进行去重
     const uniqueArray = attList.reduce((acc: any, obj: any) => {
       const found = acc.find((item: any) => item.name === obj.name);
@@ -170,51 +170,66 @@ export default function AttrMap() {
           setActiveKey(e);
         }}
       />
-      <div className="overflow-hidden h-full mt-3">
-        <div className="flex text-xs border-l border-outBorder">
-          <div
-            className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.cadToFile ? 'text-primary':''}`}
-            style={{ padding: "3px 9px" }}
+      <div className="flex h-full overflow-hidden">
+        <div className="bg-white mt-3 mr-2 border border-outBorder text-xs" style={{ width: '140px', minWidth: '140px', paddingTop: '11px', paddingBottom: '11px' }}>
+          {items.map((item) => {
+            return <div className={`mb-2 cursor-pointer hover:bg-tabTitleBg ${item.key === activeKey ? 'bg-tabTitleBg': ''}`}
             onClick={() => {
-              setChildActiveKey(settingType.cadToFile)
-            }}
-          >
-            CAD至文件
-          </div>
-          <div
-            className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.cadToItem ? 'text-primary':''}`}
-            style={{ padding: "3px 9px" }}
-            onClick={() => {
-              setChildActiveKey(settingType.cadToItem)
-            }}
-          >
-            CAD至物料
-          </div>
-          <div
-            className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.PlmToCad ? 'text-primary':''}`}
-            style={{ padding: "3px 9px" }}
-            onClick={() => {
-              setChildActiveKey(settingType.PlmToCad)
-            }}
-          >
-            文件至CAD
-          </div>
+              setActiveKey(item.key);
+            }} style={{
+              paddingLeft: '11px', paddingRight: '11px', paddingTop: '2px', paddingBottom: "2px"
+            }}>
+              {item.label}
+            </div>
+          })}
         </div>
-        <div className="flex overflow-hidden" style={{ height: "calc(100% - 36px)", width: "100%" }}>
-          <div
-            className="h-full w-full py-2 bg-white px-2 border border-outBorder"
-          >
-            <PlmMappingData
-              ref={mappingRef}
-              isShowHeader={false}
-              onLoading={() => {}}
-              mappingData={mappingData}
-              leftTableList={attrList}
-              rightTableList={rightTableList}
-            ></PlmMappingData>
+        <div className="overflow-hidden h-full mt-3 flex-1">
+          <div className="flex text-xs border-l border-outBorder">
+            <div
+              className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.cadToFile ? 'text-primary' : ''}`}
+              style={{ padding: "3px 9px" }}
+              onClick={() => {
+                setChildActiveKey(settingType.cadToFile)
+              }}
+            >
+              CAD至文件
+            </div>
+            <div
+              className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.cadToItem ? 'text-primary' : ''}`}
+              style={{ padding: "3px 9px" }}
+              onClick={() => {
+                setChildActiveKey(settingType.cadToItem)
+              }}
+            >
+              CAD至物料
+            </div>
+            <div
+              className={`bg-white border-r border-t cursor-pointer border-outBorder ${childActiveKey == settingType.PlmToCad ? 'text-primary' : ''}`}
+              style={{ padding: "3px 9px" }}
+              onClick={() => {
+                setChildActiveKey(settingType.PlmToCad)
+              }}
+            >
+              文件至CAD
+            </div>
+          </div>
+          <div className="flex overflow-hidden" style={{ height: "calc(100% - 36px)", width: "100%" }}>
+            <div
+              className="h-full w-full py-2 bg-white px-2 border border-outBorder"
+            >
+              <PlmMappingData
+                ref={mappingRef}
+                isShowHeader={false}
+                onLoading={() => { }}
+                mappingData={mappingData}
+                leftTableList={attrList}
+                rightTableList={rightTableList}
+              ></PlmMappingData>
+            </div>
           </div>
         </div>
       </div>
+
 
       <div style={{ textAlign: "right" }}>
         <Button
