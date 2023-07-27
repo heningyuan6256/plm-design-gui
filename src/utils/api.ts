@@ -235,6 +235,9 @@ const API = {
   queryInstanceTab: (data: any) => {
     return NewRequest.post('/opendata/instance/tab', data);
   },
+  queryInsVersionOrder: (ids:string) => {
+    return NewRequest.get('/pdm/ins/versions', {tenantId: '719', ids:ids})
+  }
 };
 
 export default API;
