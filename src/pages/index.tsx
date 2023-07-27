@@ -408,11 +408,128 @@ const index = () => {
   }
 
 
-  const checkInData = ({ row }: { row: any }) => {
+  const checkInData = async ({ row }: { row: any }) => {
     if (!judgeFileCheckout(row)) {
       message.error('当前文件还未签出')
     } else {
       dispatch(setLoading(true))
+      // 签入需要更新当前的附件，以及相对应的属性，以及结构
+      const { result: { records } }: any = await API.queryInstanceTab({
+        instanceId: row.file.onChain.insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
+        tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version
+      })
+      console.log(records, 'records');
+
+      if ((records || []).length) {
+        const params = {
+          id: row.file.onChain.insId,
+          itemCode: BasicsItemCode.file,
+          tabCode: '10002016',
+          deleteAffectedInstanceIds: records.map((item: any) => item.insId).join(','),
+          deleteRowIds: records.map((item: any) => item.rowId),
+          tenantId: '719',
+          userId: user.id,
+          versionNumber: row.Version
+        }
+        console.log(params, '删除结构参数')
+        const result = await API.insatnceTabsave(params)
+        console.log(result, '删除结构');
+
+      }
+      // //更新当前的第一级结构
+      const {
+        result: { records: tabAttrs },
+      }: any = await API.getInstanceAttrs({
+        itemCode: BasicsItemCode.file,
+        tabCode: "10002016",
+      });
+
+      const countMap = groupBy(InstanceAttrsMap[row.node_name].origin.children || [], (item) => {
+        return item.file.plugin.Description
+      })
+
+      console.log(countMap, 'countMap');
+
+
+      const setVal = ((row: any, col: any) => {
+        if (col.apicode === 'ID') {
+          return row.file.onChain.insId
+        } else if (col.apicode === 'Qty') {
+          return countMap[row.file.plugin.Description].length || ''
+        } else {
+          return ''
+        }
+      })
+
+      const flattenData = getFlattenData(InstanceAttrsMap[row.node_name].origin).filter(item => {
+        return item.node_name != row.node_name
+      })
+
+      // 需要过滤掉所有的内部零件以及
+      const dealParams = flattenData.map((item: any) => {
+        return {
+          insAttrs: tabAttrs.filter((attr: any) => {
+            return ['ID', 'Qty']
+          }).map((attr: any) => {
+            return {
+              apicode: attr.apicode,
+              id: attr.id,
+              valueType: attr.valueType,
+              value: setVal(item, attr)
+            }
+          })
+        }
+      })
+      console.log(dealParams, 'dealParams');
+      if (dealParams.length) {
+        await API.insatnceTabsave({
+          itemCode: BasicsItemCode.file,
+          tabCode: '10002016',
+          rowList: dealParams,
+          id: row.file.onChain.insId,
+          tenantId: '719',
+          userId: user.id,
+          versionNumber: row.Version
+        })
+      }
+      const nameFileUrlMap = await uploadFile([{
+        name: getFileNameWithFormat(row),
+        data: new Blob([await readBinaryFile(row.file_path)]),
+        source: 'Local',
+        isRemote: false,
+      }])
+
+      const nameThumbMap = await uploadFile([{
+        name: row.pic_path.substring(row.pic_path.lastIndexOf('\\') + 1),
+        data: new Blob([await readBinaryFile(row.pic_path)]),
+        source: 'Local',
+        isRemote: false,
+      }])
+      //批量更新文件地址
+      const updateInstances = [{
+        id: row.file.onChain.insId,
+        itemCode: BasicsItemCode.file,
+        tabCode: '10002001',
+        insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
+          if (attr.apicode === 'FileUrl') {
+            return {
+              ...attr,
+              value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(row)].uploadURL.split('/plm/files')[1]}?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${row.file.plugin?.FileFormat}`
+            }
+          } else {
+            return {
+              ...attr,
+              value: `/plm/files${nameThumbMap[`${row.file.plugin?.Description}.bmp`]?.uploadURL.split('/plm/files')[1]}`
+            }
+          }
+        }),
+        tenantId: '719'
+      }]
+      if (updateInstances.length) {
+        await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
+        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime() }])
+      }
+
       API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
         updateSingleData(row)
         dispatch(setLoading(false))
@@ -422,27 +539,33 @@ const index = () => {
     }
   }
 
+  // 获取选中节点的扁平化数据（过滤后的)
+  const getFlattenData = (selectNode: any) => {
+    const flattenData: Record<string, any>[] = [];
+    const loop = (data: any) => {
+      for (let i = 0; i < data.length; i++) {
+        const flattenedItem = { ...data[i], ...data[i].file.onChain }; // Create a copy of the current item
+        delete flattenedItem.children; // Remove the "children" property from the copy
+        delete flattenedItem.property;
+        const nodeNames = flattenData.map((item) => {
+          return item.file.plugin.fileNameWithFormat
+        });
+        if (!nodeNames.includes(data[i].file.plugin.fileNameWithFormat) && !data[i].InternalModelFlag) {
+          flattenData.push(flattenedItem);
+        }
+        if (data[i].children && data[i].children.length) {
+          loop(data[i].children);
+        }
+      }
+    };
+    loop([selectNode]);
+    return flattenData
+  }
+
   // 取出所有的属性
   useEffect(() => {
     if (leftData.length) {
-      const flattenData: Record<string, any>[] = [];
-      const loop = (data: any) => {
-        for (let i = 0; i < data.length; i++) {
-          const flattenedItem = { ...data[i], ...data[i].file.onChain }; // Create a copy of the current item
-          delete flattenedItem.children; // Remove the "children" property from the copy
-          delete flattenedItem.property;
-          const nodeNames = flattenData.map((item) => {
-            return item.file.plugin.fileNameWithFormat
-          });
-          if (!nodeNames.includes(data[i].file.plugin.fileNameWithFormat) && !data[i].InternalModelFlag) {
-            flattenData.push(flattenedItem);
-          }
-          if (data[i].children && data[i].children.length) {
-            loop(data[i].children);
-          }
-        }
-      };
-      loop([selectNode]);
+      const flattenData: Record<string, any>[] = getFlattenData(selectNode)
       setCenterData(flattenData);
     }
   }, [selectNode, leftData]);
@@ -468,8 +591,6 @@ const index = () => {
         }
       };
       loop([selectNode]);
-      console.log(flattenData, 'flattenData');
-
       setMaterialCenterData(flattenData);
     }
   }, [selectNode, leftData]);
@@ -677,6 +798,39 @@ const index = () => {
     setLogData([...lastestLogData.current, { log: ItemCode.isFile(itemCode) ? '批量创建结构成功!' : '批量创建BOM成功!', dateTime: getCurrentTime() }])
   }
 
+  // 上传文件
+  const uploadFile = async (FileArray: any) => {
+    // // 批量上传文件
+    const uppy = new Uppy({
+      meta: {},
+      debug: false,
+      autoProceed: true,
+    });
+    uppy
+      .use(Tus, {
+        endpoint: `http://192.168.0.101:8000/plm/files`,
+        headers: {
+          // Authorization: `${StorageController.token.get()}`,
+        },
+        chunkSize: 1 * 1024 * 1024,
+        overridePatchMethod: false,
+        allowedMetaFields: null,
+      })
+      .on('upload-progress', (...e) => {
+        if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
+          setLogData([...lastestLogData.current, { log: `${e[0]?.name}上传成功！`, dateTime: getCurrentTime() }])
+        }
+      })
+
+    uppy.addFiles(FileArray);
+    const res = await uppy.upload();
+    const nameThumbMap = Utils.transformArrayToMap(res.successful, 'name', 'response')
+    uppy.close()
+    console.log(nameThumbMap, 'nameThumbMap')
+    localStorage.clear()
+    return nameThumbMap
+  }
+
   const handleClick = async (name: string) => {
     if (name === 'upload') {
       setLogVisbile(true)
@@ -720,7 +874,7 @@ const index = () => {
           )
           FileThumbArray.push(
             {
-              name: item.pic_path.substring(item.pic_path.lastIndexOf('\\') + 1),
+              name: `${item.pic_path.substring(item.pic_path.lastIndexOf('\\') + 1)}`,
               data: new Blob([await readBinaryFile(item.pic_path)]),
               source: 'Local',
               isRemote: false,
@@ -735,64 +889,8 @@ const index = () => {
       });
       // // 批量创建文件结构
       createStructure({ nameNumberMap, itemCode: BasicsItemCode.file, tabCode: '10002016' })
-      // // 批量上传文件
-      const uppy = new Uppy({
-        meta: {},
-        debug: false,
-        autoProceed: true,
-      });
-      uppy
-        .use(Tus, {
-          endpoint: `http://192.168.0.101:8000/plm/files`,
-          headers: {
-            // Authorization: `${StorageController.token.get()}`,
-          },
-          chunkSize: 1 * 1024 * 1024,
-          overridePatchMethod: false,
-          allowedMetaFields: null,
-        })
-        .on('upload-progress', (...e) => {
-          if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
-            setLogData([...lastestLogData.current, { log: `${e[0]?.name}模型上传成功！`, dateTime: getCurrentTime() }])
-          }
-        })
-      // .on('upload-success', (file: any, response: any) => {
-      //   setLogData([...lastestLogData.current, { log: `${file.name}模型上传成功！`, dateTime: getCurrentTime() }])
-      //   // ProductService.toPostFileRecord({ file, response, type: '0' });
-      // });
-
-      const thumbres = new Uppy({
-        meta: {},
-        debug: false,
-        autoProceed: true,
-      });
-      thumbres
-        .use(Tus, {
-          endpoint: `http://192.168.0.101:8000/plm/files`,
-          headers: {
-            // Authorization: `${StorageController.token.get()}`,
-          },
-          chunkSize: 1 * 1024 * 1024,
-          overridePatchMethod: false,
-          allowedMetaFields: null,
-        })
-        .on('upload-progress', (...e) => {
-          if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
-            setLogData([...lastestLogData.current, { log: `${e[0]?.name}缩略图上传成功！`, dateTime: getCurrentTime() }])
-          }
-        })
-      // .on('upload-success', (file: any, response: any) => {
-      //   setLogData([...lastestLogData.current, { log: `${file.name}缩略图上传成功！`, dateTime: getCurrentTime() }])
-      //   // ProductService.toPostFileRecord({ file, response, type: '0' });
-      // });
-      uppy.addFiles(FileArray);
-      const res = await uppy.upload();
-      console.log(FileThumbArray, 'FileThumbArray')
-      thumbres.addFiles(FileThumbArray)
-      const thumbRes = await thumbres.upload();
-      const nameThumbMap = Utils.transformArrayToMap(thumbRes.successful, 'name', 'response')
-      const nameFileUrlMap = Utils.transformArrayToMap(res.successful, 'name', 'response')
-      console.log(nameThumbMap, 'nameThumbMap')
+      const nameFileUrlMap = await uploadFile(FileArray)
+      const nameThumbMap = await uploadFile(FileThumbArray)
       //批量更新文件地址
       const updateInstances = centerData.filter(item => item.file.onChain.flag != 'exist').map(item => {
         return {
@@ -808,7 +906,7 @@ const index = () => {
             } else {
               return {
                 ...attr,
-                value: nameThumbMap[`${item.file.plugin?.Description}.bmp`]?.uploadURL
+                value: `/plm/files${nameThumbMap[`${item.file.plugin?.Description}.bmp`]?.uploadURL.split('/plm/files')[1]}`
               }
             }
           }),
@@ -1102,7 +1200,7 @@ const index = () => {
                   fixed: true,
                   sorter: true,
                   width: 100,
-                  render: (text: string, record:any) => {
+                  render: (text: string, record: any) => {
                     return <>{record.file.plugin.Description}</>;
                   },
                 },
@@ -1311,7 +1409,7 @@ const index = () => {
                   },
                   width: 100,
                   sorter: true,
-                  render: (text:string, record:any) => {
+                  render: (text: string, record: any) => {
                     return <>{record.file.plugin.Description}</>;
                   }
                 },
