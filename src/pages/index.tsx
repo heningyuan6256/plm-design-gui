@@ -47,6 +47,7 @@ import Tus from '@uppy/tus';
 import Uppy from '@uppy/core';
 import PlmModal from "../components/PlmModal";
 import { useSelector } from "react-redux";
+import { open } from "@tauri-apps/api/shell";
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
 
@@ -356,6 +357,7 @@ const index = () => {
       res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
         InstanceAttrsMap[row.node_name].file.onChain[item.apicode] = res.result.readInstanceVo.attributes[item.id]
         InstanceAttrsMap[row.node_name].file.onChain.checkOut = res.result.readInstanceVo.checkout
+        InstanceAttrsMap[row.node_name].file.onChain.Revision = res.result.readInstanceVo.insVersionOrder
         setLeftData([...leftData])
       })
     })
@@ -416,7 +418,7 @@ const index = () => {
       // 签入需要更新当前的附件，以及相对应的属性，以及结构
       const { result: { records } }: any = await API.queryInstanceTab({
         instanceId: row.file.onChain.insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
-        tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version
+        tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version,versionOrder: row.file.onChain.Revision
       })
       console.log(records, 'records');
 
@@ -1056,6 +1058,7 @@ const index = () => {
 
   // 处理文件列头
   useAsyncEffect(async () => {
+    // alternatively, load a remote URL:
     const codeList = Attrs.filter((item) => item.listCode).map((item) => {
       return {
         code: item.listCode,
@@ -1201,7 +1204,11 @@ const index = () => {
                   sorter: true,
                   width: 100,
                   render: (text: string, record: any) => {
-                    return <>{record.file.plugin.Description}</>;
+                    return <a onClick={async() => {
+                      if(record.flag === 'exist') {
+                        await open(`http://dev.onchainplm.com/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`)
+                      }
+                    }}>{record.file.plugin.Description}</a>;
                   },
                 },
                 {

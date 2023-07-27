@@ -40,3 +40,11 @@ registry = "https://github.com/rust-lang/crates.io-index"
 replace-with = 'ustc' # 如：tuna、sjtu、ustc，或者 rustcc
 [source.ustc]
 registry = "https://mirrors.ustc.edu.cn/crates.io-index"
+
+
+    "updater": {
+      "active": true,
+      "dialog": true,
+      "endpoints": ["https://heningyuan6256.github.io/install.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg1RUQzNUQzRDNCOTQzQzAKUldUQVE3blQwelh0aGFFTzRjZEFkbnhQSXMwZ2U5R1lkZ2hDNW82QU81SGJvWVdJMC9GSnA3a3cK"
+    },

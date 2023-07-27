@@ -85,8 +85,8 @@ class MqttService {
       const tc: any = matches?.args?.topic?.value || ''
       this.pid = pid
       this.publishTopic = tc
-      // this.pid = '12336'
-      // this.publishTopic = 'sw'
+      this.pid = '20872'
+      this.publishTopic = 'sw'
       this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
       this.mqtt.on("connect", () => {
         console.log("成功建立连接");

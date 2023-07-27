@@ -3,9 +3,9 @@ import { http } from "@tauri-apps/api";
 
 const getUrl = (str: string) => {
     if (str.startsWith('/opendata')) {
-        return 'http://192.168.0.66:19220/plm' + str
+        return 'http://192.168.0.101:8000/plm' + str
     } else {
-        return 'http://192.168.0.66:18080/plm' + str
+        return 'http://192.168.0.101:8000/plm' + str
     }
 }
 
@@ -53,7 +53,7 @@ class Request {
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
             http
-                .fetch(this.interceptors.baseURL + url, {
+                .fetch(getUrl(url), {
                     headers: requestHeaders,
                     method: "POST",
                     // 常规的json格式请求体发送
@@ -75,7 +75,7 @@ class Request {
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
             http
-                .fetch(this.interceptors.baseURL + url, {
+                .fetch(getUrl(url), {
                     headers: requestHeaders,
                     method: "PUT",
                     // 常规的json格式请求体发送
@@ -97,7 +97,7 @@ class Request {
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
             http
-                .fetch(this.interceptors.baseURL + url, {
+                .fetch(getUrl(url), {
                     headers: requestHeaders,
                     method: "PUT",
                     // 常规的json格式请求体发送
@@ -120,7 +120,7 @@ class Request {
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
             http
-                .fetch(this.interceptors.baseURL + url, {
+                .fetch(getUrl(url), {
                     headers: requestHeaders,
                     method: "GET",
                     // 常规的json格式请求体发送
