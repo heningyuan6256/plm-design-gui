@@ -34,7 +34,7 @@ export default function login() {
     const user: loginUserProps = {
       email: name,
       password: psw,
-      userAgent: "windows",
+      userAgent: "OnChain-DesingFusion",
     };
     API.login(user)
       .then(async (res: any) => {
