@@ -5,6 +5,7 @@
  */
 
 import OnChainLogo from "../assets/image/singlelogo.svg";
+import TextLogo from "../assets/image/TextLogo.svg";
 import { invoke } from "@tauri-apps/api";
 
 import { WebviewWindow, appWindow, getCurrent } from "@tauri-apps/api/window";
@@ -69,7 +70,12 @@ const Head: FC = () => {
           src={OnChainLogo}
           alt=""
         />
-        {/* <div className="text-white text-xs self-end flex">DesignFusion</div> */}
+        <img
+          width={60}
+          style={{ marginLeft: "4px" }}
+          src={TextLogo}
+          alt=""
+        />
       </div>
       <div></div>
       <div></div>

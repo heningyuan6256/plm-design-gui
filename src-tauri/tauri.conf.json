@@ -6,7 +6,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "DESIGNFUSION",
+    "productName": "OnChain-DesignFusion",
     "version": "0.0.0"
   },
   "tauri": {

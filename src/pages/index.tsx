@@ -91,6 +91,7 @@ const index = () => {
   const [materialSelectRows, setMaterialSelectRows] = useState<any>([])
   const [logVisible, setLogVisbile] = useState(false)
   const [logData, setLogData] = useState<{ dateTime: string, log: string }[]>([])
+  const { value:network } = useSelector((state: any) => state.network);
 
   const lastestLogData = useLatest(logData)
 
@@ -457,13 +458,14 @@ const index = () => {
         if (col.apicode === 'ID') {
           return row.file.onChain.insId
         } else if (col.apicode === 'Qty') {
+          console.log(row.file.plugin.Description,'')
           return countMap[row.file.plugin.Description].length || ''
         } else {
           return ''
         }
       })
 
-      const flattenData = getFlattenData(InstanceAttrsMap[row.node_name].origin).filter(item => {
+      const flattenData = (InstanceAttrsMap[row.node_name].origin.children || []).filter((item:any) => {
         return item.node_name != row.node_name
       })
 
@@ -1204,11 +1206,7 @@ const index = () => {
                   sorter: true,
                   width: 100,
                   render: (text: string, record: any) => {
-                    return <a onClick={async() => {
-                      if(record.flag === 'exist') {
-                        await open(`http://dev.onchainplm.com/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`)
-                      }
-                    }}>{record.file.plugin.Description}</a>;
+                    return <div>{record.file.plugin.Description}</div>;
                   },
                 },
                 {
@@ -1219,6 +1217,13 @@ const index = () => {
                   },
                   width: 100,
                   sorter: true,
+                  render: (text: string, record: any) => {
+                    return <a onClick={async() => {
+                      if(record.flag === 'exist') {
+                        await open(`http://${network}:8017/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`)
+                      }
+                    }}>{text}</a>;
+                  },
                 },
                 {
                   title: "版次",
@@ -1429,6 +1434,13 @@ const index = () => {
                   },
                   width: 100,
                   sorter: true,
+                  render: (text: string, record: any) => {
+                    return <a onClick={async() => {
+                      if(record.flag === 'exist') {
+                        await open(`http://${network}:8017/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`)
+                      }
+                    }}>{text}</a>;
+                  },
                 },
                 {
                   title: "版次",

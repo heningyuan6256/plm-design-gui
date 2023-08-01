@@ -81,7 +81,7 @@ const Foot: FC = () => {
         {
           loading ? <div style={{ marginRight: '10px' }}>读取中 ...</div> : <></>
         }
-        <div>DESIGNFUSION 1.0.0</div>
+        <div>版本 1.0.0</div>
         {/* <PlmIcon name="user" className="text-xs text-white"></PlmIcon>{" "} */}
         {/* <PlmIcon
           name="notice"
