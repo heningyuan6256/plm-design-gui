@@ -39,7 +39,7 @@ import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import settingSvg from "../assets/image/setting.svg";
-import { cloneDeep, groupBy, pick, remove } from "lodash";
+import { cloneDeep, groupBy, pick, remove, unionBy } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType, templateType } from "./attrMap";
@@ -154,15 +154,20 @@ const index = () => {
     return item.file_path.substring(item.file_path.lastIndexOf('\\') + 1)
   }
 
+  // 获取唯一的key，目前是根据文件在文件夹中的文件名称来的
+  const getRowKey = (item: any) => {
+    return item.file_path.substring(item.file_path.lastIndexOf('\\') + 1)
+  }
+
   const getCurrentTime = () => {
     return `${(new Date().toLocaleDateString())} ${(new Date().toLocaleTimeString())}`
   }
 
-  const uniqueArrayByAttr = (arr: any, key: string) => {
+  const uniqueArrayByAttr = (arr: any) => {
     const m = new Map()
     const mCount: any = {}
     for (const item of arr) {
-      const nodeName = item[key].split('<')[0]
+      const nodeName = getRowKey(item)
       if (!m.has(nodeName) && !item.InternalModelFlag) {
         m.set(nodeName, item)
         mCount[nodeName] = 1
@@ -237,12 +242,13 @@ const index = () => {
     const flattenData: Record<string, any>[] = [];
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
+        const rowKey = getRowKey(data[i]) 
         data[i].material = { onChain: {}, plugin: {} }
         data[i].file = { onChain: {}, plugin: {} }
-        InstanceAttrsMap[data[i].node_name] = { origin: {}, material: { onChain: {}, plugin: {} }, file: { onChain: {}, plugin: {} } }
-        InstanceAttrsMap[data[i].node_name].material = data[i].material
-        InstanceAttrsMap[data[i].node_name].file = data[i].file
-        InstanceAttrsMap[data[i].node_name].origin = data[i]
+        InstanceAttrsMap[rowKey] = { origin: {}, material: { onChain: {}, plugin: {} }, file: { onChain: {}, plugin: {} } }
+        InstanceAttrsMap[rowKey].material = data[i].material
+        InstanceAttrsMap[rowKey].file = data[i].file
+        InstanceAttrsMap[rowKey].origin = data[i]
         flattenData.push(data[i])
         if (data[i].children && data[i].children.length) {
           loop(data[i].children);
@@ -260,14 +266,16 @@ const index = () => {
 
     const PromiseData: any[] = []
     const PromiseImgData: any[] = []
+    console.log(InstanceAttrsMap, 'InstanceAttrsMap');
     for (const item of flattenData) {
+      const rowKey = getRowKey(item) 
       item.id = Utils.generateSnowId();
       const fileNameWithFormat = getFileNameWithFormat(item)
-      const onChainAttrs = InstanceAttrsMap[item.node_name].file.onChain
-      const pluginAttrs = InstanceAttrsMap[item.node_name].file.plugin
+      const onChainAttrs = InstanceAttrsMap[rowKey].file.onChain
+      const pluginAttrs = InstanceAttrsMap[rowKey].file.plugin
 
-      const materialOnChainAttrs = InstanceAttrsMap[item.node_name].material.onChain
-      const materialPluginAttrs = InstanceAttrsMap[item.node_name].material.plugin
+      const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain
+      const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin
 
 
       // 为每一个赋值id属性
@@ -356,9 +364,10 @@ const index = () => {
   const updateSingleData = (row: any) => {
     API.getInstanceInfoById({ instanceId: row.insId, authType: 'read', tabCode: '10002001', userId: user.id, tenantId: '719' }).then((res: any) => {
       res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
-        InstanceAttrsMap[row.node_name].file.onChain[item.apicode] = res.result.readInstanceVo.attributes[item.id]
-        InstanceAttrsMap[row.node_name].file.onChain.checkOut = res.result.readInstanceVo.checkout
-        InstanceAttrsMap[row.node_name].file.onChain.Revision = res.result.readInstanceVo.insVersionOrder
+        const rowKey = getRowKey(row) 
+        InstanceAttrsMap[rowKey].file.onChain[item.apicode] = res.result.readInstanceVo.attributes[item.id]
+        InstanceAttrsMap[rowKey].file.onChain.checkOut = res.result.readInstanceVo.checkout
+        InstanceAttrsMap[rowKey].file.onChain.Revision = res.result.readInstanceVo.insVersionOrder
         setLeftData([...leftData])
       })
     })
@@ -372,8 +381,8 @@ const index = () => {
       message.error('当前文件已签出')
     } else {
       dispatch(setLoading(true))
-      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.node_name }).then(() => {
-        API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.node_name }).then(res => {
+      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(() => {
+        API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
           updateSingleData(row)
           dispatch(setLoading(false))
         })
@@ -447,8 +456,10 @@ const index = () => {
         tabCode: "10002016",
       });
 
-      const countMap = groupBy(InstanceAttrsMap[row.node_name].origin.children || [], (item) => {
-        return item.file.plugin.Description
+      const rowKey = getRowKey(row)
+
+      const countMap = groupBy(InstanceAttrsMap[rowKey].origin.children || [], (item) => {
+        return getRowKey(item)
       })
 
       console.log(countMap, 'countMap');
@@ -459,14 +470,14 @@ const index = () => {
           return row.file.onChain.insId
         } else if (col.apicode === 'Qty') {
           console.log(row.file.plugin.Description,'')
-          return countMap[row.file.plugin.Description].length || ''
+          return countMap[getRowKey(row)].length || ''
         } else {
           return ''
         }
       })
 
-      const flattenData = (InstanceAttrsMap[row.node_name].origin.children || []).filter((item:any) => {
-        return item.node_name != row.node_name
+      const flattenData = (InstanceAttrsMap[getRowKey(row)].origin.children || []).filter((item:any) => {
+        return getRowKey(item) != getRowKey(row)
       })
 
       // 需要过滤掉所有的内部零件以及
@@ -552,9 +563,9 @@ const index = () => {
         delete flattenedItem.children; // Remove the "children" property from the copy
         delete flattenedItem.property;
         const nodeNames = flattenData.map((item) => {
-          return item.file.plugin.fileNameWithFormat
+          return getRowKey(item)
         });
-        if (!nodeNames.includes(data[i].file.plugin.fileNameWithFormat) && !data[i].InternalModelFlag) {
+        if (!nodeNames.includes(getRowKey(data[i])) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
           flattenData.push(flattenedItem);
         }
         if (data[i].children && data[i].children.length) {
@@ -569,6 +580,7 @@ const index = () => {
   // 取出所有的属性
   useEffect(() => {
     if (leftData.length) {
+      console.log(selectNode,'selectNodeselectNode')
       const flattenData: Record<string, any>[] = getFlattenData(selectNode)
       setCenterData(flattenData);
     }
@@ -584,9 +596,9 @@ const index = () => {
           delete flattenedItem.children; // Remove the "children" property from the copy
           delete flattenedItem.property;
           const nodeNames = flattenData.map((item) => {
-            return item.file.plugin.fileNameWithFormat
+            return getRowKey(item)
           });
-          if (!nodeNames.includes(data[i].file.plugin.fileNameWithFormat) && !data[i].InternalModelFlag) {
+          if (!nodeNames.includes(getRowKey(data[i]) ) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
             flattenData.push(flattenedItem);
           }
           if (data[i].children && data[i].children.length) {
@@ -719,6 +731,7 @@ const index = () => {
         objectId: Category,
         workspaceId: selectProduct,
         node_name: item.node_name,
+        file_path: item.file_path,
         tenantId: "719",
         verifyCode: '200',
         user: user.id,
@@ -745,19 +758,19 @@ const index = () => {
       }
     })
     setLogData([...lastestLogData.current, ...createLogArray])
-    if (ItemCode.isFile(itemCode)) {
-      return successInstances
-    } else {
+    // if (ItemCode.isFile(itemCode)) {
+    //   return successInstances
+    // } else {
       const successInstancesMap: any = {}
       console.log(successInstances, 'successInstances');
 
       successInstances.result.forEach((item: any, index: number) => {
         if (item.code == 2000) {
-          successInstancesMap[dealData[index].node_name] = item.instanceId
+          successInstancesMap[getRowKey(dealData[index])] = item.instanceId
         }
       })
       return successInstancesMap
-    }
+    // }
   }
 
   const createStructure = async ({ nameNumberMap, itemCode, tabCode }: { nameNumberMap?: any; itemCode: string; tabCode: string }) => {
@@ -776,21 +789,22 @@ const index = () => {
       for (let i = 0; i < struct.length; i++) {
         struct[i].attrMap = {}
         const folder = ItemCode.isFile(itemCode) ? 'file' : 'material'
-        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[struct[i][folder].plugin?.Description]?.instanceId : struct[i][folder].onChain.insId
-        if (struct[i].node_name != leftData[0].node_name) {
-          struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[struct[i].file.plugin.Description]
+        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[getRowKey(struct[i])] : struct[i][folder].onChain.insId
+        if (getRowKey(struct[i]) != getRowKey(leftData[0])) {
+          struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[getRowKey(struct[i])]
         }
         struct[i] = pick(struct[i], ['insId', 'attrMap', 'children'])
         if (struct[i].children && struct[i].children.length) {
           struct[i].copyChildren = [...struct[i].children]
-          struct[i].children = uniqueArrayByAttr(struct[i].children, 'node_name').array
-          loop(struct[i].children, uniqueArrayByAttr(struct[i].copyChildren, 'node_name'));
+          struct[i].children = uniqueArrayByAttr(struct[i].children).array
+          loop(struct[i].children, uniqueArrayByAttr(struct[i].copyChildren));
           delete struct[i].copyChildren
         }
       }
     };
-    loop(structureData, uniqueArrayByAttr(structureData, 'node_name'));
+    loop(structureData, uniqueArrayByAttr(structureData));
 
+    console.log(structureData,'创建结构参数')
     API.batchCreateStructure({
       tenantId: '719',
       userId: user.id,
@@ -841,9 +855,9 @@ const index = () => {
       dispatch(setLoading(true));
 
       // 创建实例
-      const successInstances: any = await createInstance({ itemCode: BasicsItemCode.file })
+      const nameNumberMap: any = await createInstance({ itemCode: BasicsItemCode.file })
 
-      const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
+      // const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
 
       // 过滤当前已经存在的实例
       const unExistInstances = centerData.filter(item => item.file.onChain.flag != 'exist')
@@ -857,7 +871,7 @@ const index = () => {
             {
               "attr_name": "编号",
               "attr_type": "string",
-              "attr_value": nameNumberMap[item.file.plugin?.Description]?.number
+              "attr_value": nameNumberMap[getRowKey(item)]?.number
             }
           ]
         }
@@ -891,6 +905,7 @@ const index = () => {
         type: CommandConfig.setProductAttVal,
         attr_set: pluginUpdateNumber
       });
+      console.log(nameNumberMap, 'nameNumberMapnameNumberMap')
       // // 批量创建文件结构
       createStructure({ nameNumberMap, itemCode: BasicsItemCode.file, tabCode: '10002016' })
       const nameFileUrlMap = await uploadFile(FileArray)
@@ -898,7 +913,7 @@ const index = () => {
       //批量更新文件地址
       const updateInstances = centerData.filter(item => item.file.onChain.flag != 'exist').map(item => {
         return {
-          id: nameNumberMap[item.file.plugin?.Description].instanceId,
+          id: nameNumberMap[getRowKey(item)],
           itemCode: BasicsItemCode.file,
           tabCode: '10002001',
           insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
@@ -1206,7 +1221,7 @@ const index = () => {
                   sorter: true,
                   width: 100,
                   render: (text: string, record: any) => {
-                    return <div>{record.file.plugin.Description}</div>;
+                    return <div className="text-ellipsis w-full overflow-hidden">{record.file.plugin.Description}</div>;
                   },
                 },
                 {
@@ -1422,7 +1437,7 @@ const index = () => {
                   width: 100,
                   sorter: true,
                   render: (text: string, record: any) => {
-                    return <>{record.file.plugin.Description}</>;
+                    return <div className="w-full overflow-hidden text-ellipsis">{record.file.plugin.Description}</div>;
                   }
                 },
                 {
@@ -1528,7 +1543,7 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`w-full gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
+                          className={`w-full gap-1 inline-flex overflow-hidden items-center cursor-pointer ${!(record.children && record.children.length)
                             ? "ml-3"
                             : ""
                             }`}
@@ -1545,7 +1560,7 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>{text}</div>
+                          <div style={{width:'100%', textOverflow: 'ellipsis', overflow:"hidden"}}>{text}</div>
                         </div>
                       );
                     },
@@ -1689,7 +1704,7 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center ${!(record.children && record.children.length)
+                          className={`gap-1 inline-flex overflow-hidden items-center ${!(record.children && record.children.length)
                             ? "ml-3"
                             : ""
                             }`}
@@ -1703,7 +1718,7 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>
+                          <div className='overflow-hidden text-ellipsis w-full'>
                             {record?.material?.onChain?.Number ? (
                               record?.material?.onChain?.Number
                             ) : (
