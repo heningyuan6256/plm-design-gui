@@ -22,12 +22,13 @@ const left: FC = () => {
 
   useEffect(() => {
     mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
+      console.log(res, 'res')
       if ((res.input_data === 'cad_start') || (res.input_data === CommandConfig.cadShutDown)) {
         return
-      } 
-      
-      
-      
+      }
+
+
+
       if (res.input_data === PathConfig.login) {
         if (location.pathname !== '/login') {
           mqttClient.publish({
@@ -49,7 +50,7 @@ const left: FC = () => {
         });
         setTimeout(() => {
           appWindow.close()
-        },200)
+        }, 200)
       } else {
         navigate(`/${res.input_data.split("_")[1]}`);
       }

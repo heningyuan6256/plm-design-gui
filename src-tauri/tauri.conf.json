@@ -6,7 +6,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "DESIGNFUSION",
+    "productName": "OnChain-DesignFusion",
     "version": "0.0.0"
   },
   "tauri": {
@@ -77,7 +77,9 @@
       "targets": "all",
       "windows": {
         "wix": {
-          "language": "zh-CN"
+          "language": "zh-CN",
+          "bannerPath": "./banner.png",
+          "dialogImagePath":"./dialogImage.png"
         },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
@@ -86,12 +88,6 @@
     },
     "security": {
       "csp": null
-    },
-    "updater": {
-      "active": true,
-      "dialog": true,
-      "endpoints": ["https://heningyuan6256.github.io/install.json"],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg1RUQzNUQzRDNCOTQzQzAKUldUQVE3blQwelh0aGFFTzRjZEFkbnhQSXMwZ2U5R1lkZ2hDNW82QU81SGJvWVdJMC9GSnA3a3cK"
     },
     "windows": [
       {

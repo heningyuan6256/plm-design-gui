@@ -62,7 +62,7 @@ const PlmToolBar: FC<PlmToolBarProps> = (props) => {
         {renderButton(topupdate, `更新`, "update")}
           {renderButton(checkout, `签出`, "checkout")}
           {renderButton(cancelcheckin, "取消签出", "cancelcheckout")}
-          {renderButton(checkin, "签入", "cancelcheckin")}
+          {renderButton(checkin, "签入", "checkin")}
         </div>
         <div className="scale-90 text-xs text-littleGrey text-center">
           刷新
