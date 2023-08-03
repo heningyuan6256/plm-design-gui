@@ -22,7 +22,7 @@ export class Utils {
         };
       });
   };
-// 转换文件大小
+  // 转换文件大小
   public static converBytes(size: number) {
     size = Number(size);
     var data = '';
@@ -242,10 +242,30 @@ export class Utils {
   };
 
   //生成雪花Id
-public static generateSnowId = () => {
-  function S4() {
-    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-  }
-  return S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4();
-};
+  public static generateSnowId = () => {
+    function S4() {
+      return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+    }
+    return S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4();
+  };
+
+  public static uint8arrayToBase64 = function (u8Arr: any) {
+    try {
+      let CHUNK_SIZE = 0x8000; //arbitrary number
+      let index = 0;
+      let length = u8Arr.length;
+      let result = "";
+      let slice;
+      while (index < length) {
+        slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
+        result += String.fromCharCode.apply(null, slice);
+        index += CHUNK_SIZE;
+      }
+      // web image base64图片格式: "data:image/png;base64," + b64encoded;
+      return "data:image/png;base64," + btoa(result);
+      //  return btoa(result);
+    } catch (e) {
+      throw e;
+    }
+  };
 }

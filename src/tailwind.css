@@ -374,10 +374,10 @@ select {
 .main .ant-table .ant-table-placeholder td {
   background: #fff !important;
 }
-
+/* 
 .anticon {
   font-size: 10px !important;
-}
+} */
 
 .tree-table .ant-table-cell-with-append > div {
   display: flex;
@@ -401,7 +401,7 @@ select {
   justify-content: center;
   width: 350px;
   height: 120px;
-  z-index: 99999999;
+  z-index: 999;
   background: #ffffff;
   border-radius: 2px;
 }
@@ -726,3 +726,24 @@ img {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.ant-modal-content{
+  padding: 0px !important;
+}
+.ant-modal .ant-modal-content{
+  border-radius: 0px !important;
+}
+.ant-modal .ant-modal-header{
+  margin: 0px !important;
+}
+
+.ant-message-custom-content{
+  align-items: center;
+  display: flex;
+}
+.ant-modal{
+  border: 1px solid #cdcdcd;
+  background: #f1f1f1;
+  padding-bottom: 0px;
+}
+.ant-modal-close{display: none;}

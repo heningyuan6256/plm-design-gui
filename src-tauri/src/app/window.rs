@@ -11,7 +11,7 @@ pub async fn open_login(handle: tauri::AppHandle) {
     tauri::WindowBuilder
         ::new(&handle, "Home", tauri::WindowUrl::App("/query".into()))
         .inner_size(1440.0, 720.0)
-        .title("PLM DESIGNER")
+        .title("OnChain-DesignFusion")
         .decorations(false)
         .center()
         .build()

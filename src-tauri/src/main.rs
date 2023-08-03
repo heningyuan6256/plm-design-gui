@@ -11,7 +11,7 @@ use config::utils;
 // use tauri::api::process::{Command, CommandEvent};
 // // extern crate libloading;
 
-use tauri::{utils::config::AppUrl, window::WindowBuilder, WindowUrl};
+use tauri::{utils::config::AppUrl, WindowUrl};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
 
 #[derive(Clone, serde::Serialize)]

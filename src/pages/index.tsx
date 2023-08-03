@@ -21,15 +21,15 @@ import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
-import { Tabs, TabsProps, message, Image } from "antd";
+import { Tabs, TabsProps, message, Image, Button } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import checkout from "../assets/image/checkin.svg";
 import checkin from "../assets/image/checkout.svg";
-import { useAsyncEffect } from "ahooks";
+import { useAsyncEffect, useLatest } from "ahooks";
 import API from "../utils/api";
 import { Utils } from "../utils";
-import { BasicsItemCode } from "../constant/itemCode";
+import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
@@ -38,12 +38,17 @@ import { readBinaryFile, readDir, readTextFile, removeFile } from "@tauri-apps/a
 import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
-import { cloneDeep, groupBy, remove } from "lodash";
+import settingSvg from "../assets/image/setting.svg";
+import { cloneDeep, groupBy, pick, remove, unionBy } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType, templateType } from "./attrMap";
+import Tus from '@uppy/tus';
+import Uppy from '@uppy/core';
 import PlmModal from "../components/PlmModal";
 import { useSelector } from "react-redux";
+import { open } from "@tauri-apps/api/shell";
+// import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
 
 export const formItemMap: Record<string, any> = {
@@ -59,11 +64,20 @@ export const formItemMap: Record<string, any> = {
   "13": "CompositeForm",
 };
 
+export interface logItemType {
+  log: string;
+  dateTime: string
+}
+
 const index = () => {
+
+  // AES密码解密
   const { value: user } = useSelector((state: any) => state.user);
+  const { value: loading } = useSelector((state: any) => state.loading);
   const [rightData, setRightData] = useState<Record<string, any>[]>([]);
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
+  const [materialCenterData, setMaterialCenterData] = useState<Record<string, any>[]>([]);
   const dynamicFormRef = useRef<PlmFormForwardRefProps>();
   const [Attrs, setAttrs] = useState<Record<string, any>[]>([]);
   const [materialAttrs, setMaterialAttrs] = useState<Record<string, any>[]>([]);
@@ -73,15 +87,108 @@ const index = () => {
   const [productOptions, setProductOptions] = useState<any[]>();
   const [selectProduct, setSelectProduct] = useState<string>("");
   const [cacheItemNumber, setCacheItemNumber] = useState({});
-  const [thumbImage, setThumbImage] = useState("");
+  const [fileSelectRows, setFileSelectRows] = useState<any[]>([])
+  const [materialSelectRows, setMaterialSelectRows] = useState<any>([])
+  const [logVisible, setLogVisbile] = useState(false)
+  const [logData, setLogData] = useState<{ dateTime: string, log: string }[]>([])
+  const { value:network } = useSelector((state: any) => state.network);
+
+  const lastestLogData = useLatest(logData)
+
+  const [InstanceAttrsMap] = useState<{ [k: string]: { origin: any, material: { onChain: any, plugin: any }, file: { onChain: any, plugin: any } } }>({})
+  const [pluginAttr] = useState<any>({})
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(setLoading(true));
-    mqttClient.publish({
-      type: CommandConfig.getCurrentBOM,
+
+  // 获取所有的属性
+  const getAllAttr = async (itemCode: string) => {
+    // 查找公有属性
+    const {
+      result: { records: PublicAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: itemCode,
+      tabCode: "10002001",
     });
-  }, []);
+    // 查找私有属性
+    const {
+      result: { records: PrivateAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: itemCode,
+      tabCode: "10002002",
+    });
+
+    const totalAttrs = [
+      ...PublicAttrs,
+      ...PrivateAttrs,
+    ];
+    return [totalAttrs, PublicAttrs, PrivateAttrs]
+  }
+  // 根据文件类型判断所对应的物料的类型
+  const getMaterialTypeMap = async () => {
+    const { result: { records: fileObjectRecords } }: any = await API.getMaterialTypeMap({ itemCode: BasicsItemCode.file })
+    const fileObjectMap = Utils.transformArrayToMap((fileObjectRecords || []), 'id', 'materialObject')
+    return fileObjectMap
+  }
+  // 获取cad文件类型映射的规则
+  const getCadFileMapRule = async () => {
+    const { result: { records: cadFileData } }: any = await API.getAllCadFileTypeMap()
+    const cadFileMap = Utils.transformArrayToMap(cadFileData, 'fileSuffix', 'fileType')
+    return cadFileMap
+  }
+  // 获取cad文件属性映射规则
+  const getCadAttrMapRule = async () => {
+    const { result: attrsArray }: any = await API.getMapptingAttrs({
+      toolName: mqttClient.publishTopic,
+      mappingName: settingType.cadToFile,
+      fileType: templateType.product,
+    });
+    const attrsMap = Utils.transformArrayToMap(
+      attrsArray,
+      "sourceAttr",
+      "targetAttr"
+    );
+    return attrsMap
+  }
+  // 获取文件全名
+  const getFileNameWithFormat = (item: any) => {
+    return item.file_path.substring(item.file_path.lastIndexOf('\\') + 1)
+  }
+
+  // 获取唯一的key，目前是根据文件在文件夹中的文件名称来的
+  const getRowKey = (item: any) => {
+    return item.file_path.substring(item.file_path.lastIndexOf('\\') + 1)
+  }
+
+  const getCurrentTime = () => {
+    return `${(new Date().toLocaleDateString())} ${(new Date().toLocaleTimeString())}`
+  }
+
+  const uniqueArrayByAttr = (arr: any) => {
+    const m = new Map()
+    const mCount: any = {}
+    for (const item of arr) {
+      const nodeName = getRowKey(item)
+      if (!m.has(nodeName) && !item.InternalModelFlag) {
+        m.set(nodeName, item)
+        mCount[nodeName] = 1
+      } else {
+        mCount[nodeName] = mCount[nodeName] + 1
+      }
+    }
+    return {
+      array: [...m.values()],
+      map: mCount
+    }
+  }
+
+  useEffect(() => {
+    if (selectProduct) {
+      dispatch(setLoading(true));
+      mqttClient.publish({
+        type: CommandConfig.getCurrentBOM,
+      });
+    }
+  }, [selectProduct]);
 
   // 获取当前产品数据
   useEffect(() => {
@@ -120,135 +227,378 @@ const index = () => {
   }, [leftData]);
 
   const dealCurrentBom = async (res?: any) => {
-    dispatch(setLoading(true));
-
-    const { result: { records: cadFileData } }: any = await API.getAllCadFileTypeMap()
-    const cadFileMap = Utils.transformArrayToMap(cadFileData, 'fileSuffix', 'fileType')
-    // 查找公有属性
-    const {
-      result: { records: PublicAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
-      tabCode: "10002001",
-    });
-    // 查找私有属性
-    const {
-      result: { records: PrivateAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
-      tabCode: "10002002",
-    });
+    // cad文件格式对应的文件类型
+    const cadFileMap = await getCadFileMapRule()
+    const [totalAttrs] = await getAllAttr(BasicsItemCode.file)
+    const [totalMaterialAttrs] = await getAllAttr(BasicsItemCode.material)
+    const fileObjectMap = await getMaterialTypeMap()
+    setMaterialAttrs(totalMaterialAttrs);
+    setAttrs(totalAttrs);
+    // cad属性映射文件属性
+    const attrsMap = await getCadAttrMapRule()
 
 
-    const apicodeIdMap = Utils.transformArrayToMap(PublicAttrs, 'apicode', 'id')
-
-    // 查找物料公有属性
-    const {
-      result: { records: MaterialPublicAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.material,
-      tabCode: "10002001",
-    });
-    // 查找物料专有属性
-    const {
-      result: { records: MaterialPrivateAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.material,
-      tabCode: "10002002",
-    });
-
-    const totalMaterialAttrs = [
-      ...MaterialPublicAttrs,
-      ...MaterialPrivateAttrs,
-    ];
-
-    const uint8arrayToBase64 = function (u8Arr: any) {
-      try {
-        let CHUNK_SIZE = 0x8000; //arbitrary number
-        let index = 0;
-        let length = u8Arr.length;
-        let result = "";
-        let slice;
-        while (index < length) {
-          slice = u8Arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
-          result += String.fromCharCode.apply(null, slice);
-          index += CHUNK_SIZE;
+    // 扁平化数组
+    const flattenData: Record<string, any>[] = [];
+    const loop = (data: any) => {
+      for (let i = 0; i < data.length; i++) {
+        const rowKey = getRowKey(data[i]) 
+        data[i].material = { onChain: {}, plugin: {} }
+        data[i].file = { onChain: {}, plugin: {} }
+        InstanceAttrsMap[rowKey] = { origin: {}, material: { onChain: {}, plugin: {} }, file: { onChain: {}, plugin: {} } }
+        InstanceAttrsMap[rowKey].material = data[i].material
+        InstanceAttrsMap[rowKey].file = data[i].file
+        InstanceAttrsMap[rowKey].origin = data[i]
+        flattenData.push(data[i])
+        if (data[i].children && data[i].children.length) {
+          loop(data[i].children);
         }
-        // web image base64图片格式: "data:image/png;base64," + b64encoded;
-        return "data:image/png;base64," + btoa(result);
-        //  return btoa(result);
-      } catch (e) {
-        throw e;
       }
     };
+    loop([res.output_data]);
 
-    setMaterialAttrs(totalMaterialAttrs);
 
-    // 获取所有属性映射
-    const { result: attrsArray }: any = await API.getMapptingAttrs({
-      toolName: BasicConfig.pubgin_topic,
-      mappingName: settingType.cadToFile,
-      fileType: templateType.product,
-    });
-    const attrsMap = Utils.transformArrayToMap(
-      attrsArray,
-      "sourceAttr",
-      "targetAttr"
-    );
-    const sourceAttrPlugin = attrsArray.map((item: any) => item.sourceAttr);
-    const totalAttrs = [...PublicAttrs, ...PrivateAttrs];
+    const nameList = [...new Set(flattenData.map(item => getFileNameWithFormat(item)))]
+    const judgeFileResult: any = await API.judgeFileExist({ productId: selectProduct, fileNameList: nameList, itemCodes: [BasicsItemCode.file], userId: user.id })
+    const nameInstanceMap = Utils.transformArrayToMap(judgeFileResult.result || [], 'insDesc')
 
-    setAttrs(totalAttrs);
+    console.log(nameInstanceMap, 'nameInstanceMap')
 
-    try {
-      const loop = async (data: any) => {
-        for (let i = 0; i < data.length; i++) {
-          data[i].itemAttrs = {};
-          data[i].id = Utils.generateSnowId();
-          // 处理设计工具给的值
-          data[i].property.forEach((item: any) => {
-            if (sourceAttrPlugin.includes(item.name)) {
-              data[i][attrsMap[item.name]] = item.defaultVal;
-            }
-          });
-          if (data[i].pic_path != ".bmp") {
-            const uint8 = await readBinaryFile(data[i].pic_path, {});
-            // const base64String = btoa(String.fromCharCode.apply(null, uint8));
-            data[i].thumbnail = uint8arrayToBase64(uint8);
+    const PromiseData: any[] = []
+    const PromiseImgData: any[] = []
+    console.log(InstanceAttrsMap, 'InstanceAttrsMap');
+    for (const item of flattenData) {
+      const rowKey = getRowKey(item) 
+      item.id = Utils.generateSnowId();
+      const fileNameWithFormat = getFileNameWithFormat(item)
+      const onChainAttrs = InstanceAttrsMap[rowKey].file.onChain
+      const pluginAttrs = InstanceAttrsMap[rowKey].file.plugin
+
+      const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain
+      const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin
+
+
+      // 为每一个赋值id属性
+      // 判断有实例在系统中
+      if (judgeFileResult.result) {
+        totalAttrs.filter((attr: any) => attr.status).forEach((attr: any) => {
+          // 判断节点在当前实例中
+          if (nameInstanceMap[fileNameWithFormat]) {
+            onChainAttrs[attr.apicode] = nameInstanceMap[fileNameWithFormat].attributes[attr.id]
+            onChainAttrs.insId = nameInstanceMap[fileNameWithFormat].insId
+            onChainAttrs.checkOut = nameInstanceMap[fileNameWithFormat].checkout
+            onChainAttrs.flag = "exist"
           }
+        })
 
-          const contents = await readBinaryFile(data[i].file_path);
-          const fileNameWithFormat = data[i].file_path.substring(data[i].file_path.lastIndexOf('\\') + 1)
-          const fileSize = contents.length
-          const fileName = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
-          const fileFormat = fileNameWithFormat.substring(fileNameWithFormat.lastIndexOf('.') + 1)
-          data[i]['Description'] = fileName
-          data[i]['FileFormat'] = fileFormat
-          data[i]['FileSize'] = fileSize
-          data[i]['Category'] = cadFileMap[fileFormat]
-          if (data[i].children && data[i].children.length) {
-            await loop(data[i].children);
-          }
+        // 判断文件有对应的物料存在
+        const materialDataMap = nameInstanceMap[fileNameWithFormat]?.tabCodeInsMap
+
+        if (materialDataMap && materialDataMap['10002044'] && materialDataMap['10002044'].length) {
+          materialOnChainAttrs.insId = materialDataMap['10002044'][0].insId
+          materialOnChainAttrs.checkOut = materialDataMap['10002044'][0].checkout
+          materialOnChainAttrs.flag = "exist"
+          totalMaterialAttrs.filter((attr: any) => attr.status).forEach((attr: any) => {
+            materialOnChainAttrs[attr.apicode] = materialDataMap['10002044'][0].attributes[attr.id]
+          })
         }
-      };
-      await loop([res.output_data]);
-    } catch (error) { }
+      }
 
+      // 树状结构是设计工具给的，每一个节点都有设计工具给的属性
+      // 处理公共额外属性
+      // try {
+
+
+      PromiseData.push(new Promise((resolve, reject) => {
+        readBinaryFile(item.file_path).then(contents => {
+          pluginAttrs['FileSize'] = contents.length
+          resolve({})
+        })
+      }))
+      PromiseImgData.push(new Promise((resolve, reject) => {
+        readBinaryFile(item.pic_path).then(contents => {
+          pluginAttrs['thumbnail'] = Utils.uint8arrayToBase64(contents);
+          resolve({})
+        })
+      }))
+      // const [contents, img_contents] = await Promise.all([readBinaryFile(item.file_path), readBinaryFile(item.pic_path)])
+      // const fileSize = contents.length
+      const fileName = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
+      const fileFormat = fileNameWithFormat.substring(fileNameWithFormat.lastIndexOf('.') + 1)
+      // 处理设计工具给的值
+      item.property.forEach((attr: any) => {
+        if (Object.keys(attrsMap).includes(attr.name)) {
+          pluginAttrs[attrsMap[attr.name]] = attr.defaultVal;
+        }
+      });
+      pluginAttrs['fileNameWithFormat'] = fileNameWithFormat
+      pluginAttrs['Description'] = fileName
+      pluginAttrs['FileFormat'] = fileFormat
+      // pluginAttrs['FileSize'] = fileSize
+      onChainAttrs['Category'] = cadFileMap[fileFormat]
+
+      materialOnChainAttrs['Category'] = fileObjectMap[cadFileMap[fileFormat]]
+      // } catch (error) {
+      // }
+    }
+
+    await Promise.all(PromiseData)
+    await Promise.all(PromiseImgData)
+
+    setExpandedKeys(flattenData.map(item => item.id));
+
+    const copyLeftData = [res.output_data]
     setSelectNode(res.output_data);
-    setLeftData([res.output_data]);
+    setLeftData([...copyLeftData]);
     dispatch(setLoading(false));
   };
 
+  const judgeFileCheckout = (row: any) => {
+    if (row.file.onChain.Revision == 1) {
+      return false
+    } else {
+      return row.file.onChain.checkOut
+    }
+  }
+
+  const updateSingleData = (row: any) => {
+    API.getInstanceInfoById({ instanceId: row.insId, authType: 'read', tabCode: '10002001', userId: user.id, tenantId: '719' }).then((res: any) => {
+      res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
+        const rowKey = getRowKey(row) 
+        InstanceAttrsMap[rowKey].file.onChain[item.apicode] = res.result.readInstanceVo.attributes[item.id]
+        InstanceAttrsMap[rowKey].file.onChain.checkOut = res.result.readInstanceVo.checkout
+        InstanceAttrsMap[rowKey].file.onChain.Revision = res.result.readInstanceVo.insVersionOrder
+        setLeftData([...leftData])
+      })
+    })
+  }
+
+
+
+  const upadteData = ({ row }: { row: any }) => {
+    // 判断当前文件是否签出
+    if (judgeFileCheckout(row)) {
+      message.error('当前文件已签出')
+    } else {
+      dispatch(setLoading(true))
+      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(() => {
+        API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
+          updateSingleData(row)
+          dispatch(setLoading(false))
+        })
+      })
+    }
+  }
+
+  const checkoutData = ({ row }: { row: any }) => {
+    // 判断当前文件是否签出
+    if (judgeFileCheckout(row)) {
+      message.error('当前文件已签出')
+    } else {
+      dispatch(setLoading(true))
+      API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(() => {
+        updateSingleData(row)
+        dispatch(setLoading(false))
+      }).catch(() => {
+        dispatch(setLoading(false))
+      })
+    }
+  }
+
+  const cancelCheckoutData = ({ row }: { row: any }) => {
+    if (!judgeFileCheckout(row)) {
+      message.error('当前文件还未签出')
+    } else {
+      dispatch(setLoading(true))
+      API.cancelCheckout({ insId: row.insId }).then(res => {
+        updateSingleData(row)
+        dispatch(setLoading(false))
+      }).catch(() => {
+        dispatch(setLoading(false))
+      })
+    }
+  }
+
+
+  const checkInData = async ({ row }: { row: any }) => {
+    if (!judgeFileCheckout(row)) {
+      message.error('当前文件还未签出')
+    } else {
+      dispatch(setLoading(true))
+      // 签入需要更新当前的附件，以及相对应的属性，以及结构
+      const { result: { records } }: any = await API.queryInstanceTab({
+        instanceId: row.file.onChain.insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
+        tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version,versionOrder: row.file.onChain.Revision
+      })
+      console.log(records, 'records');
+
+      if ((records || []).length) {
+        const params = {
+          id: row.file.onChain.insId,
+          itemCode: BasicsItemCode.file,
+          tabCode: '10002016',
+          deleteAffectedInstanceIds: records.map((item: any) => item.insId).join(','),
+          deleteRowIds: records.map((item: any) => item.rowId),
+          tenantId: '719',
+          userId: user.id,
+          versionNumber: row.Version
+        }
+        console.log(params, '删除结构参数')
+        const result = await API.insatnceTabsave(params)
+        console.log(result, '删除结构');
+
+      }
+      // //更新当前的第一级结构
+      const {
+        result: { records: tabAttrs },
+      }: any = await API.getInstanceAttrs({
+        itemCode: BasicsItemCode.file,
+        tabCode: "10002016",
+      });
+
+      const rowKey = getRowKey(row)
+
+      const countMap = groupBy(InstanceAttrsMap[rowKey].origin.children || [], (item) => {
+        return getRowKey(item)
+      })
+
+      console.log(countMap, 'countMap');
+
+
+      const setVal = ((row: any, col: any) => {
+        if (col.apicode === 'ID') {
+          return row.file.onChain.insId
+        } else if (col.apicode === 'Qty') {
+          console.log(row.file.plugin.Description,'')
+          return countMap[getRowKey(row)].length || ''
+        } else {
+          return ''
+        }
+      })
+
+      const flattenData = (InstanceAttrsMap[getRowKey(row)].origin.children || []).filter((item:any) => {
+        return getRowKey(item) != getRowKey(row)
+      })
+
+      // 需要过滤掉所有的内部零件以及
+      const dealParams = flattenData.map((item: any) => {
+        return {
+          insAttrs: tabAttrs.filter((attr: any) => {
+            return ['ID', 'Qty']
+          }).map((attr: any) => {
+            return {
+              apicode: attr.apicode,
+              id: attr.id,
+              valueType: attr.valueType,
+              value: setVal(item, attr)
+            }
+          })
+        }
+      })
+      console.log(dealParams, 'dealParams');
+      if (dealParams.length) {
+        await API.insatnceTabsave({
+          itemCode: BasicsItemCode.file,
+          tabCode: '10002016',
+          rowList: dealParams,
+          id: row.file.onChain.insId,
+          tenantId: '719',
+          userId: user.id,
+          versionNumber: row.Version
+        })
+      }
+      const nameFileUrlMap = await uploadFile([{
+        name: getFileNameWithFormat(row),
+        data: new Blob([await readBinaryFile(row.file_path)]),
+        source: 'Local',
+        isRemote: false,
+      }])
+
+      const nameThumbMap = await uploadFile([{
+        name: row.pic_path.substring(row.pic_path.lastIndexOf('\\') + 1),
+        data: new Blob([await readBinaryFile(row.pic_path)]),
+        source: 'Local',
+        isRemote: false,
+      }])
+      //批量更新文件地址
+      const updateInstances = [{
+        id: row.file.onChain.insId,
+        itemCode: BasicsItemCode.file,
+        tabCode: '10002001',
+        insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
+          if (attr.apicode === 'FileUrl') {
+            return {
+              ...attr,
+              value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(row)].uploadURL.split('/plm/files')[1]}?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${row.file.plugin?.FileFormat}`
+            }
+          } else {
+            return {
+              ...attr,
+              value: `/plm/files${nameThumbMap[`${row.file.plugin?.Description}.bmp`]?.uploadURL.split('/plm/files')[1]}`
+            }
+          }
+        }),
+        tenantId: '719'
+      }]
+      if (updateInstances.length) {
+        await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
+        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime() }])
+      }
+
+      API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
+        updateSingleData(row)
+        dispatch(setLoading(false))
+      }).catch(() => {
+        dispatch(setLoading(false))
+      })
+    }
+  }
+
+  // 获取选中节点的扁平化数据（过滤后的)
+  const getFlattenData = (selectNode: any) => {
+    const flattenData: Record<string, any>[] = [];
+    const loop = (data: any) => {
+      for (let i = 0; i < data.length; i++) {
+        const flattenedItem = { ...data[i], ...data[i].file.onChain }; // Create a copy of the current item
+        delete flattenedItem.children; // Remove the "children" property from the copy
+        delete flattenedItem.property;
+        const nodeNames = flattenData.map((item) => {
+          return getRowKey(item)
+        });
+        if (!nodeNames.includes(getRowKey(data[i])) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
+          flattenData.push(flattenedItem);
+        }
+        if (data[i].children && data[i].children.length) {
+          loop(data[i].children);
+        }
+      }
+    };
+    loop([selectNode]);
+    return flattenData
+  }
+
+  // 取出所有的属性
+  useEffect(() => {
+    if (leftData.length) {
+      console.log(selectNode,'selectNodeselectNode')
+      const flattenData: Record<string, any>[] = getFlattenData(selectNode)
+      setCenterData(flattenData);
+    }
+  }, [selectNode, leftData]);
+
+  // 取出所有的属性
   useEffect(() => {
     if (leftData.length) {
       const flattenData: Record<string, any>[] = [];
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
-          const flattenedItem = { ...data[i] }; // Create a copy of the current item
+          const flattenedItem = { ...data[i], ...data[i].material.onChain }; // Create a copy of the current item
           delete flattenedItem.children; // Remove the "children" property from the copy
           delete flattenedItem.property;
-          const nodeNames = flattenData.map((item) => item.node_name);
-          if (!nodeNames.includes(data[i].node_name)) {
+          const nodeNames = flattenData.map((item) => {
+            return getRowKey(item)
+          });
+          if (!nodeNames.includes(getRowKey(data[i]) ) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
             flattenData.push(flattenedItem);
           }
           if (data[i].children && data[i].children.length) {
@@ -257,50 +607,24 @@ const index = () => {
         }
       };
       loop([selectNode]);
-      setCenterData(flattenData);
+      setMaterialCenterData(flattenData);
     }
   }, [selectNode, leftData]);
 
 
-  useEffect(() => {
-    if (cacheItemNumber && leftData.length) {
-      const cloneNumber: any = cloneDeep(cacheItemNumber);
-      const loop = (data: any) => {
-        for (let i = 0; i < data.length; i++) {
-          // todo需要限制如果没有则赋值Number
-          if (cloneNumber[data[i].Category]) {
-            data[i].itemAttrs["Number"] = cloneNumber[data[i].Category][0];
-            cloneNumber[data[i].Category] =
-              cloneNumber[data[i].Category].splice(1);
-          }
-          if (data[i].children && data[i].children.length) {
-            loop(data[i].children);
-          }
-        }
-      };
-      loop(leftData);
-      setLeftData([...leftData]);
-    }
-  }, [cacheItemNumber]);
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
     await dealCurrentBom(res);
   });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // 监听设置属性
+  useMqttRegister(CommandConfig.setProductAttVal, async (res) => {
+    setLogData([...lastestLogData.current, { dateTime: getCurrentTime(), log: '属性回写模型成功!' }])
+    // mqttClient.publish({
+    //   type: CommandConfig.getCurrentBOM,
+    // });
+  });
 
 
 
@@ -351,28 +675,195 @@ const index = () => {
     return newBase64;
   }
 
-  const handleClick = async (name: string) => {
-    if (name === 'upload') {
-      centerData.map((item, index) => {
-        return {
-          fileIndex: index,
-          itemCode: BasicsItemCode.file,
-          ObjectId: item.Category,
-          workspaceId: selectProduct,
-          tenantId: "719",
-          verifyCode: '200',
-          user: user.id,
-          insAttrs: Attrs.map(v => {
-            return {
-              ...v,
-              value: item[v.apicode]
-            }
-          })
+  /**
+   * 创建实例
+   */
+  const createInstance = async ({ itemCode }: { itemCode: string }) => {
+    // 根据所选的产品去查询第一个型谱的id
+    const spectrumReturnV: any = await API.getProductSpectrumList(selectProduct)
+    const spectrum = spectrumReturnV.result[0].id
+
+    const setVal = ((row: any, col: any) => {
+      if (ItemCode.isFile(itemCode)) {
+        if (col.apicode === 'ProductModel') {
+          return spectrum
+        } else if (col.apicode === 'Product') {
+          return selectProduct
+        } else if (col.apicode === 'FileUrl') {
+          return ''
+        } else if (col.apicode === 'Thumbnail') {
+          return ''
+        } else if (col.apicode === 'Description') {
+          return row.file.plugin.Description
+        } else if (col.apicode === 'FileFormat') {
+          return row.file.plugin.FileFormat
+        } else if (col.apicode === 'FileSize') {
+          return row.file.plugin.FileSize
+        } else if (col.apicode === 'Category') {
+          return row.file.onChain.Category
+        } else {
+          return row[col.apicode] || ''
+        }
+      } else {
+        if (col.apicode === 'ProductModel') {
+          return spectrum
+        } else if (col.apicode === 'Product') {
+          return selectProduct
+        } else if (col.apicode === 'Category') {
+          return row.material.onChain.Category
+        } else if (col.apicode === 'Description') {
+          return ''
+        } else if (col.apicode === 'Number') {
+          return ''
+        } else {
+          return row[col.apicode] || ''
+        }
+      }
+
+    })
+
+    const ItemCodeFolder = ItemCode.isFile(itemCode) ? 'file' : 'material'
+    const dealData = centerData.filter(item => item[ItemCodeFolder].onChain.flag != 'exist').map((item, index) => {
+      const Category = item[ItemCodeFolder].onChain.Category
+      return {
+        fileIndex: index,
+        itemCode: itemCode,
+        objectId: Category,
+        workspaceId: selectProduct,
+        node_name: item.node_name,
+        file_path: item.file_path,
+        tenantId: "719",
+        verifyCode: '200',
+        user: user.id,
+        insAttrs: (ItemCode.isFile(itemCode) ? Attrs : materialAttrs).filter(item => item.status).map(v => {
+          return {
+            ...v,
+            value: setVal(item, v)
+          }
+        })
+      }
+    })
+
+    console.log(dealData, '创建参数');
+
+
+    const successInstances: any = await API.createInstances(dealData)
+
+    console.log(successInstances, '创建返回');
+
+    const createLogArray: logItemType[] = []
+    successInstances.result.forEach((item: any) => {
+      if (item && item.name) {
+        createLogArray.push({ log: `${item.name} 创建成功， 编号:${item.number}`, dateTime: getCurrentTime() })
+      }
+    })
+    setLogData([...lastestLogData.current, ...createLogArray])
+    // if (ItemCode.isFile(itemCode)) {
+    //   return successInstances
+    // } else {
+      const successInstancesMap: any = {}
+      console.log(successInstances, 'successInstances');
+
+      successInstances.result.forEach((item: any, index: number) => {
+        if (item.code == 2000) {
+          successInstancesMap[getRowKey(dealData[index])] = item.instanceId
+        }
+      })
+      return successInstancesMap
+    // }
+  }
+
+  const createStructure = async ({ nameNumberMap, itemCode, tabCode }: { nameNumberMap?: any; itemCode: string; tabCode: string }) => {
+    // // 批量创建文件结构
+    // // 查找公有属性
+    const {
+      result: { records: structureAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: itemCode,
+      tabCode: tabCode,
+    });
+    const structureAttrsMap = Utils.transformArrayToMap(structureAttrs, 'apicode', 'id')
+    const structureData = cloneDeep(leftData)
+
+    const loop = (struct: any, dealArray: any) => {
+      for (let i = 0; i < struct.length; i++) {
+        struct[i].attrMap = {}
+        const folder = ItemCode.isFile(itemCode) ? 'file' : 'material'
+        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[getRowKey(struct[i])] : struct[i][folder].onChain.insId
+        if (getRowKey(struct[i]) != getRowKey(leftData[0])) {
+          struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[getRowKey(struct[i])]
+        }
+        struct[i] = pick(struct[i], ['insId', 'attrMap', 'children'])
+        if (struct[i].children && struct[i].children.length) {
+          struct[i].copyChildren = [...struct[i].children]
+          struct[i].children = uniqueArrayByAttr(struct[i].children).array
+          loop(struct[i].children, uniqueArrayByAttr(struct[i].copyChildren));
+          delete struct[i].copyChildren
+        }
+      }
+    };
+    loop(structureData, uniqueArrayByAttr(structureData));
+
+    console.log(structureData,'创建结构参数')
+    API.batchCreateStructure({
+      tenantId: '719',
+      userId: user.id,
+      itemCode: itemCode,
+      tabCode: tabCode,
+      instances: structureData
+    })
+
+    setLogData([...lastestLogData.current, { log: ItemCode.isFile(itemCode) ? '批量创建结构成功!' : '批量创建BOM成功!', dateTime: getCurrentTime() }])
+  }
+
+  // 上传文件
+  const uploadFile = async (FileArray: any) => {
+    // // 批量上传文件
+    const uppy = new Uppy({
+      meta: {},
+      debug: false,
+      autoProceed: true,
+    });
+    uppy
+      .use(Tus, {
+        endpoint: `http://192.168.0.101:8000/plm/files`,
+        headers: {
+          // Authorization: `${StorageController.token.get()}`,
+        },
+        chunkSize: 1 * 1024 * 1024,
+        overridePatchMethod: false,
+        allowedMetaFields: null,
+      })
+      .on('upload-progress', (...e) => {
+        if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
+          setLogData([...lastestLogData.current, { log: `${e[0]?.name}上传成功！`, dateTime: getCurrentTime() }])
         }
       })
 
+    uppy.addFiles(FileArray);
+    const res = await uppy.upload();
+    const nameThumbMap = Utils.transformArrayToMap(res.successful, 'name', 'response')
+    uppy.close()
+    console.log(nameThumbMap, 'nameThumbMap')
+    localStorage.clear()
+    return nameThumbMap
+  }
+
+  const handleClick = async (name: string) => {
+    if (name === 'upload') {
+      setLogVisbile(true)
+      dispatch(setLoading(true));
+
+      // 创建实例
+      const nameNumberMap: any = await createInstance({ itemCode: BasicsItemCode.file })
+
+      // const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
+
+      // 过滤当前已经存在的实例
+      const unExistInstances = centerData.filter(item => item.file.onChain.flag != 'exist')
+
       // 修改文件编号
-      const pluginUpdateNumber = centerData.map((item, index) => {
+      const pluginUpdateNumber = unExistInstances.map((item, index) => {
         return {
           product_name: item.node_name,
           "extra": "属性设置",
@@ -380,21 +871,79 @@ const index = () => {
             {
               "attr_name": "编号",
               "attr_type": "string",
-              "attr_value": `测试`
+              "attr_value": nameNumberMap[getRowKey(item)]?.number
             }
           ]
         }
       })
 
+
+      const FileArray = []
+      const FileThumbArray = []
+      for (let item of centerData) {
+        if (item.file.onChain.flag != 'exist') {
+          FileArray.push(
+            {
+              name: getFileNameWithFormat(item),
+              data: new Blob([await readBinaryFile(item.file_path)]),
+              source: 'Local',
+              isRemote: false,
+            }
+          )
+          FileThumbArray.push(
+            {
+              name: `${item.pic_path.substring(item.pic_path.lastIndexOf('\\') + 1)}`,
+              data: new Blob([await readBinaryFile(item.pic_path)]),
+              source: 'Local',
+              isRemote: false,
+            }
+          )
+        }
+      }
+
       mqttClient.publish({
         type: CommandConfig.setProductAttVal,
         attr_set: pluginUpdateNumber
       });
-
+      console.log(nameNumberMap, 'nameNumberMapnameNumberMap')
+      // // 批量创建文件结构
+      createStructure({ nameNumberMap, itemCode: BasicsItemCode.file, tabCode: '10002016' })
+      const nameFileUrlMap = await uploadFile(FileArray)
+      const nameThumbMap = await uploadFile(FileThumbArray)
+      //批量更新文件地址
+      const updateInstances = centerData.filter(item => item.file.onChain.flag != 'exist').map(item => {
+        return {
+          id: nameNumberMap[getRowKey(item)],
+          itemCode: BasicsItemCode.file,
+          tabCode: '10002001',
+          insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
+            if (attr.apicode === 'FileUrl') {
+              return {
+                ...attr,
+                value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(item)].uploadURL.split('/plm/files')[1]}?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize}&extension=${item.file.plugin?.FileFormat}`
+              }
+            } else {
+              return {
+                ...attr,
+                value: `/plm/files${nameThumbMap[`${item.file.plugin?.Description}.bmp`]?.uploadURL.split('/plm/files')[1]}`
+              }
+            }
+          }),
+          tenantId: '719'
+        }
+      })
+      if (updateInstances.length) {
+        await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
+        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime() }])
+      }
+      setLogData([...lastestLogData.current, { log: '模型上传成功！', dateTime: getCurrentTime() }])
+      mqttClient.publish({
+        type: CommandConfig.getCurrentBOM,
+      });
 
     } else
       if (name === 'log') {
-
+        setLogVisbile(true)
       } else if (name === "refresh") {
         dispatch(setLoading(true));
         mqttClient.publish({
@@ -416,38 +965,66 @@ const index = () => {
           setCacheItemNumber(res.result);
         });
       }
-    if (name === "logout") {
-      mqttClient.publish({
-        type: PathConfig.exit,
-        output_data: {
-          result: "1",
-        },
-      });
-      // 退出登录
-      const homeDirPath = await homeDir();
-      await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
-      await removeFile(
-        `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
-      );
-      const mainWindow = WebviewWindow.getByLabel("Home");
-      mainWindow?.close();
-      await invoke("exist", {});
-    } else if (name === "info") {
-      await invoke(PathConfig.openInfo, {});
-    } else if (name === "checkout") {
-      mqttClient.publish({
-        type: CommandConfig.getProductTypeAtt,
-      });
-      // dispatch(increment());
-    }
+      else if (name === "logout") {
+        mqttClient.publish({
+          type: PathConfig.exit,
+          output_data: {
+            result: "1",
+          },
+        });
+        // 退出登录
+        const homeDirPath = await homeDir();
+        await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
+        await removeFile(
+          `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
+        );
+        const mainWindow = WebviewWindow.getByLabel("Home");
+        mainWindow?.close();
+        await invoke("exist", {});
+      } else if (name === "info") {
+        await invoke(PathConfig.openInfo, {});
+      } else if (name === 'update') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          upadteData({ row: row })
+        }
+
+      } else if (name === 'checkout') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          checkoutData({ row: row })
+        }
+
+      } else if (name === 'cancelcheckout') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          cancelCheckoutData({ row: row })
+        }
+      } else if (name === 'checkin') {
+        if (selectNode) {
+          const row = { ...selectNode, ...selectNode.file.onChain }
+          checkInData({ row: row })
+        }
+      }
   };
 
   const generalDealAttrs = (attrs: any[], listCodeMap: any) => {
     return attrs
       .filter(
-        (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat') && item.status
+        (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate') && item.status
       )
       .map((item) => {
+        const renderData: any = {
+          'FileSize': (text: string, record: any) => {
+            return Utils.converBytes(Number(record.file.plugin.FileSize))
+          },
+          'FileFormat': (text: string, record: any) => {
+            return record.file.plugin.FileFormat
+          },
+        }
+        const specificRender = () => {
+          return renderData[item.apicode]
+        }
         return {
           title: item.name,
           dataIndex: item.apicode,
@@ -457,17 +1034,15 @@ const index = () => {
             type: formItemMap[item.valueType],
             props: {
               ...Utils.generateFormItemProps(item, listCodeMap),
-              disabled: item.apicode === 'Category' || item.apicode === 'FileSize' || item.apicode === 'FileFormat',
+              disabled: item.apicode === 'Category' || item.apicode === 'FileSize' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate',
             },
           },
           search: {
             type: formItemMap[item.valueType],
             props: Utils.generateFormItemProps(item, listCodeMap),
           },
-          render: item.apicode === 'FileSize' ? (text: string) => {
-            return Utils.converBytes(Number(text))
-          } : undefined
-        };
+          render: specificRender()
+        }
       });
   };
 
@@ -500,6 +1075,7 @@ const index = () => {
 
   // 处理文件列头
   useAsyncEffect(async () => {
+    // alternatively, load a remote URL:
     const codeList = Attrs.filter((item) => item.listCode).map((item) => {
       return {
         code: item.listCode,
@@ -520,14 +1096,14 @@ const index = () => {
     }
   }, [Attrs]);
 
-  const materialCenterData: any = useMemo(() => {
-    return centerData.map((item) => {
-      return {
-        ...item,
-        ...item.itemAttrs,
-      };
-    });
-  }, [centerData]);
+  // const materialCenterData: any = useMemo(() => {
+  //   return centerData.map((item) => {
+  //     return {
+  //       ...item,
+  //       ...item.material.onChain
+  //     };
+  //   });
+  // }, [centerData]);
 
   const items: TabsProps["items"] = [
     {
@@ -537,10 +1113,20 @@ const index = () => {
         <Fragment>
           <div className="ml-1">
             <PlmTabToolBar
+              onClick={(item) => {
+                if (item.tag === 'checkout') {
+                  fileSelectRows.length && checkoutData({ row: fileSelectRows[0] })
+                } else if (item.tag === 'cancelCheckout') {
+                  fileSelectRows.length && cancelCheckoutData({ row: fileSelectRows[0] })
+                } else if (item.tag === 'checkIn') {
+                  console.log(fileSelectRows, 'fileSelectRows');
+                  fileSelectRows.length && checkInData({ row: fileSelectRows[0] })
+                }
+              }}
               list={[
-                { name: "签出", icon: checkout },
-                { name: "取消签出", icon: cancelcheckin },
-                { name: "签入", icon: checkin },
+                { name: "签出", icon: checkout, tag: 'checkout' },
+                { name: "取消签出", icon: cancelcheckin, tag: 'cancelCheckout' },
+                { name: "签入", icon: checkin, tag: 'checkIn' },
               ]}
             ></PlmTabToolBar>
           </div>
@@ -554,6 +1140,10 @@ const index = () => {
               rowSelection={{
                 columnWidth: 19,
                 fixed: true,
+                selectedRowKeys: fileSelectRows.length ? fileSelectRows.map(item => item?.id) : [],
+                onChange: (selectRowKeys, selectRows) => {
+                  setFileSelectRows([selectRows.pop()])
+                }
               }}
               onSubmit={(row, column) => {
                 const loop = (data: any) => {
@@ -575,9 +1165,13 @@ const index = () => {
                 {
                   title: <div className="w-full flex justify-center"><PlmIcon name="listcheck"></PlmIcon></div>,
                   dataIndex: "flag",
-                  width: 45,
+                  width: 40,
+                  fixed: true,
                   sort: true,
-                  render: (text: string) => {
+                  render: (text: string, record: any) => {
+                    if (record.flag === 'exist') {
+                      return <></>
+                    }
                     return (
                       <div className="w-full flex justify-center">
                         <img width={12} src={plusImg} alt="" />
@@ -586,14 +1180,34 @@ const index = () => {
                   },
                 },
                 {
-                  title: "缩略图",
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listcheckout"></PlmIcon></div>,
+                  dataIndex: "checkOut",
+                  // sorter: true,
+                  fixed: true,
+                  width: 40,
+                  sort: true,
+                  render: (text: string, record: any) => {
+                    if (record.file.onChain.checkOut && record.file.onChain.Revision != '1') {
+                      return (
+                        <div className="flex items-center justify-center">
+                          <div className='h-1 w-1 bg-primary' style={{ borderRadius: '50%' }}></div>
+                        </div>
+                      );
+                    } else {
+                      return <></>
+                    }
+                  },
+                },
+                {
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listphoto"></PlmIcon></div>,
                   dataIndex: "thumbnail",
                   // sorter: true,
-                  width: 50,
+                  width: 40,
+                  fixed: true,
                   sort: true,
-                  render: (text: string) => {
+                  render: (text: string, record: any) => {
                     return (
-                      <Image src={text} width={32} preview={false}></Image>
+                      <div className="flex items-center justify-center"><Image src={record.file.plugin.thumbnail} width={32} preview={false}></Image></div>
                     );
                   },
                 },
@@ -603,28 +1217,40 @@ const index = () => {
                   search: {
                     type: "Input",
                   },
+                  fixed: true,
                   sorter: true,
                   width: 100,
-                  // render: (text: string) => {
-                  //   return <a>{text}</a>;
-                  // },
+                  render: (text: string, record: any) => {
+                    return <div className="text-ellipsis w-full overflow-hidden">{record.file.plugin.Description}</div>;
+                  },
                 },
                 {
                   title: "编号",
-                  dataIndex: "number",
+                  dataIndex: "Number",
                   search: {
                     type: "Input",
                   },
                   width: 100,
                   sorter: true,
+                  render: (text: string, record: any) => {
+                    return <a onClick={async() => {
+                      if(record.flag === 'exist') {
+                        await open(`http://${network}:8017/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`)
+                      }
+                    }}>{text}</a>;
+                  },
                 },
                 {
                   title: "版次",
                   dataIndex: "revision",
                   sorter: true,
                   width: 100,
-                  render: () => {
-                    return <span>1</span>;
+                  render: (text: string, record: any) => {
+                    if (record.flag == 'exist') {
+                      return record.Revision
+                    } else {
+                      return <span>1</span>;
+                    }
                   },
                 },
                 ...fileColumn,
@@ -647,9 +1273,80 @@ const index = () => {
         <Fragment>
           <div className="ml-1">
             <PlmTabToolBar
+              onClick={async (item) => {
+                if (item.tag === 'checkout') {
+                  materialSelectRows.length && checkoutData({ row: materialSelectRows[0] })
+                } else if (item.tag === 'cancelCheckout') {
+                  materialSelectRows.length && cancelCheckoutData({ row: materialSelectRows[0] })
+                } else if (item.tag === 'checkIn') {
+                  materialSelectRows.length && checkInData({ row: materialSelectRows[0] })
+                } else if (item.tag === 'createIntance') {
+                  dispatch(setLoading(true));
+                  const successInstances = await createInstance({ itemCode: BasicsItemCode.material })
+                  const {
+                    result: { records: designTabAttrs },
+                  }: any = await API.getInstanceAttrs({
+                    itemCode: BasicsItemCode.material,
+                    tabCode: "10002028",
+                  });
+
+                  const setVal = ((row: any, col: any) => {
+                    if (col.apicode === 'ID') {
+                      return row.file.onChain.insId
+                    } else if (col.apicode === 'CorrespondingVersion') {
+                      return row.file.onChain.Version || ''
+                    } else {
+                      return ''
+                    }
+                  })
+                  const dealParams = Object.keys(successInstances).map(item => {
+                    return {
+                      affectedInstanceIds: InstanceAttrsMap[item].file.onChain.insId,
+                      id: successInstances[item],
+                      itemCode: BasicsItemCode.material,
+                      tabCode: 10002028,
+                      tenantId: '719',
+                      userId: user.id,
+                      versionNumber: 'Draft',
+                      rowList: [{
+                        insAttrs: designTabAttrs.filter((attr: any) => {
+                          return ['ID', 'CorrespondingVersion', 'From']
+                        }).map((attr: any) => {
+                          return {
+                            apicode: attr.apicode,
+                            id: attr.id,
+                            valueType: attr.valueType,
+                            value: setVal(InstanceAttrsMap[item], attr)
+                          }
+                        })
+                      }]
+                    }
+                  })
+                  API.bindFileAndMaterial({
+                    tenantId: '719',
+                    userId: user.id,
+                    saveVos: dealParams,
+                  }).then((res) => {
+                    dispatch(setLoading(true));
+                    mqttClient.publish({
+                      type: CommandConfig.getCurrentBOM,
+                    });
+                  })
+                } else if (item.tag === 'createBom') {
+                  dispatch(setLoading(true));
+                  // // 批量创建Bom结构
+                  createStructure({ itemCode: BasicsItemCode.material, tabCode: '10002003' })
+                  mqttClient.publish({
+                    type: CommandConfig.getCurrentBOM,
+                  });
+                }
+              }}
               list={[
-                { name: "分配编码", icon: encodedSvg },
-                { name: "保存", icon: saveSvg },
+                { name: "创建编码", icon: encodedSvg, tag: 'createIntance' },
+                { name: "创建EBOM", icon: encodedSvg, tag: 'createBom' },
+                { name: "签出", icon: checkout, tag: 'checkout' },
+                { name: "取消签出", icon: cancelcheckin, tag: 'cancelCheckout' },
+                { name: "签入", icon: checkin, tag: 'checkIn' },
               ]}
             ></PlmTabToolBar>
           </div>
@@ -683,33 +1380,95 @@ const index = () => {
               className="table-checkbox"
               columns={[
                 {
-                  title: <PlmIcon name="listphoto"></PlmIcon>,
-                  dataIndex: "thumbnail",
-                  // sorter: true,
-                  width: 50,
-                  render: (text: string) => {
+                  title: <div className="w-full flex justify-center"><PlmIcon name="listcheck"></PlmIcon></div>,
+                  dataIndex: "flag",
+                  width: 40,
+                  sort: true,
+                  fixed: true,
+                  render: (text: string, record: any) => {
+                    if (record.flag === 'exist') {
+                      return <></>
+                    }
                     return (
-                      <Image src={text} width={32} preview={false}></Image>
+                      <div className="w-full flex justify-center">
+                        <img width={12} src={plusImg} alt="" />
+                      </div>
                     );
                   },
                 },
                 {
-                  title: "物料名称",
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listcheckout"></PlmIcon></div>,
+                  dataIndex: "checkOut",
+                  // sorter: true,
+                  width: 40,
+                  fixed: true,
+                  sort: true,
+                  render: (text: string, record: any) => {
+                    if (record.material.onChain.checkOut && record.material.onChain.Revision != '1') {
+                      return (
+                        <div className="flex items-center justify-center">
+                          <div className='h-1 w-1 bg-primary' style={{ borderRadius: '50%' }}></div>
+                        </div>
+                      );
+                    } else {
+                      return <></>
+                    }
+                  },
+                },
+                {
+                  title: <div className="flex items-center justify-center"><PlmIcon name="listphoto"></PlmIcon></div>,
+                  dataIndex: "thumbnail",
+                  // sorter: true,
+                  width: 40,
+                  fixed: true,
+                  render: (text: string, record: any) => {
+                    return (
+                      <div className="flex items-center justify-center"><Image src={record.file.plugin.thumbnail} width={32} preview={false}></Image></div>
+                    );
+                  },
+                },
+                {
+                  title: "文件名称",
                   dataIndex: "node_name",
+                  fixed: true,
                   search: {
                     type: "Input",
                   },
                   width: 100,
                   sorter: true,
+                  render: (text: string, record: any) => {
+                    return <div className="w-full overflow-hidden text-ellipsis">{record.file.plugin.Description}</div>;
+                  }
                 },
                 {
                   title: "编号",
                   dataIndex: "Number",
+                  fixed: true,
                   search: {
                     type: "Input",
                   },
                   width: 100,
                   sorter: true,
+                  render: (text: string, record: any) => {
+                    return <a onClick={async() => {
+                      if(record.flag === 'exist') {
+                        await open(`http://${network}:8017/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`)
+                      }
+                    }}>{text}</a>;
+                  },
+                },
+                {
+                  title: "版次",
+                  dataIndex: "revision",
+                  sorter: true,
+                  width: 100,
+                  render: (text: string, record: any) => {
+                    if (record.flag == 'exist') {
+                      return record.Revision
+                    } else {
+                      return <span>1</span>;
+                    }
+                  },
                 },
                 ...materialColumn,
               ]}
@@ -730,13 +1489,6 @@ const index = () => {
     console.log(centerData, "centerData");
   }, [centerData]);
 
-  // useEffect(() => {
-  //   if(selectNode?.thumbnail){
-  //     console.log(selectNode?.thumbnail,'selectNode?.thumbnail')
-  //       removeImgBg(document.getElementById('thumbnail'))
-  //   }
-  // }, [selectNode?.thumbnail])
-
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       {/* <PlmModal></PlmModal> */}
@@ -754,7 +1506,9 @@ const index = () => {
                   value={selectProduct}
                   options={productOptions}
                   onChange={(e) => {
-                    setSelectProduct(e);
+                    if (e) {
+                      setSelectProduct(e);
+                    }
                   }}
                   clearIcon={false}
                 ></OnChainSelect>
@@ -789,7 +1543,7 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center cursor-pointer ${!(record.children && record.children.length)
+                          className={`w-full gap-1 inline-flex overflow-hidden items-center cursor-pointer ${!(record.children && record.children.length)
                             ? "ml-3"
                             : ""
                             }`}
@@ -806,7 +1560,7 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>{text}</div>
+                          <div style={{width:'100%', textOverflow: 'ellipsis', overflow:"hidden"}}>{text}</div>
                         </div>
                       );
                     },
@@ -836,7 +1590,7 @@ const index = () => {
                 <img
                   id="thumbnail"
                   style={{ margin: "0 auto", height: "100%" }}
-                  src={removeImgBg(selectNode?.thumbnail)}
+                  src={removeImgBg(selectNode?.file.plugin.thumbnail)}
                   alt=""
                 />
               </div>
@@ -888,7 +1642,10 @@ const index = () => {
               </div>
             </div>
             <div className="mt-2 flex-1 overflow-hidden">
-              <Tabs defaultActiveKey="1" items={items} destroyInactiveTabPane />
+              <Tabs onTabClick={() => {
+                setFileSelectRows([])
+                setMaterialSelectRows([])
+              }} defaultActiveKey="1" items={items} destroyInactiveTabPane />
             </div>
           </div>
 
@@ -947,7 +1704,7 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`gap-1 inline-flex items-center ${!(record.children && record.children.length)
+                          className={`gap-1 inline-flex overflow-hidden items-center ${!(record.children && record.children.length)
                             ? "ml-3"
                             : ""
                             }`}
@@ -961,19 +1718,47 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div>
-                            {record?.itemAttrs &&
-                              record?.itemAttrs["Number"] ? (
-                              record?.itemAttrs["Number"]
+                          <div className='overflow-hidden text-ellipsis w-full'>
+                            {record?.material?.onChain?.Number ? (
+                              record?.material?.onChain?.Number
                             ) : (
                               <div
                                 style={{
                                   height: "22px",
                                   width: "140px",
-                                  background: "#FFC745",
+                                  // background: "#FFC745",
                                   opacity: "0.5",
                                 }}
-                              ></div>
+                              >
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) == 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) != 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) == 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                                <div className="flex">{Array.from({ length: 20 }).map((item, index: number) => {
+                                  if ((index % 2) != 0) {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#ffffff' }}></div>
+                                  } else {
+                                    return <div key={index} style={{ width: '5px', height: '5px', background: '#c1c1c1' }}></div>
+                                  }
+                                })}</div>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -989,6 +1774,32 @@ const index = () => {
               {/* </div> */}
             </div>
           </div>
+          <PlmModal width={582} open={logVisible} onCancel={() => {
+            if (loading) {
+              message.error({
+                content: '上传中，请稍后',
+              })
+            } else {
+              setLogVisbile(false)
+            }
+          }}>
+            <div style={{ padding: '12px 13px', background: '#f1f1f1' }}>
+              <div className={"w-full border border-outBorder overflow-auto bg-white"} style={{ height: '365px', padding: '12px' }}>
+                {
+                  logData.map((item: any, index: number) => {
+                    return <div key={index} className="flex text-xs">
+                      <div style={{ marginRight: '10px', marginBottom: '4px' }}>{item.dateTime}</div>
+                      <div>{item.log}</div>
+                    </div>
+                  })
+                }
+              </div>
+            </div>
+            <div className='h-12 flex justify-end mt-1'>
+              <Button style={{ borderRadius: '2px', borderColor: '#57a8ed', marginRight: '8px' }}>下载错误日志</Button>
+              <Button style={{ marginRight: '13px', borderRadius: '2px', borderColor: '#57a8ed' }}>下载日志</Button>
+            </div>
+          </PlmModal>
         </div>
       </div>
     </div>

@@ -156,9 +156,88 @@ const API = {
   /**
 * 下载文件
 */
-  downloadFile: (url:string,) => {
-    return NewRequest.get(url, {}, {responseType: 3});
+  downloadFile: (url: string,) => {
+    return NewRequest.get(url, {}, { responseType: 3 });
   },
+
+  /**
+  * 根据产品查询型谱
+  */
+  getProductSpectrumList: (rootNodeId: string) => {
+    return NewRequest.get('/pdm/productSpectrumList/getList', { tenantId: '719', rootNodeId: rootNodeId });
+  },
+
+  /**
+  * 批量创建实例
+  */
+  createInstances: (instances: any) => {
+    return NewRequest.post('/pdm/instances', { tenantId: '719', instances: instances });
+  },
+
+  /**
+ * 根据产品和文件名判断文件是否存在
+ */
+  judgeFileExist: ({ productId, fileNameList, userId, itemCodes }: { productId: string, fileNameList: string[], userId: string, itemCodes: string[] }) => {
+    return NewRequest.post('/opendata/cad/exist/files', { tenantId: '719', productId: productId, fileNameList: fileNameList, userId: userId, itemCodes: itemCodes });
+  },
+  /**
+  * 取消签出
+  */
+  cancelCheckout: ({ insId }: { insId: string }) => {
+    return NewRequest.put('/pdm/affected/cancel/checkout', { tenantId: '719', insId: insId });
+  },
+  /**
+  * 签出
+  */
+  checkout: ({ insId, insSize, insName, checkoutBy }: { insId: string, insSize: string, insName: string, checkoutBy: string }) => {
+    return NewRequest.put('/pdm/affected/checkout', { tenantId: '719', insId: insId, insSize: insSize, insName: insName, checkoutBy: checkoutBy });
+  },
+  /**
+* 签入
+*/
+  checkIn: ({ insId, insSize, insName, insUrl }: { insId: string, insSize: string, insName: string, insUrl: string }) => {
+    return NewRequest.put('/pdm/affected/checkin', { tenantId: '719', insId: insId, insSize: insSize, insName: insName, insUrl: insUrl });
+  },
+
+  /**
+* 批量修改
+*/
+  batchUpdate: (data: any) => {
+    return NewRequest.postPut('/pdm/instances', data);
+  },
+  /**
+  * 批量创建实例结构
+  */
+  batchCreateStructure: (data: any) => {
+    return NewRequest.postPut('/pdm/instances/tab', data);
+  },
+  /**
+  * 根据文件类型判断所对应的物料的类型
+  */
+  getMaterialTypeMap: (params: { itemCode: string }) => {
+    return NewRequest.get('/pdm/objects', { ...params, tenantId: '719', pageNo: '1', pageSize: '500' });
+  },
+  /**
+  * 绑定物料和设计文件
+  */
+  bindFileAndMaterial: (data: any) => {
+    return NewRequest.postPut('/pdm/instances/bind/files', data);
+  },
+  /**
+  * 实例页签的保存接口
+  */
+  insatnceTabsave: (data: any) => {
+    return NewRequest.post('/pdm/replace/save', data);
+  },
+  /**
+  * 实施页签查询
+  */
+  queryInstanceTab: (data: any) => {
+    return NewRequest.post('/opendata/instance/tab', data);
+  },
+  queryInsVersionOrder: (ids:string) => {
+    return NewRequest.get('/pdm/ins/versions', {tenantId: '719', ids:ids})
+  }
 };
 
 export default API;
