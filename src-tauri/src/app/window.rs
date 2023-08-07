@@ -37,7 +37,7 @@ pub async fn open_home(handle: tauri::AppHandle) {
     tauri::WindowBuilder
         ::new(&handle, "Home", tauri::WindowUrl::App("/query".into()))
         .inner_size(1440.0, 720.0)
-        .title("主页")
+        .title("OnChain-DesignFusion-主页")
         .decorations(false)
         .center()
         .build()

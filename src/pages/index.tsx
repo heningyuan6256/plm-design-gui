@@ -42,7 +42,7 @@ import settingSvg from "../assets/image/setting.svg";
 import { cloneDeep, groupBy, pick, remove, unionBy } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
-import { settingType, templateType } from "./attrMap";
+import { settingType } from "./attrMap";
 import Tus from '@uppy/tus';
 import Uppy from '@uppy/core';
 import PlmModal from "../components/PlmModal";
@@ -136,12 +136,44 @@ const index = () => {
     return cadFileMap
   }
   // 获取cad文件属性映射规则
-  const getCadAttrMapRule = async () => {
+  const getCadAttrMapRule = async (type: 'asm' | 'prt') => {
+    let fileType = ''
+    // 判断如果当前的topic是catia则
+    if(mqttClient.publishTopic === 'catia'){
+      if(type === 'asm') {
+        fileType = 'catproduct'
+      } else {
+        fileType = 'catpart'
+      }
+    } else if(mqttClient.publishTopic === 'sw') {
+      if(type === 'asm') {
+        fileType = 'sldasm'
+      } else {
+        fileType = 'sldprt'
+      }
+    }
+
+    let text = ''
+    try {
+      const homeDirPath = await homeDir();
+      text = await readTextFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`, {
+      })
+    } catch (e) {
+
+    }
+
+    if(!text || text && !JSON.parse(text)[fileType]) {
+      return []
+    }
+
+    const fileAddr = JSON.parse(text)[fileType]
+
     const { result: attrsArray }: any = await API.getMapptingAttrs({
       toolName: mqttClient.publishTopic,
       mappingName: settingType.cadToFile,
-      fileType: templateType.product,
+      fileType: fileAddr.substring(fileAddr.lastIndexOf('\\') + 1),
     });
+    
     const attrsMap = Utils.transformArrayToMap(
       attrsArray,
       "sourceAttr",
@@ -235,7 +267,7 @@ const index = () => {
     setMaterialAttrs(totalMaterialAttrs);
     setAttrs(totalAttrs);
     // cad属性映射文件属性
-    const attrsMap = await getCadAttrMapRule()
+    const attrsMap = await getCadAttrMapRule('asm')
 
 
     // 扁平化数组

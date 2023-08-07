@@ -9,6 +9,7 @@ import userSvg from "../assets/image/user.svg";
 import { useSelector } from "react-redux";
 import { Dropdown, MenuProps } from "antd";
 import { mqttClient } from "../utils/MqttService";
+const defaultMap:any = {'sw': 'SolidWorks'}
 
 const Foot: FC = () => {
   const [pid, setPid] = useState(mqttClient.pid)
@@ -66,7 +67,7 @@ const Foot: FC = () => {
             background: "#69A1D1",
           }}
         >
-          {mqttClient.publishTopic +
+          {(defaultMap[mqttClient.publishTopic] || 'mqttClient.publishTopic') +
             (pid ? ` (${pid})` : "")}
         </div>
         {/* <PlmIcon

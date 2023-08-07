@@ -760,3 +760,15 @@ img {
     margin-bottom: 9px !important;
     height: 30px;
 }
+
+.attr.ant-select-disabled .ant-select-selector{
+  border: 1px solid #ecedf0;
+}
+
+.attr.ant-select-disabled .ant-select-selection-item{
+  color: #B2B2B6 !important; 
+}
+
+.attr.ant-select-disabled .ant-select-selector{
+  background: #ffffff !important;
+}

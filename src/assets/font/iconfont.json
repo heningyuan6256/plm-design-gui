@@ -6,6 +6,62 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "36679599",
+      "name": "success",
+      "font_class": "success",
+      "unicode": "e738",
+      "unicode_decimal": 59192
+    },
+    {
+      "icon_id": "36677933",
+      "name": "port",
+      "font_class": "port",
+      "unicode": "e737",
+      "unicode_decimal": 59191
+    },
+    {
+      "icon_id": "36677954",
+      "name": "incorrect",
+      "font_class": "incorrect",
+      "unicode": "e735",
+      "unicode_decimal": 59189
+    },
+    {
+      "icon_id": "36677955",
+      "name": "correct",
+      "font_class": "correct",
+      "unicode": "e736",
+      "unicode_decimal": 59190
+    },
+    {
+      "icon_id": "36655438",
+      "name": "TextLogo",
+      "font_class": "TextLogo",
+      "unicode": "e734",
+      "unicode_decimal": 59188
+    },
+    {
+      "icon_id": "36648152",
+      "name": "document",
+      "font_class": "document",
+      "unicode": "e732",
+      "unicode_decimal": 59186
+    },
+    {
+      "icon_id": "36648151",
+      "name": "file",
+      "font_class": "file1",
+      "unicode": "e733",
+      "unicode_decimal": 59187
+    },
+    {
+      "icon_id": "36586291",
+      "name": "EBOM",
+      "font_class": "EBOM",
+      "unicode": "e731",
+      "unicode_decimal": 59185
+    },
+    {
       "icon_id": "36181845",
       "name": "front-SingleArrow",
       "font_class": "front-SingleArrow",

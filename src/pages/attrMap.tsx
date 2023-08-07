@@ -4,20 +4,22 @@
  * Description: 属性映射
  */
 
-import { appWindow } from "@tauri-apps/api/window";
+import { open } from "@tauri-apps/api/dialog";
 import PlmIcon from "../components/PlmIcon";
 import PlmMappingData from "../components/PlmMappingData";
 import { BasicConfig, CommandConfig } from "../constant/config";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { useEffect, useRef, useState } from "react";
-import { Button, Tabs, TabsProps, message } from "antd";
+import { Button, Tabs, TabsProps, message, Select } from "antd";
 import API from "../utils/api";
 import { BasicsItemCode } from "../constant/itemCode";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { cloneDeep } from "lodash";
 import { mqttClient } from "../utils/MqttService";
-import { useUpdateEffect } from "ahooks";
+import { useAsyncEffect, useUpdateEffect } from "ahooks";
+import { homeDir } from "@tauri-apps/api/path";
+import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/api/fs";
 
 export enum settingType {
   cadToFile = "cadToFile",
@@ -26,27 +28,25 @@ export enum settingType {
   setting = "setting",
 }
 
-export enum templateType {
-  product = "gb_assembly.asmdot",
-  part = "gb_part.prtdot",
-}
-
 export default function AttrMap() {
   const mappingRef = useRef<any>();
   const [attrList, setAttrList] = useState<Record<string, any>[]>([]);
   const [topActiveKey, setTopActiveKey] = useState<string>('attr');
-  const [activeKey, setActiveKey] = useState<string>(templateType.part);
+  const [activeKey, setActiveKey] = useState<string>('sldprt');
   const [childActiveKey, setChildActiveKey] = useState(settingType.cadToFile)
   const [mappingData, setMappingData] = useState<any[]>([]);
   const [rightTableList, setRightTableList] = useState<Record<string, any>[]>(
     []
   );
-  const [fileAddress, setFileAddress] = useState({
+  const [isEdited, setIsEdited] = useState(false)
+  const [fileAddress, setFileAddress] = useState<any>({
     default: '',
     sldprt: '',
     sldasm: '',
     catpart: '',
-    catproduct: ''
+    catproduct: '',
+    partSaveas: '',
+    drwSaveas: ''
   })
   const dispatch = useDispatch();
 
@@ -57,9 +57,9 @@ export default function AttrMap() {
       result: { records: PublicAttrs },
     }: any = await API.getInstanceAttrs({
       itemCode:
-        activeKey === settingType.cadToFile
-          ? BasicsItemCode.file
-          : BasicsItemCode.material,
+        childActiveKey === settingType.cadToItem
+          ? BasicsItemCode.material
+          : BasicsItemCode.file,
       tabCode: "10002001",
     });
     // 查找专有属性
@@ -67,12 +67,13 @@ export default function AttrMap() {
       result: { records: PrivateAttrs },
     }: any = await API.getInstanceAttrs({
       itemCode:
-        activeKey === settingType.cadToFile
-          ? BasicsItemCode.file
-          : BasicsItemCode.material,
+        childActiveKey === settingType.cadToItem
+          ? BasicsItemCode.material
+          : BasicsItemCode.file,
       tabCode: "10002002",
     });
-    const attList = res.output_data[activeKey] || [];
+    const fileName = fileAddress[activeKey].substring(fileAddress[activeKey].lastIndexOf('\\') + 1)
+    const attList = res.output_data[fileName] || [];
     // 使用 reduce 方法进行去重
     const uniqueArray = attList.reduce((acc: any, obj: any) => {
       const found = acc.find((item: any) => item.name === obj.name);
@@ -139,16 +140,53 @@ export default function AttrMap() {
     });
   };
 
-  useEffect(() => {
-    dispatch(setLoading(true));
-    mqttClient.publish({
-      type: CommandConfig.getProductTypeAtt,
-      input_data: {
-        template_path:
-          "C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS 2019\\templates",
-      },
-    });
-  }, [activeKey, childActiveKey]);
+  // useAsyncEffect(async() => {
+
+  // }, [
+  // ])
+
+  //清除映射关系数据
+  const clearData = () => {
+    setMappingData([])
+    setAttrList([])
+    setRightTableList([])
+  }
+
+  useAsyncEffect(async () => {
+    if (topActiveKey === 'attr') {
+      dispatch(setLoading(true));
+      let text = ''
+      try {
+        const homeDirPath = await homeDir();
+        text = await readTextFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`, {
+        })
+      } catch (e) {
+
+      }
+      if (text) {
+        const fileAddressScope = JSON.parse(text)
+        setFileAddress(fileAddressScope)
+
+        if (fileAddressScope[activeKey]) {
+          mqttClient.publish({
+            type: CommandConfig.getProductTypeAtt,
+            input_data: {
+              template_path:
+                fileAddressScope[activeKey].substring(0, fileAddressScope[activeKey].lastIndexOf('\\')),
+            },
+          });
+        } else {
+          message.error('请选择相对应的模板文件')
+          dispatch(setLoading(false));
+          clearData()
+        }
+      } else {
+        message.error('请选择相对应的模板文件')
+        dispatch(setLoading(false));
+        clearData()
+      }
+    }
+  }, [activeKey, childActiveKey, topActiveKey]);
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getProductTypeAtt, (res) => {
@@ -168,12 +206,20 @@ export default function AttrMap() {
 
   const items: TabsProps["items"] = [
     {
-      key: templateType.part,
+      key: 'sldprt',
       label: `SLDPRT`,
     },
     {
-      key: templateType.product,
+      key: 'sldasm',
       label: `SLDASM`,
+    },
+    {
+      key: 'catpart',
+      label: `CATPart`,
+    },
+    {
+      key: 'catproduct',
+      label: `CATProduct`,
     },
   ];
   return (
@@ -186,6 +232,7 @@ export default function AttrMap() {
         items={tabItems}
         destroyInactiveTabPane
         onTabClick={(e) => {
+          setIsEdited(false)
           setTopActiveKey(e);
         }}
       />
@@ -238,14 +285,17 @@ export default function AttrMap() {
                 <div
                   className="h-full w-full py-2 bg-white px-2 border border-outBorder"
                 >
-                  <PlmMappingData
-                    ref={mappingRef}
-                    isShowHeader={false}
-                    onLoading={() => { }}
-                    mappingData={mappingData}
-                    leftTableList={attrList}
-                    rightTableList={rightTableList}
-                  ></PlmMappingData>
+                  {
+                    [...attrList, ...rightTableList].length ? <PlmMappingData
+                      ref={mappingRef}
+                      isShowHeader={false}
+                      onLoading={() => { }}
+                      mappingData={mappingData}
+                      leftTableList={attrList}
+                      rightTableList={rightTableList}
+                    ></PlmMappingData> : <></>
+                  }
+
                 </div>
               </div>
             </div>
@@ -279,105 +329,142 @@ export default function AttrMap() {
               保存
             </Button>
           </div>
-        </div> : <div className='bg-white border border-outBorder' style={{ padding: '0px 12px', marginTop: '12px', fontSize: '12px' }}>
-          <input id="selectDownload" style={{ overflow: 'hidden', width: '0px', height: '0px', position: 'absolute' }} onChange={(e: any) => {
-            setFileAddress({ ...fileAddress, default: e.target.value })
-            //@ts-ignore
-          }} type="file" webkitdirectory="" multiple="" />
+        </div> : <div>
+          <div className="flex justify-end">
+            <Button onClick={async () => {
+              if (isEdited) {
+                const homeDirPath = await homeDir();
+                await writeTextFile(
+                  `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`,
+                  JSON.stringify(fileAddress)
+                );
+              }
+              setIsEdited(!isEdited)
+            }} style={{ height: '30px', fontSize: '12px', width: '66px', borderRadius: '2px', borderColor: '#57a8ed', marginTop: '12px' }}>{isEdited ? '保存' : '编辑'}</Button>
+          </div>
 
+          <div className='bg-white border border-outBorder' style={{ padding: '24px', marginTop: '12px', fontSize: '12px' }}>
 
-          <input id="selectSldprt" style={{ overflow: 'hidden', width: '0px', height: '0px', position: 'absolute' }} onChange={(e: any) => {
-            console.log(e.target.files[0],'111');
-            console.log(URL.createObjectURL(e.target.files[0]) ,'eeee')
-              console.log(e,'eeee')
-            setFileAddress({ ...fileAddress, sldprt: e.target.value })
-          }} type="file" />
+            {
+              [{
+                button: '更改',
+                icon: 'file1',
+                text: '默认文件下载地址:',
+                address: fileAddress.default, function: async () => {
+                  const selected = await open({
+                    multiple: false,
+                    directory: true,
+                    title: '选择默认文件下载地址'
+                  });
+                  setFileAddress({ ...fileAddress, default: selected })
+                }
+              }, {
+                button: '选择',
+                text: 'SLDPRT模板文件:',
+                icon: 'document',
+                address: fileAddress.sldprt,
+                function: async () => {
+                  const selected = await open({
+                    multiple: false,
+                    directory: false,
+                    title: '选择SLDPRT模板文件',
+                    filters: [{
+                      name: 'prtdot',
+                      extensions: ['prtdot']
+                    }]
+                  });
+                  console.log(selected, 'selected');
 
-          <input id="selectSldasm" style={{ overflow: 'hidden', width: '0px', height: '0px', position: 'absolute' }} onChange={(e: any) => {
-              console.log(e,'eeee')
-            setFileAddress({ ...fileAddress, sldasm: e.target.value })
-          }} type="file" />
-
-          <input id="selectCatpart" style={{ overflow: 'hidden', width: '0px', height: '0px', position: 'absolute' }} onChange={(e: any) => {
-            setFileAddress({ ...fileAddress, catpart: e.target.value })
-          }} type="file" />
-
-          <input id="selectCatproduct" style={{ overflow: 'hidden', width: '0px', height: '0px', position: 'absolute' }} onChange={(e: any) => {
-            setFileAddress({ ...fileAddress, catproduct: e.target.value })
-          }} type="file" />
-
-          <div className="border-b border-outBorder" style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-            <div className="flex items-center justify-between" style={{ width: '600px' }}>
-              <div className="flex">
-                <div style={{ width: '136px' }}>默认文件下载地址:</div>
-                <div>{fileAddress.default}</div>
-              </div>
-              <div className="flex items-center">
-                <Button onClick={() => {
-                  document.getElementById('selectDownload')?.click()
-                }} style={{ height: '30px', fontSize: '12px', width: '66px', borderRadius: '2px', borderColor: '#57a8ed', marginRight: '8px' }}>更改</Button>
-              </div>
+                  setFileAddress({ ...fileAddress, sldprt: selected })
+                }
+              },
+              {
+                button: '选择',
+                text: 'SLDASM模板文件:',
+                icon: 'document',
+                address: fileAddress.sldasm,
+                function: async () => {
+                  const selected = await open({
+                    multiple: false,
+                    directory: false,
+                    title: '选择SLDASM模板文件',
+                    filters: [{
+                      name: 'asmdot',
+                      extensions: ['asmdot']
+                    }]
+                  });
+                  setFileAddress({ ...fileAddress, sldasm: selected })
+                }
+              },
+              {
+                button: '选择',
+                text: 'CATPart模板文件:',
+                icon: 'document',
+                address: fileAddress.catpart,
+                function: async () => {
+                  const selected = await open({
+                    multiple: false,
+                    directory: false,
+                    title: '选择CATPart模板文件',
+                    filters: [{
+                      name: 'CATPart',
+                      extensions: ['CATPart']
+                    }]
+                  });
+                  setFileAddress({ ...fileAddress, catpart: selected })
+                }
+              }, {
+                button: '选择',
+                text: 'CATProduct模板文件:',
+                icon: 'document',
+                address: fileAddress.catproduct,
+                function: async () => {
+                  const selected = await open({
+                    multiple: false,
+                    directory: false,
+                    title: '选择CATPart模板文件',
+                    filters: [{
+                      name: 'CATPart',
+                      extensions: ['CATPart']
+                    }]
+                  });
+                  setFileAddress({ ...fileAddress, catproduct: selected })
+                }
+              }].map((item, index) => {
+                return <div key={index} style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+                  <div className="flex items-center justify-between" style={{ width: '600px' }}>
+                    <div className="flex items-center">
+                      <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
+                      <div style={{ width: '150px' }}>{item.text}</div>
+                      <div className="flex justify-between" style={{ color: isEdited ? '#2C3652' : '#B2B2B6', width: '440px', height: '24px', background: isEdited ? '#ecedf0' : '#ecedf0', borderRadius: '2px', padding: '3px 8px' }}>
+                        <div className='overflow-hidden text-ellipsis whitespace-nowrap' title={item.address}>{item.address}</div>
+                        <div className="flex items-center">
+                          <div style={{ height: '16px', width: '1px', background: '#cdcdcd', margin: '0px 8px' }}></div>
+                          <div onClick={isEdited ? item.function : () => { }} className={`${isEdited ? 'cursor-pointer' : 'cursor-not-allowed'} whitespace-nowrap`}><PlmIcon name={item.icon}></PlmIcon> {item.button}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              })
+            }
+            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+              <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
+              <div style={{ width: '150px' }}>上传工程图另存文件格式:</div>
+              <Select suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" onChange={(e) => {
+                setFileAddress({ ...fileAddress, drwSaveas: e })
+              }} value={fileAddress.drwSaveas} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'pdf', value: 'pdf' }]} size={'small'}></Select>
             </div>
-          </div>
-          <div className="border-b border-outBorder" style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-            <div className="flex items-center justify-between" style={{ width: '600px' }}>
-              <div className="flex">
-                <div style={{ width: '136px' }}>SLDPRT模板文件:</div>
-                <div>{fileAddress.sldprt}</div>
-              </div>
-              <div className="flex items-center">
-                <Button onClick={() => {
-                  document.getElementById('selectSldprt')?.click()
-                }} style={{ borderRadius: '2px', fontSize: '12px', borderColor: '#57a8ed', marginRight: '8px' }}>选择文件</Button>
-              </div>
+            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+              <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
+              <div style={{ width: '150px' }}>上传零件图另存文件格式:</div>
+              <Select onChange={(e) => {
+                setFileAddress({ ...fileAddress, partSaveas: e })
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partSaveas} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'stp', value: 'stp' }, { label: 'stl', value: 'stl' }]} size={'small'}></Select>
             </div>
-          </div>
-          <div className="border-b border-outBorder" style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-            <div className="flex items-center justify-between" style={{ width: '600px' }}>
-              <div className="flex">
-                <div style={{ width: '136px' }}>SLDASM模板文件:</div>
-                <div>{fileAddress.sldasm}</div>
-              </div>
-              <div className="flex items-center">
-                <Button onClick={() => {
-                  document.getElementById('selectSldasm')?.click()
-                }} style={{ borderRadius: '2px', fontSize: '12px', borderColor: '#57a8ed', marginRight: '8px' }}>选择文件</Button>
-              </div>
-            </div>
-          </div>
-          <div className="border-b border-outBorder" style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-            <div className="flex items-center justify-between" style={{ width: '600px' }}>
-              <div className="flex">
-                <div style={{ width: '136px' }}>CATPart模板文件:</div>
-                <div>{fileAddress.catpart}</div>
-              </div>
-              <div className="flex items-center">
-                <Button onClick={() => {
-                  document.getElementById('selectCatpart')?.click()
-                }} style={{ borderRadius: '2px', fontSize: '12px', borderColor: '#57a8ed', marginRight: '8px' }}>选择文件</Button>
-              </div>
-            </div>
-          </div>
-          <div className="border-b border-outBorder" style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-            <div className="flex items-center justify-between" style={{ width: '600px' }}>
-              <div className="flex">
-                <div style={{ width: '136px' }}>CATProduct模板文件:</div>
-                <div>{fileAddress.catproduct}</div>
-              </div>
-              <div>
-                <Button onClick={() => {
-                  document.getElementById('selectCatproduct')?.click()
-                }} style={{ borderRadius: '2px', fontSize: '12px', borderColor: '#57a8ed', marginRight: '8px' }}>选择文件</Button>
-              </div>
-            </div>
-          </div>
-          <div className="border-b border-outBorder" style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-            <div style={{ width: '136px' }}>上传工程图另存文件格式:</div>
-          </div>
-          <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-            <div style={{ width: '136px' }}>上传零件图另存文件格式:</div>
           </div>
         </div>
+
       }
     </div>
   );

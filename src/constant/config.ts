@@ -3,6 +3,7 @@ export enum BasicConfig {
   NetworkCache = "network.txt",
   Active="active",
   TokenCache = "token.txt",
+  setting = 'setting.json',
   User="user.txt",
   /**设计工具连接地址*/
   MqttConnectUrl = "ws://192.168.0.104:8085/mqtt",
