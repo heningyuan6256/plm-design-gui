@@ -127,6 +127,7 @@ fn main() {
             window::open_attr_map,
             window::open_home,
             window::open_stock,
+            window::open_active,
             // utils::create_chatgpt_prompts,
             // utils::silent_install,
             // utils::run_check_update,

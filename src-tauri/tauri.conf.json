@@ -96,11 +96,11 @@
         "resizable": false,
         "title": "OnChain-DesignFusion",
         "width": 648,
-        "url": "/login",
-        "label": "Login",
+        "url": "/active",
+        "label": "Active",
         "decorations": false,
         "center": true,
-        "visible": true
+        "visible": false
       }
     ],
     "systemTray": {

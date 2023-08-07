@@ -60,7 +60,7 @@ export default function login() {
           fetchUserByToken(res.result.token) as any
         ).unwrap();
         if (data.id) {
-          await invoke("open_login", {
+          await invoke("open_home", {
             width: window.innerWidth,
             height: window.innerHeight,
           });

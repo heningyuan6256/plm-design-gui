@@ -1,10 +1,11 @@
 export enum BasicConfig {
   APPCacheFolder = ".onChain",
   NetworkCache = "network.txt",
+  Active="active",
   TokenCache = "token.txt",
   User="user.txt",
   /**设计工具连接地址*/
-  MqttConnectUrl = "ws://124.71.151.153:8095/mqtt",
+  MqttConnectUrl = "ws://192.168.0.104:8085/mqtt",
   /**设计工具dll名称*/
   pubgin_topic = "sw",
   /**设计工具dll版本*/

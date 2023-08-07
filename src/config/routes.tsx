@@ -9,6 +9,7 @@ import Home from "../pages/index";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Info from "../pages/info";
 import Stock from "../pages/stock";
+import Active from "../pages/active";
 import Query from "../pages/query";
 import PageLayout from "../layout/pageLayout";
 import AttrMap from "../pages/attrMap";
@@ -26,6 +27,11 @@ export const RoutesWithSubRoutes = () => {
       element: <Login></Login>,
     },
 
+    // 激活界面
+    {
+      path: "/active",
+      element: <Active></Active>,
+    },
     // 关于界面
     {
       path: "/info",

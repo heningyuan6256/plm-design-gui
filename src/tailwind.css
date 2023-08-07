@@ -747,3 +747,16 @@ img {
   padding-bottom: 0px;
 }
 .ant-modal-close{display: none;}
+
+.ant-divider{
+  height: 100%;
+  padding: 0px;
+}
+
+.active_form {
+  width: 240px;
+}
+.active_form .ant-form-item  {
+    margin-bottom: 9px !important;
+    height: 30px;
+}

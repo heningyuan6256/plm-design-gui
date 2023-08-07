@@ -9,8 +9,8 @@ pub fn greet(name: &str) -> String {
 #[command]
 pub async fn open_login(handle: tauri::AppHandle) {
     tauri::WindowBuilder
-        ::new(&handle, "Home", tauri::WindowUrl::App("/query".into()))
-        .inner_size(1440.0, 720.0)
+        ::new(&handle, "Login", tauri::WindowUrl::App("/login".into()))
+        .inner_size(648.0, 347.0)
         .title("OnChain-DesignFusion")
         .decorations(false)
         .center()
@@ -35,7 +35,7 @@ pub async fn open_info(handle: tauri::AppHandle) {
 #[command]
 pub async fn open_home(handle: tauri::AppHandle) {
     tauri::WindowBuilder
-        ::new(&handle, "Home", tauri::WindowUrl::App("/home".into()))
+        ::new(&handle, "Home", tauri::WindowUrl::App("/query".into()))
         .inner_size(1440.0, 720.0)
         .title("主页")
         .decorations(false)
@@ -52,6 +52,19 @@ pub async fn open_stock(handle: tauri::AppHandle) {
         .inner_size(1440.0, 720.0)
         .title("库")
         .decorations(false)
+        .center()
+        .build()
+        .unwrap();
+}
+// 打开激活页面
+#[command]
+pub async fn open_active(handle: tauri::AppHandle) {
+    tauri::WindowBuilder
+        ::new(&handle, "Active", tauri::WindowUrl::App("/active".into()))
+        .inner_size(648.0, 346.0)
+        .title("激活")
+        .decorations(false)
+        .resizable(false)
         .center()
         .build()
         .unwrap();
