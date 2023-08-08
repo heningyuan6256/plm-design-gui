@@ -14,16 +14,20 @@ import menuSettingHover from "../assets/image/menuSetting (1).svg";
 import { mqttClient } from "../utils/MqttService";
 import { appWindow } from "@tauri-apps/api/window";
 import { useSelector } from "react-redux";
+import { invoke } from "@tauri-apps/api";
+import PlmModal from "../components/PlmModal";
+import Info from "../pages/info";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
+  const [infoVisible, setInfoVisible] = useState<boolean>(false);
   const { value: bom } = useSelector((state: any) => state.bom);
   const navigate = useNavigate();
   const location = useLocation();
   // // 监听路由
 
   useEffect(() => {
-    mqttClient.registerCallBack(CommandConfig.onchain_path, (res) => {
+    mqttClient.registerCallBack(CommandConfig.onchain_path, async(res) => {
       console.log(res, 'res')
       if ((res.input_data === 'cad_start') || (res.input_data === CommandConfig.cadShutDown)) {
         return
@@ -53,6 +57,8 @@ const left: FC = () => {
         setTimeout(() => {
           appWindow.close()
         }, 200)
+      } else if (res.input_data === PathConfig.openInfo) {
+        setInfoVisible(true)
       } else {
         navigate(`/${res.input_data.split("_")[1]}`);
       }
@@ -150,6 +156,9 @@ const left: FC = () => {
             return renderToolItem(item);
           })}
       </div>
+      <Info visible={infoVisible} onCancel={() => {
+        setInfoVisible(false)
+      }}></Info>
     </div>
   );
 };

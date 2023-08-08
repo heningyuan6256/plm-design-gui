@@ -1821,7 +1821,7 @@ const index = () => {
               {/* </div> */}
             </div>
           </div>
-          <PlmModal width={582} open={logVisible} onCancel={() => {
+          <PlmModal title={'上传日志'} width={582} open={logVisible} onCancel={() => {
             if (loading) {
               message.error({
                 content: '上传中，请稍后',

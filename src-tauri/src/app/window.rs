@@ -23,7 +23,7 @@ pub async fn open_login(handle: tauri::AppHandle) {
 pub async fn open_info(handle: tauri::AppHandle) {
     tauri::WindowBuilder
         ::new(&handle, "Info", tauri::WindowUrl::App("/info".into()))
-        .inner_size(300.0, 400.0)
+        .inner_size(360.0, 267.0)
         .title("关于")
         // .decorations(false)
         .center()
