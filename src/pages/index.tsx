@@ -48,6 +48,8 @@ import Uppy from '@uppy/core';
 import PlmModal from "../components/PlmModal";
 import { useSelector } from "react-redux";
 import { open } from "@tauri-apps/api/shell";
+import SplitPane from 'react-split-pane';
+
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
 
@@ -91,7 +93,7 @@ const index = () => {
   const [materialSelectRows, setMaterialSelectRows] = useState<any>([])
   const [logVisible, setLogVisbile] = useState(false)
   const [logData, setLogData] = useState<{ dateTime: string, log: string }[]>([])
-  const { value:network } = useSelector((state: any) => state.network);
+  const { value: network } = useSelector((state: any) => state.network);
 
   const lastestLogData = useLatest(logData)
 
@@ -139,14 +141,14 @@ const index = () => {
   const getCadAttrMapRule = async (type: 'asm' | 'prt') => {
     let fileType = ''
     // 判断如果当前的topic是catia则
-    if(mqttClient.publishTopic === 'catia'){
-      if(type === 'asm') {
+    if (mqttClient.publishTopic === 'catia') {
+      if (type === 'asm') {
         fileType = 'catproduct'
       } else {
         fileType = 'catpart'
       }
-    } else if(mqttClient.publishTopic === 'sw') {
-      if(type === 'asm') {
+    } else if (mqttClient.publishTopic === 'sw') {
+      if (type === 'asm') {
         fileType = 'sldasm'
       } else {
         fileType = 'sldprt'
@@ -162,7 +164,7 @@ const index = () => {
 
     }
 
-    if(!text || text && !JSON.parse(text)[fileType]) {
+    if (!text || text && !JSON.parse(text)[fileType]) {
       return []
     }
 
@@ -173,7 +175,7 @@ const index = () => {
       mappingName: settingType.cadToFile,
       fileType: fileAddr.substring(fileAddr.lastIndexOf('\\') + 1),
     });
-    
+
     const attrsMap = Utils.transformArrayToMap(
       attrsArray,
       "sourceAttr",
@@ -274,7 +276,7 @@ const index = () => {
     const flattenData: Record<string, any>[] = [];
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
-        const rowKey = getRowKey(data[i]) 
+        const rowKey = getRowKey(data[i])
         data[i].material = { onChain: {}, plugin: {} }
         data[i].file = { onChain: {}, plugin: {} }
         InstanceAttrsMap[rowKey] = { origin: {}, material: { onChain: {}, plugin: {} }, file: { onChain: {}, plugin: {} } }
@@ -300,7 +302,7 @@ const index = () => {
     const PromiseImgData: any[] = []
     console.log(InstanceAttrsMap, 'InstanceAttrsMap');
     for (const item of flattenData) {
-      const rowKey = getRowKey(item) 
+      const rowKey = getRowKey(item)
       item.id = Utils.generateSnowId();
       const fileNameWithFormat = getFileNameWithFormat(item)
       const onChainAttrs = InstanceAttrsMap[rowKey].file.onChain
@@ -396,7 +398,7 @@ const index = () => {
   const updateSingleData = (row: any) => {
     API.getInstanceInfoById({ instanceId: row.insId, authType: 'read', tabCode: '10002001', userId: user.id, tenantId: '719' }).then((res: any) => {
       res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
-        const rowKey = getRowKey(row) 
+        const rowKey = getRowKey(row)
         InstanceAttrsMap[rowKey].file.onChain[item.apicode] = res.result.readInstanceVo.attributes[item.id]
         InstanceAttrsMap[rowKey].file.onChain.checkOut = res.result.readInstanceVo.checkout
         InstanceAttrsMap[rowKey].file.onChain.Revision = res.result.readInstanceVo.insVersionOrder
@@ -460,7 +462,7 @@ const index = () => {
       // 签入需要更新当前的附件，以及相对应的属性，以及结构
       const { result: { records } }: any = await API.queryInstanceTab({
         instanceId: row.file.onChain.insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
-        tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version,versionOrder: row.file.onChain.Revision
+        tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version, versionOrder: row.file.onChain.Revision
       })
       console.log(records, 'records');
 
@@ -501,14 +503,14 @@ const index = () => {
         if (col.apicode === 'ID') {
           return row.file.onChain.insId
         } else if (col.apicode === 'Qty') {
-          console.log(row.file.plugin.Description,'')
+          console.log(row.file.plugin.Description, '')
           return countMap[getRowKey(row)].length || ''
         } else {
           return ''
         }
       })
 
-      const flattenData = (InstanceAttrsMap[getRowKey(row)].origin.children || []).filter((item:any) => {
+      const flattenData = (InstanceAttrsMap[getRowKey(row)].origin.children || []).filter((item: any) => {
         return getRowKey(item) != getRowKey(row)
       })
 
@@ -612,7 +614,7 @@ const index = () => {
   // 取出所有的属性
   useEffect(() => {
     if (leftData.length) {
-      console.log(selectNode,'selectNodeselectNode')
+      console.log(selectNode, 'selectNodeselectNode')
       const flattenData: Record<string, any>[] = getFlattenData(selectNode)
       setCenterData(flattenData);
     }
@@ -630,7 +632,7 @@ const index = () => {
           const nodeNames = flattenData.map((item) => {
             return getRowKey(item)
           });
-          if (!nodeNames.includes(getRowKey(data[i]) ) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
+          if (!nodeNames.includes(getRowKey(data[i])) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
             flattenData.push(flattenedItem);
           }
           if (data[i].children && data[i].children.length) {
@@ -793,15 +795,15 @@ const index = () => {
     // if (ItemCode.isFile(itemCode)) {
     //   return successInstances
     // } else {
-      const successInstancesMap: any = {}
-      console.log(successInstances, 'successInstances');
+    const successInstancesMap: any = {}
+    console.log(successInstances, 'successInstances');
 
-      successInstances.result.forEach((item: any, index: number) => {
-        if (item.code == 2000) {
-          successInstancesMap[getRowKey(dealData[index])] = item.instanceId
-        }
-      })
-      return successInstancesMap
+    successInstances.result.forEach((item: any, index: number) => {
+      if (item.code == 2000) {
+        successInstancesMap[getRowKey(dealData[index])] = item.instanceId
+      }
+    })
+    return successInstancesMap
     // }
   }
 
@@ -836,7 +838,7 @@ const index = () => {
     };
     loop(structureData, uniqueArrayByAttr(structureData));
 
-    console.log(structureData,'创建结构参数')
+    console.log(structureData, '创建结构参数')
     API.batchCreateStructure({
       tenantId: '719',
       userId: user.id,
@@ -1265,8 +1267,8 @@ const index = () => {
                   width: 100,
                   sorter: true,
                   render: (text: string, record: any) => {
-                    return <a onClick={async() => {
-                      if(record.flag === 'exist') {
+                    return <a onClick={async () => {
+                      if (record.flag === 'exist') {
                         await open(`http://${network}:8017/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`)
                       }
                     }}>{text}</a>;
@@ -1482,8 +1484,8 @@ const index = () => {
                   width: 100,
                   sorter: true,
                   render: (text: string, record: any) => {
-                    return <a onClick={async() => {
-                      if(record.flag === 'exist') {
+                    return <a onClick={async () => {
+                      if (record.flag === 'exist') {
                         await open(`http://${network}:8017/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`)
                       }
                     }}>{text}</a>;
@@ -1592,7 +1594,7 @@ const index = () => {
                             }
                             alt=""
                           />
-                          <div style={{width:'100%', textOverflow: 'ellipsis', overflow:"hidden"}}>{text}</div>
+                          <div style={{ width: '100%', textOverflow: 'ellipsis', overflow: "hidden" }}>{text}</div>
                         </div>
                       );
                     },
@@ -1609,69 +1611,75 @@ const index = () => {
 
           {/* 中间详情 */}
           <div className="flex-1 h-full flex flex-col overflow-hidden">
-            <div className="flex w-full gap-1.5" style={{ height: "240px" }}>
-              {/* 缩略图 */}
-              <div
-                style={{
-                  background:
-                    "linear-gradient(180deg,#ffffff 0%, #e8e8e8 100%)",
-                  overflow: "hidden",
-                }}
-                className="flex-1 h-full border border-outBorder"
-              >
-                <img
-                  id="thumbnail"
-                  style={{ margin: "0 auto", height: "100%" }}
-                  src={removeImgBg(selectNode?.file.plugin.thumbnail)}
-                  alt=""
-                />
-              </div>
-              {/* 基本信息 */}
-              <div
-                className="border bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto"
-                style={{ width: "478px" }}
-              >
-                <div>
+            <div className="flex w-full gap-1.5" style={{ height: "240px", position: 'relative' }}>
+              {
+                //@ts-ignore
+                <SplitPane split="vertical" minSize={240} defaultSize={400} maxSize={600} allowResize>
                   <div
-                    className="text-primary mb-1"
-                    style={{ fontSize: "13px", fontWeight: 500 }}
-                  >
-                    属性名称
-                  </div>
-                  <div
-                    className="bg-outBorder w-full mb-1"
-                    style={{ height: "1px" }}
-                  ></div>
-                </div>
-
-                <div className="flex-1 w-full basic-attr">
-                  <OnChainForm
-                    ref={dynamicFormRef}
-                    layout="horizontal"
-                    readOnly
-                    labelCol={{
-                      style: {
-                        width: 48,
-                      },
+                    style={{
+                      background:
+                        "linear-gradient(180deg,#ffffff 0%, #e8e8e8 100%)",
+                      overflow: "hidden",
                     }}
+                    className="flex-1 h-full border border-outBorder"
                   >
-                    <div className="grid grid-cols-2 gap-x-8">
-                      {FormAttrs.map((item, index) => {
-                        return (
-                          <OnChainFormItem
-                            key={`${item}${index}`}
-                            colon
-                            readOnly
-                            label={item.name}
-                            name={item.name}
-                            content={{ type: "Input" }}
-                          ></OnChainFormItem>
-                        );
-                      })}
+                    <img
+                      id="thumbnail"
+                      style={{ margin: "0 auto", height: "100%" }}
+                      src={removeImgBg(selectNode?.file.plugin.thumbnail)}
+                      alt=""
+                    />
+                  </div>
+                  {/* 基本信息 */}
+                  <div
+                    className="bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto border-t border-b border-r"
+                    // style={{ width: "478px" }}
+                  >
+                    <div>
+                      <div
+                        className="text-primary mb-1"
+                        style={{ fontSize: "13px", fontWeight: 500 }}
+                      >
+                        属性名称
+                      </div>
+                      <div
+                        className="bg-outBorder w-full mb-1"
+                        style={{ height: "1px" }}
+                      ></div>
                     </div>
-                  </OnChainForm>
-                </div>
-              </div>
+
+                    <div className="flex-1 w-full basic-attr">
+                      <OnChainForm
+                        ref={dynamicFormRef}
+                        layout="horizontal"
+                        readOnly
+                        labelCol={{
+                          style: {
+                            width: 48,
+                          },
+                        }}
+                      >
+                        <div className="grid grid-cols-2 gap-x-8">
+                          {FormAttrs.map((item, index) => {
+                            return (
+                              <OnChainFormItem
+                                key={`${item}${index}`}
+                                colon
+                                readOnly
+                                label={item.name}
+                                name={item.name}
+                                content={{ type: "Input" }}
+                              ></OnChainFormItem>
+                            );
+                          })}
+                        </div>
+                      </OnChainForm>
+                    </div>
+                  </div>
+                </SplitPane>
+              }
+
+
             </div>
             <div className="mt-2 flex-1 overflow-hidden">
               <Tabs onTabClick={() => {
