@@ -268,4 +268,37 @@ export class Utils {
       throw e;
     }
   };
+
+  public static parseINIString(data: any) {
+    var regex = {
+      section: /^\s*\s*([^]*)\s*\]\s*$/,
+      param: /^\s*([\w\.\-\_]+)\s*=\s*(.*?)\s*$/,
+      comment: /^\s*;.*$/
+    };
+    var value:any = {};
+    var lines = data.split(/\r\n|\r|\n/);
+    var section:any = null;
+    lines.forEach(function(line:any){
+      if(regex.comment.test(line)){
+        return;
+      }else if(regex.param.test(line)){
+        var match = line.match(regex.param);
+        if(section){
+          value[section][match[1]] = match[2];
+        }else{
+          value[match[1]] = match[2];
+        }
+      }else if(regex.section.test(line)){
+        var match = line.match(regex.section);
+        value[match[1]] = {};
+        section = match[1];
+      }else if(line.length == 0 && section){
+        section = null;
+      };
+    });
+    return value
+  }
+
+
+  //本段代码来自 我点评 ：https://www.wodianping.com/javascript/2023-05/55471.html
 }

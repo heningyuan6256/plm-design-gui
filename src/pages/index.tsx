@@ -197,12 +197,17 @@ const index = () => {
     return `${(new Date().toLocaleDateString())} ${(new Date().toLocaleTimeString())}`
   }
 
+  // 判断是否是标准件
+  const judgeStandard = (row: any) => {
+    return row.file_path.indexOf('solidworks data\\browser') != -1
+  }
+
   const uniqueArrayByAttr = (arr: any) => {
     const m = new Map()
     const mCount: any = {}
     for (const item of arr) {
       const nodeName = getRowKey(item)
-      if (!m.has(nodeName) && !item.InternalModelFlag) {
+      if (!m.has(nodeName) && !(item.InternalModelFlag && judgeStandard(item))) {
         m.set(nodeName, item)
         mCount[nodeName] = 1
       } else {
@@ -599,7 +604,7 @@ const index = () => {
         const nodeNames = flattenData.map((item) => {
           return getRowKey(item)
         });
-        if (!nodeNames.includes(getRowKey(data[i])) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
+        if (!nodeNames.includes(getRowKey(data[i])) && !(data[i].InternalModelFlag && judgeStandard(data[i])) && data[i].file.plugin.fileNameWithFormat) {
           flattenData.push(flattenedItem);
         }
         if (data[i].children && data[i].children.length) {
@@ -632,7 +637,7 @@ const index = () => {
           const nodeNames = flattenData.map((item) => {
             return getRowKey(item)
           });
-          if (!nodeNames.includes(getRowKey(data[i])) && !data[i].InternalModelFlag && data[i].file.plugin.fileNameWithFormat) {
+          if (!nodeNames.includes(getRowKey(data[i])) && !(data[i].InternalModelFlag && judgeStandard(data[i])) && data[i].file.plugin.fileNameWithFormat) {
             flattenData.push(flattenedItem);
           }
           if (data[i].children && data[i].children.length) {
@@ -1633,7 +1638,7 @@ const index = () => {
                   {/* 基本信息 */}
                   <div
                     className="bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto border-t border-b border-r"
-                    // style={{ width: "478px" }}
+                  // style={{ width: "478px" }}
                   >
                     <div>
                       <div
