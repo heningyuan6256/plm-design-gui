@@ -67,7 +67,7 @@ const Foot: FC = () => {
             background: "#69A1D1",
           }}
         >
-          {(defaultMap[mqttClient.publishTopic] || 'mqttClient.publishTopic') +
+          {(defaultMap[mqttClient.publishTopic] || '未连接') +
             (pid ? ` (${pid})` : "")}
         </div>
         {/* <PlmIcon
