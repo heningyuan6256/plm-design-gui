@@ -13,9 +13,11 @@ import menuSetting from "../assets/image/menuSetting.svg";
 import menuSettingHover from "../assets/image/menuSetting (1).svg";
 import { mqttClient } from "../utils/MqttService";
 import { appWindow } from "@tauri-apps/api/window";
+import { useSelector } from "react-redux";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
+  const { value: bom } = useSelector((state: any) => state.bom);
   const navigate = useNavigate();
   const location = useLocation();
   // // 监听路由
@@ -90,7 +92,12 @@ const left: FC = () => {
       path: "/preference",
       location: "right",
     },
-  ];
+  ].filter(item => {
+    if(bom.init) {
+      return item.path != '/home'
+    }
+    return item
+  });
   const renderToolItem = (item: any) => {
     return (
       <div

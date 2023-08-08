@@ -49,6 +49,7 @@ import PlmModal from "../components/PlmModal";
 import { useSelector } from "react-redux";
 import { open } from "@tauri-apps/api/shell";
 import SplitPane from 'react-split-pane';
+import { setBom } from "../models/bom";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -654,6 +655,7 @@ const index = () => {
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
+    dispatch(setBom({init: false}))
     await dealCurrentBom(res);
   });
 

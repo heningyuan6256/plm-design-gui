@@ -3,6 +3,7 @@ import counterReducer from "./count";
 import userReducer from "./user";
 import networkReducer from "./network";
 import loadingReducer from "./loading";
+import bomReducer from './bom'
 // import mqttReducer from "./mqtt";
 
 export default configureStore({
@@ -12,6 +13,7 @@ export default configureStore({
     network: networkReducer,
     loading: loadingReducer,
     // mqtt: mqttReducer,
+    bom: bomReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
