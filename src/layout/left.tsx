@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { invoke } from "@tauri-apps/api";
 import PlmModal from "../components/PlmModal";
 import Info from "../pages/info";
+import { message } from "antd";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
@@ -115,6 +116,10 @@ const left: FC = () => {
           padding: "10px 0px",
         }}
         onClick={() => {
+          if(!mqttClient.publishTopic && item.path === '/preference') {
+            message.error('请打开设计工具')
+            return
+          }
           setHoverButton(item.path);
           navigate(`${item.path}`);
         }}

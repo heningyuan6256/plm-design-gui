@@ -39,7 +39,7 @@ import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import settingSvg from "../assets/image/setting.svg";
-import { cloneDeep, groupBy, pick, remove, unionBy } from "lodash";
+import { cloneDeep, groupBy, merge, pick, remove, unionBy } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType } from "./attrMap";
@@ -99,7 +99,6 @@ const index = () => {
   const lastestLogData = useLatest(logData)
 
   const [InstanceAttrsMap] = useState<{ [k: string]: { origin: any, material: { onChain: any, plugin: any }, file: { onChain: any, plugin: any } } }>({})
-  const [pluginAttr] = useState<any>({})
   const dispatch = useDispatch();
 
 
@@ -208,10 +207,18 @@ const index = () => {
     const mCount: any = {}
     for (const item of arr) {
       const nodeName = getRowKey(item)
+      // 如果没有存过，并且不是标准件，则set
       if (!m.has(nodeName) && !(item.InternalModelFlag && judgeStandard(item))) {
         m.set(nodeName, item)
         mCount[nodeName] = 1
       } else {
+        if (m.has(nodeName)) {
+          if (
+            item.file.plugin.fileNameWithFormat
+          ) {
+            m.set(nodeName, item)
+          }
+        }
         mCount[nodeName] = mCount[nodeName] + 1
       }
     }
@@ -655,7 +662,7 @@ const index = () => {
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
-    dispatch(setBom({init: false}))
+    dispatch(setBom({ init: false }))
     await dealCurrentBom(res);
   });
 
@@ -1766,8 +1773,8 @@ const index = () => {
                             alt=""
                           />
                           <div className='overflow-hidden text-ellipsis w-full'>
-                            {record?.material?.onChain?.Number ? (
-                              record?.material?.onChain?.Number
+                            {InstanceAttrsMap && InstanceAttrsMap[getRowKey(record)]?.material?.onChain?.Number ? (
+                               InstanceAttrsMap[getRowKey(record)]?.material?.onChain?.Number
                             ) : (
                               <div
                                 style={{

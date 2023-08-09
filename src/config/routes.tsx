@@ -33,10 +33,10 @@ export const RoutesWithSubRoutes = () => {
       element: <Active></Active>,
     },
     // 关于界面
-    {
-      path: "/info",
-      element: <Info></Info>,
-    },
+    // {
+    //   path: "/info",
+    //   element: <Info></Info>,
+    // },
 
     // 主页
     {
