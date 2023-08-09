@@ -155,25 +155,26 @@ const index = () => {
       }
     }
 
-    let text = ''
-    try {
-      const homeDirPath = await homeDir();
-      text = await readTextFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`, {
-      })
-    } catch (e) {
+    // let text = ''
+    // try {
+    //   const homeDirPath = await homeDir();
+    //   text = await readTextFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`, {
+    //   })
+    // } catch (e) {
 
-    }
+    // }
 
-    if (!text || text && !JSON.parse(text)[fileType]) {
-      return []
-    }
+    // if (!text || text && !JSON.parse(text)[fileType]) {
+    //   return []
+    // }
 
-    const fileAddr = JSON.parse(text)[fileType]
+    // const fileAddr = JSON.parse(text)[fileType]
 
     const { result: attrsArray }: any = await API.getMapptingAttrs({
       toolName: mqttClient.publishTopic,
       mappingName: settingType.cadToFile,
-      fileType: fileAddr.substring(fileAddr.lastIndexOf('\\') + 1),
+      // fileType: fileAddr.substring(fileAddr.lastIndexOf('\\') + 1),
+      fileType: fileType
     });
 
     const attrsMap = Utils.transformArrayToMap(
@@ -282,7 +283,9 @@ const index = () => {
     setMaterialAttrs(totalMaterialAttrs);
     setAttrs(totalAttrs);
     // cad属性映射文件属性
-    const attrsMap = await getCadAttrMapRule('asm')
+    const attrsMap = await getCadAttrMapRule('prt')
+    // cad属性映射文件属性
+    const asmAttrsMap = await getCadAttrMapRule('asm')
 
 
     // 扁平化数组
@@ -837,7 +840,7 @@ const index = () => {
       for (let i = 0; i < struct.length; i++) {
         struct[i].attrMap = {}
         const folder = ItemCode.isFile(itemCode) ? 'file' : 'material'
-        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[getRowKey(struct[i])] : struct[i][folder].onChain.insId
+        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[getRowKey(struct[i])] : InstanceAttrsMap[getRowKey(struct[i])][folder].onChain.insId
         if (getRowKey(struct[i]) != getRowKey(leftData[0])) {
           struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[getRowKey(struct[i])]
         }
@@ -1057,12 +1060,51 @@ const index = () => {
   };
 
   const generalDealAttrs = (attrs: any[], listCodeMap: any) => {
+
     return attrs
       .filter(
         (item) => (item.readonly == "0" || item.readonly == "1" || item.apicode === 'FileSize' || item.apicode === 'Category' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate') && item.status
+          && item.valueType != '12' && item.valueType != '13'
       )
       .map((item) => {
+        const formitem = {
+          type: formItemMap[item.valueType],
+          props: {
+            ...Utils.generateFormItemProps(item, listCodeMap),
+            disabled: item.apicode === 'Category' || item.apicode === 'FileSize' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate',
+          }
+        }
         const renderData: any = {
+          [item.apicode]: (text: string, record: any) => {
+            const pluginValue = record.file.plugin[item.apicode]
+            const onChainValue = record.file.onChain[item.apicode]
+            // 判断设计工具给的值如果不等于plm系统给的值，则上面显示红色，下面红线杠
+            if (pluginValue != onChainValue && item.apicode != 'Category' && item.apicode != 'CheckOutUser' && item.apicode != 'CheckOutDate') {
+              // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
+              if (!pluginValue && onChainValue) {
+                return <div style={{ textDecorationColor: 'red', textDecoration: 'line-through' }}>
+                  {Utils.renderReadonlyItem({ apicode: item.apicode, formitem: formitem, value: pluginValue })}
+                </div>
+              }
+              // 如果判断设计工具的值有值，onChain没有值，则显示红色
+              if (pluginValue && !onChainValue) {
+                return <div className="text-red-500">
+                  {Utils.renderReadonlyItem({ apicode: item.apicode, formitem: formitem, value: pluginValue })}
+                </div>
+              }
+
+              return <div>
+                <div className="text-red-500">
+                  {Utils.renderReadonlyItem({ apicode: item.apicode, formitem: formitem, value: pluginValue })}
+                </div>
+                <div style={{ textDecorationColor: 'red', textDecoration: 'line-through' }}>
+                  {Utils.renderReadonlyItem({ apicode: item.apicode, formitem: formitem, value: onChainValue })}
+                </div>
+              </div>
+            } else {
+              return <div>{Utils.renderReadonlyItem({ apicode: item.apicode, formitem: formitem, value: onChainValue })}</div>
+            }
+          },
           'FileSize': (text: string, record: any) => {
             return Utils.converBytes(Number(record.file.plugin.FileSize))
           },
@@ -1078,13 +1120,7 @@ const index = () => {
           dataIndex: item.apicode,
           editable: true,
           width: 150,
-          formitem: {
-            type: formItemMap[item.valueType],
-            props: {
-              ...Utils.generateFormItemProps(item, listCodeMap),
-              disabled: item.apicode === 'Category' || item.apicode === 'FileSize' || item.apicode === 'FileFormat' || item.apicode === 'CheckOutUser' || item.apicode === 'CheckOutDate',
-            },
-          },
+          formitem: formitem,
           search: {
             type: formItemMap[item.valueType],
             props: Utils.generateFormItemProps(item, listCodeMap),
@@ -1774,7 +1810,7 @@ const index = () => {
                           />
                           <div className='overflow-hidden text-ellipsis w-full'>
                             {InstanceAttrsMap && InstanceAttrsMap[getRowKey(record)]?.material?.onChain?.Number ? (
-                               InstanceAttrsMap[getRowKey(record)]?.material?.onChain?.Number
+                              InstanceAttrsMap[getRowKey(record)]?.material?.onChain?.Number
                             ) : (
                               <div
                                 style={{

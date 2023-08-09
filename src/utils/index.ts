@@ -1,3 +1,4 @@
+import { find, isArray } from "lodash";
 import moment from "moment";
 import { BasicConfig } from "../constant/config";
 import { ListCode } from "../constant/listCode";
@@ -275,30 +276,173 @@ export class Utils {
       param: /^\s*([\w\.\-\_]+)\s*=\s*(.*?)\s*$/,
       comment: /^\s*;.*$/
     };
-    var value:any = {};
+    var value: any = {};
     var lines = data.split(/\r\n|\r|\n/);
-    var section:any = null;
-    lines.forEach(function(line:any){
-      if(regex.comment.test(line)){
+    var section: any = null;
+    lines.forEach(function (line: any) {
+      if (regex.comment.test(line)) {
         return;
-      }else if(regex.param.test(line)){
+      } else if (regex.param.test(line)) {
         var match = line.match(regex.param);
-        if(section){
+        if (section) {
           value[section][match[1]] = match[2];
-        }else{
+        } else {
           value[match[1]] = match[2];
         }
-      }else if(regex.section.test(line)){
+      } else if (regex.section.test(line)) {
         var match = line.match(regex.section);
         value[match[1]] = {};
         section = match[1];
-      }else if(line.length == 0 && section){
+      } else if (line.length == 0 && section) {
         section = null;
       };
     });
     return value
   }
+  // 获取只读元数据
+  public static renderReadonlyItem = ({
+    apicode,
+    formitem,
+    value,
+    record,
+  }: {
+    apicode?: string;
+    formitem: any;
+    value: string | any[];
+    record?: Record<string, any>;
+  }) => {
+    if (!formitem) {
+      return value;
+    }
+    if (!formitem.type) {
+      return '';
+    }
 
+    if (['Select', 'Cascader'].includes(formitem.type)) {
+      // console.log(value, 'vlaues');
+      // 多选的情况
+      if (formitem.props.mode === 'multiple') {
+        if (isArray(value)) {
+          return value
+            .map((v: any) => {
+              return this.getLabelInOptions({
+                value: v,
+                options: formitem?.props.options || [],
+              });
+            })
+            .join(',');
+        } else {
 
-  //本段代码来自 我点评 ：https://www.wodianping.com/javascript/2023-05/55471.html
+          return value
+            ? value
+              .split(',')
+              .map((v: any) => {
+                return this.getLabelInOptions({
+                  value: v,
+                  options: formitem?.props.options || [],
+                });
+              })
+              .join(',')
+            : '';
+        }
+      } else {
+        return this.getLabelInOptions({
+          value,
+          options: formitem?.props.options || [],
+        });
+      }
+    } else if (['TreeSelect'].includes(formitem.type)) {
+      // 多选的情况
+      if (formitem.props?.treeCheckable && isArray(value)) {
+        return value
+          .map((v: any) => {
+            return this.getLabelInOptions({
+              value: typeof v !== 'string' ? v.value : v,
+              options: formitem?.props.treeData || [],
+            });
+          })
+          .join(',');
+      } else {
+        return this.getLabelInOptions({
+          value,
+          options: formitem?.props.treeData || [],
+        });
+      }
+    } else if (['Date'].includes(formitem.type)) {
+      if (value) {
+        const isMot = moment.isMoment(value);
+        if (isMot) {
+          const creation = value.creationData();
+          return value.format(formitem?.props?.format ?? (creation.format as string));
+        } else {
+          return moment(value).format(formitem?.props?.format ?? 'YYYY-MM-DD HH:mm:ss');
+        }
+      } else {
+        return '';
+      }
+    } else if (['CompositeForm'].includes(formitem.type)) {
+      if (value && typeof value === 'string') {
+        if (String(value)?.includes('~%~')) {
+          return `${value.split('~%~')[0] || ''}${find(formitem.props?.options, { id: value.split('~%~')[1] })?.name || ''}`;
+        } else {
+          return value;
+        }
+      }
+      return '';
+    } else {
+      if (isArray(value)) {
+        return value.join(',');
+      } else {
+        return value ?? '';
+      }
+    }
+  };
+  // 转换值
+  public static getLabelInOptions = (params: {
+    value: string | boolean | string[];
+    options: any & { label: string; value: string | boolean }[];
+    adaptor?: {
+      label: string;
+      value: string;
+      children?: string;
+    };
+  }) => {
+    const { value, options, adaptor } = params;
+    const valueType = Object.prototype.toString.call(value);
+
+    const isValid = (value: any) => {
+      return value !== '' && value !== undefined && value !== null;
+    };
+    if (!isValid(value)) {
+      return '';
+    }
+    let valueLabel: any = '';
+    if (valueType === '[object Array]') {
+      valueLabel = [];
+    }
+    const fn = (childOptions: any) => {
+      for (let index = 0; index < childOptions.length; index++) {
+        const optionLabel = childOptions[index][adaptor ? adaptor.label : 'label'];
+        const optionValue = childOptions[index][adaptor ? adaptor.value : 'value'];
+        // 找到id === option.value
+        if (valueType === '[object Array]') {
+          //@ts-ignore
+          if (value.includes(optionValue)) {
+            valueLabel.push(optionLabel);
+          }
+        } else {
+          if (value === optionValue) {
+            valueLabel = optionLabel;
+          }
+        }
+
+        if (childOptions[index].children && childOptions[index].children.length) {
+          // 树状查找
+          fn(childOptions[index].children);
+        }
+      }
+    };
+    fn(options);
+    return valueLabel;
+  };
 }
