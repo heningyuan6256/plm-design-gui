@@ -49,8 +49,8 @@ class SSEService {
     //   console.log("SSE连接失败/关闭");
     // };
     this.es.onmessage = async (res: any) => {
-      // console.log('接收到SEE数据', res);
-      const result = JSON.parse(res.data).seq_context;
+      // console.log('接收到SEE数据', res);s
+      const result = JSON.parse(JSON.parse(res.data).seq_context);
       const toUserList = result.msg.target ? result.msg.target.split(',') : [];
       // 如果是退出挤用户的情况，则判断消息的源头如果等于当前的则不挤用户，否则挤用户
       // console.log(, 'document.Browser.Agent');
@@ -59,7 +59,7 @@ class SSEService {
       // }
       if (
         (result.cmd === 'global.instanceNumberCreated' ||
-          result.cmd === 'instance.workflowUpdate') &&
+          result.cmd === 'ins.delete') &&
         result.msg.from === this.userId
       ) {
         return;
