@@ -3,6 +3,7 @@ import API from "../utils/api";
 import { writeFile } from "@tauri-apps/api/fs";
 import { homeDir } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
+import { sse } from "../utils/SSEService";
 
 export const fetchUserByToken = createAsyncThunk<any, string>(
   "users/fetchUserByToken",
@@ -14,6 +15,10 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
         `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`,
         token
       );
+      sse.userId = response.result.id
+      sse.token = token
+      const sseUrl = `http://192.168.0.101:8000/plm/event/pull/${response.result.orgCode}/${response.result.id}`
+      sse.connect(sseUrl)
       return response.result;
     } catch (error) {
       if (!error) {

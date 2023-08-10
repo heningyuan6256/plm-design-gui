@@ -21,6 +21,7 @@
     "antd": "^5.2.3",
     "autoprefixer": "^10.4.13",
     "crypto-js": "^4.1.1",
+    "event-source-polyfill": "^1.0.31",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "mqtt": "^4.3.7",

@@ -70,6 +70,7 @@ export const formItemMap: Record<string, any> = {
 export interface logItemType {
   log: string;
   dateTime: string
+  id: string
 }
 
 const index = () => {
@@ -93,13 +94,24 @@ const index = () => {
   const [fileSelectRows, setFileSelectRows] = useState<any[]>([])
   const [materialSelectRows, setMaterialSelectRows] = useState<any>([])
   const [logVisible, setLogVisbile] = useState(false)
-  const [logData, setLogData] = useState<{ dateTime: string, log: string }[]>([])
+  const [logData, setLogData] = useState<logItemType[]>([])
   const { value: network } = useSelector((state: any) => state.network);
+  const logWrapperRef = useRef<any>(null)
 
   const lastestLogData = useLatest(logData)
 
   const [InstanceAttrsMap] = useState<{ [k: string]: { origin: any, material: { onChain: any, plugin: any }, file: { onChain: any, plugin: any } } }>({})
   const dispatch = useDispatch();
+
+
+  const warpperSetLog = (func: () => void) => {
+    func()
+    if (logWrapperRef.current) {
+      setTimeout(() => {
+        logWrapperRef.current.scrollTop = logWrapperRef.current.scrollHeight
+      })
+    }
+  }
 
 
   // 获取所有的属性
@@ -592,7 +604,7 @@ const index = () => {
       }]
       if (updateInstances.length) {
         await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
-        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime() }])
+        warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
       }
 
       API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
@@ -671,7 +683,7 @@ const index = () => {
 
   // 监听设置属性
   useMqttRegister(CommandConfig.setProductAttVal, async (res) => {
-    setLogData([...lastestLogData.current, { dateTime: getCurrentTime(), log: '属性回写模型成功!' }])
+    warpperSetLog(() => { setLogData([...lastestLogData.current, { dateTime: getCurrentTime(), log: '属性回写模型成功!', id: Utils.generateSnowId() }]) })
     // mqttClient.publish({
     //   type: CommandConfig.getCurrentBOM,
     // });
@@ -805,10 +817,11 @@ const index = () => {
     const createLogArray: logItemType[] = []
     successInstances.result.forEach((item: any) => {
       if (item && item.name) {
-        createLogArray.push({ log: `${item.name} 创建成功， 编号:${item.number}`, dateTime: getCurrentTime() })
+        createLogArray.push({ log: `${item.name} 创建成功， 编号:${item.number}`, dateTime: getCurrentTime(), id: Utils.generateSnowId() })
       }
     })
-    setLogData([...lastestLogData.current, ...createLogArray])
+    warpperSetLog(() => { setLogData([...lastestLogData.current, ...createLogArray]) })
+
     // if (ItemCode.isFile(itemCode)) {
     //   return successInstances
     // } else {
@@ -863,8 +876,8 @@ const index = () => {
       tabCode: tabCode,
       instances: structureData
     })
+    warpperSetLog(() => { setLogData([...lastestLogData.current, { log: ItemCode.isFile(itemCode) ? '批量创建结构成功!' : '批量创建BOM成功!', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
 
-    setLogData([...lastestLogData.current, { log: ItemCode.isFile(itemCode) ? '批量创建结构成功!' : '批量创建BOM成功!', dateTime: getCurrentTime() }])
   }
 
   // 上传文件
@@ -887,8 +900,13 @@ const index = () => {
       })
       .on('upload-progress', (...e) => {
         if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
-          setLogData([...lastestLogData.current, { log: `${e[0]?.name}上传成功！`, dateTime: getCurrentTime() }])
-        }
+          warpperSetLog(() => { setLogData([...lastestLogData.current, { log: `${e[0]?.name}上传成功！`, dateTime: getCurrentTime(), id: `` }]) })
+        } 
+        // else {
+        //   if (e[0]?.name === `upload-${e[0]?.name}`) {
+        //     warpperSetLog(() => { setLogData([...lastestLogData.current, { log: `${e[0]?.name}开始上传${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(2)}！`, dateTime: getCurrentTime(), id: `upload-${e[0]?.name}` }]) })
+        //   }
+        // }
       })
 
     uppy.addFiles(FileArray);
@@ -985,9 +1003,9 @@ const index = () => {
       })
       if (updateInstances.length) {
         await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
-        setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime() }])
+        warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
       }
-      setLogData([...lastestLogData.current, { log: '模型上传成功！', dateTime: getCurrentTime() }])
+      warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '模型上传成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
       });
@@ -1874,7 +1892,7 @@ const index = () => {
             }
           }}>
             <div style={{ padding: '12px 13px', background: '#f1f1f1' }}>
-              <div className={"w-full border border-outBorder overflow-auto bg-white"} style={{ height: '365px', padding: '12px' }}>
+              <div ref={logWrapperRef} className={"w-full border border-outBorder overflow-auto bg-white"} style={{ height: '365px', padding: '12px' }}>
                 {
                   logData.map((item: any, index: number) => {
                     return <div key={index} className="flex text-xs">
