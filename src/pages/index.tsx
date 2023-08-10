@@ -50,6 +50,7 @@ import { useSelector } from "react-redux";
 import { open } from "@tauri-apps/api/shell";
 import SplitPane from 'react-split-pane';
 import { setBom } from "../models/bom";
+import { useLocation } from "react-router-dom";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -97,6 +98,7 @@ const index = () => {
   const [logData, setLogData] = useState<logItemType[]>([])
   const { value: network } = useSelector((state: any) => state.network);
   const logWrapperRef = useRef<any>(null)
+  const location = useLocation()
 
   const lastestLogData = useLatest(logData)
 
@@ -248,7 +250,7 @@ const index = () => {
         type: CommandConfig.getCurrentBOM,
       });
     }
-  }, [selectProduct]);
+  }, [selectProduct, location.pathname]);
 
   // 获取当前产品数据
   useEffect(() => {
@@ -899,14 +901,18 @@ const index = () => {
         allowedMetaFields: null,
       })
       .on('upload-progress', (...e) => {
-        if (e[1]?.bytesTotal == e[1]?.bytesUploaded) {
-          warpperSetLog(() => { setLogData([...lastestLogData.current, { log: `${e[0]?.name}上传成功！`, dateTime: getCurrentTime(), id: `` }]) })
-        } 
-        // else {
-        //   if (e[0]?.name === `upload-${e[0]?.name}`) {
-        //     warpperSetLog(() => { setLogData([...lastestLogData.current, { log: `${e[0]?.name}开始上传${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(2)}！`, dateTime: getCurrentTime(), id: `upload-${e[0]?.name}` }]) })
-        //   }
-        // }
+        if (lastestLogData.current.findIndex(item => item.id == `upload-${e[0]?.name}`) != -1) {
+          const logs = lastestLogData.current.map(item => {
+            if (item.id === `upload-${e[0]?.name}`) {
+              return { log: `${e[0]?.name} ${e[1]?.bytesUploaded == e[1]?.bytesTotal ? '上传完成' : "上传中"} ${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(2)}！`, dateTime: getCurrentTime(), id: `upload-${e[0]?.name}` }
+            } else {
+              return item
+            }
+          })
+          warpperSetLog(() => { setLogData(logs) })
+        } else {
+          warpperSetLog(() => { setLogData([...lastestLogData.current, { log: `${e[0]?.name}开始上传${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(2)}！`, dateTime: getCurrentTime(), id: `upload-${e[0]?.name}` }]) })
+        }
       })
 
     uppy.addFiles(FileArray);

@@ -45,7 +45,7 @@ export const RoutesWithSubRoutes = () => {
       element: <PageLayout></PageLayout>,
       children: [
         {
-          path: "/home",
+          path: "/home/:id",
           element: <Home></Home>,
         },
         // 属性映射

@@ -18,6 +18,7 @@ import { invoke } from "@tauri-apps/api";
 import PlmModal from "../components/PlmModal";
 import Info from "../pages/info";
 import { message } from "antd";
+import { Utils } from "../utils";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
@@ -28,7 +29,7 @@ const left: FC = () => {
   // // 监听路由
 
   useEffect(() => {
-    mqttClient.registerCallBack(CommandConfig.onchain_path, async(res) => {
+    mqttClient.registerCallBack(CommandConfig.onchain_path, async (res) => {
       console.log(res, 'res')
       if ((res.input_data === 'cad_start') || (res.input_data === CommandConfig.cadShutDown)) {
         return
@@ -60,6 +61,8 @@ const left: FC = () => {
         }, 200)
       } else if (res.input_data === PathConfig.openInfo) {
         setInfoVisible(true)
+      } else if (res.input_data === PathConfig.openUpload) {
+        navigate(`/${res.input_data.split("_")[1]}/id-${Utils.generateSnowId()}`);
       } else {
         navigate(`/${res.input_data.split("_")[1]}`);
       }
@@ -89,7 +92,7 @@ const left: FC = () => {
       title: "上传",
       icon: menuUpload,
       hoverIcon: menuUploadHover,
-      path: "/home",
+      path: "/home/id",
       location: "left",
     },
     {
@@ -100,8 +103,8 @@ const left: FC = () => {
       location: "right",
     },
   ].filter(item => {
-    if(bom.init) {
-      return item.path != '/home'
+    if (bom.init) {
+      return item.title != '上传'
     }
     return item
   });
@@ -109,14 +112,14 @@ const left: FC = () => {
     return (
       <div
         key={item.path}
-        className={`cursor-pointer w-full flex justify-center ${location.pathname == item.path ? "leftBorder" : ""
+        className={`cursor-pointer w-full flex justify-center ${(location.pathname == item.path || location.pathname.indexOf(item.path) != -1) ? "leftBorder" : ""
           }`}
         style={{
           // borderLeft: location.pathname == item.path ? "3px solid #0563B2" : "",
           padding: "10px 0px",
         }}
         onClick={() => {
-          if(!mqttClient.publishTopic && item.path === '/preference') {
+          if (!mqttClient.publishTopic && item.path === '/preference') {
             message.error('请打开设计工具')
             return
           }
@@ -133,7 +136,7 @@ const left: FC = () => {
         <img
           className="w-4"
           src={
-            item.path === hoverButton || location.pathname == item.path
+            item.path === hoverButton || location.pathname == item.path || location.pathname.indexOf(item.path) != -1
               ? item.hoverIcon
               : item.icon
           }
