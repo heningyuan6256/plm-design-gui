@@ -30,128 +30,139 @@ interface LayoutProps {
   children?: React.ReactNode;
 }
 
+export const openDesign = async ({
+  loading,
+  cancelLoading,
+  insId,
+  userId,
+  network
+}: { loading: () => void, cancelLoading: () => void, insId: string, network: string, userId: string }) => {
+  // dispatch(setLoading(true))
+  loading()
+  const currentWindow = getCurrent();
+  currentWindow.setFocus()
+  const versionOrderResult: any = await API.queryInsVersionOrder(insId)
+  const orders = versionOrderResult.result[insId].orders
+  console.log('收到打开设计工具命令')
+  API.getInstanceInfoById({
+    instanceId: insId,
+    authType: 'read',
+    tabCode: '10002001',
+    tenantId: '719',
+    userId: userId,
+    versionOrder: orders[orders.length - 1]
+  }).then(async (ins: any) => {
+    const attrMap = Utils.transformArrayToMap(ins.result.pdmAttributeCustomizedVoList, 'apicode', 'id')
+    const instance = ins.result.readInstanceVo
+    const fileUrl = instance.attributes[attrMap['FileUrl']]
+    const fileName = instance.attributes[attrMap['Description']]
+    const client = await getClient()
+
+    try {
+      API.downloadFile(fileUrl.split('/plm')[1]).then(res => {
+      }).catch(async (res) => {
+        const homeDirPath = await homeDir();
+        await createDir(`${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}`, { recursive: true })
+        await writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${instance.insDesc}`, contents: res })
+
+        const { result: { records } }: any = await API.queryInstanceTab({
+          instanceId: insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
+          tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: userId, versionOrder: ins.result.readInstanceVo.insVersionOrder
+        })
+
+        const loop = async (data: any) => {
+          for (let i = 0; i < data.length; i++) {
+            const response: any = await client.get(`http://${network}/api/plm${data[i].attributes[attrMap['FileUrl']].split('/plm')[1]}`, {
+              // the expected response type
+              responseType: ResponseType.Binary
+            });
+            console.log(response)
+            await writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${data[i].insDesc}`, contents: response.data })
+            if (data[i].children && data[i].children.length) {
+              loop(data[i].children);
+            }
+          }
+        };
+        await loop(records || []);
+        cancelLoading()
+        const regCommand = new Command(
+          "reg",
+          [
+            "query",
+            `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
+            "/v",
+            "SolidWorks Folder",
+          ],
+          { encoding: "GBK" }
+        );
+        // const homeDirPath = await homeDir();
+        regCommand.stdout.on("data", async (line: string) => {
+          const installDir = line.replace('REG_SZ', '').replace('SolidWorks Folder', '').trim()
+          if (installDir && installDir.indexOf("HKEY_LOCAL_MACHINE") == -1) {
+            // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
+
+
+            // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
+            // command.execute()
+            const command = new Command(
+              "rundesign",
+              [
+                // installDir + "SOLIDWORKS.exe",
+                // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
+                homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' + instance.insDesc,
+              ],
+              // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
+              // { encoding: "GBK" }
+            );
+            command.stderr.on("data", (args) => {
+              console.log('args', ...args);
+
+            })
+
+            command.stdout.on("data", async (line: string) => {
+              console.log('line', ...line);
+            })
+            command.execute()
+          }
+        })
+        regCommand.stderr.on('data', (err) => {
+          message.error(err)
+          cancelLoading()
+        })
+        regCommand.execute()
+      }).catch(err => {
+        message.error(err)
+        cancelLoading()
+      })
+    } catch (error: any) {
+      message.error(error)
+      cancelLoading()
+    }
+
+  }).catch((e) => {
+    cancelLoading()
+  })
+}
+
 const PageLayout: React.FC<LayoutProps> = (data) => {
   const { value: user } = useSelector((state: any) => state.user);
   const { value: loading } = useSelector((state: any) => state.loading);
   const { value: network } = useSelector((state: any) => state.network);
   const dispatch = useDispatch();
 
-  const openDesignWarpper = useMemoizedFn(async (insId: string) => {
-    dispatch(setLoading(true))
-    const currentWindow = getCurrent();
-    currentWindow.setFocus()
-    const versionOrderResult: any = await API.queryInsVersionOrder(insId)
-    const orders = versionOrderResult.result[insId].orders
-    console.log('收到打开设计工具命令')
-    API.getInstanceInfoById({
-      instanceId: insId,
-      authType: 'read',
-      tabCode: '10002001',
-      tenantId: '719',
-      userId: user.id,
-      versionOrder: orders[orders.length - 1]
-    }).then(async (ins: any) => {
-      console.log(ins, 'ins')
-
-      const attrMap = Utils.transformArrayToMap(ins.result.pdmAttributeCustomizedVoList, 'apicode', 'id')
-      const instance = ins.result.readInstanceVo
-      const fileUrl = instance.attributes[attrMap['FileUrl']]
-      const fileName = instance.attributes[attrMap['Description']]
-      const client = await getClient()
-
-      try {
-        API.downloadFile(fileUrl.split('/plm')[1]).then(res => {
-        }).catch(async (res) => {
-          const homeDirPath = await homeDir();
-          await createDir(`${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}`, { recursive: true })
-          await writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${instance.insDesc}`, contents: res })
-
-          const { result: { records } }: any = await API.queryInstanceTab({
-            instanceId: insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
-            tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, versionOrder: ins.result.readInstanceVo.insVersionOrder
-          })
-
-          const loop = async (data: any) => {
-            for (let i = 0; i < data.length; i++) {
-              const response: any = await client.get(`http://${network}/api/plm${data[i].attributes[attrMap['FileUrl']].split('/plm')[1]}`, {
-                // the expected response type
-                responseType: ResponseType.Binary
-              });
-              console.log(response)
-              await writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${data[i].insDesc}`, contents: response.data })
-              if (data[i].children && data[i].children.length) {
-                loop(data[i].children);
-              }
-            }
-          };
-          await loop(records || []);
-          dispatch(setLoading(false))
-          const regCommand = new Command(
-            "reg",
-            [
-              "query",
-              `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
-              "/v",
-              "SolidWorks Folder",
-            ],
-            { encoding: "GBK" }
-          );
-          // const homeDirPath = await homeDir();
-          regCommand.stdout.on("data", async (line: string) => {
-            const installDir = line.replace('REG_SZ', '').replace('SolidWorks Folder', '').trim()
-            if (installDir && installDir.indexOf("HKEY_LOCAL_MACHINE") == -1) {
-              // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
-
-
-              // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
-              // command.execute()
-              const command = new Command(
-                "rundesign",
-                [
-                  // installDir + "SOLIDWORKS.exe",
-                  // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
-                  homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' + instance.insDesc,
-                ],
-                // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
-                // { encoding: "GBK" }
-              );
-              command.stderr.on("data", (args) => {
-                console.log('args', ...args);
-
-              })
-
-              command.stdout.on("data", async (line: string) => {
-                console.log('line', ...line);
-              })
-              command.execute()
-            }
-          })
-          regCommand.stderr.on('data', (err) => {
-            message.error(err)
-            dispatch(setLoading(false))
-          })
-          regCommand.execute()
-        }).catch(err => {
-          message.error(err)
-          dispatch(setLoading(false))
-        })
-      } catch (error: any) {
-        message.error(error)
-      }
-
-
-    }).catch((e) => {
-      console.log(e,'333');
-      dispatch(setLoading(false))
+  const openDesignWarpper = useMemoizedFn((insId: any) => {
+    openDesign({
+      loading: () => { dispatch(setLoading(true)) },
+      cancelLoading: () => { dispatch(setLoading(false)) },
+      network: network,
+      insId: insId,
+      userId: user.id
     })
   })
 
   useEffect(() => {
-    const openDesign = (insId: any) => {
-      openDesignWarpper(insId)
-    }
     sse.registerCallBack('open_design', (insId) => {
-      openDesign(insId)
+      openDesignWarpper(insId)
     })
     const currentWindow = getCurrent();
     currentWindow.listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async (e) => {

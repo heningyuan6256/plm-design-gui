@@ -21,6 +21,7 @@ import { setLoading } from "../models/loading";
 import { getClient, ResponseType } from '@tauri-apps/api/http';
 import { Command,open } from "@tauri-apps/api/shell";
 import { BasicsItemCode } from "../constant/itemCode";
+import { openDesign } from "../layout/pageLayout";
 // import { dealMaterialData } from 'plm-wasm'
 
 const query: FC = () => {
@@ -298,101 +299,12 @@ const query: FC = () => {
                 onRow={(row: any) => {
                   return {
                     onDoubleClick: async() => {
-                      dispatch(setLoading(true))
-                      const versionOrderResult:any = await API.queryInsVersionOrder(row.insId)
-                      const orders = versionOrderResult.result[row.insId].orders
-                      API.getInstanceInfoById({
-                        instanceId: row.insId,
-                        authType: 'read',
-                        tabCode: '10002001',
-                        tenantId: '719',
-                        userId: user.id,
-                        versionOrder: orders[orders.length - 1]
-                      }).then(async(ins: any) => {
-                        const attrMap = Utils.transformArrayToMap(ins.result.pdmAttributeCustomizedVoList, 'apicode', 'id')
-                        const instance = ins.result.readInstanceVo
-                        const fileUrl = instance.attributes[attrMap['FileUrl']]
-                        const fileName = instance.attributes[attrMap['Description']]
-                        const client = await getClient()
-                        
-                        try {
-                          API.downloadFile(fileUrl.split('/plm')[1]).then(res => {
-                          }).catch(async (res) => {
-                            const homeDirPath = await homeDir();
-                            await createDir(`${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}`, { recursive: true })
-                            await writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${instance.insDesc}`, contents: res })
-  
-                            const { result: { records } }: any = await API.queryInstanceTab({
-                              instanceId: row.insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
-                              tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, versionOrder: ins.result.readInstanceVo.insVersionOrder
-                            })
-                            console.log(records,row, 'records');
-                            
-                            const loop = async(data: any) => {
-                              for (let i = 0; i < data.length; i++) {
-                                console.log(`http://${network}${data[i].attributes[attrMap['FileUrl']].split('/plm')[1]}`,'111')
-                                const response:any = await client.get(`http://${network}/api/plm${data[i].attributes[attrMap['FileUrl']].split('/plm')[1]}`, {
-                                  // the expected response type
-                                  responseType: ResponseType.Binary
-                                  });
-                                  console.log(response)
-                                  await writeBinaryFile({ path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${data[i].insDesc}`, contents: response.data })
-                                if (data[i].children && data[i].children.length) {
-                                  loop(data[i].children);
-                                }
-                              }
-                            };
-                            await loop(records || []);
-                            dispatch(setLoading(false))
-                            const regCommand = new Command(
-                              "reg",
-                              [
-                                "query",
-                                `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
-                                "/v",
-                                "SolidWorks Folder",
-                              ],
-                              { encoding: "GBK" }
-                            );
-                            // const homeDirPath = await homeDir();
-                            regCommand.stdout.on("data", async (line: string) => {
-                              const installDir = line.replace('REG_SZ', '').replace('SolidWorks Folder', '').trim()
-                              if(installDir && installDir.indexOf("HKEY_LOCAL_MACHINE") == -1){
-                                // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
-                                
-  
-                                // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
-                                // command.execute()
-                                const command = new Command(
-                                  "rundesign",
-                                  [
-                                    // installDir + "SOLIDWORKS.exe",
-                                    // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
-                                    homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,
-                                  ],
-                                  // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
-                                  // { encoding: "GBK" }
-                                );
-                                command.stderr.on("data",(args) => {
-                                  console.log('args',...args);
-                                  
-                                })
-  
-                                command.stdout.on("data", async (line: string) => {
-                                  console.log('line',...line);
-                                })
-                                command.execute()
-                              }
-                            })
-                            regCommand.execute()
-                          })
-                        } catch (error:any) {
-                          message.error(error)
-                        }
-                        
-                        
-                      }).catch(() => {
-                        dispatch(setLoading(false))
+                      openDesign({
+                        loading: () => { dispatch(setLoading(true)) },
+                        cancelLoading: () => { dispatch(setLoading(false)) },
+                        network: network,
+                        insId: row.insId,
+                        userId: user.id
                       })
                     }
                   }
