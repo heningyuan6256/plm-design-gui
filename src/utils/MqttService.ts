@@ -95,7 +95,7 @@ class MqttService {
           const tc: any = matches?.args?.topic?.value || ''
           this.pid = pid
           this.publishTopic = tc
-          // this.pid = '16820'
+          // this.pid = '11492'
           // this.publishTopic = 'sw'
           this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
           this.mqtt.on("connect", () => {
@@ -109,13 +109,18 @@ class MqttService {
             console.log(value, value.pid, this.pid, '收到消息')
             // 判断当前是设计工具退出的命令，并且当前发送的pid等于当前存储的pid
             if ((value.input_data === CommandConfig.cadShutDown) && (value.pid == this.pid)) {
-              console.log('退出');
-              const currentWindow = getCurrent();
-              currentWindow.close()
+              // 绑定的solidworks退出，该应用不退出
+              this.publishTopic = ''
+              this.updatePid(JSON.stringify({pid: ''}))
+              console.log('绑定的设计工具退出')
+              return
+              // console.log('退出');
+              // const currentWindow = getCurrent();
+              // currentWindow.close()
             }
   
             // 判断当前发过来的进程pid不等于当前已经存在的pid,则原先的pid解除绑定
-            if (value.pid != this.pid && value.input_data != 'cad_start') {
+            if (value.pid != this.pid) {
               // 判断当前不在loading中
               if (!this.loading.current) {
                 this.publish({

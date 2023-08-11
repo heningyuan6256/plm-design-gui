@@ -100,6 +100,7 @@ const index = () => {
   const { value: network } = useSelector((state: any) => state.network);
   const logWrapperRef = useRef<any>(null)
   const location = useLocation()
+  const [designData, setDesignData] = useState({})
 
   const lastestLogData = useLatest(logData)
 
@@ -444,12 +445,14 @@ const index = () => {
     // 判断当前文件是否签出
     if (judgeFileCheckout(row)) {
       message.error('当前文件已签出')
+      dispatch(setLoading(false))
     } else {
       dispatch(setLoading(true))
       API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(() => {
-        API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
-          updateSingleData(row)
-          dispatch(setLoading(false))
+        API.getInstanceInfoById({ instanceId: row.insId, authType: 'read', tabCode: '10002001', userId: user.id, tenantId: '719' }).then((res: any) => {
+          row.file.onChain.checkOut = res.result.readInstanceVo.checkout
+          row.file.onChain.Revision = res.result.readInstanceVo.insVersionOrder
+          originCheckIn(row)
         })
       })
     }
@@ -459,6 +462,7 @@ const index = () => {
     // 判断当前文件是否签出
     if (judgeFileCheckout(row)) {
       message.error('当前文件已签出')
+      dispatch(setLoading(false))
     } else {
       dispatch(setLoading(true))
       API.checkout({ checkoutBy: user.id, insId: row.insId, insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(() => {
@@ -473,6 +477,7 @@ const index = () => {
   const cancelCheckoutData = ({ row }: { row: any }) => {
     if (!judgeFileCheckout(row)) {
       message.error('当前文件还未签出')
+      dispatch(setLoading(false))
     } else {
       dispatch(setLoading(true))
       API.cancelCheckout({ insId: row.insId }).then(res => {
@@ -484,138 +489,143 @@ const index = () => {
     }
   }
 
+  const originCheckIn = async (row: any) => {
+    // 签入需要更新当前的附件，以及相对应的属性，以及结构
+    const { result: { records } }: any = await API.queryInstanceTab({
+      instanceId: row.file.onChain.insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
+      tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version, versionOrder: row.file.onChain.Revision
+    })
+    console.log(records, 'records');
+
+    if ((records || []).length) {
+      const params = {
+        id: row.file.onChain.insId,
+        itemCode: BasicsItemCode.file,
+        tabCode: '10002016',
+        deleteAffectedInstanceIds: records.map((item: any) => item.insId).join(','),
+        deleteRowIds: records.map((item: any) => item.rowId),
+        tenantId: '719',
+        userId: user.id,
+        versionNumber: row.Version
+      }
+      console.log(params, '删除结构参数')
+      const result = await API.insatnceTabsave(params)
+      console.log(result, '删除结构');
+
+    }
+    // //更新当前的第一级结构
+    const {
+      result: { records: tabAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.file,
+      tabCode: "10002016",
+    });
+
+    const rowKey = getRowKey(row)
+
+    const countMap = groupBy(InstanceAttrsMap[rowKey].origin.children || [], (item) => {
+      return getRowKey(item)
+    })
+
+    console.log(countMap, 'countMap');
+
+
+    const setVal = ((row: any, col: any) => {
+      if (col.apicode === 'ID') {
+        return row.file.onChain.insId
+      } else if (col.apicode === 'Qty') {
+        console.log(row.file.plugin.Description, '')
+        return countMap[getRowKey(row)].length || ''
+      } else {
+        return ''
+      }
+    })
+
+    const flattenData = (InstanceAttrsMap[getRowKey(row)].origin.children || []).filter((item: any) => {
+      return getRowKey(item) != getRowKey(row)
+    })
+
+    // 需要过滤掉所有的内部零件以及
+    const dealParams = flattenData.map((item: any) => {
+      return {
+        insAttrs: tabAttrs.filter((attr: any) => {
+          return ['ID', 'Qty']
+        }).map((attr: any) => {
+          return {
+            apicode: attr.apicode,
+            id: attr.id,
+            valueType: attr.valueType,
+            value: setVal(item, attr)
+          }
+        })
+      }
+    })
+    console.log(dealParams, 'dealParams');
+    if (dealParams.length) {
+      await API.insatnceTabsave({
+        itemCode: BasicsItemCode.file,
+        tabCode: '10002016',
+        rowList: dealParams,
+        id: row.file.onChain.insId,
+        tenantId: '719',
+        userId: user.id,
+        versionNumber: row.Version
+      })
+    }
+    const nameFileUrlMap = await uploadFile([{
+      name: getFileNameWithFormat(row),
+      data: new Blob([await readBinaryFile(row.file_path)]),
+      source: 'Local',
+      isRemote: false,
+    }])
+
+    const nameThumbMap = await uploadFile([{
+      name: row.pic_path.substring(row.pic_path.lastIndexOf('\\') + 1),
+      data: new Blob([await readBinaryFile(row.pic_path)]),
+      source: 'Local',
+      isRemote: false,
+    }])
+    //批量更新文件地址
+    const updateInstances = [{
+      id: row.file.onChain.insId,
+      itemCode: BasicsItemCode.file,
+      tabCode: '10002001',
+      insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
+        if (attr.apicode === 'FileUrl') {
+          return {
+            ...attr,
+            value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(row)].response.uploadURL.split('/plm/files')[1]}?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${row.file.plugin?.FileFormat}`
+          }
+        } else {
+          return {
+            ...attr,
+            value: `/plm/files${nameThumbMap[`${row.file.plugin?.Description}.bmp`].response?.uploadURL.split('/plm/files')[1]}`
+          }
+        }
+      }),
+      tenantId: '719'
+    }]
+    if (updateInstances.length) {
+      await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
+      warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
+    }
+
+    API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
+      updateSingleData(row)
+      dispatch(setLoading(false))
+    }).catch(() => {
+      dispatch(setLoading(false))
+    })
+  }
+
 
   const checkInData = async ({ row }: { row: any }) => {
     if (!judgeFileCheckout(row)) {
+      dispatch(setLoading(false))
       message.error('当前文件还未签出')
     } else {
       dispatch(setLoading(true))
-      // 签入需要更新当前的附件，以及相对应的属性，以及结构
-      const { result: { records } }: any = await API.queryInstanceTab({
-        instanceId: row.file.onChain.insId, itemCode: BasicsItemCode.file, pageNo: '1', pageSize: '500',
-        tabCode: '10002016', tabCodes: '10002016', tenantId: '719', userId: user.id, version: row.Version, versionOrder: row.file.onChain.Revision
-      })
-      console.log(records, 'records');
-
-      if ((records || []).length) {
-        const params = {
-          id: row.file.onChain.insId,
-          itemCode: BasicsItemCode.file,
-          tabCode: '10002016',
-          deleteAffectedInstanceIds: records.map((item: any) => item.insId).join(','),
-          deleteRowIds: records.map((item: any) => item.rowId),
-          tenantId: '719',
-          userId: user.id,
-          versionNumber: row.Version
-        }
-        console.log(params, '删除结构参数')
-        const result = await API.insatnceTabsave(params)
-        console.log(result, '删除结构');
-
-      }
-      // //更新当前的第一级结构
-      const {
-        result: { records: tabAttrs },
-      }: any = await API.getInstanceAttrs({
-        itemCode: BasicsItemCode.file,
-        tabCode: "10002016",
-      });
-
-      const rowKey = getRowKey(row)
-
-      const countMap = groupBy(InstanceAttrsMap[rowKey].origin.children || [], (item) => {
-        return getRowKey(item)
-      })
-
-      console.log(countMap, 'countMap');
-
-
-      const setVal = ((row: any, col: any) => {
-        if (col.apicode === 'ID') {
-          return row.file.onChain.insId
-        } else if (col.apicode === 'Qty') {
-          console.log(row.file.plugin.Description, '')
-          return countMap[getRowKey(row)].length || ''
-        } else {
-          return ''
-        }
-      })
-
-      const flattenData = (InstanceAttrsMap[getRowKey(row)].origin.children || []).filter((item: any) => {
-        return getRowKey(item) != getRowKey(row)
-      })
-
-      // 需要过滤掉所有的内部零件以及
-      const dealParams = flattenData.map((item: any) => {
-        return {
-          insAttrs: tabAttrs.filter((attr: any) => {
-            return ['ID', 'Qty']
-          }).map((attr: any) => {
-            return {
-              apicode: attr.apicode,
-              id: attr.id,
-              valueType: attr.valueType,
-              value: setVal(item, attr)
-            }
-          })
-        }
-      })
-      console.log(dealParams, 'dealParams');
-      if (dealParams.length) {
-        await API.insatnceTabsave({
-          itemCode: BasicsItemCode.file,
-          tabCode: '10002016',
-          rowList: dealParams,
-          id: row.file.onChain.insId,
-          tenantId: '719',
-          userId: user.id,
-          versionNumber: row.Version
-        })
-      }
-      const nameFileUrlMap = await uploadFile([{
-        name: getFileNameWithFormat(row),
-        data: new Blob([await readBinaryFile(row.file_path)]),
-        source: 'Local',
-        isRemote: false,
-      }])
-
-      const nameThumbMap = await uploadFile([{
-        name: row.pic_path.substring(row.pic_path.lastIndexOf('\\') + 1),
-        data: new Blob([await readBinaryFile(row.pic_path)]),
-        source: 'Local',
-        isRemote: false,
-      }])
-      //批量更新文件地址
-      const updateInstances = [{
-        id: row.file.onChain.insId,
-        itemCode: BasicsItemCode.file,
-        tabCode: '10002001',
-        insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
-          if (attr.apicode === 'FileUrl') {
-            return {
-              ...attr,
-              value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(row)].uploadURL.split('/plm/files')[1]}?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${row.file.plugin?.FileFormat}`
-            }
-          } else {
-            return {
-              ...attr,
-              value: `/plm/files${nameThumbMap[`${row.file.plugin?.Description}.bmp`]?.uploadURL.split('/plm/files')[1]}`
-            }
-          }
-        }),
-        tenantId: '719'
-      }]
-      if (updateInstances.length) {
-        await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
-        warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
-      }
-
-      API.checkIn({ insId: row.insId, insUrl: '', insSize: String(row.FileSize), insName: row.file.onChain.Description }).then(res => {
-        updateSingleData(row)
-        dispatch(setLoading(false))
-      }).catch(() => {
-        dispatch(setLoading(false))
-      })
+      originCheckIn(row)
     }
   }
 
@@ -681,15 +691,13 @@ const index = () => {
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
     dispatch(setBom({ init: false }))
+    setDesignData(res)
     await dealCurrentBom(res);
   });
 
   // 监听设置属性
   useMqttRegister(CommandConfig.setProductAttVal, async (res) => {
     warpperSetLog(() => { setLogData([...lastestLogData.current, { dateTime: getCurrentTime(), log: '属性回写模型成功!', id: Utils.generateSnowId() }]) })
-    // mqttClient.publish({
-    //   type: CommandConfig.getCurrentBOM,
-    // });
   });
 
 
@@ -912,13 +920,13 @@ const index = () => {
           })
           warpperSetLog(() => { setLogData(logs) })
         } else {
-          warpperSetLog(() => { setLogData([...lastestLogData.current, { log: `${e[0]?.name}开始上传${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(2)}！`, dateTime: getCurrentTime(), id: `upload-${e[0]?.name}` }]) })
+          warpperSetLog(() => { setLogData([...lastestLogData.current, { log: `${e[0]?.name} 开始上传 ${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(2)}！`, dateTime: getCurrentTime(), id: `upload-${e[0]?.name}` }]) })
         }
       })
 
     uppy.addFiles(FileArray);
     const res = await uppy.upload();
-    const nameThumbMap = Utils.transformArrayToMap(res.successful, 'name', 'response')
+    const nameThumbMap = Utils.transformArrayToMap(res.successful, 'name')
     uppy.close()
     console.log(nameThumbMap, 'nameThumbMap')
     localStorage.clear()
@@ -955,27 +963,67 @@ const index = () => {
 
 
       const FileArray = []
-      const FileThumbArray = []
+
       for (let item of centerData) {
         if (item.file.onChain.flag != 'exist') {
-          FileArray.push(
-            {
-              name: getFileNameWithFormat(item),
-              data: new Blob([await readBinaryFile(item.file_path)]),
-              source: 'Local',
-              isRemote: false,
-            }
-          )
-          FileThumbArray.push(
-            {
-              name: `${item.pic_path.substring(item.pic_path.lastIndexOf('\\') + 1)}`,
-              data: new Blob([await readBinaryFile(item.pic_path)]),
-              source: 'Local',
-              isRemote: false,
-            }
-          )
+          if (item.file_path) {
+            FileArray.push(new Promise(async (resolve, reject) => {
+              const arrayBufferData = await readBinaryFile(item.file_path)
+              resolve({
+                name: getFileNameWithFormat(item),
+                data: new Blob([arrayBufferData]),
+                source: 'Local',
+                isRemote: false,
+              })
+            }))
+          }
+          if (item.pic_path) {
+            FileArray.push(
+              new Promise(async (resolve, reject) => {
+                const arrayBufferData = await readBinaryFile(item.pic_path)
+                resolve({
+                  name: `${item.pic_path.substring(item.pic_path.lastIndexOf('\\') + 1)}`,
+                  data: new Blob([arrayBufferData]),
+                  source: 'Local',
+                  isRemote: false,
+                })
+              })
+            )
+          }
+          if (item.step_path) {
+            FileArray.push(
+              new Promise(async (resolve, reject) => {
+                const arrayBufferData = await readBinaryFile(item.step_path)
+                resolve({
+                  name: `${item.step_path.substring(item.step_path.lastIndexOf('\\') + 1)}`,
+                  data: new Blob([arrayBufferData]),
+                  source: 'Local',
+                  isRemote: false,
+                  dataType: 'step'
+                })
+              })
+            )
+          }
+          if (item.drw_path) {
+            FileArray.push(
+              new Promise(async (resolve, reject) => {
+                const arrayBufferData = await readBinaryFile(item.drw_path)
+                resolve({
+                  name: `${item.drw_path.substring(item.drw_path.lastIndexOf('\\') + 1)}`,
+                  data: new Blob([arrayBufferData]),
+                  source: 'Local',
+                  isRemote: false,
+                  dataType: 'drw'
+                })
+              })
+            )
+          }
         }
       }
+
+      const fileItems = await Promise.all([...FileArray])
+
+      console.log(fileItems, 'fileItems')
 
       mqttClient.publish({
         type: CommandConfig.setProductAttVal,
@@ -984,8 +1032,85 @@ const index = () => {
       console.log(nameNumberMap, 'nameNumberMapnameNumberMap')
       // // 批量创建文件结构
       createStructure({ nameNumberMap, itemCode: BasicsItemCode.file, tabCode: '10002016' })
-      const nameFileUrlMap = await uploadFile(FileArray)
-      const nameThumbMap = await uploadFile(FileThumbArray)
+      const nameFileUrlMap = await uploadFile(fileItems)
+      // const nameThumbMap = await uploadFile(FileThumbArray)
+      // 批量上传附件
+      const {
+        result: { records: tabAttrs },
+      }: any = await API.getInstanceAttrs({
+        itemCode: BasicsItemCode.file,
+        tabCode: "10002008",
+      });
+
+      console.log(nameFileUrlMap, 'nameFileUrlMap')
+
+      const setAttachmentValue = (item: any, apicode: string, type: 'drw' | 'step') => {
+        const nameWidthFormat = `${item[`${type}_path`].substring(item[`${type}_path`].lastIndexOf('\\') + 1)}`
+        if (apicode === 'ID') {
+          return nameWidthFormat
+        } else if (apicode === 'FileId') {
+          return nameFileUrlMap[nameWidthFormat].id
+        } else if (apicode === 'OnlineEditingStatus') {
+          return '1'
+        } else if (apicode === 'OldFileUrl') {
+          return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split('/plm/files')[1]}`
+        } else if (apicode === 'FileName') {
+          return nameWidthFormat
+        } else if (apicode === 'FileSize') {
+          return `${nameFileUrlMap[nameWidthFormat].size}`
+        } else if (apicode === 'FileFormat') {
+          return `${nameFileUrlMap[nameWidthFormat].extension}`
+        } else if (apicode === 'FileUrl') {
+          return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split('/plm/files')[1]}`
+        } else {
+          return ''
+        }
+      }
+      const addAttachmentParams: any = []
+      centerData.filter(item => item.file.onChain.flag != 'exist').forEach((item) => {
+        if (item.step_path) {
+          addAttachmentParams.push({
+            instanceId: nameNumberMap[getRowKey(item)],
+            itemCode: BasicsItemCode.file,
+            tabCode: '10002008',
+            versionNumber: 'Draft',
+            versionOrder: '1',
+            insAttrs: tabAttrs.map((attr: any) => {
+              return {
+                apicode: attr.apicode,
+                id: attr.id,
+                title: attr.name,
+                valueType: attr.valueType,
+                value: setAttachmentValue(item, attr.apicode, 'step')
+              }
+            })
+          })
+        } else if (item.drw_path) {
+          addAttachmentParams.push({
+            instanceId: nameNumberMap[getRowKey(item)],
+            itemCode: BasicsItemCode.file,
+            tabCode: '10002008',
+            versionNumber: 'Draft',
+            versionOrder: '1',
+            insAttrs: tabAttrs.map((attr: any) => {
+              return {
+                apicode: attr.apicode,
+                id: attr.id,
+                title: attr.name,
+                valueType: attr.valueType,
+                value: setAttachmentValue(item, attr.apicode, 'drw')
+              }
+            })
+          })
+        }
+      })
+
+      const attchmentResult = await API.addInstanceAttributeAttachment({
+        tenantId: '719',
+        instanceAttrVos: addAttachmentParams
+      })
+      console.log(attchmentResult, addAttachmentParams, 'FileAttachment')
+
       //批量更新文件地址
       const updateInstances = centerData.filter(item => item.file.onChain.flag != 'exist').map(item => {
         return {
@@ -996,12 +1121,12 @@ const index = () => {
             if (attr.apicode === 'FileUrl') {
               return {
                 ...attr,
-                value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(item)].uploadURL.split('/plm/files')[1]}?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize}&extension=${item.file.plugin?.FileFormat}`
+                value: `/plm/files${nameFileUrlMap[getFileNameWithFormat(item)].response.uploadURL.split('/plm/files')[1]}?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize}&extension=${item.file.plugin?.FileFormat}`
               }
             } else {
               return {
                 ...attr,
-                value: `/plm/files${nameThumbMap[`${item.file.plugin?.Description}.bmp`]?.uploadURL.split('/plm/files')[1]}`
+                value: `/plm/files${nameFileUrlMap[`${item.file.plugin?.Description}.bmp`].response?.uploadURL.split('/plm/files')[1]}`
               }
             }
           }),
@@ -1012,11 +1137,10 @@ const index = () => {
         await API.batchUpdate({ instances: updateInstances, tenantId: '719', userId: user.id })
         warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '批量更新模型地址成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
       }
-      warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '模型上传成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
-      mqttClient.publish({
-        type: CommandConfig.getCurrentBOM,
-      });
+      // 批量增加附件
 
+      warpperSetLog(() => { setLogData([...lastestLogData.current, { log: '模型上传成功！', dateTime: getCurrentTime(), id: Utils.generateSnowId() }]) })
+      await dealCurrentBom(designData);
     } else
       if (name === 'log') {
         setLogVisbile(true)
@@ -1069,17 +1193,23 @@ const index = () => {
         if (selectNode) {
           const row = { ...selectNode, ...selectNode.file.onChain }
           checkoutData({ row: row })
+        } else {
+          message.error('请选择目标节点')
         }
 
       } else if (name === 'cancelcheckout') {
         if (selectNode) {
           const row = { ...selectNode, ...selectNode.file.onChain }
           cancelCheckoutData({ row: row })
+        } else {
+          message.error('请选择目标节点')
         }
       } else if (name === 'checkin') {
         if (selectNode) {
           const row = { ...selectNode, ...selectNode.file.onChain }
           checkInData({ row: row })
+        } else {
+          message.error('请选择目标节点')
         }
       }
   };
@@ -1384,11 +1514,11 @@ const index = () => {
             <PlmTabToolBar
               onClick={async (item) => {
                 if (item.tag === 'checkout') {
-                  materialSelectRows.length && checkoutData({ row: materialSelectRows[0] })
+                  materialSelectRows.length ? checkoutData({ row: materialSelectRows[0] }) : message.error('请选择目标节点')
                 } else if (item.tag === 'cancelCheckout') {
-                  materialSelectRows.length && cancelCheckoutData({ row: materialSelectRows[0] })
+                  materialSelectRows.length ? cancelCheckoutData({ row: materialSelectRows[0] }) : message.error('请选择目标节点')
                 } else if (item.tag === 'checkIn') {
-                  materialSelectRows.length && checkInData({ row: materialSelectRows[0] })
+                  materialSelectRows.length ? checkInData({ row: materialSelectRows[0] }) : message.error('请选择目标节点')
                 } else if (item.tag === 'createIntance') {
                   dispatch(setLoading(true));
                   const successInstances = await createInstance({ itemCode: BasicsItemCode.material })
@@ -1437,17 +1567,13 @@ const index = () => {
                     saveVos: dealParams,
                   }).then((res) => {
                     dispatch(setLoading(true));
-                    mqttClient.publish({
-                      type: CommandConfig.getCurrentBOM,
-                    });
+                    dealCurrentBom(designData);
                   })
                 } else if (item.tag === 'createBom') {
                   dispatch(setLoading(true));
                   // // 批量创建Bom结构
                   createStructure({ itemCode: BasicsItemCode.material, tabCode: '10002003' })
-                  mqttClient.publish({
-                    type: CommandConfig.getCurrentBOM,
-                  });
+                  dealCurrentBom(designData);
                 }
               }}
               list={[

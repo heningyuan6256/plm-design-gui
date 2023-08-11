@@ -237,6 +237,12 @@ const API = {
   },
   queryInsVersionOrder: (ids:string) => {
     return NewRequest.get('/pdm/ins/versions', {tenantId: '719', ids:ids})
+  },
+  /**
+  * 上传附件
+  */
+   addInstanceAttributeAttachment: (data:any) => {
+    return NewRequest.post('/pdm/attachment/batchImportInstanceAttributeAttachment', data)
   }
 };
 

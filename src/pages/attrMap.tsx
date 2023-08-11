@@ -82,7 +82,6 @@ export default function AttrMap() {
       }
       return acc;
     }, []);
-
     setAttrList(
       uniqueArray.map((item: any) => {
         return {
@@ -115,7 +114,7 @@ export default function AttrMap() {
       fileType: activeKey,
     }).then((res: any) => {
       setMappingData(
-        res.result.map((item: any) => {
+        (res.result || []).map((item: any) => {
           return {
             source: item.sourceAttr,
             target: item.targetAttr,
@@ -135,6 +134,7 @@ export default function AttrMap() {
           children: configData(PrivateAttrs),
         },
       ];
+      console.log(rightTableList, 'rightTableList')
       setRightTableList(rightTableList);
       dispatch(setLoading(false));
     });
