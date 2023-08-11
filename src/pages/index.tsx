@@ -15,6 +15,7 @@ import materialSvg from "../assets/image/childnode.svg";
 import cubeSvg from "../assets/image/rootdirectory.svg";
 import fileCubeSvg from "../assets/image/cube.svg";
 import encodedSvg from "../assets/image/encoded.svg";
+import EBOM from "../assets/image/EBOM.svg";
 import saveSvg from "../assets/image/save.svg";
 import fileSvg from "../assets/image/threecubes.svg";
 import { useMqttRegister } from "../hooks/useMqttRegister";
@@ -1451,7 +1452,7 @@ const index = () => {
               }}
               list={[
                 { name: "创建编码", icon: encodedSvg, tag: 'createIntance' },
-                { name: "创建EBOM", icon: encodedSvg, tag: 'createBom' },
+                { name: "创建EBOM", icon: EBOM, tag: 'createBom' },
                 { name: "签出", icon: checkout, tag: 'checkout' },
                 { name: "取消签出", icon: cancelcheckin, tag: 'cancelCheckout' },
                 { name: "签入", icon: checkin, tag: 'checkIn' },

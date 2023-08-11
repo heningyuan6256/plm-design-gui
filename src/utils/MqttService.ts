@@ -95,7 +95,7 @@ class MqttService {
           const tc: any = matches?.args?.topic?.value || ''
           this.pid = pid
           this.publishTopic = tc
-          // this.pid = '19640'
+          // this.pid = '16820'
           // this.publishTopic = 'sw'
           this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
           this.mqtt.on("connect", () => {
@@ -103,6 +103,9 @@ class MqttService {
           });
           this.mqtt.on("message", (topic, data: any) => {
             const value = this.formatData(data)
+            if(value.input_data == 'cad_start'){
+              return
+            }
             console.log(value, value.pid, this.pid, '收到消息')
             // 判断当前是设计工具退出的命令，并且当前发送的pid等于当前存储的pid
             if ((value.input_data === CommandConfig.cadShutDown) && (value.pid == this.pid)) {
@@ -124,6 +127,8 @@ class MqttService {
                 })
               } else {
                 const currentWindow = getCurrent();
+                currentWindow.unminimize()
+
                 currentWindow.setFocus()
                 message.info("当前任务进行中，请等待")
                 return
@@ -140,6 +145,7 @@ class MqttService {
             const callBack = this.callBackMapping[type]; //执行订阅的回调
             if (callBack) {
               const currentWindow = getCurrent();
+              currentWindow.unminimize()
               currentWindow.setFocus()
               callBack.call(this, value);
             }

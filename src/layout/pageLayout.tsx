@@ -37,9 +37,10 @@ export const openDesign = async ({
   userId,
   network
 }: { loading: () => void, cancelLoading: () => void, insId: string, network: string, userId: string }) => {
-  // dispatch(setLoading(true))
   loading()
   const currentWindow = getCurrent();
+  await currentWindow.unminimize()
+  
   currentWindow.setFocus()
   const versionOrderResult: any = await API.queryInsVersionOrder(insId)
   const orders = versionOrderResult.result[insId].orders
