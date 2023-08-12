@@ -841,7 +841,7 @@ const index = () => {
 
     successInstances.result.forEach((item: any, index: number) => {
       if (item.code == 2000) {
-        successInstancesMap[getRowKey(dealData[index])] = item.instanceId
+        successInstancesMap[getRowKey(dealData[index])] = item
       }
     })
     return successInstancesMap
@@ -864,7 +864,7 @@ const index = () => {
       for (let i = 0; i < struct.length; i++) {
         struct[i].attrMap = {}
         const folder = ItemCode.isFile(itemCode) ? 'file' : 'material'
-        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[getRowKey(struct[i])] : InstanceAttrsMap[getRowKey(struct[i])][folder].onChain.insId
+        struct[i].insId = (struct[i][folder].onChain.flag != 'exist' && nameNumberMap) ? nameNumberMap[getRowKey(struct[i])]?.instanceId : InstanceAttrsMap[getRowKey(struct[i])][folder].onChain.insId
         if (getRowKey(struct[i]) != getRowKey(leftData[0])) {
           struct[i].attrMap[structureAttrsMap['Qty']] = dealArray.map[getRowKey(struct[i])]
         }
@@ -1070,7 +1070,7 @@ const index = () => {
       centerData.filter(item => item.file.onChain.flag != 'exist').forEach((item) => {
         if (item.step_path) {
           addAttachmentParams.push({
-            instanceId: nameNumberMap[getRowKey(item)],
+            instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
             itemCode: BasicsItemCode.file,
             tabCode: '10002008',
             versionNumber: 'Draft',
@@ -1087,7 +1087,7 @@ const index = () => {
           })
         } else if (item.drw_path) {
           addAttachmentParams.push({
-            instanceId: nameNumberMap[getRowKey(item)],
+            instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
             itemCode: BasicsItemCode.file,
             tabCode: '10002008',
             versionNumber: 'Draft',
@@ -1114,7 +1114,7 @@ const index = () => {
       //批量更新文件地址
       const updateInstances = centerData.filter(item => item.file.onChain.flag != 'exist').map(item => {
         return {
-          id: nameNumberMap[getRowKey(item)],
+          id: nameNumberMap[getRowKey(item)]?.instanceId,
           itemCode: BasicsItemCode.file,
           tabCode: '10002001',
           insAttrs: Attrs.filter(attr => ['FileUrl', 'Thumbnail'].includes(attr.apicode)).map(attr => {
@@ -1541,7 +1541,7 @@ const index = () => {
                   const dealParams = Object.keys(successInstances).map(item => {
                     return {
                       affectedInstanceIds: InstanceAttrsMap[item].file.onChain.insId,
-                      id: successInstances[item],
+                      id: successInstances[item].instanceId,
                       itemCode: BasicsItemCode.material,
                       tabCode: 10002028,
                       tenantId: '719',

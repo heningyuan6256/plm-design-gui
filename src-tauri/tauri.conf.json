@@ -51,6 +51,11 @@
             "args": true
           },
           {
+            "name": "runCatia",
+            "cmd": "D:\\Program Files\\Dassault Systemes\\B19\\win_b64\\code\\bin\\CATSTART.exe",
+            "args": true
+          },
+          {
             "name": "reg",
             "cmd": "reg",
             "args": true

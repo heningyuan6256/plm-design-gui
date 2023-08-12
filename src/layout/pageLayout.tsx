@@ -86,51 +86,79 @@ export const openDesign = async ({
         };
         await loop(records || []);
         cancelLoading()
-        const regCommand = new Command(
-          "reg",
-          [
-            "query",
-            `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
-            "/v",
-            "SolidWorks Folder",
-          ],
-          { encoding: "GBK" }
-        );
-        // const homeDirPath = await homeDir();
-        regCommand.stdout.on("data", async (line: string) => {
-          const installDir = line.replace('REG_SZ', '').replace('SolidWorks Folder', '').trim()
-          if (installDir && installDir.indexOf("HKEY_LOCAL_MACHINE") == -1) {
-            // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
 
+        const fileFormat = instance.insDesc.substring(instance.insDesc.indexOf('.') + 1)
 
-            // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
-            // command.execute()
-            const command = new Command(
-              "rundesign",
-              [
-                // installDir + "SOLIDWORKS.exe",
-                // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
-                homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' + instance.insDesc,
-              ],
-              // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
-              // { encoding: "GBK" }
-            );
-            command.stderr.on("data", (args) => {
-              console.log('args', ...args);
+        if(['CATProduct', 'CATPart', 'CATPRODUCT', 'CATPART'].includes(fileFormat)) {
+          const command = new Command(
+            "runCatia",
+            [
+              // installDir + "SOLIDWORKS.exe",
+              // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
+              "-object",
+              homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' + instance.insDesc,
+            ],
+            // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
+            // { encoding: "GBK" }
+          );
+          command.stderr.on("data", (args) => {
+            console.log('args', ...args);
 
-            })
+          })
 
-            command.stdout.on("data", async (line: string) => {
-              console.log('line', ...line);
-            })
-            command.execute()
-          }
-        })
-        regCommand.stderr.on('data', (err) => {
-          message.error(err)
-          cancelLoading()
-        })
-        regCommand.execute()
+          command.stdout.on("data", async (line: string) => {
+            console.log('line', ...line);
+          })
+          command.execute()
+        } else if(
+          ['sldprt', 'sldasm', 'SLDPRT', 'SLDASM'].includes(fileFormat)
+        ) {
+          const regCommand = new Command(
+            "reg",
+            [
+              "query",
+              `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
+              "/v",
+              "SolidWorks Folder",
+            ],
+            { encoding: "GBK" }
+          );
+          // const homeDirPath = await homeDir();
+          regCommand.stdout.on("data", async (line: string) => {
+            const installDir = line.replace('REG_SZ', '').replace('SolidWorks Folder', '').trim()
+            if (installDir && installDir.indexOf("HKEY_LOCAL_MACHINE") == -1) {
+              // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
+  
+  
+              // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
+              // command.execute()
+              const command = new Command(
+                "rundesign",
+                [
+                  // installDir + "SOLIDWORKS.exe",
+                  // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
+                  homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' + instance.insDesc,
+                ],
+                // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
+                // { encoding: "GBK" }
+              );
+              command.stderr.on("data", (args) => {
+                console.log('args', ...args);
+  
+              })
+  
+              command.stdout.on("data", async (line: string) => {
+                console.log('line', ...line);
+              })
+              command.execute()
+            }
+          })
+          regCommand.stderr.on('data', (err) => {
+            message.error(err)
+            cancelLoading()
+          })
+          regCommand.execute()
+        }
       }).catch(err => {
         message.error(err)
         cancelLoading()
