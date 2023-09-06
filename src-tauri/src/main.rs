@@ -109,6 +109,8 @@ fn main() {
             }));
     }
 
+    tauri_plugin_deep_link::prepare("com.ONCHAIN.build");
+
     builder
         // .setup(move |app| {
         //     WindowBuilder::new(app, "main".to_string(), window_url)
@@ -147,6 +149,21 @@ fn main() {
             utils::gen_cmd,
             solidworks::call_dynamic // utils::get_data
         ])
+        .setup(|app| {
+            let handle = app.handle();
+            tauri_plugin_deep_link::register("onchain", move |request| {
+                dbg!(&request); // 调用的时候会在控制台打印
+                                // 将参数传递到前端，前端使用listen监听
+                // handle.emit_all("test", request).unwrap();
+                // 但是经过尝试，我只能在应用已经打开的时候获取到传递的参数，大概率是因为第一次发送的时候，前端的监听事件还没有开启，插件的作者正在添加新的API:get_last_url实现
+            })
+            .unwrap();
+            #[cfg(not(target_os = "macos"))]
+            if let Some(url) = std::env::args().nth(1) {
+                // app.emit_all("test", url).unwrap();
+            }
+            Ok(())
+        })
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| menu::menu_handle(app, event))
         .run(context)
