@@ -830,3 +830,8 @@ img {
 .Resizer.disabled:hover {
   border-color: transparent;
 }
+
+.text_line{
+  text-decoration: line-through !important;
+  text-decoration-color: red !important;
+}

@@ -423,10 +423,10 @@ export default function AttrMap() {
                   const selected = await open({
                     multiple: false,
                     directory: false,
-                    title: '选择CATPart模板文件',
+                    title: '选择CATProduct模板文件',
                     filters: [{
-                      name: 'CATPart',
-                      extensions: ['CATPart']
+                      name: 'CATProduct',
+                      extensions: ['CATProduct']
                     }]
                   });
                   setFileAddress({ ...fileAddress, catproduct: selected })
