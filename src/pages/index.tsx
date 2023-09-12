@@ -720,8 +720,7 @@ const index = () => {
           } else {
             return {
               ...attr,
-              value:
-                row[attr.apicode],
+              value: row[attr.apicode],
             };
           }
         }),
@@ -819,7 +818,11 @@ const index = () => {
       const flattenData: Record<string, any>[] = [];
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
-          const flattenedItem = { ...data[i], ...data[i].material.onChain, ...data[i].material.plugin }; // Create a copy of the current item
+          const flattenedItem = {
+            ...data[i],
+            ...data[i].material.onChain,
+            ...data[i].material.plugin,
+          }; // Create a copy of the current item
           delete flattenedItem.children; // Remove the "children" property from the copy
           delete flattenedItem.property;
           const nodeNames = flattenData.map((item) => {
@@ -939,7 +942,7 @@ const index = () => {
         } else if (col.apicode === "Category") {
           return row.file.onChain.Category;
         } else {
-          return row[col.apicode] || "";
+          return row[col.apicode] || col.defValue || "";
         }
       } else {
         if (col.apicode === "ProductModel") {
@@ -953,13 +956,15 @@ const index = () => {
         } else if (col.apicode === "Number") {
           return "";
         } else {
-          return row[col.apicode] || "";
+          return row[col.apicode] || col.defValue || "";
         }
       }
     };
 
     const ItemCodeFolder = ItemCode.isFile(itemCode) ? "file" : "material";
-    const dealData = centerData
+    const dealData = (
+      ItemCode.isFile(itemCode) ? centerData : materialCenterData
+    )
       .filter((item) => item[ItemCodeFolder].onChain.flag != "exist")
       .map((item, index) => {
         const Category = item[ItemCodeFolder].onChain.Category;
@@ -1532,8 +1537,11 @@ const index = () => {
         };
         const renderData: any = {
           [item.apicode]: (text: string, record: any) => {
-            const pluginValue = record.file.plugin[item.apicode];
-            const onChainValue = record.file.onChain[item.apicode];
+            const typeInstance = ItemCode.isFile(attrs[0].itemCode)
+              ? "file"
+              : "material";
+            const pluginValue = record[typeInstance].plugin[item.apicode];
+            const onChainValue = record[typeInstance].onChain[item.apicode];
             // 判断设计工具给的值如果不等于plm系统给的值，则上面显示红色，下面红线杠
             if (
               pluginValue != onChainValue &&
@@ -1617,6 +1625,7 @@ const index = () => {
             props: Utils.generateFormItemProps(item, listCodeMap),
           },
           render: specificRender(),
+          attr: item
         };
       });
   };
@@ -1910,6 +1919,40 @@ const index = () => {
                     : message.error("请选择目标节点");
                 } else if (item.tag === "createIntance") {
                   dispatch(setLoading(true));
+                  // 增加判断，所有的必填校验
+
+                  const requiredColumns = materialColumn.filter((item: any) => {
+                    return item.attr?.required && item.attr?.dataFrom == '0';
+                  });
+
+                  console.log(requiredColumns,'requiredColumns');
+                  
+              
+                  let requiredMsgList: Record<string, any>[] = [];
+                  materialCenterData.forEach((item) => {
+                    requiredColumns.forEach((childItem: any) => {
+                      if (!item[childItem.dataIndex]) {
+                        requiredMsgList.push(childItem);
+                      }
+                    });
+                  });
+
+                  console.log(requiredMsgList,'requiredMsgList');
+                  
+                  if (requiredMsgList.length) {
+                    message.warning(
+                      `请填写必填项：${[
+                        ...new Set(
+                          requiredMsgList.map((item) => {
+                            return item.attr?.name;
+                          }),
+                        ),
+                      ]}`,
+                    );
+                    dispatch(setLoading(false));
+                    return false;
+                  }
+
                   const successInstances = await createInstance({
                     itemCode: BasicsItemCode.material,
                   });
@@ -2005,8 +2048,9 @@ const index = () => {
                 const loop = (data: any) => {
                   for (let i = 0; i < data.length; i++) {
                     if (data[i].node_name == row.node_name) {
-                      data[i].itemAttrs[column["dataIndex"]] =
-                        row[column["dataIndex"]];
+                      InstanceAttrsMap[getRowKey(data[i])].material.plugin[
+                        column["dataIndex"]
+                      ] = row[column["dataIndex"]];
                     }
                     if (data[i].children && data[i].children.length) {
                       loop(data[i].children);
