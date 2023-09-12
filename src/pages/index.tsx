@@ -25,6 +25,8 @@ import { mqttClient } from "../utils/MqttService";
 import { Tabs, TabsProps, message, Image, Button } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
+import filldown from "../assets/image/filldown.svg";
+import fillup from "../assets/image/fillup.svg";
 import checkout from "../assets/image/checkin.svg";
 import checkin from "../assets/image/checkout.svg";
 import { useAsyncEffect, useLatest } from "ahooks";
@@ -108,6 +110,7 @@ const index = () => {
   const logWrapperRef = useRef<any>(null);
   const location = useLocation();
   const [designData, setDesignData] = useState({});
+  const [selectedCell, setSelectedCell] = useState<any>({});
 
   const lastestLogData = useLatest(logData);
 
@@ -720,8 +723,7 @@ const index = () => {
           } else {
             return {
               ...attr,
-              value:
-                row[attr.apicode],
+              value: row[attr.apicode],
             };
           }
         }),
@@ -819,7 +821,11 @@ const index = () => {
       const flattenData: Record<string, any>[] = [];
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
-          const flattenedItem = { ...data[i], ...data[i].material.onChain, ...data[i].material.plugin }; // Create a copy of the current item
+          const flattenedItem = {
+            ...data[i],
+            ...data[i].material.onChain,
+            ...data[i].material.plugin,
+          }; // Create a copy of the current item
           delete flattenedItem.children; // Remove the "children" property from the copy
           delete flattenedItem.property;
           const nodeNames = flattenData.map((item) => {
@@ -1699,6 +1705,61 @@ const index = () => {
                   console.log(fileSelectRows, "fileSelectRows");
                   fileSelectRows.length &&
                     checkInData({ row: fileSelectRows[0] });
+                } else if (item.tag === "fillDown") {
+                  if (selectedCell?.record) {
+                    let findSelect = false;
+                    centerData.forEach((item) => {
+                      if (getRowKey(selectedCell.record) != getRowKey(item)) {
+                        return;
+                      } else {
+                        findSelect = true;
+                      }
+
+                      if (findSelect) {
+                        InstanceAttrsMap[
+                          getRowKey(selectedCell.record)
+                        ].file.plugin[selectedCell.dataIndex] =
+                          selectedCell.record[selectedCell.dataIndex];
+                      }
+                    });
+                    setLeftData([...leftData]);
+                  }
+                } else if (item.tag === "fillUp") {
+                  let findSelect = false;
+                  for (let index = 0; index < centerData.length; index++) {
+                    const element = centerData[index];
+
+                    if (getRowKey(selectedCell.record) == getRowKey(element)) {
+                      findSelect = true;
+                      InstanceAttrsMap[
+                        getRowKey(selectedCell.record)
+                      ].file.plugin[selectedCell.dataIndex] =
+                        selectedCell.record[selectedCell.dataIndex];
+                    }
+
+                    if (!findSelect) {
+                      InstanceAttrsMap[
+                        getRowKey(selectedCell.record)
+                      ].file.plugin[selectedCell.dataIndex] =
+                        selectedCell.record[selectedCell.dataIndex];
+                    }
+                  }
+
+                  setLeftData([...leftData]);
+
+                  // materialCenterData.forEach((item) => {
+                  //   if (getRowKey(selectedCell.record) == getRowKey(item)) {
+                  //     findSelect = true;
+                  //   } else {
+                  //   }
+
+                  //   if (findSelect) {
+                  //     InstanceAttrsMap[
+                  //       getRowKey(selectedCell.record)
+                  //     ].material.plugin[selectedCell.dataIndex] =
+                  //       selectedCell.record[selectedCell.dataIndex];
+                  //   }
+                  // });
                 }
               }}
               list={[
@@ -1709,6 +1770,8 @@ const index = () => {
                   tag: "cancelCheckout",
                 },
                 { name: "签入", icon: checkin, tag: "checkIn" },
+                { name: "向上填充", icon: fillup, tag: "fillUp" },
+                { name: "向下填充", icon: filldown, tag: "fillDown" },
               ]}
             ></PlmTabToolBar>
           </div>
@@ -1728,6 +1791,12 @@ const index = () => {
                 onChange: (selectRowKeys, selectRows) => {
                   setFileSelectRows([selectRows.pop()]);
                 },
+              }}
+              onSelectCell={({ dataIndex, record }) => {
+                setSelectedCell({
+                  dataIndex: dataIndex,
+                  record: record,
+                });
               }}
               onSubmit={(row, column) => {
                 const loop = (data: any) => {
@@ -1877,10 +1946,7 @@ const index = () => {
                 },
                 ...fileColumn,
               ]}
-              selectedCell={{
-                dataIndex: "",
-                record: {},
-              }}
+              selectedCell={selectedCell}
             ></OnChainTable>
           ) : (
             <></>
@@ -1908,6 +1974,65 @@ const index = () => {
                   materialSelectRows.length
                     ? checkInData({ row: materialSelectRows[0] })
                     : message.error("请选择目标节点");
+                } else if (item.tag === "fillDown") {
+                  if (selectedCell?.record) {
+                    let findSelect = false;
+                    materialCenterData.forEach((item) => {
+                      if (getRowKey(selectedCell.record) != getRowKey(item)) {
+                        return;
+                      } else {
+                        findSelect = true;
+                      }
+
+                      if (findSelect) {
+                        InstanceAttrsMap[
+                          getRowKey(selectedCell.record)
+                        ].material.plugin[selectedCell.dataIndex] =
+                          selectedCell.record[selectedCell.dataIndex];
+                      }
+                    });
+                    setLeftData([...leftData]);
+                  }
+                } else if (item.tag === "fillUp") {
+                  let findSelect = false;
+                  for (
+                    let index = 0;
+                    index < materialCenterData.length;
+                    index++
+                  ) {
+                    const element = materialCenterData[index];
+
+                    if (getRowKey(selectedCell.record) == getRowKey(element)) {
+                      findSelect = true;
+                      InstanceAttrsMap[
+                        getRowKey(selectedCell.record)
+                      ].material.plugin[selectedCell.dataIndex] =
+                        selectedCell.record[selectedCell.dataIndex];
+                    }
+
+                    if (!findSelect) {
+                      InstanceAttrsMap[
+                        getRowKey(selectedCell.record)
+                      ].material.plugin[selectedCell.dataIndex] =
+                        selectedCell.record[selectedCell.dataIndex];
+                    }
+                  }
+
+                  setLeftData([...leftData]);
+
+                  // materialCenterData.forEach((item) => {
+                  //   if (getRowKey(selectedCell.record) == getRowKey(item)) {
+                  //     findSelect = true;
+                  //   } else {
+                  //   }
+
+                  //   if (findSelect) {
+                  //     InstanceAttrsMap[
+                  //       getRowKey(selectedCell.record)
+                  //     ].material.plugin[selectedCell.dataIndex] =
+                  //       selectedCell.record[selectedCell.dataIndex];
+                  //   }
+                  // });
                 } else if (item.tag === "createIntance") {
                   dispatch(setLoading(true));
                   const successInstances = await createInstance({
@@ -1986,7 +2111,8 @@ const index = () => {
                   icon: cancelcheckin,
                   tag: "cancelCheckout",
                 },
-                { name: "签入", icon: checkin, tag: "checkIn" },
+                { name: "向上填充", icon: fillup, tag: "fillUp" },
+                { name: "向下填充", icon: filldown, tag: "fillDown" },
               ]}
             ></PlmTabToolBar>
           </div>
