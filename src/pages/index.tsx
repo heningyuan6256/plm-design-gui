@@ -48,7 +48,7 @@ import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { dialog, invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import settingSvg from "../assets/image/setting.svg";
-import { cloneDeep, groupBy, merge, pick, remove, unionBy } from "lodash";
+import { cloneDeep, groupBy, isArray, merge, pick, remove, unionBy } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType } from "./attrMap";
@@ -60,6 +60,7 @@ import { open } from "@tauri-apps/api/shell";
 import SplitPane from "react-split-pane";
 import { setBom } from "../models/bom";
 import { useLocation } from "react-router-dom";
+import moment from "moment";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -111,6 +112,8 @@ const index = () => {
   const location = useLocation();
   const [designData, setDesignData] = useState({});
   const [selectedCell, setSelectedCell] = useState<any>({});
+
+  const selectedCellLatest = useLatest(selectedCell);
 
   const lastestLogData = useLatest(logData);
 
@@ -413,7 +416,9 @@ const index = () => {
             .filter((attr: any) => attr.status)
             .forEach((attr: any) => {
               materialOnChainAttrs[attr.apicode] =
-                materialDataMap["10002044"][0].attributes[attr.id];
+                materialDataMap["10002044"][0].attributes[attr.id] || '';
+
+                // materialPluginAttrs[attr.apicode] = ''
             });
         }
       }
@@ -916,6 +921,16 @@ const index = () => {
     return newBase64;
   }
 
+  const transferValue = (val: any) => {
+    if(isArray(val)){
+      return val.join(',')
+    } else if(moment.isMoment(val)){
+      return moment(val).format("YYYY-MM-DD")
+    } else {
+      return val
+    }
+  }
+
   /**
    * 创建实例
    */
@@ -936,8 +951,6 @@ const index = () => {
           return "";
         } else if (col.apicode === "Thumbnail") {
           return "";
-        } else if (col.apicode === "Description") {
-          return row.file.plugin.Description;
         } else if (col.apicode === "FileFormat") {
           return row.file.plugin.FileFormat;
         } else if (col.apicode === "FileSize") {
@@ -945,7 +958,7 @@ const index = () => {
         } else if (col.apicode === "Category") {
           return row.file.onChain.Category;
         } else {
-          return row[col.apicode] || col.defValue || "";
+          return transferValue(row[col.apicode] || col.defValue || "");
         }
       } else {
         if (col.apicode === "ProductModel") {
@@ -954,12 +967,10 @@ const index = () => {
           return selectProduct;
         } else if (col.apicode === "Category") {
           return row.material.onChain.Category;
-        } else if (col.apicode === "Description") {
-          return "";
         } else if (col.apicode === "Number") {
           return "";
         } else {
-          return row[col.apicode] || col.defValue || "";
+          return transferValue(row[col.apicode] || col.defValue || "");
         }
       }
     };
@@ -1559,7 +1570,7 @@ const index = () => {
                     {Utils.renderReadonlyItem({
                       apicode: item.apicode,
                       formitem: formitem,
-                      value: pluginValue,
+                      value: onChainValue,
                     })}
                   </div>
                 );
@@ -1628,7 +1639,7 @@ const index = () => {
             props: Utils.generateFormItemProps(item, listCodeMap),
           },
           render: specificRender(),
-          attr: item
+          attr: item,
         };
       });
   };
@@ -1712,60 +1723,61 @@ const index = () => {
                   fileSelectRows.length &&
                     checkInData({ row: fileSelectRows[0] });
                 } else if (item.tag === "fillDown") {
-                  if (selectedCell?.record) {
+                  if (selectedCellLatest.current?.record) {
                     let findSelect = false;
                     centerData.forEach((item) => {
-                      if (getRowKey(selectedCell.record) != getRowKey(item)) {
-                        return;
+                      if (
+                        getRowKey(selectedCellLatest.current?.record) !=
+                        getRowKey(item)
+                      ) {
                       } else {
                         findSelect = true;
                       }
 
                       if (findSelect) {
-                        InstanceAttrsMap[
-                          getRowKey(selectedCell.record)
-                        ].file.plugin[selectedCell.dataIndex] =
-                          selectedCell.record[selectedCell.dataIndex];
+                        InstanceAttrsMap[getRowKey(item)].file.plugin[
+                          selectedCellLatest.current?.dataIndex
+                        ] =
+                          selectedCellLatest.current?.record?.file?.plugin[
+                            selectedCellLatest.current?.dataIndex
+                          ];
                       }
                     });
                     setLeftData([...leftData]);
                   }
                 } else if (item.tag === "fillUp") {
                   let findSelect = false;
-                  for (let index = 0; index < centerData.length; index++) {
+                  for (
+                    let index = 0;
+                    index < centerData.length;
+                    index++
+                  ) {
                     const element = centerData[index];
 
-                    if (getRowKey(selectedCell.record) == getRowKey(element)) {
+                    if (
+                      getRowKey(selectedCellLatest.current?.record) ==
+                      getRowKey(element)
+                    ) {
                       findSelect = true;
-                      InstanceAttrsMap[
-                        getRowKey(selectedCell.record)
-                      ].file.plugin[selectedCell.dataIndex] =
-                        selectedCell.record[selectedCell.dataIndex];
                     }
 
                     if (!findSelect) {
-                      InstanceAttrsMap[
-                        getRowKey(selectedCell.record)
-                      ].file.plugin[selectedCell.dataIndex] =
-                        selectedCell.record[selectedCell.dataIndex];
+                      // if (
+                      //   InstanceAttrsMap[getRowKey(element)].material.plugin[
+                      //     selectedCellLatest.current?.dataIndex
+                      //   ]
+                      // ) {
+                      //   return;
+                      // }
+                      InstanceAttrsMap[getRowKey(element)].file.plugin[
+                        selectedCellLatest.current?.dataIndex
+                      ] =
+                        selectedCellLatest.current?.record?.file?.plugin[
+                          selectedCellLatest.current?.dataIndex
+                        ];
                     }
                   }
-
                   setLeftData([...leftData]);
-
-                  // materialCenterData.forEach((item) => {
-                  //   if (getRowKey(selectedCell.record) == getRowKey(item)) {
-                  //     findSelect = true;
-                  //   } else {
-                  //   }
-
-                  //   if (findSelect) {
-                  //     InstanceAttrsMap[
-                  //       getRowKey(selectedCell.record)
-                  //     ].material.plugin[selectedCell.dataIndex] =
-                  //       selectedCell.record[selectedCell.dataIndex];
-                  //   }
-                  // });
                 }
               }}
               list={[
@@ -1798,7 +1810,9 @@ const index = () => {
                   setFileSelectRows([selectRows.pop()]);
                 },
               }}
+              canselectcell
               onSelectCell={({ dataIndex, record }) => {
+                console.log(dataIndex, record, "record");
                 setSelectedCell({
                   dataIndex: dataIndex,
                   record: record,
@@ -1981,20 +1995,24 @@ const index = () => {
                     ? checkInData({ row: materialSelectRows[0] })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "fillDown") {
-                  if (selectedCell?.record) {
+                  if (selectedCellLatest.current?.record) {
                     let findSelect = false;
                     materialCenterData.forEach((item) => {
-                      if (getRowKey(selectedCell.record) != getRowKey(item)) {
-                        return;
+                      if (
+                        getRowKey(selectedCellLatest.current?.record) !=
+                        getRowKey(item)
+                      ) {
                       } else {
                         findSelect = true;
                       }
 
                       if (findSelect) {
-                        InstanceAttrsMap[
-                          getRowKey(selectedCell.record)
-                        ].material.plugin[selectedCell.dataIndex] =
-                          selectedCell.record[selectedCell.dataIndex];
+                        InstanceAttrsMap[getRowKey(item)].material.plugin[
+                          selectedCellLatest.current?.dataIndex
+                        ] =
+                          selectedCellLatest.current?.record?.material?.plugin[
+                            selectedCellLatest.current?.dataIndex
+                          ];
                       }
                     });
                     setLeftData([...leftData]);
@@ -2008,48 +2026,40 @@ const index = () => {
                   ) {
                     const element = materialCenterData[index];
 
-                    if (getRowKey(selectedCell.record) == getRowKey(element)) {
+                    if (
+                      getRowKey(selectedCellLatest.current?.record) ==
+                      getRowKey(element)
+                    ) {
                       findSelect = true;
-                      InstanceAttrsMap[
-                        getRowKey(selectedCell.record)
-                      ].material.plugin[selectedCell.dataIndex] =
-                        selectedCell.record[selectedCell.dataIndex];
                     }
 
                     if (!findSelect) {
-                      InstanceAttrsMap[
-                        getRowKey(selectedCell.record)
-                      ].material.plugin[selectedCell.dataIndex] =
-                        selectedCell.record[selectedCell.dataIndex];
+                      // if (
+                      //   InstanceAttrsMap[getRowKey(element)].material.plugin[
+                      //     selectedCellLatest.current?.dataIndex
+                      //   ]
+                      // ) {
+                      //   return;
+                      // }
+                      InstanceAttrsMap[getRowKey(element)].material.plugin[
+                        selectedCellLatest.current?.dataIndex
+                      ] =
+                        selectedCellLatest.current?.record?.material?.plugin[
+                          selectedCellLatest.current?.dataIndex
+                        ];
                     }
                   }
-
                   setLeftData([...leftData]);
-
-                  // materialCenterData.forEach((item) => {
-                  //   if (getRowKey(selectedCell.record) == getRowKey(item)) {
-                  //     findSelect = true;
-                  //   } else {
-                  //   }
-
-                  //   if (findSelect) {
-                  //     InstanceAttrsMap[
-                  //       getRowKey(selectedCell.record)
-                  //     ].material.plugin[selectedCell.dataIndex] =
-                  //       selectedCell.record[selectedCell.dataIndex];
-                  //   }
-                  // });
                 } else if (item.tag === "createIntance") {
                   dispatch(setLoading(true));
                   // 增加判断，所有的必填校验
 
                   const requiredColumns = materialColumn.filter((item: any) => {
-                    return item.attr?.required && item.attr?.dataFrom == '0';
+                    return item.attr?.required && item.attr?.dataFrom == "0";
                   });
 
-                  console.log(requiredColumns,'requiredColumns');
-                  
-              
+                  console.log(requiredColumns, "requiredColumns");
+
                   let requiredMsgList: Record<string, any>[] = [];
                   materialCenterData.forEach((item) => {
                     requiredColumns.forEach((childItem: any) => {
@@ -2059,17 +2069,17 @@ const index = () => {
                     });
                   });
 
-                  console.log(requiredMsgList,'requiredMsgList');
-                  
+                  console.log(requiredMsgList, "requiredMsgList");
+
                   if (requiredMsgList.length) {
                     message.warning(
                       `请填写必填项：${[
                         ...new Set(
                           requiredMsgList.map((item) => {
                             return item.attr?.name;
-                          }),
+                          })
                         ),
-                      ]}`,
+                      ]}`
                     );
                     dispatch(setLoading(false));
                     return false;
@@ -2165,6 +2175,13 @@ const index = () => {
               extraHeight={24}
               rowSelection={{
                 columnWidth: 19,
+              }}
+              canselectcell
+              onSelectCell={({ dataIndex, record }) => {
+                setSelectedCell({
+                  dataIndex: dataIndex,
+                  record: record,
+                });
               }}
               bordered={false}
               onSubmit={(row, column) => {
@@ -2315,10 +2332,7 @@ const index = () => {
                 },
                 ...materialColumn,
               ]}
-              selectedCell={{
-                dataIndex: "",
-                record: {},
-              }}
+              selectedCell={selectedCell}
             ></OnChainTable>
           ) : (
             <></>
@@ -2444,10 +2458,7 @@ const index = () => {
                     },
                   },
                 ]}
-                selectedCell={{
-                  dataIndex: "",
-                  record: {},
-                }}
+                selectedCell={selectedCell}
               ></OnChainTable>
               {/* </div> */}
             </div>
@@ -2754,10 +2765,7 @@ const index = () => {
                     },
                   },
                 ]}
-                selectedCell={{
-                  dataIndex: "",
-                  record: {},
-                }}
+                selectedCell={selectedCell}
               ></OnChainTable>
               {/* </div> */}
             </div>
