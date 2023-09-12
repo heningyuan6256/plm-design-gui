@@ -3,9 +3,9 @@ import { http } from "@tauri-apps/api";
 
 const getUrl = (str: string) => {
     if (str.startsWith('/opendata')) {
-        return 'http://124.71.151.153:8000/plm' + str
+        return 'http://192.168.0.101:8000/plm' + str
     } else {
-        return 'http://124.71.151.153:8000/plm' + str
+        return 'http://192.168.0.101:8000/plm' + str
     }
 }
 
@@ -21,7 +21,7 @@ class Request {
     }
 
     interceptors = {
-        baseURL: "http://124.71.151.153:8000/plm",
+        baseURL: "http://192.168.0.101:8000/plm",
         token: '',
         request: {
             headers: {
