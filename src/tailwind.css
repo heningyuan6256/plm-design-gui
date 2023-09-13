@@ -773,12 +773,15 @@ img {
   background: #ffffff !important;
 }
 
-.anticon-caret-right, .anticon-caret-down{
+.anticon-caret-right, .anticon-caret-down, .anticon-caret-up{
   transform: scale(0.7);
   color: lightgray;
 }
 .ant-collapse>.ant-collapse-item >.ant-collapse-header .ant-collapse-expand-icon{
   padding-inline-end: 0px !important;
+}
+.ant-tag{
+  line-height: 18px;
 }
 
 .Resizer {

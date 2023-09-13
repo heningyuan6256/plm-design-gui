@@ -25,7 +25,8 @@ class Request {
         token: '',
         request: {
             headers: {
-                Authorization: ''
+                Authorization: '',
+                'User-Agent': 'OnChain-DesingFusion'
             },
             body: {},
             use: () => {

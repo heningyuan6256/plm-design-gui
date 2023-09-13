@@ -78,7 +78,7 @@ const API = {
    * 搜索dsl
    * */
   getConditionDsl: (data: any) => {
-    return NewRequest.post("/pdm/condition/searchDsl", {
+    return NewRequest.post("/opendata/condition/searchDsl", {
       ...data,
       tenantId: "719",
     });

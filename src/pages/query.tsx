@@ -18,10 +18,11 @@ import { homeDir } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
-import { getClient, ResponseType } from '@tauri-apps/api/http';
-import { Command,open } from "@tauri-apps/api/shell";
+import { getClient, ResponseType } from "@tauri-apps/api/http";
+import { Command, open } from "@tauri-apps/api/shell";
 import { BasicsItemCode } from "../constant/itemCode";
 import { openDesign } from "../layout/pageLayout";
+import { cloneDeep } from "lodash";
 // import { dealMaterialData } from 'plm-wasm'
 
 const query: FC = () => {
@@ -30,19 +31,34 @@ const query: FC = () => {
   const [tableSelectedRows, setTableSelectedRows] = useState<
     Record<string, any>[]
   >([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<any>([]);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value: user } = useSelector((state: any) => state.user);
   const [SearchColumn, setSearchColumn] = useState<Record<string, any>[]>([]);
   const dispatch = useDispatch();
-  const { value:network } = useSelector((state: any) => state.network);
+  const { value: network } = useSelector((state: any) => state.network);
 
   const { run, loading } = useRequest(() => API.getQueryFolder(), {
     manual: true,
     onSuccess(data: any) {
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
-          if (data[i].conditionList && data[i].conditionList.length) {
-            data[i].children = data[i].conditionList;
+          if (
+            (data[i].conditionList && data[i].conditionList.length) ||
+            (data[i].children && data[i].children.length)
+          ) {
+            data[i].conditionList = (data[i].conditionList || []).filter(
+              (item: any) => {
+                return [BasicsItemCode.file, BasicsItemCode.material].includes(
+                  String(item.itemCode) as BasicsItemCode
+                );
+              }
+            );
+
+            data[i].children = [
+              ...(data[i].conditionList || []),
+              ...(data[i].children || []),
+            ];
           }
           if (data[i].conditionName) {
             data[i].name = data[i].conditionName;
@@ -52,23 +68,28 @@ const query: FC = () => {
           }
         }
       };
-      loop(data.result);
-      setLeftTreeData(data.result);
+
+      const serachs = data.result.filter(
+        (item: any) => item.folderType != "change"
+      );
+      loop(serachs);
+      setLeftTreeData(serachs);
     },
   });
 
   const GetConditionDsl = useRequest((data) => API.getConditionDsl(data), {
     manual: true,
     onSuccess(res: any) {
-      console.log(res.result.pageData.records,'res.result.pageData.records');
       const records = res.result.pageData.records.map((item: any) => {
-        let row: any = {};
-        item.insAttrs.forEach((v: any) => {
-          row[v.apicode] = v.attrValue;
-        });
-        row["insId"] = item.id;
-        return row;
+        const transferMap = Utils.transformArrayToMap(
+          item.baseSearchDto.searchStr,
+          "apiCode",
+          "attrValue"
+        );
+        return { ...item.baseSearchDto, ...transferMap };
       });
+      console.log(records, "records");
+
       setTableData(records);
     },
   });
@@ -79,13 +100,125 @@ const query: FC = () => {
 
   useEffect(() => {
     API.getQueryColumns({ itemCode: "10001006" }).then((res: any) => {
-      console.log(res.result, 'result')
+      console.log(res.result, "result");
       setSearchColumn(res.result);
     });
   }, []);
 
   const column = useMemo(() => {
-    return SearchColumn.map((item) => {
+    return [
+      {
+        title: "编号",
+        dataIndex: "number",
+        apicode: "Number",
+        width: 180,
+        search: {
+          type: "Input",
+        },
+        sorter: true,
+        ellipsis: true,
+        render: (data: string, record: Record<string, any>) => {
+          return <a>{data}</a>;
+        },
+      },
+      {
+        title: "描述",
+        ellipsis: true,
+        search: {
+          type: "Input",
+        },
+        width: 180,
+        dataIndex: "insDesc",
+        apicode: "Description",
+        sorter: true,
+      },
+
+      {
+        title: "类型",
+        ellipsis: true,
+        width: 100,
+        dataIndex: "objectName",
+        apicode: "Category",
+        search: {
+          type: "Input",
+          props: {},
+        },
+        sorter: true,
+      },
+      {
+        title: "状态",
+        width: 70,
+        ellipsis: true,
+        dataIndex: "statusName",
+        sorter: true,
+        render: (text: string, record: any) => {
+          return (
+            <PlmLifeCycle
+              record={record}
+              color={
+                record.lifecycle && record.lifecycle.color
+                  ? record.lifecycle.color
+                  : "1"
+              }
+            >
+              {text}
+            </PlmLifeCycle>
+          );
+        },
+      },
+      // {
+      //   title: '版本',
+      //   ellipsis: true,
+      //   width: 90,
+      //   dataIndex: 'insVersion',
+      //   sorter: true,
+      //   render: (text: any) => {
+      //     return text === 'Draft' ? '草稿' : text && text.split(' ')[0];
+      //   },
+      // },
+      {
+        title: "发布时间",
+        width: 150,
+        ellipsis: true,
+        search: {
+          type: "Date",
+        },
+        sorter: true,
+        dataIndex: "publishTime",
+        apicode: "ReleaseTime",
+      },
+      {
+        title: "创建人",
+        width: 100,
+        // editable: true,
+        // formitem: {
+        //   type: "Select",
+        //   props: {
+        //     disabled: true, //控制不能编辑
+        //     options: [],
+        //   },
+        // },
+        ellipsis: true,
+        //取属性外面的
+        dataIndex: "CreateUser",
+        apicode: "CreateUser",
+        sorter: true,
+        // isUser: true,
+      },
+      {
+        title: "创建时间",
+        width: 150,
+        ellipsis: true,
+        search: {
+          type: "Date",
+        },
+        sorter: true,
+        dataIndex: "createTime",
+        apicode: "CreateTime",
+      },
+    ];
+
+    SearchColumn.map((item) => {
       return {
         ...item,
         title: item.name,
@@ -98,8 +231,8 @@ const query: FC = () => {
         render:
           item.apicode === "Number" || item.apicode === "CreateUser"
             ? (text: string) => {
-              return <a>{text}</a>;
-            }
+                return <a>{text}</a>;
+              }
             : undefined,
       };
     });
@@ -118,7 +251,7 @@ const query: FC = () => {
           <div className="flex justify-between items-center h-6 mb-1.5">
             <OnChainSelect
               size="small"
-              value={"物料库"}
+              value={"搜索"}
               showArrow={false}
               open={false}
               clearIcon={false}
@@ -133,7 +266,11 @@ const query: FC = () => {
             dataSource={leftTreeData}
             expandable={{
               expandIconColumnIndex: 2,
+              expandedRowKeys: expandedRowKeys,
               indentSize: 22,
+              onExpandedRowsChange: (expandedKeys: any) => {
+                setExpandedRowKeys(expandedKeys);
+              },
             }}
             rowSelection={{
               columnWidth: 0,
@@ -163,8 +300,9 @@ const query: FC = () => {
                             fields: SearchColumn.map((item) => {
                               return { ...item, parentTabCode: 10002001 };
                             }),
-                            pageSize: 100,
-                            itemCode: "10001006",
+                            pageSize: 200,
+                            userId: user.id,
+                            itemCode: record.itemCode,
                           });
                         }
                       }}
@@ -182,59 +320,71 @@ const query: FC = () => {
                   );
                 },
               },
-              // {
-              //   title: "",
-              //   dataIndex: "tool",
-              //   width: 72,
-              //   sorter: true,
-              //   render: (text, record: any) => {
-              //     if (record.apicode === "ItemAdmin") {
-              //       return (
-              //         <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
-              //           <PlmIcon
-              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-              //             name="fold"
-              //           ></PlmIcon>
-              //           <PlmIcon
-              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-              //             name="add"
-              //           ></PlmIcon>
-              //         </div>
-              //       );
-              //     }
-              //     if (!record.isDelete) {
-              //       return (
-              //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-              //           <PlmIcon
-              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-              //             name="edit"
-              //           ></PlmIcon>
-              //           <PlmIcon
-              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-              //             name="add"
-              //           ></PlmIcon>
-              //         </div>
-              //       );
-              //     } else {
-              //       return (
-              //         <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-              //           <PlmIcon
-              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-              //             name="edit"
-              //           ></PlmIcon>
-              //           <PlmIcon
-              //             className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-              //             name="delete"
-              //           ></PlmIcon>
-              //           <PlmIcon
-              //             className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-              //             name="add"
-              //           ></PlmIcon>
-              //         </div>
-              //       );
-              //     }
-              //   },
-              // },
+              {
+                title: "",
+                dataIndex: "tool",
+                width: 72,
+                sorter: true,
+                render: (text, record: any) => {
+                  // if (record.apicode === "ItemAdmin") {
+                  //   return (
+                  //     <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
+                  //       <PlmIcon
+                  //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //         name="fold"
+                  //       ></PlmIcon>
+                  //       <PlmIcon
+                  //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //         name="add"
+                  //       ></PlmIcon>
+                  //     </div>
+                  //   );
+                  // }
+                  // if (!record.isDelete) {
+                  //   return (
+                  //     <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+                  //       <PlmIcon
+                  //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //         name="edit"
+                  //       ></PlmIcon>
+                  //       <PlmIcon
+                  //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                  //         name="add"
+                  //       ></PlmIcon>
+                  //     </div>
+                  //   );
+                  // } else {
+                  if (record.parentId == "0" && !record.canDel) {
+                    return (
+                      <div
+                        className="flex gap-2 flex-row-reverse  pr-1"
+                        onClick={() => {
+                          const ids: any = [];
+                          const loop = (data: any) => {
+                            for (let i = 0; i < data.length; i++) {
+                              if (
+                                data[i]["children"] &&
+                                data[i]["children"].length
+                              ) {
+                                ids.push(data[i]["id"]);
+                                loop(data[i]["children"]);
+                              }
+                            }
+                          };
+                          loop([record] || []);
+                          setExpandedRowKeys(new Set([...expandedRowKeys, ...ids]));
+                        }}
+                      >
+                        <PlmIcon
+                          className="textv-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                          name="fold"
+                        ></PlmIcon>
+                      </div>
+                    );
+                  }
+                },
+                // },
+              },
             ]}
             selectedCell={{
               dataIndex: "",
@@ -298,16 +448,20 @@ const query: FC = () => {
                 }}
                 onRow={(row: any) => {
                   return {
-                    onDoubleClick: async() => {
+                    onDoubleClick: async () => {
                       openDesign({
-                        loading: () => { dispatch(setLoading(true)) },
-                        cancelLoading: () => { dispatch(setLoading(false)) },
+                        loading: () => {
+                          dispatch(setLoading(true));
+                        },
+                        cancelLoading: () => {
+                          dispatch(setLoading(false));
+                        },
                         network: network,
                         insId: row.insId,
-                        userId: user.id
-                      })
-                    }
-                  }
+                        userId: user.id,
+                      });
+                    },
+                  };
                 }}
                 hideFooter
                 extraHeight={22}
