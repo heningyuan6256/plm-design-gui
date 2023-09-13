@@ -20,7 +20,7 @@ import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { getClient, ResponseType } from "@tauri-apps/api/http";
 import { Command, open } from "@tauri-apps/api/shell";
-import { BasicsItemCode } from "../constant/itemCode";
+import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { openDesign } from "../layout/pageLayout";
 import { cloneDeep } from "lodash";
 // import { dealMaterialData } from 'plm-wasm'
@@ -449,6 +449,28 @@ const query: FC = () => {
                 onRow={(row: any) => {
                   return {
                     onDoubleClick: async () => {
+                      let insId = row.insId
+                      if(ItemCode.isMaterial(row.itemCode)) {
+                        const {
+                          result: { records },
+                        }: any = await API.queryInstanceTab({
+                          instanceId: row.insId,
+                          itemCode: BasicsItemCode.material,
+                          pageNo: "1",
+                          pageSize: "500",
+                          tabCode: "10002028",
+                          tabCodes: "10002028",
+                          tenantId: "719",
+                          userId: user.id,
+                        });
+
+                        console.log(records[0]?.insId,'materialInstance');
+                        insId = records[0]?.insId
+                      }
+                      if(!insId) {
+                        message.success('该物料没有对应的设计文件')
+                        return
+                      }
                       openDesign({
                         loading: () => {
                           dispatch(setLoading(true));
@@ -457,7 +479,7 @@ const query: FC = () => {
                           dispatch(setLoading(false));
                         },
                         network: network,
-                        insId: row.insId,
+                        insId: insId,
                         userId: user.id,
                       });
                     },
