@@ -9,7 +9,7 @@ import { FC, useEffect, useMemo, useState } from "react";
 import API from "../utils/api";
 import { Input, message } from "antd";
 import { useSelector } from "react-redux";
-import { useRequest } from "ahooks";
+import { useKeyPress, useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
 import { OnChainTableColumnProps } from "onchain-ui/dist/esm/OnChainTable";
 import { Utils } from "../utils";
@@ -89,10 +89,19 @@ const query: FC = () => {
         );
         return { ...item.baseSearchDto, ...transferMap };
       });
-      console.log(records, "records");
-
-      setTableData(records);
+      setTableData(
+        records.filter((item: any) => {
+          return (
+            item.number.indexOf(selectVal) != -1 ||
+            item.insDesc.indexOf(selectVal) != -1
+          );
+        })
+      );
     },
+  });
+
+  useKeyPress("enter", () => {
+    setSelectedRows([...selectedRows]);
   });
 
   useEffect(() => {
@@ -239,6 +248,22 @@ const query: FC = () => {
     });
   }, [SearchColumn]);
 
+  useEffect(() => {
+    if (selectedRows && selectedRows.length) {
+      GetConditionDsl.run({
+        actionType: "select",
+        dsl: selectedRows[0].content,
+        pageNo: 1,
+        fields: SearchColumn.map((item) => {
+          return { ...item, parentTabCode: 10002001 };
+        }),
+        pageSize: 200,
+        userId: user.id,
+        itemCode: selectedRows[0].itemCode,
+      });
+    }
+  }, [selectedRows]);
+
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="w-full bg-base flex-1 flex px-3 py-3 overflow-hidden gap-1.5">
@@ -293,19 +318,6 @@ const query: FC = () => {
                       className="cursor-pointer w-full overflow-hidden text-ellipsis"
                       onClick={() => {
                         setSelectedRows([record]);
-                        if (!(record.children && record.children.length)) {
-                          GetConditionDsl.run({
-                            actionType: "select",
-                            dsl: record.content,
-                            pageNo: 1,
-                            fields: SearchColumn.map((item) => {
-                              return { ...item, parentTabCode: 10002001 };
-                            }),
-                            pageSize: 200,
-                            userId: user.id,
-                            itemCode: record.itemCode,
-                          });
-                        }
                       }}
                     >
                       {record.children ? (
@@ -373,7 +385,9 @@ const query: FC = () => {
                             }
                           };
                           loop([record] || []);
-                          setExpandedRowKeys(new Set([...expandedRowKeys, ...ids]));
+                          setExpandedRowKeys(
+                            new Set([...expandedRowKeys, ...ids])
+                          );
                         }}
                       >
                         <PlmIcon
@@ -465,9 +479,9 @@ const query: FC = () => {
                           dispatch(setLoading(false));
                         },
                         network: network,
-                        insId:  row.insId,
+                        insId: row.insId,
                         userId: user.id,
-                        itemCode: row.itemCode
+                        itemCode: row.itemCode,
                       });
                     },
                   };
