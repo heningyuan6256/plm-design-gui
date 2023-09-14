@@ -7,30 +7,44 @@ import Foot from "../layout/foot";
 import Head from "../layout/head";
 import PlmIcon from "../components/PlmIcon";
 import { OnChainSelect, OnChainTable } from "onchain-ui";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import API from "../utils/api";
-import PageLayout from "../layout/pageLayout";
+import PageLayout, { openDesign } from "../layout/pageLayout";
 import { Input } from "antd";
 import { useSelector } from "react-redux";
-import { useRequest } from "ahooks";
+import { useKeyPress, useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
 import { BasicsItemCode } from "../constant/itemCode";
+import { useDispatch } from "react-redux";
+import { setLoading } from "../models/loading";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
   const [leftTreeData, setLeftTreeData] = useState<Record<string, any>[]>([]);
+  const [selectVal, setSelectVal] = useState<string>("");
   const [selectedRows, setSelectedRows] = useState<Record<string, any>[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<any>([]);
+  const { value: user } = useSelector((state: any) => state.user);
   const [tableSelectedRows, setTableSelectedRows] = useState<
     Record<string, any>[]
   >([]);
+  const dispatch = useDispatch();
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value } = useSelector((state: any) => state.user);
+  const { value: network } = useSelector((state: any) => state.network);
 
   const { run, loading } = useRequest((data) => API.getStockByType(data), {
     manual: true,
     onSuccess(data: any) {
       setTableSelectedRows([]);
-      setTableData(data.result.records);
+      setTableData(
+        data.result.records.filter((item: any) => {
+          return (
+            item.number.indexOf(selectVal) != -1 ||
+            item.insDesc.indexOf(selectVal) != -1
+          );
+        })
+      );
     },
   });
 
@@ -42,30 +56,35 @@ const stock = () => {
       setLeftTreeData(result);
       if (result.length > 0) {
         setSelectedRows([result[0]]);
-        const data = {
-          libraryId: result[0].id,
-          pageNo: 1,
-          pageSize: 50,
-          sort: "",
-          andQuery: "",
-          itemCode: BasicsItemCode.material,
-          tenantId: "719",
-          userId: value.id,
-          isAll: false,
-          fields: [{}],
-        };
-        run(data);
       }
     });
   }, []);
+  useKeyPress("enter", () => {
+    setSelectedRows([...selectedRows]);
+  });
+
+  useEffect(() => {
+    if (selectedRows.length) {
+      const data = {
+        libraryId: selectedRows[0].id,
+        pageNo: 1,
+        pageSize: 50,
+        sort: "",
+        andQuery: "",
+        tenantId: "719",
+        itemCode: BasicsItemCode.material,
+        userId: value.id,
+        isAll: false,
+        fields: [{}],
+      };
+      run(data);
+    }
+  }, [selectedRows]);
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="w-full bg-base flex-1 flex px-3 py-3 overflow-hidden gap-1.5">
-        <div
-          style={{ width: "254px" }}
-          className="h-full"
-        >
+        <div style={{ width: "254px" }} className="h-full">
           <div className="pb-1.5 flex flex-col h-full">
             <div className="flex justify-between items-center h-6 mb-1.5">
               <OnChainSelect
@@ -89,7 +108,11 @@ const stock = () => {
               dataSource={leftTreeData}
               expandable={{
                 expandIconColumnIndex: 2,
-                indentSize: 22,
+                indentSize: 12,
+                expandedRowKeys: expandedRowKeys,
+                onExpandedRowsChange: (expandedKeys: any) => {
+                  setExpandedRowKeys(expandedKeys);
+                },
               }}
               rowSelection={{
                 columnWidth: 0,
@@ -108,27 +131,15 @@ const stock = () => {
                   render: (text, record: any) => {
                     return (
                       <div
-                        className="cursor-pointer w-full overflow-hidden text-ellipsis"
+                        className="cursor-pointer w-full overflow-hidden text-ellipsis flex items-center"
                         onClick={() => {
                           setSelectedRows([record]);
-                          const data = {
-                            libraryId: record.id,
-                            pageNo: 1,
-                            pageSize: 50,
-                            sort: "",
-                            andQuery: "",
-                            tenantId: "719",
-                            userId: value.id,
-                            isAll: false,
-                            fields: [{}],
-                          };
-                          run(data);
                         }}
                       >
                         <PlmIcon
                           className={"text-primary text-base mr-1"}
                           name={
-                            record.apicode === "ItemAdmin"
+                            record.apicode === "ItemAdministrator"
                               ? "a-Materialwarehouse"
                               : "file"
                           }
@@ -144,51 +155,81 @@ const stock = () => {
                   width: 72,
                   sorter: true,
                   render: (text, record: any) => {
-                    if (record.apicode === "ItemAdmin") {
+                    if (record?.apicode == "ItemAdministrator") {
                       return (
-                        <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
+                        <div
+                          className="flex gap-2 flex-row-reverse  pr-1"
+                          onClick={() => {
+                            const ids: any = [];
+                            const loop = (data: any) => {
+                              for (let i = 0; i < data.length; i++) {
+                                if (
+                                  data[i]["children"] &&
+                                  data[i]["children"].length
+                                ) {
+                                  ids.push(data[i]["id"]);
+                                  loop(data[i]["children"]);
+                                }
+                              }
+                            };
+                            loop([record] || []);
+                            setExpandedRowKeys(
+                              new Set([...expandedRowKeys, ...ids])
+                            );
+                          }}
+                        >
                           <PlmIcon
-                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                            className="textv-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
                             name="fold"
                           ></PlmIcon>
-                          <PlmIcon
-                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                            name="add"
-                          ></PlmIcon>
                         </div>
                       );
                     }
-                    if (!record.isDelete) {
-                      return (
-                        <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                          <PlmIcon
-                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                            name="edit"
-                          ></PlmIcon>
-                          <PlmIcon
-                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                            name="add"
-                          ></PlmIcon>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
-                          <PlmIcon
-                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                            name="edit"
-                          ></PlmIcon>
-                          <PlmIcon
-                            className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                            name="delete"
-                          ></PlmIcon>
-                          <PlmIcon
-                            className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
-                            name="add"
-                          ></PlmIcon>
-                        </div>
-                      );
-                    }
+                    // if (record.apicode === "ItemAdmin") {
+                    //   return (
+                    //     <div className="flex gap-2 flex-row-reverse pr-1 row-tool">
+                    //       <PlmIcon
+                    //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                    //         name="fold"
+                    //       ></PlmIcon>
+                    //       <PlmIcon
+                    //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                    //         name="add"
+                    //       ></PlmIcon>
+                    //     </div>
+                    //   );
+                    // }
+                    // if (!record.isDelete) {
+                    //   return (
+                    //     <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+                    //       <PlmIcon
+                    //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                    //         name="edit"
+                    //       ></PlmIcon>
+                    //       <PlmIcon
+                    //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                    //         name="add"
+                    //       ></PlmIcon>
+                    //     </div>
+                    //   );
+                    // } else {
+                    //   return (
+                    //     <div className="flex gap-2 flex-row-reverse  pr-1 row-tool">
+                    //       <PlmIcon
+                    //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                    //         name="edit"
+                    //       ></PlmIcon>
+                    //       <PlmIcon
+                    //         className="cursor-pointer text-xs hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                    //         name="delete"
+                    //       ></PlmIcon>
+                    //       <PlmIcon
+                    //         className="text-xs cursor-pointer hover:shadow-3xl hover:bg-hoverBlue hover:text-primary"
+                    //         name="add"
+                    //       ></PlmIcon>
+                    //     </div>
+                    //   );
+                    // }
                   },
                 },
               ]}
@@ -207,16 +248,33 @@ const stock = () => {
             }}
             className="w-full h-6 text-xs flex items-center pl-2.5 mb-4"
           >
-            <span className="mr-1">物料库</span> <span className="mr-1">/</span>{" "}
-            <span className="text-primary">电子件库</span>
+            <span className="mr-1">物料库</span>
+            {selectedRows[0] &&
+            selectedRows[0]?.apicode != "ItemAdministrator" ? (
+              <Fragment>
+                <span className="mr-1">/</span>{" "}
+                <span className="text-primary">{selectedRows[0].name}</span>
+              </Fragment>
+            ) : (
+              <></>
+            )}
           </div>
           <div className="mb-4 flex gap-2">
             <Input
               placeholder="请输入编号或描述"
+              value={selectVal}
               style={{ width: "360px" }}
+              onChange={(e) => {
+                setSelectVal(e.target.value);
+              }}
             ></Input>
             <div className="w-7 h-7 cursor-pointer rounded-sm bg-white border-outBorder border flex items-center justify-center">
-              <PlmIcon name="search"></PlmIcon>
+              <PlmIcon
+                onClick={() => {
+                  setSelectedRows([...selectedRows]);
+                }}
+                name="search"
+              ></PlmIcon>
             </div>
           </div>
           <div
@@ -240,6 +298,24 @@ const stock = () => {
                 onChange: (keys, rows: any) => {
                   setTableSelectedRows(rows);
                 },
+              }}
+              onRow={(row: any) => {
+                return {
+                  onDoubleClick: async () => {
+                    openDesign({
+                      loading: () => {
+                        dispatch(setLoading(true));
+                      },
+                      cancelLoading: () => {
+                        dispatch(setLoading(false));
+                      },
+                      network: network,
+                      insId: row.insId,
+                      userId: user.id,
+                      itemCode: row.itemCode,
+                    });
+                  },
+                };
               }}
               expandable={{
                 expandIconColumnIndex: 0,

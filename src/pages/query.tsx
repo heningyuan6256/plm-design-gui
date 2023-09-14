@@ -31,6 +31,7 @@ const query: FC = () => {
   const [tableSelectedRows, setTableSelectedRows] = useState<
     Record<string, any>[]
   >([]);
+  const [selectVal, setSelectVal] = useState<string>("");
   const [expandedRowKeys, setExpandedRowKeys] = useState<any>([]);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value: user } = useSelector((state: any) => state.user);
@@ -266,8 +267,8 @@ const query: FC = () => {
             dataSource={leftTreeData}
             expandable={{
               expandIconColumnIndex: 2,
-              expandedRowKeys: expandedRowKeys,
               indentSize: 22,
+              expandedRowKeys: expandedRowKeys,
               onExpandedRowsChange: (expandedKeys: any) => {
                 setExpandedRowKeys(expandedKeys);
               },
@@ -409,12 +410,19 @@ const query: FC = () => {
             <Input
               placeholder="请输入编号或描述"
               style={{ width: "360px" }}
+              value={selectVal}
+              onChange={(e) => {
+                setSelectVal(e.target.value);
+              }}
               suffix={
                 <PlmIcon name="search" style={{ color: "#CDCDCD" }}></PlmIcon>
               }
             ></Input>
             <div
               style={{ height: "30px" }}
+              onClick={() => {
+                setSelectedRows([...selectedRows]);
+              }}
               className="text-xs rounded-sm hover:border hover:border-primary transition-all cursor-pointer bg-white border-outBorder border flex items-center justify-center w-16"
             >
               搜索
@@ -449,28 +457,6 @@ const query: FC = () => {
                 onRow={(row: any) => {
                   return {
                     onDoubleClick: async () => {
-                      let insId = row.insId
-                      if(ItemCode.isMaterial(row.itemCode)) {
-                        const {
-                          result: { records },
-                        }: any = await API.queryInstanceTab({
-                          instanceId: row.insId,
-                          itemCode: BasicsItemCode.material,
-                          pageNo: "1",
-                          pageSize: "500",
-                          tabCode: "10002028",
-                          tabCodes: "10002028",
-                          tenantId: "719",
-                          userId: user.id,
-                        });
-
-                        console.log(records[0]?.insId,'materialInstance');
-                        insId = records[0]?.insId
-                      }
-                      if(!insId) {
-                        message.success('该物料没有对应的设计文件')
-                        return
-                      }
                       openDesign({
                         loading: () => {
                           dispatch(setLoading(true));
@@ -479,8 +465,9 @@ const query: FC = () => {
                           dispatch(setLoading(false));
                         },
                         network: network,
-                        insId: insId,
+                        insId:  row.insId,
                         userId: user.id,
+                        itemCode: row.itemCode
                       });
                     },
                   };
