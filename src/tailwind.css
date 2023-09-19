@@ -436,12 +436,15 @@ select {
 }
 
 td .anticon-caret-right {
-  margin-right: 4px;
+  margin-right: 2px !important;
 }
-
+td .anticon-caret-down{
+  margin-right: 2px !important;
+}
+/* 
 td .anticon-caret-down {
   margin-right: 4px;
-}
+} */
 
 .ant-spin-dot {
   font-size: 32px !important;

@@ -1,7 +1,7 @@
 /**
  * Author: hny_147
  * Date: 2023/03/02 14:44:05
- * Description: 库
+ * Description: 搜索
  */
 import PlmIcon from "../components/PlmIcon";
 import { OnChainSelect, OnChainTable } from "onchain-ui";
@@ -292,7 +292,7 @@ const query: FC = () => {
             dataSource={leftTreeData}
             expandable={{
               expandIconColumnIndex: 2,
-              indentSize: 22,
+              indentSize: 20,
               expandedRowKeys: expandedRowKeys,
               onExpandedRowsChange: (expandedKeys: any) => {
                 setExpandedRowKeys(expandedKeys);
@@ -313,6 +313,7 @@ const query: FC = () => {
                 },
                 sorter: true,
                 render: (text, record: any) => {
+                  console.log(record, 'record')
                   return (
                     <div
                       className="cursor-pointer w-full overflow-hidden text-ellipsis"
@@ -320,7 +321,7 @@ const query: FC = () => {
                         setSelectedRows([record]);
                       }}
                     >
-                      {record.children ? (
+                      {record.children || record.parentId == '0' ? (
                         <PlmIcon
                           className={"text-primary text-base mr-1"}
                           name={"file"}
