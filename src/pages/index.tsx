@@ -48,7 +48,7 @@ import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { dialog, invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import settingSvg from "../assets/image/setting.svg";
-import { cloneDeep, groupBy, isArray, merge, pick, remove, unionBy } from "lodash";
+import { cloneDeep, groupBy, isArray, merge, pick, remove, sortBy, unionBy, uniqBy, uniqWith } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType } from "./attrMap";
@@ -61,6 +61,7 @@ import SplitPane from "react-split-pane";
 import { setBom } from "../models/bom";
 import { useLocation } from "react-router-dom";
 import moment from "moment";
+import { PDFViewer } from 'fuyun';
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -177,10 +178,15 @@ const index = () => {
       "fileSuffix",
       "fileType"
     );
-    return cadFileMap;
+    const cadIdMap = Utils.transformArrayToMap(
+      cadFileData,
+      "fileSuffix",
+      "id"
+    );
+    return [cadFileMap, cadIdMap];
   };
   // 获取cad文件属性映射规则
-  const getCadAttrMapRule = async (type: "asm" | "prt") => {
+  const getCadAttrMapRule = async (type: "asm" | "prt", cadIdMap: any, mapping_type: settingType) => {
     let fileType = "";
     // 判断如果当前的topic是catia则
     if (mqttClient.publishTopic === "catia") {
@@ -195,7 +201,11 @@ const index = () => {
       } else {
         fileType = "sldprt";
       }
+    } else if (mqttClient.publishTopic === "Tribon") {
+      fileType = 'tribon'
     }
+
+    // 查询所有格式，获取格式的id映射
 
     // let text = ''
     // try {
@@ -213,17 +223,35 @@ const index = () => {
     // const fileAddr = JSON.parse(text)[fileType]
 
     const { result: attrsArray }: any = await API.getMapptingAttrs({
-      toolName: mqttClient.publishTopic,
-      mappingName: settingType.cadToFile,
+      toolName: 'sw',
+      mappingName: mapping_type,
+      // tabCode: '10002001',
+      // attrName: '',
       // fileType: fileAddr.substring(fileAddr.lastIndexOf('\\') + 1),
-      fileType: fileType,
+      fileType: cadIdMap[fileType],
     });
+
+    // 获取cad对应的id属性名称
+    const { result: { records: attrs } }: any = await API.getCadAttrs({
+      fileTypeId: cadIdMap[fileType],
+      pageNo: '1',
+      pageSize: '500'
+    });
+    const attrsMapDara = Utils.transformArrayToMap(attrs, 'id', 'attrName')
+
+    console.log(attrs, 'attrs')
+
+    attrsArray.forEach((item: any) => {
+      item.sourceAttrName = attrsMapDara[item.sourceAttr]
+    })
 
     const attrsMap = Utils.transformArrayToMap(
       attrsArray,
-      "sourceAttr",
+      "sourceAttrName",
       "targetAttr"
     );
+    console.log(attrsMap, 'attrsMap');
+
     return attrsMap;
   };
   // 获取文件全名
@@ -233,6 +261,11 @@ const index = () => {
 
   // 获取唯一的key，目前是根据文件在文件夹中的文件名称来的
   const getRowKey = (item: any) => {
+    if (mqttClient.publishTopic === 'Tribon') {
+      const caizhi = getPropertyByName(item, '材质')
+      const guige = getPropertyByName(item, '规格')
+      return caizhi && guige ? `${caizhi}${guige}` : item.node_name
+    }
     return item.file_path.substring(item.file_path.lastIndexOf("\\") + 1);
   };
 
@@ -248,15 +281,33 @@ const index = () => {
   const uniqueArrayByAttr = (arr: any) => {
     const m = new Map();
     const mCount: any = {};
+    const mLoc: any = {};
+    const mLong: any = {};
+    const mWeight: any = {};
+
     for (const item of arr) {
-      const nodeName = getRowKey(item);
+      let nodeName = getRowKey(item);
+      if (mqttClient.publishTopic === 'Tribon') {
+        const caizhi = getPropertyByName(item, '材质')
+        const guige = getPropertyByName(item, '规格')
+        nodeName = ((caizhi && guige) ? `${caizhi}${guige}` : item.node_name)
+      }
       // 如果没有存过，并且不是标准件，则set
       if (
         !m.has(nodeName) &&
         !(item.InternalModelFlag && judgeStandard(item))
       ) {
+
         m.set(nodeName, item);
         mCount[nodeName] = 1;
+        if (mqttClient.publishTopic === 'Tribon') {
+          const zongchang = getPropertyByName(item, '总长')
+          const zhongliang = getPropertyByName(item, '重量')
+          mLong[nodeName] = zongchang ? Number(zongchang) : ''
+          mWeight[nodeName] = zhongliang ? Number(zhongliang) : ''
+          mLoc[nodeName] = [item.node_name]
+        }
+
       } else {
         if (m.has(nodeName)) {
           if (item.file.plugin.fileNameWithFormat) {
@@ -264,11 +315,21 @@ const index = () => {
           }
         }
         mCount[nodeName] = mCount[nodeName] + 1;
+        if (mqttClient.publishTopic === 'Tribon') {
+          mLoc[nodeName] = [...(mLoc[nodeName] || []), item.node_name]
+          const zongchang = getPropertyByName(item, '总长')
+          const zhongliang = getPropertyByName(item, '重量')
+          mLong[nodeName] = mLong[nodeName] ? Number(mLong[nodeName]) + Number(zongchang) : ''
+          mWeight[nodeName] = mWeight[nodeName] ? Number(mWeight[nodeName]) + Number(zhongliang) : ''
+        }
       }
     }
     return {
       array: [...m.values()],
       map: mCount,
+      mLoc: mLoc,
+      mWeight: mWeight,
+      mLong: mLong
     };
   };
 
@@ -277,6 +338,9 @@ const index = () => {
       dispatch(setLoading(true));
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
+        input_data: {
+          "info": ["proximate"]
+        }
       });
     }
   }, [selectProduct, location.pathname]);
@@ -304,36 +368,136 @@ const index = () => {
 
   useEffect(() => {
     if (selectNode) {
-      setFormAttrs(selectNode.property);
+      setFormAttrs((selectNode.property || []).filter((item: any) => {
+        if (mqttClient.publishTopic === 'Tribon') {
+          return ['材质', '规格', '总长', '划线长', '重量'].includes(item.name)
+        } else {
+          return item
+        }
+      }));
       dynamicFormRef.current?.setFieldsValue(
-        Utils.transformArrayToMap(selectNode.property, "name", "defaultVal")
+        Utils.transformArrayToMap(selectNode.property, "name", mqttClient.publishTopic === 'Tribon' ? "DefaultVal" : "defaultVal")
       );
     }
   }, [selectNode]);
 
-  useEffect(() => {
-    if (leftData.length) {
-      setRightData(leftData);
+  // useAsyncEffect(async () => {
+  //   if (leftData.length) {
+  //     const fileEntry = await readDir("d:/tb.11.14")
+  //     const loop = async (data: any) => {
+  //       for (let i = 0; i < fileEntry.length; i++) {
+  //         if (data[i].children) {
+  //           data[i].id = data[i].path
+  //           data[i].children = await readDir(data[i].path)
+  //           data[i].children.forEach((v: any) => {
+  //             v.id = v.path
+  //             v.type = data[i].name
+  //           })
+  //         }
+  //       }
+  //     }
+
+  //     await loop(fileEntry)
+  //     console.log(fileEntry, 'fileEntry');
+
+  //     setRightData(fileEntry);
+  //   }
+  // }, [leftData]);
+
+  const buildTreeArray = (nodes: any) => {
+    const tree = {};
+
+    nodes.forEach((node: any) => {
+      const parts = node.node_name.split('-');
+      let currentNode: any = tree;
+
+      parts.forEach((part: any) => {
+        currentNode[part] = currentNode[part] || {};
+        currentNode = currentNode[part];
+      });
+
+      // 添加描述信息
+      currentNode.property = node.property;
+    });
+
+    return convertTreeToArray(tree);
+  }
+
+  const convertTreeToArray: any = (node: any) => {
+    const result = [];
+
+    for (const key in node) {
+      if (key !== 'property') {
+        const children = convertTreeToArray(node[key]);
+        result.push({
+          node_name: key,
+          property: node[key].property,
+          children: children
+        });
+      }
     }
-  }, [leftData]);
+
+    return result;
+  }
+
 
   const dealCurrentBom = async (res?: any) => {
+    // Windows 文件路径
+    const windowsPathRegex = /^(?:[a-zA-Z]:\\|\\\\)(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/;
+
+    if (!windowsPathRegex.test(res.output_data.file_path)) {
+      dispatch(setLoading(false))
+      message.warning("请选择模型")
+      return
+    }
+
+    // 覆盖初始值 todo
+    if (mqttClient.publishTopic === 'Tribon') {
+      const loopTribon = (data1: any) => {
+        for (let i = 0; i < data1.length; i++) {
+          const numberData = data1[i]?.property && data1[i]?.property[0] ? data1[i]?.property[0].DefaultVal : ''
+          data1[i].node_name = numberData || data1[i].node_name
+          if (data1[i].children && data1[i].children.length) {
+            loopTribon(data1[i].children);
+          }
+        }
+      };
+      loopTribon([res.output_data]);
+      const data = buildTreeArray(res.output_data.children[0].children)
+      console.log(data, 'data')
+      res.output_data.children[0].children = data[0].children
+    }
+
     // cad文件格式对应的文件类型
-    const cadFileMap = await getCadFileMapRule();
+    const [cadFileMap, cadIdMap] = await getCadFileMapRule();
     const [totalAttrs] = await getAllAttr(BasicsItemCode.file);
     const [totalMaterialAttrs] = await getAllAttr(BasicsItemCode.material);
     const fileObjectMap = await getMaterialTypeMap();
     setMaterialAttrs(totalMaterialAttrs);
     setAttrs(totalAttrs);
     // cad属性映射文件属性
-    const attrsMap = await getCadAttrMapRule("prt");
+    const attrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToFile);
     // cad属性映射文件属性
-    const asmAttrsMap = await getCadAttrMapRule("asm");
+    const asmAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToFile);
+
+
+    // cad属性映射物料属性
+    const asmMaterialAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToItem);
+
+    // cad属性映射物料属性
+    const prtMaterialAttrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToItem);
 
     // 扁平化数组
     const flattenData: Record<string, any>[] = [];
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
+        // 覆盖初始值 todo
+        if (mqttClient.publishTopic === 'Tribon') {
+          // const numberData = data[i]?.property && data[i]?.property[0] ? data[i]?.property[0].DefaultVal : ''
+          // data[i].node_name = numberData || data[i].node_name
+          data[i].file_path = `D:\\TRIBON_Temp\\${Utils.generateSnowId()}\\${data[i].node_name}.Tribon`
+        }
+
         const rowKey = getRowKey(data[i]);
         data[i].material = { onChain: {}, plugin: {} };
         data[i].file = { onChain: {}, plugin: {} };
@@ -418,7 +582,7 @@ const index = () => {
               materialOnChainAttrs[attr.apicode] =
                 materialDataMap["10002044"][0].attributes[attr.id] || '';
 
-                // materialPluginAttrs[attr.apicode] = ''
+              // materialPluginAttrs[attr.apicode] = ''
             });
         }
       }
@@ -429,11 +593,11 @@ const index = () => {
 
       PromiseData.push(
         new Promise((resolve, reject) => {
-          item.file_path
+          item.file_path && mqttClient.publishTopic !== "Tribon"
             ? readBinaryFile(item.file_path).then((contents) => {
-                pluginAttrs["FileSize"] = contents.length;
-                resolve({});
-              })
+              pluginAttrs["FileSize"] = contents.length;
+              resolve({});
+            })
             : resolve({});
         })
       );
@@ -441,12 +605,22 @@ const index = () => {
         new Promise((resolve, reject) => {
           item.pic_path
             ? readBinaryFile(item.pic_path).then((contents) => {
-                pluginAttrs["thumbnail"] = Utils.uint8arrayToBase64(contents);
-                resolve({});
-              })
+              pluginAttrs["thumbnail"] = Utils.uint8arrayToBase64(contents);
+              resolve({});
+            })
             : resolve({});
         })
       );
+
+      // PromiseImgData.push(
+      //   new Promise((resolve, reject) => {
+      //     readBinaryFile("D:\tb\X802012001HCMX01.PDF").then((contents) => {
+      //       pluginAttrs["TribonUrl"] = Utils.uint8arrayToBase64(contents);
+      //       resolve({});
+      //     })
+
+      //   })
+      // );
       // const [contents, img_contents] = await Promise.all([readBinaryFile(item.file_path), readBinaryFile(item.pic_path)])
       // const fileSize = contents.length
       const fileName = fileNameWithFormat.substring(
@@ -457,18 +631,28 @@ const index = () => {
         fileNameWithFormat.lastIndexOf(".") + 1
       );
       // 处理设计工具给的值
-      item.property.forEach((attr: any) => {
+      (item?.property || []).filter((item: any) => {
+        if (mqttClient.publishTopic === 'Tribon') {
+          return ['材质', '规格', '总长', '划线长', '重量'].includes(item.name)
+        } else {
+          return item
+        }
+      }).forEach((attr: any) => {
         if (Object.keys(attrsMap).includes(attr.name)) {
-          pluginAttrs[attrsMap[attr.name]] = attr.defaultVal;
+          pluginAttrs[attrsMap[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+        }
+        if (Object.keys(asmMaterialAttrsMap).includes(attr.name)) {
+          materialPluginAttrs[asmMaterialAttrsMap[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
         }
       });
       pluginAttrs["fileNameWithFormat"] = fileNameWithFormat;
       pluginAttrs["Description"] = fileName;
       pluginAttrs["FileFormat"] = fileFormat;
       // pluginAttrs['FileSize'] = fileSize
-      onChainAttrs["Category"] = cadFileMap[fileFormat];
+      // console.log(cadFileMap, fileFormat, 'fileFormat')
+      onChainAttrs["Category"] = cadFileMap[fileFormat] || cadFileMap[fileFormat.toLowerCase()];
 
-      materialOnChainAttrs["Category"] = fileObjectMap[cadFileMap[fileFormat]];
+      materialOnChainAttrs["Category"] = fileObjectMap[cadFileMap[fileFormat] || cadFileMap[fileFormat.toLowerCase()]];
       // } catch (error) {
       // }
     }
@@ -480,6 +664,8 @@ const index = () => {
 
     const copyLeftData = [res.output_data];
     setSelectNode(res.output_data);
+    console.log(copyLeftData, 'copyLeftData');
+
     setLeftData([...copyLeftData]);
     dispatch(setLoading(false));
   };
@@ -708,22 +894,19 @@ const index = () => {
           if (attr.apicode === "FileUrl") {
             return {
               ...attr,
-              value: `/plm/files${
-                nameFileUrlMap[
-                  getFileNameWithFormat(row)
-                ].response.uploadURL.split("/plm/files")[1]
-              }?name=${row.file.plugin?.fileNameWithFormat}&size=${
-                row.file.plugin?.FileSize
-              }&extension=${row.file.plugin?.FileFormat}`,
+              value: `/plm/files${nameFileUrlMap[
+                getFileNameWithFormat(row)
+              ].response.uploadURL.split("/plm/files")[1]
+                }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize
+                }&extension=${row.file.plugin?.FileFormat}`,
             };
           } else if (attr.apicode === "Thumbnail") {
             return {
               ...attr,
-              value: `/plm/files${
-                nameThumbMap[
-                  `${row.file.plugin?.Description}.bmp`
-                ].response?.uploadURL.split("/plm/files")[1]
-              }`,
+              value: `/plm/files${nameThumbMap[
+                `${row.file.plugin?.Description}.bmp`
+              ].response?.uploadURL.split("/plm/files")[1]
+                }`,
             };
           } else {
             return {
@@ -814,7 +997,6 @@ const index = () => {
   // 取出所有的属性
   useEffect(() => {
     if (leftData.length) {
-      console.log(selectNode, "selectNodeselectNode");
       const flattenData: Record<string, any>[] = getFlattenData(selectNode);
       setCenterData(flattenData);
     }
@@ -824,6 +1006,13 @@ const index = () => {
   useEffect(() => {
     if (leftData.length) {
       const flattenData: Record<string, any>[] = [];
+      const getKeys = (data: any) => {
+        if (mqttClient.publishTopic === 'Tribon') {
+          return data.caihzi ? `${data.caihzi}${data.guige}` : data.node_name
+        } else {
+          return getRowKey(data)
+        }
+      }
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
           const flattenedItem = {
@@ -834,10 +1023,10 @@ const index = () => {
           delete flattenedItem.children; // Remove the "children" property from the copy
           delete flattenedItem.property;
           const nodeNames = flattenData.map((item) => {
-            return getRowKey(item);
+            return getKeys(item);
           });
           if (
-            !nodeNames.includes(getRowKey(data[i])) &&
+            !nodeNames.includes(getKeys(data[i])) &&
             !(data[i].InternalModelFlag && judgeStandard(data[i])) &&
             data[i].file.plugin.fileNameWithFormat
           ) {
@@ -849,7 +1038,9 @@ const index = () => {
         }
       };
       loop([selectNode]);
-      setMaterialCenterData(flattenData);
+      console.log(flattenData, 'flattenData')
+      setMaterialCenterData(sortBy(flattenData, ['guige', 'caihzi']));
+
     }
   }, [selectNode, leftData]);
 
@@ -922,13 +1113,21 @@ const index = () => {
   }
 
   const transferValue = (val: any) => {
-    if(isArray(val)){
+    if (isArray(val)) {
       return val.join(',')
-    } else if(moment.isMoment(val)){
+    } else if (moment.isMoment(val)) {
       return moment(val).format("YYYY-MM-DD")
     } else {
       return val
     }
+  }
+
+
+  const getPropertyByName = (data: any, name: string) => {
+    const property = (data.property || []).find((item: any) => {
+      return item.name === name
+    })
+    return property?.DefaultVal
   }
 
   /**
@@ -966,9 +1165,11 @@ const index = () => {
         } else if (col.apicode === "Product") {
           return selectProduct;
         } else if (col.apicode === "Category") {
-          return row.material.onChain.Category;
+          return mqttClient.publishTopic === 'Tribon' && !row.guige ? '1480780705587916801' : row.material.onChain.Category;
         } else if (col.apicode === "Number") {
           return "";
+        } else if (col.apicode === "Description" && mqttClient.publishTopic === 'Tribon') {
+          return row.caihzi ? `${row.caihzi}${row.guige}` : row.node_name;
         } else {
           return transferValue(row[col.apicode] || col.defValue || "");
         }
@@ -976,8 +1177,28 @@ const index = () => {
     };
 
     const ItemCodeFolder = ItemCode.isFile(itemCode) ? "file" : "material";
+
+    let materialData = materialCenterData
+    console.log(materialCenterData, 'materialCenterData');
+
+    if (mqttClient.publishTopic === 'Tribon') {
+      const empty = materialCenterData.filter(v => !v.caihzi)
+      const hasData = uniqBy(materialCenterData.filter(v => {
+        console.log(v, 'vvv');
+
+        return v.caihzi
+      }), (s) => `${s.caihzi}${s.guige}`)
+      console.log(empty, 'empty');
+      console.log(hasData, 'hasData');
+
+
+      materialData = [...empty, ...hasData]
+      console.log(materialData, 'materialData');
+
+    }
+
     const dealData = (
-      ItemCode.isFile(itemCode) ? centerData : materialCenterData
+      ItemCode.isFile(itemCode) ? centerData : materialData
     )
       .filter((item) => item[ItemCodeFolder].onChain.flag != "exist")
       .map((item, index) => {
@@ -985,13 +1206,16 @@ const index = () => {
         return {
           fileIndex: index,
           itemCode: itemCode,
-          objectId: Category,
+          objectId: mqttClient.publishTopic === 'Tribon' && !item.guige ? '1480780705587916801' : Category,
           workspaceId: selectProduct,
+          caihzi: item.caihzi,
+          guige: item.guige,
           node_name: item.node_name,
           file_path: item.file_path,
           tenantId: "719",
           verifyCode: "200",
           user: user.id,
+          material: item.material,
           insAttrs: (ItemCode.isFile(itemCode) ? Attrs : materialAttrs)
             .filter((item) => item.status)
             .map((v) => {
@@ -1011,7 +1235,7 @@ const index = () => {
 
     const createLogArray: logItemType[] = [];
     successInstances.result.forEach((item: any) => {
-      if (item && item.name) {
+      if (item) {
         createLogArray.push({
           log: `${item.name} 创建成功， 编号:${item.number}`,
           dateTime: getCurrentTime(),
@@ -1031,9 +1255,12 @@ const index = () => {
 
     successInstances.result.forEach((item: any, index: number) => {
       if (item.code == 2000) {
-        successInstancesMap[getRowKey(dealData[index])] = item;
+        // tribon判断首先根据caizhiguige然后根据node_name
+        const rowKey = mqttClient.publishTopic === 'Tribon' ? (dealData[index].caihzi ? `${dealData[index].caihzi}${dealData[index].guige}` : dealData[index].node_name) : getRowKey(dealData[index])
+        successInstancesMap[rowKey] = item;
       }
     });
+    console.log(successInstancesMap, 'successInstancesMap')
     return successInstancesMap;
     // }
   };
@@ -1062,19 +1289,42 @@ const index = () => {
     );
     const structureData = cloneDeep(leftData);
 
+
+    // 复写获取rowkey的方法
+    const getRowKeyOverWrite = (data: any) => {
+      if (mqttClient.publishTopic === 'Tribon') {
+        const caizhi = getPropertyByName(data, '材质')
+        // console.log(caizhi, 'caizhi')
+        const guige = getPropertyByName(data, '规格')
+        return caizhi && guige ? `${caizhi}${guige}` : data.node_name
+      } else {
+        return getRowKey(data)
+      }
+    }
+
     const loop = (struct: any, dealArray: any) => {
       for (let i = 0; i < struct.length; i++) {
         struct[i].attrMap = {};
         const folder = ItemCode.isFile(itemCode) ? "file" : "material";
+        const rowKey = getRowKeyOverWrite(struct[i])
+        // console.log(, struct[i].material, 'getRowKeyOverWrite(struct[i])')
         struct[i].insId =
           struct[i][folder].onChain.flag != "exist" && nameNumberMap
-            ? nameNumberMap[getRowKey(struct[i])]?.instanceId
-            : InstanceAttrsMap[getRowKey(struct[i])][folder].onChain.insId;
-        if (getRowKey(struct[i]) != getRowKey(leftData[0])) {
-          struct[i].attrMap[structureAttrsMap["Qty"]] =
-            dealArray.map[getRowKey(struct[i])];
+            ? nameNumberMap[rowKey]?.instanceId
+            : InstanceAttrsMap[rowKey][folder].onChain.insId;
+        if (rowKey != getRowKeyOverWrite(leftData[0])) {
+          struct[i].attrMap[structureAttrsMap["Qty"]] = dealArray.map[rowKey];
+          if (mqttClient.publishTopic === 'Tribon') {
+
+            const unique = getPropertyByName(struct[i], '材质') ? `${getPropertyByName(struct[i], '材质')}${getPropertyByName(struct[i], '规格')}` : struct[i].node_name
+            struct[i].attrMap[structureAttrsMap["RefNumber"]] = dealArray.mLoc[unique].join(",");
+
+            struct[i].attrMap[structureAttrsMap["zhognliang"]] = dealArray.mWeight[unique]
+
+            struct[i].attrMap[structureAttrsMap["zongchang"]] = dealArray.mLong[unique]
+          }
         }
-        struct[i] = pick(struct[i], ["insId", "attrMap", "children"]);
+        struct[i] = pick(struct[i], ["insId", "attrMap", "children", "property", "guige", "caihzi"]);
         if (struct[i].children && struct[i].children.length) {
           struct[i].copyChildren = [...struct[i].children];
           struct[i].children = uniqueArrayByAttr(struct[i].children).array;
@@ -1117,7 +1367,7 @@ const index = () => {
     });
     uppy
       .use(Tus, {
-        endpoint: `http://192.168.0.101:8000/plm/files`,
+        endpoint: `http://192.168.0.101:1080/plm/files`,
         headers: {
           // Authorization: `${StorageController.token.get()}`,
         },
@@ -1134,13 +1384,12 @@ const index = () => {
           const logs = lastestLogData.current.map((item) => {
             if (item.id === `upload-${e[0]?.name}`) {
               return {
-                log: `${e[0]?.name} ${
-                  e[1]?.bytesUploaded == e[1]?.bytesTotal
-                    ? "上传完成"
-                    : "上传中"
-                } ${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(
-                  2
-                )}！`,
+                log: `${e[0]?.name} ${e[1]?.bytesUploaded == e[1]?.bytesTotal
+                  ? "上传完成"
+                  : "上传中"
+                  } ${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(
+                    2
+                  )}！`,
                 dateTime: getCurrentTime(),
                 id: `upload-${e[0]?.name}`,
               };
@@ -1179,6 +1428,149 @@ const index = () => {
 
   const handleClick = async (name: string) => {
     if (name === "upload") {
+      warpperSetLog(() => {
+        setLogData([
+          ...lastestLogData.current,
+          {
+            log: "实例上传中",
+            dateTime: getCurrentTime(),
+            id: Utils.generateSnowId(),
+          },
+        ]);
+      });
+      // tribon重新写接口，首先需要创建文件，再然后需要创建物料
+      if (mqttClient.publishTopic === 'Tribon') {
+        setLogVisbile(true);
+        dispatch(setLoading(true));
+        // 创建实例
+        const nameNumberMap: any = await createInstance({
+          itemCode: BasicsItemCode.material,
+        });
+
+        createStructure({
+          nameNumberMap,
+          itemCode: BasicsItemCode.material,
+          tabCode: "10002003",
+        });
+        dispatch(setLoading(false))
+
+        // const pdfData = [...rightData[0].children, ...rightData[1].children, ...rightData[2].children, ...rightData[3].children]
+        // const FileArray = []
+        // for (let i = 0; i < pdfData.length; i++) {
+        //   FileArray.push(
+        //     new Promise(async (resolve, reject) => {
+        //       const arrayBufferData = await readBinaryFile(pdfData[i].path);
+        //       resolve({
+        //         name: pdfData[i].name,
+        //         data: new Blob([arrayBufferData]),
+        //         source: "Local",
+        //         isRemote: false,
+        //         type: pdfData[i].type,
+        //       });
+        //     })
+        //   );
+        // }
+
+
+        // Promise.all(FileArray).then(async (res) => {
+        //   console.log(res, 'FileArray')
+
+        //   const nameFileUrlMap = await uploadFile(res)
+
+        //   console.log(nameFileUrlMap, 'nameFileUrlMap')
+        //   // 根据所选的产品去查询第一个型谱的id
+        //   const spectrumReturnV: any = await API.getProductSpectrumList(
+        //     selectProduct
+        //   );
+
+        //   const fileTypeMap: any = {
+        //     '扁钢手工下料图': '1725740831471722497',
+        //     '扁钢数控下料图': '1725740752593641474',
+        //     '曲型加工图': '1725740960031334402',
+        //     '型材下料图': '1725741029036023809',
+        //     '组立装配图': '1725741077094359042'
+        //   }
+        //   const Category = '1459426710323851265'
+
+        //   const spectrum = spectrumReturnV.result[0].id;
+
+        //   const setVal = (row: any, col: any) => {
+        //     if (col.apicode === "ProductModel") {
+        //       return spectrum;
+        //     } else if (col.apicode === "Product") {
+        //       return selectProduct;
+        //     }
+        //     else if (col.apicode === "FileUrl") {
+        //       return `/plm/files${(nameFileUrlMap[
+        //         row.name
+        //       ]).response.uploadURL.split("/plm/files")[1]
+        //         }?name=${row.name}&size=10020&extension=pdf`;
+        //     }
+        //     else if (col.apicode === "Thumbnail") {
+        //       return "";
+        //     } else if (col.apicode === "FileFormat") {
+        //       return 'pdf';
+        //     } else if (col.apicode === "FileSize") {
+        //       return '10020';
+        //     } else if (col.apicode === "Category") {
+        //       return fileTypeMap[row.type] || Category;
+        //     } else if (col.apicode === "Description") {
+        //       return row.name.split('.')[0];
+        //     } else {
+        //       return "";
+        //     }
+        //   };
+
+        //   const dealData = res
+        //     .map((item: any, index) => {
+        //       return {
+        //         fileIndex: index,
+        //         itemCode: '10001006',
+        //         objectId: fileTypeMap[item.type] || Category,
+        //         workspaceId: selectProduct,
+        //         node_name: item.name,
+        //         file_path: item.path,
+        //         tenantId: "719",
+        //         verifyCode: "200",
+        //         user: user.id,
+        //         insAttrs: (Attrs)
+        //           .filter((item) => item.status)
+        //           .map((v) => {
+        //             return {
+        //               ...v,
+        //               value: setVal(item, v),
+        //             };
+        //           }),
+        //       };
+        //     });
+
+
+
+        //   console.log(dealData, "创建参数");
+        //   const successInstances: any = await API.createInstances(dealData);
+        //   console.log(successInstances, "创建返回");
+
+        //   const createLogArray: logItemType[] = [];
+        //   successInstances.result.forEach((item: any) => {
+        //     if (item && item.name) {
+        //       createLogArray.push({
+        //         log: `${item.name} 创建成功， 编号:${item.number}`,
+        //         dateTime: getCurrentTime(),
+        //         id: Utils.generateSnowId(),
+        //       });
+        //     }
+        //   });
+        //   dispatch(setLoading(false))
+        //   setMaterialCenterData(materialCenterData)
+
+        //   warpperSetLog(() => {
+        //     setLogData([...lastestLogData.current, ...createLogArray]);
+        //   });
+
+        // })
+        return
+      }
+
       setLogVisbile(true);
       dispatch(setLoading(true));
 
@@ -1213,7 +1605,7 @@ const index = () => {
 
       for (let item of centerData) {
         if (item.file.onChain.flag != "exist") {
-          if (item.file_path) {
+          if (item.file_path && (mqttClient.publishTopic != 'Tribon')) {
             FileArray.push(
               new Promise(async (resolve, reject) => {
                 const arrayBufferData = await readBinaryFile(item.file_path);
@@ -1293,153 +1685,154 @@ const index = () => {
       });
       const nameFileUrlMap = await uploadFile(fileItems);
       // const nameThumbMap = await uploadFile(FileThumbArray)
-      // 批量上传附件
-      const {
-        result: { records: tabAttrs },
-      }: any = await API.getInstanceAttrs({
-        itemCode: BasicsItemCode.file,
-        tabCode: "10002008",
-      });
-
-      console.log(nameFileUrlMap, "nameFileUrlMap");
-
-      const setAttachmentValue = (
-        item: any,
-        apicode: string,
-        type: "drw" | "step"
-      ) => {
-        const nameWidthFormat = `${item[`${type}_path`].substring(
-          item[`${type}_path`].lastIndexOf("\\") + 1
-        )}`;
-        if (apicode === "ID") {
-          return nameWidthFormat;
-        } else if (apicode === "FileId") {
-          return nameFileUrlMap[nameWidthFormat].id;
-        } else if (apicode === "OnlineEditingStatus") {
-          return "1";
-        } else if (apicode === "OldFileUrl") {
-          return `/plm/files${
-            nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
-              "/plm/files"
-            )[1]
-          }`;
-        } else if (apicode === "FileName") {
-          return nameWidthFormat;
-        } else if (apicode === "FileSize") {
-          return `${nameFileUrlMap[nameWidthFormat].size}`;
-        } else if (apicode === "FileFormat") {
-          return `${nameFileUrlMap[nameWidthFormat].extension}`;
-        } else if (apicode === "FileUrl") {
-          return `/plm/files${
-            nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
-              "/plm/files"
-            )[1]
-          }`;
-        } else {
-          return "";
-        }
-      };
-      const addAttachmentParams: any = [];
-      centerData
-        .filter((item) => item.file.onChain.flag != "exist")
-        .forEach((item) => {
-          if (item.step_path) {
-            addAttachmentParams.push({
-              instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-              itemCode: BasicsItemCode.file,
-              tabCode: "10002008",
-              versionNumber: "Draft",
-              versionOrder: "1",
-              insAttrs: tabAttrs.map((attr: any) => {
-                return {
-                  apicode: attr.apicode,
-                  id: attr.id,
-                  title: attr.name,
-                  valueType: attr.valueType,
-                  value: setAttachmentValue(item, attr.apicode, "step"),
-                };
-              }),
-            });
-          } else if (item.drw_path) {
-            addAttachmentParams.push({
-              instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-              itemCode: BasicsItemCode.file,
-              tabCode: "10002008",
-              versionNumber: "Draft",
-              versionOrder: "1",
-              insAttrs: tabAttrs.map((attr: any) => {
-                return {
-                  apicode: attr.apicode,
-                  id: attr.id,
-                  title: attr.name,
-                  valueType: attr.valueType,
-                  value: setAttachmentValue(item, attr.apicode, "drw"),
-                };
-              }),
-            });
-          }
+      if (mqttClient.publishTopic != 'Tribon') {
+        // 批量上传附件
+        const {
+          result: { records: tabAttrs },
+        }: any = await API.getInstanceAttrs({
+          itemCode: BasicsItemCode.file,
+          tabCode: "10002008",
         });
 
-      const attchmentResult = await API.addInstanceAttributeAttachment({
-        tenantId: "719",
-        instanceAttrVos: addAttachmentParams,
-      });
-      console.log(attchmentResult, addAttachmentParams, "FileAttachment");
+        console.log(nameFileUrlMap, "nameFileUrlMap");
 
-      //批量更新文件地址
-      const updateInstances = centerData
-        .filter((item) => item.file.onChain.flag != "exist")
-        .map((item) => {
-          return {
-            id: nameNumberMap[getRowKey(item)]?.instanceId,
-            itemCode: BasicsItemCode.file,
-            tabCode: "10002001",
-            insAttrs: Attrs.filter((attr) =>
-              ["FileUrl", "Thumbnail"].includes(attr.apicode)
-            ).map((attr) => {
-              if (attr.apicode === "FileUrl") {
-                return {
-                  ...attr,
-                  value: `/plm/files${
-                    nameFileUrlMap[
+        const setAttachmentValue = (
+          item: any,
+          apicode: string,
+          type: "drw" | "step"
+        ) => {
+          const nameWidthFormat = `${item[`${type}_path`].substring(
+            item[`${type}_path`].lastIndexOf("\\") + 1
+          )}`;
+          if (apicode === "ID") {
+            return nameWidthFormat;
+          } else if (apicode === "FileId") {
+            return nameFileUrlMap[nameWidthFormat].id;
+          } else if (apicode === "OnlineEditingStatus") {
+            return "1";
+          } else if (apicode === "OldFileUrl") {
+            return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
+              "/plm/files"
+            )[1]
+              }`;
+          } else if (apicode === "FileName") {
+            return nameWidthFormat;
+          } else if (apicode === "FileSize") {
+            return `${nameFileUrlMap[nameWidthFormat].size}`;
+          } else if (apicode === "FileFormat") {
+            return `${nameFileUrlMap[nameWidthFormat].extension}`;
+          } else if (apicode === "FileUrl") {
+            return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
+              "/plm/files"
+            )[1]
+              }`;
+          } else {
+            return "";
+          }
+        };
+        const addAttachmentParams: any = [];
+        centerData
+          .filter((item) => item.file.onChain.flag != "exist")
+          .forEach((item) => {
+            if (item.step_path) {
+              addAttachmentParams.push({
+                instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+                itemCode: BasicsItemCode.file,
+                tabCode: "10002008",
+                versionNumber: "Draft",
+                versionOrder: "1",
+                insAttrs: tabAttrs.map((attr: any) => {
+                  return {
+                    apicode: attr.apicode,
+                    id: attr.id,
+                    title: attr.name,
+                    valueType: attr.valueType,
+                    value: setAttachmentValue(item, attr.apicode, "step"),
+                  };
+                }),
+              });
+            } else if (item.drw_path) {
+              addAttachmentParams.push({
+                instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+                itemCode: BasicsItemCode.file,
+                tabCode: "10002008",
+                versionNumber: "Draft",
+                versionOrder: "1",
+                insAttrs: tabAttrs.map((attr: any) => {
+                  return {
+                    apicode: attr.apicode,
+                    id: attr.id,
+                    title: attr.name,
+                    valueType: attr.valueType,
+                    value: setAttachmentValue(item, attr.apicode, "drw"),
+                  };
+                }),
+              });
+            }
+          });
+
+        const attchmentResult = await API.addInstanceAttributeAttachment({
+          tenantId: "719",
+          instanceAttrVos: addAttachmentParams,
+        });
+        console.log(attchmentResult, addAttachmentParams, "FileAttachment");
+
+        //批量更新文件地址
+        const updateInstances = centerData
+          .filter((item) => item.file.onChain.flag != "exist")
+          .map((item) => {
+            return {
+              id: nameNumberMap[getRowKey(item)]?.instanceId,
+              itemCode: BasicsItemCode.file,
+              tabCode: "10002001",
+              insAttrs: Attrs.filter((attr) =>
+                (mqttClient.publishTopic !== 'Tribon' ? ["FileUrl", "Thumbnail"] : ['FileUrl']).includes(attr.apicode)
+              ).map((attr) => {
+                if (attr.apicode === "FileUrl") {
+                  return {
+                    ...attr,
+                    value: mqttClient.publishTopic !== 'Tribon' ? `/plm/files${nameFileUrlMap[
                       getFileNameWithFormat(item)
                     ].response.uploadURL.split("/plm/files")[1]
-                  }?name=${item.file.plugin?.fileNameWithFormat}&size=${
-                    item.file.plugin?.FileSize
-                  }&extension=${item.file.plugin?.FileFormat}`,
-                };
-              } else {
-                return {
-                  ...attr,
-                  value: `/plm/files${
-                    nameFileUrlMap[
+                      }?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize
+                      }&extension=${item.file.plugin?.FileFormat}` : `/plm/files/ba8ad0cb2f63dbd396ab35de7e6738cb+528d612f-580e-44d5-9510-c11630179a5c?name=${item.file.plugin?.fileNameWithFormat}&size=10247&extension=pdf`,
+                  };
+                } else {
+                  return {
+                    ...attr,
+                    value: `/plm/files${nameFileUrlMap[
                       `${item.file.plugin?.Description}.bmp`
                     ].response?.uploadURL.split("/plm/files")[1]
-                  }`,
-                };
-              }
-            }),
+                      }`,
+                  };
+                }
+              }),
+              tenantId: "719",
+            };
+          });
+        if (updateInstances.length) {
+          await API.batchUpdate({
+            instances: updateInstances,
             tenantId: "719",
-          };
-        });
-      if (updateInstances.length) {
-        await API.batchUpdate({
-          instances: updateInstances,
-          tenantId: "719",
-          userId: user.id,
-        });
-        warpperSetLog(() => {
-          setLogData([
-            ...lastestLogData.current,
-            {
-              log: "批量更新模型地址成功！",
-              dateTime: getCurrentTime(),
-              id: Utils.generateSnowId(),
-            },
-          ]);
-        });
+            userId: user.id,
+          });
+          warpperSetLog(() => {
+            setLogData([
+              ...lastestLogData.current,
+              {
+                log: "批量更新模型地址成功！",
+                dateTime: getCurrentTime(),
+                id: Utils.generateSnowId(),
+              },
+            ]);
+          });
+        }
       }
+
+
+
       // 批量增加附件
+
 
       warpperSetLog(() => {
         setLogData([
@@ -1458,6 +1851,9 @@ const index = () => {
       dispatch(setLoading(true));
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
+        input_data: {
+          "info": ["proximate"]
+        }
       });
     } else if (name === "allocatenumber") {
       const centerDataMap = groupBy(centerData, (item) => {
@@ -1739,7 +2135,7 @@ const index = () => {
                           selectedCellLatest.current?.dataIndex
                         ] =
                           selectedCellLatest.current?.record?.file?.plugin[
-                            selectedCellLatest.current?.dataIndex
+                          selectedCellLatest.current?.dataIndex
                           ];
                       }
                     });
@@ -1773,7 +2169,7 @@ const index = () => {
                         selectedCellLatest.current?.dataIndex
                       ] =
                         selectedCellLatest.current?.record?.file?.plugin[
-                          selectedCellLatest.current?.dataIndex
+                        selectedCellLatest.current?.dataIndex
                         ];
                     }
                   }
@@ -2007,12 +2403,17 @@ const index = () => {
                       }
 
                       if (findSelect) {
-                        InstanceAttrsMap[getRowKey(item)].material.plugin[
+                        if (!InstanceAttrsMap[getRowKey(item)].material.plugin[
                           selectedCellLatest.current?.dataIndex
-                        ] =
-                          selectedCellLatest.current?.record?.material?.plugin[
+                        ]) {
+                          InstanceAttrsMap[getRowKey(item)].material.plugin[
                             selectedCellLatest.current?.dataIndex
-                          ];
+                          ] =
+                            selectedCellLatest.current?.record?.material?.plugin[
+                            selectedCellLatest.current?.dataIndex
+                            ];
+                        }
+
                       }
                     });
                     setLeftData([...leftData]);
@@ -2041,12 +2442,17 @@ const index = () => {
                       // ) {
                       //   return;
                       // }
-                      InstanceAttrsMap[getRowKey(element)].material.plugin[
+                      if (!InstanceAttrsMap[getRowKey(element)].material.plugin[
                         selectedCellLatest.current?.dataIndex
-                      ] =
-                        selectedCellLatest.current?.record?.material?.plugin[
+                      ]) {
+                        InstanceAttrsMap[getRowKey(element)].material.plugin[
                           selectedCellLatest.current?.dataIndex
-                        ];
+                        ] =
+                          selectedCellLatest.current?.record?.material?.plugin[
+                          selectedCellLatest.current?.dataIndex
+                          ];
+                      }
+
                     }
                   }
                   setLeftData([...leftData]);
@@ -2340,7 +2746,13 @@ const index = () => {
         </Fragment>
       ),
     },
-  ];
+  ].filter(item => {
+    if (mqttClient.publishTopic === 'Tribon') {
+      return item.key != 'file'
+    } else {
+      return item
+    }
+  });
 
   // 下载上传日志
   const downFile = async (file?: any) => {
@@ -2364,13 +2776,62 @@ const index = () => {
         .join("\n") as any,
       path: `${selPath}`,
     })
-      .then((res) => {})
-      .catch((err) => {});
+      .then((res) => { })
+      .catch((err) => { });
   };
 
   useEffect(() => {
     console.log(centerData, "centerData");
   }, [centerData]);
+
+
+
+  {/* 基本信息 */ }
+  const BaseAttrInfo = <div
+    className="bg-white border-outBorder w-full h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto border-t border-b border-r"
+  // style={{ width: "478px" }}
+  >
+    <div>
+      <div
+        className="text-primary mb-1"
+        style={{ fontSize: "13px", fontWeight: 500 }}
+      >
+        属性名称
+      </div>
+      <div
+        className="bg-outBorder w-full mb-1"
+        style={{ height: "1px" }}
+      ></div>
+    </div>
+
+    <div className="flex-1 w-full basic-attr">
+      <OnChainForm
+        ref={dynamicFormRef}
+        layout="horizontal"
+        readOnly
+        labelCol={{
+          style: {
+            width: 48,
+          },
+        }}
+      >
+        <div className="grid grid-cols-2 gap-x-8">
+          {FormAttrs.map((item, index) => {
+            return (
+              <OnChainFormItem
+                key={`${item}${index}`}
+                colon
+                readOnly
+                label={item.name}
+                name={item.name}
+                content={{ type: "Input" }}
+              ></OnChainFormItem>
+            );
+          })}
+        </div>
+      </OnChainForm>
+    </div>
+  </div>
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -2426,11 +2887,10 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`w-full gap-1 inline-flex overflow-hidden items-center cursor-pointer ${
-                            !(record.children && record.children.length)
-                              ? "ml-3"
-                              : ""
-                          }`}
+                          className={`w-full gap-1 inline-flex overflow-hidden items-center cursor-pointer ${!(record.children && record.children.length)
+                            ? "ml-3"
+                            : ""
+                            }`}
                           onClick={() => {
                             setSelectNode(record);
                           }}
@@ -2468,79 +2928,49 @@ const index = () => {
           <div className="flex-1 h-full flex flex-col overflow-hidden">
             <div
               className="flex w-full gap-1.5"
-              style={{ height: "240px", position: "relative" }}
+              style={{ height: "300px", position: "relative" }}
             >
               {
-                //@ts-ignore
-                <SplitPane
-                  split="vertical"
-                  minSize={240}
-                  defaultSize={400}
-                  maxSize={600}
-                  allowResize
-                >
-                  <div
-                    style={{
-                      background:
-                        "linear-gradient(180deg,#ffffff 0%, #e8e8e8 100%)",
-                      overflow: "hidden",
-                    }}
-                    className="flex-1 h-full border border-outBorder"
+                mqttClient.publishTopic === 'Tribon' ? BaseAttrInfo :
+                  //@ts-ignore
+                  <SplitPane
+                    split="vertical"
+                    minSize={400}
+                    defaultSize={400}
+                    maxSize={600}
+                    allowResize
                   >
-                    <img
-                      id="thumbnail"
-                      style={{ margin: "0 auto", height: "100%" }}
-                      src={removeImgBg(selectNode?.file.plugin.thumbnail)}
-                      alt=""
-                    />
-                  </div>
-                  {/* 基本信息 */}
-                  <div
-                    className="bg-white border-outBorder h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto border-t border-b border-r"
-                    // style={{ width: "478px" }}
-                  >
-                    <div>
-                      <div
-                        className="text-primary mb-1"
-                        style={{ fontSize: "13px", fontWeight: 500 }}
-                      >
-                        属性名称
-                      </div>
-                      <div
-                        className="bg-outBorder w-full mb-1"
-                        style={{ height: "1px" }}
-                      ></div>
+                    <div
+                      style={{
+                        background:
+                          "linear-gradient(180deg,#ffffff 0%, #e8e8e8 100%)",
+                        overflow: "hidden",
+                      }}
+                      className="flex-1 h-full border border-outBorder"
+                    >
+                      {/* <PDFViewer
+                      pdfConfig={{
+                        currentPage: 1,
+                        scale: 0.4,
+                        // rotate: 180
+                      }}
+                      backendDataMap={{}}
+                      annotateConfig={{
+                      }}
+                      url={'/X802012001HCMX01.PDF'}>
+                      </PDFViewer> */}
+                      <img
+                        id="thumbnail"
+                        style={{ margin: "0 auto", height: "100%" }}
+                        src={removeImgBg(selectNode?.file.plugin.thumbnail)}
+                        alt=""
+                      />
                     </div>
 
-                    <div className="flex-1 w-full basic-attr">
-                      <OnChainForm
-                        ref={dynamicFormRef}
-                        layout="horizontal"
-                        readOnly
-                        labelCol={{
-                          style: {
-                            width: 48,
-                          },
-                        }}
-                      >
-                        <div className="grid grid-cols-2 gap-x-8">
-                          {FormAttrs.map((item, index) => {
-                            return (
-                              <OnChainFormItem
-                                key={`${item}${index}`}
-                                colon
-                                readOnly
-                                label={item.name}
-                                name={item.name}
-                                content={{ type: "Input" }}
-                              ></OnChainFormItem>
-                            );
-                          })}
-                        </div>
-                      </OnChainForm>
-                    </div>
-                  </div>
-                </SplitPane>
+                    {
+                      BaseAttrInfo
+                    }
+                  </SplitPane>
               }
             </div>
             <div className="mt-2 flex-1 overflow-hidden">
@@ -2557,21 +2987,22 @@ const index = () => {
           </div>
 
           {/* 右侧BOM */}
-          <div style={{ width: "254px", minWidth: "254px" }} className="h-full">
-            <div className="h-full pr-2">
-              <div className="flex justify-between items-center h-6 mb-1.5">
-                <OnChainSelect
-                  size="small"
-                  value={"EBOM"}
-                  onChange={(e) => {
-                    setSelectProduct(e);
-                  }}
-                  open={false}
-                  clearIcon={false}
-                  showArrow={false}
-                ></OnChainSelect>
-              </div>
-              {/* <div className="h-10 flex justify-between items-center">
+          {
+            mqttClient.publishTopic === 'Tribon' ? <div style={{ width: '4px', height: '100%' }}></div> : <div style={{ width: "254px", minWidth: "254px" }} className="h-full">
+              <div className="h-full pr-2">
+                <div className="flex justify-between items-center h-6 mb-1.5">
+                  <OnChainSelect
+                    size="small"
+                    value={mqttClient.publishTopic === 'Tribon' ? '设计图' : "EBOM"}
+                    onChange={(e) => {
+                      setSelectProduct(e);
+                    }}
+                    open={false}
+                    clearIcon={false}
+                    showArrow={false}
+                  ></OnChainSelect>
+                </div>
+                {/* <div className="h-10 flex justify-between items-center">
                 <div className="text-xs">产品名称</div>
                 <div>
                   <PlmIcon
@@ -2580,196 +3011,203 @@ const index = () => {
                   ></PlmIcon>
                 </div>
               </div> */}
-              {/* <div className="flex-1 bg-white h-full"> */}
-              <OnChainTable
-                rowKey={"id"}
-                style={{ height: "100%" }}
-                className="tree-table"
-                bordered={false}
-                dataSource={rightData}
-                expandable={{
-                  expandIconColumnIndex: 2,
-                  expandedRowKeys: expandedKeys,
-                  onExpandedRowsChange: (expandedKeys) => {
-                    setExpandedKeys(expandedKeys);
-                  },
-                }}
-                rowSelection={{
-                  columnWidth: 0,
-                  selectedRowKeys: [selectNode?.id],
-                }}
-                hideFooter
-                extraHeight={0}
-                columns={[
-                  {
-                    title: "名称",
-                    dataIndex: "node_name",
-                    search: {
-                      type: "Input",
-                    },
-                    sorter: true,
-                    render: (text, record: Record<string, any>) => {
-                      return (
-                        <div
-                          className={`gap-1 inline-flex overflow-hidden items-center ${
-                            !(record.children && record.children.length)
+                {/* <div className="flex-1 bg-white h-full"> */}
+                <OnChainTable
+                  rowKey={"id"}
+                  style={{ height: "100%" }}
+                  className="tree-table"
+                  bordered={false}
+                  dataSource={rightData}
+                  expandable={{
+                    expandIconColumnIndex: 2,
+                    ...(mqttClient.publishTopic === 'Tribon' ? {
+                    } : {
+                      expandedRowKeys: expandedKeys,
+                      onExpandedRowsChange: (expandedKeys) => {
+                        setExpandedKeys(expandedKeys);
+                      },
+                    })
+                  }}
+                  rowSelection={{
+                    columnWidth: 0,
+                    selectedRowKeys: [selectNode?.id],
+                  }}
+                  hideFooter
+                  extraHeight={0}
+                  columns={[
+                    {
+                      title: "名称",
+                      dataIndex: "node_name",
+                      search: {
+                        type: "Input",
+                      },
+                      sorter: true,
+                      render: (text, record: Record<string, any>) => {
+                        if (mqttClient.publishTopic === 'Tribon') {
+                          return record.name
+                        }
+                        return (
+                          <div
+                            className={`gap-1 inline-flex overflow-hidden items-center ${!(record.children && record.children.length)
                               ? "ml-3"
                               : ""
-                          }`}
-                        >
-                          <img
-                            width={14}
-                            src={
-                              (record.children || []).length
-                                ? cubeSvg
-                                : materialSvg
-                            }
-                            alt=""
-                          />
-                          <div className="overflow-hidden text-ellipsis w-full">
-                            {InstanceAttrsMap &&
-                            InstanceAttrsMap[getRowKey(record)]?.material
-                              ?.onChain?.Number ? (
-                              InstanceAttrsMap[getRowKey(record)]?.material
-                                ?.onChain?.Number
-                            ) : (
-                              <div
-                                style={{
-                                  height: "22px",
-                                  width: "140px",
-                                  // background: "#FFC745",
-                                  opacity: "0.5",
-                                }}
-                              >
-                                <div className="flex">
-                                  {Array.from({ length: 20 }).map(
-                                    (item, index: number) => {
-                                      if (index % 2 == 0) {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#ffffff",
-                                            }}
-                                          ></div>
-                                        );
-                                      } else {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#c1c1c1",
-                                            }}
-                                          ></div>
-                                        );
+                              }`}
+                          >
+                            <img
+                              width={14}
+                              src={
+                                (record.children || []).length
+                                  ? cubeSvg
+                                  : materialSvg
+                              }
+                              alt=""
+                            />
+                            <div className="overflow-hidden text-ellipsis w-full">
+                              {InstanceAttrsMap &&
+                                InstanceAttrsMap[getRowKey(record)]?.material
+                                  ?.onChain?.Number ? (
+                                InstanceAttrsMap[getRowKey(record)]?.material
+                                  ?.onChain?.Number
+                              ) : (
+                                <div
+                                  style={{
+                                    height: "22px",
+                                    width: "140px",
+                                    // background: "#FFC745",
+                                    opacity: "0.5",
+                                  }}
+                                >
+                                  <div className="flex">
+                                    {Array.from({ length: 20 }).map(
+                                      (item, index: number) => {
+                                        if (index % 2 == 0) {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#ffffff",
+                                              }}
+                                            ></div>
+                                          );
+                                        } else {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#c1c1c1",
+                                              }}
+                                            ></div>
+                                          );
+                                        }
                                       }
-                                    }
-                                  )}
-                                </div>
-                                <div className="flex">
-                                  {Array.from({ length: 20 }).map(
-                                    (item, index: number) => {
-                                      if (index % 2 != 0) {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#ffffff",
-                                            }}
-                                          ></div>
-                                        );
-                                      } else {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#c1c1c1",
-                                            }}
-                                          ></div>
-                                        );
+                                    )}
+                                  </div>
+                                  <div className="flex">
+                                    {Array.from({ length: 20 }).map(
+                                      (item, index: number) => {
+                                        if (index % 2 != 0) {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#ffffff",
+                                              }}
+                                            ></div>
+                                          );
+                                        } else {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#c1c1c1",
+                                              }}
+                                            ></div>
+                                          );
+                                        }
                                       }
-                                    }
-                                  )}
-                                </div>
-                                <div className="flex">
-                                  {Array.from({ length: 20 }).map(
-                                    (item, index: number) => {
-                                      if (index % 2 == 0) {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#ffffff",
-                                            }}
-                                          ></div>
-                                        );
-                                      } else {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#c1c1c1",
-                                            }}
-                                          ></div>
-                                        );
+                                    )}
+                                  </div>
+                                  <div className="flex">
+                                    {Array.from({ length: 20 }).map(
+                                      (item, index: number) => {
+                                        if (index % 2 == 0) {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#ffffff",
+                                              }}
+                                            ></div>
+                                          );
+                                        } else {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#c1c1c1",
+                                              }}
+                                            ></div>
+                                          );
+                                        }
                                       }
-                                    }
-                                  )}
-                                </div>
-                                <div className="flex">
-                                  {Array.from({ length: 20 }).map(
-                                    (item, index: number) => {
-                                      if (index % 2 != 0) {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#ffffff",
-                                            }}
-                                          ></div>
-                                        );
-                                      } else {
-                                        return (
-                                          <div
-                                            key={index}
-                                            style={{
-                                              width: "5px",
-                                              height: "5px",
-                                              background: "#c1c1c1",
-                                            }}
-                                          ></div>
-                                        );
+                                    )}
+                                  </div>
+                                  <div className="flex">
+                                    {Array.from({ length: 20 }).map(
+                                      (item, index: number) => {
+                                        if (index % 2 != 0) {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#ffffff",
+                                              }}
+                                            ></div>
+                                          );
+                                        } else {
+                                          return (
+                                            <div
+                                              key={index}
+                                              style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                background: "#c1c1c1",
+                                              }}
+                                            ></div>
+                                          );
+                                        }
                                       }
-                                    }
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
+                        );
+                      },
                     },
-                  },
-                ]}
-                selectedCell={selectedCell}
-              ></OnChainTable>
-              {/* </div> */}
+                  ]}
+                  selectedCell={selectedCell}
+                ></OnChainTable>
+                {/* </div> */}
+              </div>
             </div>
-          </div>
+          }
+
           <PlmModal
             title={"上传日志"}
             width={582}

@@ -841,3 +841,7 @@ img {
   text-decoration: line-through !important;
   text-decoration-color: red !important;
 }
+
+.PDFViewer ::-webkit-scrollbar-thumb{
+  background: #e1e1e1;
+}

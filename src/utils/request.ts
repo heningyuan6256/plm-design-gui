@@ -1,11 +1,34 @@
 //  request.js
 import { http } from "@tauri-apps/api";
+import { readTextFile } from "@tauri-apps/api/fs";
+import { resolveResource } from "@tauri-apps/api/path";
+import { Utils } from ".";
+import { BasicConfig } from "../constant/config";
 
-const getUrl = (str: string) => {
+const getUrl = async (str: string) => {
+    const path = await resolveResource('Config.ini')
+
+    const config = await readTextFile(path)
+
+    const INIData = Utils.parseINIString(config)
+    let severUrl = BasicConfig.ServerUrl
+    let tenantId = BasicConfig.TenantId
+    if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].ServerUrl) {
+        severUrl = INIData['ONCHAIN'].ServerUrl
+    }
+    if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TenantId) {
+        tenantId = INIData['ONCHAIN'].TenantId
+    }
     if (str.startsWith('/opendata')) {
-        return 'http://192.168.0.101:8000/plm' + str
+        return {
+            url: severUrl + str,
+            tenantId: tenantId
+        }
     } else {
-        return 'http://192.168.0.101:8000/plm' + str
+        return {
+            url: severUrl + str,
+            tenantId: tenantId
+        }
     }
 }
 
@@ -21,7 +44,7 @@ class Request {
     }
 
     interceptors = {
-        baseURL: "http://192.168.0.101:8000/plm",
+        baseURL: BasicConfig.ServerUrl,
         token: '',
         request: {
             headers: {
@@ -44,21 +67,22 @@ class Request {
     };
 
     initAddress = (str: string, token: string) => {
-        this.interceptors.baseURL = `http://${str}:8000/plm`;
+        // this.interceptors.baseURL = `http://${str}:8000/plm`;
         this.interceptors.request.headers.Authorization = token
     };
 
     post = (url: string, data: Record<string, any>) => {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const requestBody = { ...data, ...this.interceptors.request.body };
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
+            const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
             http
-                .fetch(getUrl(url), {
+                .fetch(serverUrl, {
                     headers: requestHeaders,
                     method: "POST",
                     // 常规的json格式请求体发送
-                    body: http.Body.json(requestBody),
+                    body: http.Body.json({ ...requestBody, tenantId: tenantId }),
                 })
                 .then((res) => {
                     // res为请求成功的回调数据
@@ -71,16 +95,17 @@ class Request {
     };
 
     put = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const requestQuery = { ...data, ...this.interceptors.request.body };
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
+            const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
             http
-                .fetch(getUrl(url), {
+                .fetch(serverUrl, {
                     headers: requestHeaders,
                     method: "PUT",
                     // 常规的json格式请求体发送
-                    query: requestQuery,
+                    query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
                 .then((res) => {
@@ -93,16 +118,17 @@ class Request {
     };
 
     postPut = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const requestQuery = { ...data, ...this.interceptors.request.body };
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
+            const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
             http
-                .fetch(getUrl(url), {
+                .fetch(serverUrl, {
                     headers: requestHeaders,
                     method: "PUT",
                     // 常规的json格式请求体发送
-                    body: http.Body.json(requestQuery),
+                    body: http.Body.json({...requestQuery, tenantId: tenantId}),
                     // query: requestQuery,
                     ...headers
                 })
@@ -116,16 +142,17 @@ class Request {
     };
 
     get = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const requestQuery = { ...data, ...this.interceptors.request.body };
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
+            const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
             http
-                .fetch(getUrl(url), {
+                .fetch(serverUrl, {
                     headers: requestHeaders,
                     method: "GET",
                     // 常规的json格式请求体发送
-                    query: requestQuery,
+                    query: {...requestQuery, tenantId: tenantId},
                     ...headers
                 })
                 .then((res) => {

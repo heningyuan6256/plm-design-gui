@@ -106,6 +106,41 @@ const API = {
   },
 
   /**
+ * 获取Cad属性
+ */
+
+  getCadAttrs: (data: any) => {
+    return NewRequest.get("/pdm/cad/attrs", {
+      tenantId: "719",
+      ...data,
+    });
+  },
+
+  /**
+* 获取Cad属性
+*/
+  getCadFormats: () => {
+    return NewRequest.get("/pdm/config/formats", {
+      tenantId: "719",
+      pageNo: '1',
+      pageSize: '500',
+      column: 'format'
+    });
+  },
+
+  /**
+* 获取所有的格式
+*/
+  getCadFormat: (data: any) => {
+    return NewRequest.get("/pdm/cad/attrs", {
+      tenantId: "719",
+      ...data,
+    });
+  },
+
+
+
+  /**
    * 塞入映射表
    */
   postMapptingAttrs: (data: any) => {
@@ -235,13 +270,13 @@ const API = {
   queryInstanceTab: (data: any) => {
     return NewRequest.post('/opendata/instance/tab', data);
   },
-  queryInsVersionOrder: (ids:string) => {
-    return NewRequest.get('/pdm/ins/versions', {tenantId: '719', ids:ids})
+  queryInsVersionOrder: (ids: string) => {
+    return NewRequest.get('/pdm/ins/versions', { tenantId: '719', ids: ids })
   },
   /**
   * 上传附件
   */
-   addInstanceAttributeAttachment: (data:any) => {
+  addInstanceAttributeAttachment: (data: any) => {
     return NewRequest.post('/pdm/attachment/batchImportInstanceAttributeAttachment', data)
   }
 };

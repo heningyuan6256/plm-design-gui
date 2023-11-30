@@ -23,8 +23,8 @@ import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/api/fs";
 
 export enum settingType {
   cadToFile = "cadToFile",
-  cadToItem = "cadToItem",
-  PlmToCad = "PlmToCad",
+  cadToItem = "cadToMaterial",
+  PlmToCad = "fileToCad",
   setting = "setting",
 }
 
@@ -194,10 +194,10 @@ export default function AttrMap() {
   });
 
   const tabItems = [
-    {
-      key: 'attr',
-      label: '属性设置'
-    },
+    // {
+    //   key: 'attr',
+    //   label: '属性设置'
+    // },
     {
       key: 'preference',
       label: '首选项'

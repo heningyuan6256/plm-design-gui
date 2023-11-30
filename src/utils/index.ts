@@ -93,7 +93,7 @@ export class Utils {
     key: string,
     value?: string
   ) => {
-    return list?.reduce((pre: any, cur: any) => {
+    return (list || [])?.reduce((pre: any, cur: any) => {
       if (value) {
         pre[cur[key]] = cur[value];
       } else {
@@ -277,6 +277,7 @@ export class Utils {
       comment: /^\s*;.*$/
     };
     var value: any = {};
+    console.log(data, 'data')
     var lines = data.split(/\r\n|\r|\n/);
     var section: any = null;
     lines.forEach(function (line: any) {

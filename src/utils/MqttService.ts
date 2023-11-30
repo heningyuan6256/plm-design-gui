@@ -90,13 +90,18 @@ class MqttService {
   
           console.log(matches, 'matches')
           // do something with the { args, subcommand } matches
-          this.machineId = topic ? `_${topic}` : ''
+          this.machineId =  topic ? `_${topic}` : ''
           const pid: any = matches?.args?.pid?.value || ''
           const tc: any = matches?.args?.topic?.value || ''
           this.pid = pid
           this.publishTopic = tc
-          // this.pid = '18776'
-          // this.publishTopic = 'sw'
+          // this.pid = '3032'
+          // this.publishTopic = 'catia'
+
+          if(this.publishTopic === 'Tribon') {
+            this.machineId = "_00426-065-1283716-86439"
+          }
+
           this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
           this.mqtt.on("connect", () => {
             console.log("成功建立连接");

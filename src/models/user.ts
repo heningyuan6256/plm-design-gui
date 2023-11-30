@@ -17,7 +17,7 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
       );
       sse.userId = response.result.id
       sse.token = token
-      const sseUrl = `http://192.168.0.101:8000/plm/event/pull/${response.result.orgCode}/${response.result.id}`
+      const sseUrl = `http://192.168.0.104:8058/plm/event/pull/${response.result.orgCode}/${response.result.id}`
       sse.connect(sseUrl)
       return response.result;
     } catch (error) {

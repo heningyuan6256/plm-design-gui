@@ -1,18 +1,22 @@
 export enum BasicConfig {
   APPCacheFolder = ".onChain",
   NetworkCache = "network.txt",
-  Active="active",
+  Active = "active",
   TokenCache = "token.txt",
   setting = 'setting.json',
-  User="user.txt",
+  User = "user.txt",
   /**设计工具连接地址*/
-  MqttConnectUrl = "ws://192.168.0.104:8085/mqtt",
+  MqttConnectUrl = "ws://124.71.151.153/:8085/mqtt",
   /**设计工具dll名称*/
   pubgin_topic = "sw",
   /**设计工具dll版本*/
   plugin_version = "2019",
   /**onchain topic*/
   onchain_topic = "client_plugin",
+  /**server url*/
+  ServerUrl = "http://124.71.151.153:8058/plm",
+  /**租户Id*/
+  TenantId = "719",
 }
 
 export enum PathConfig {
