@@ -499,16 +499,25 @@ const index = () => {
         }
 
         const rowKey = getRowKey(data[i]);
+
         data[i].material = { onChain: {}, plugin: {} };
         data[i].file = { onChain: {}, plugin: {} };
-        InstanceAttrsMap[rowKey] = {
-          origin: {},
-          material: { onChain: {}, plugin: {} },
-          file: { onChain: {}, plugin: {} },
-        };
-        InstanceAttrsMap[rowKey].material = data[i].material;
-        InstanceAttrsMap[rowKey].file = data[i].file;
-        InstanceAttrsMap[rowKey].origin = data[i];
+
+        if (!InstanceAttrsMap[rowKey]) {
+          InstanceAttrsMap[rowKey] = {
+            origin: {},
+            material: { onChain: {}, plugin: {} },
+            file: { onChain: {}, plugin: {} },
+          };
+          InstanceAttrsMap[rowKey].material = data[i].material;
+          InstanceAttrsMap[rowKey].file = data[i].file;
+          InstanceAttrsMap[rowKey].origin = data[i];
+        } else {
+          data[i].material = InstanceAttrsMap[rowKey].material
+          data[i].file = InstanceAttrsMap[rowKey].file
+          // data[i] = InstanceAttrsMap[rowKey].origin
+        }
+
         flattenData.push(data[i]);
         if (data[i].children && data[i].children.length) {
           loop(data[i].children);
@@ -965,6 +974,7 @@ const index = () => {
 
   // 获取选中节点的扁平化数据（过滤后的)
   const getFlattenData = (selectNode: any) => {
+    console.log(selectNode, 'selectNode')
     const flattenData: Record<string, any>[] = [];
     const loop = (data: any) => {
       for (let i = 0; i < data.length; i++) {
@@ -978,10 +988,12 @@ const index = () => {
         const nodeNames = flattenData.map((item) => {
           return getRowKey(item);
         });
+        console.log(nodeNames, 'nodeNames')
+        const rowKey = getRowKey(data[i])
         if (
-          !nodeNames.includes(getRowKey(data[i])) &&
-          !(data[i].InternalModelFlag && judgeStandard(data[i])) &&
-          data[i].file.plugin.fileNameWithFormat
+          !nodeNames.includes(rowKey) &&
+          !(InstanceAttrsMap[rowKey].origin.InternalModelFlag && judgeStandard(InstanceAttrsMap[rowKey].origin)) &&
+          InstanceAttrsMap[rowKey].file.plugin.fileNameWithFormat
         ) {
           flattenData.push(flattenedItem);
         }
