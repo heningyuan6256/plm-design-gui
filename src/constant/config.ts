@@ -15,6 +15,8 @@ export enum BasicConfig {
   onchain_topic = "client_plugin",
   /**server url*/
   ServerUrl = "http://124.71.151.153:8058/plm",
+   /**文件服务器 url*/
+  TusUrl = "http://124.71.151.153:1080/plm/files",
   /**租户Id*/
   TenantId = "719",
 }

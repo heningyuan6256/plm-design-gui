@@ -36,7 +36,7 @@ import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
-import { downloadDir, homeDir } from "@tauri-apps/api/path";
+import { downloadDir, homeDir, resolveResource } from "@tauri-apps/api/path";
 import {
   readBinaryFile,
   readDir,
@@ -464,7 +464,6 @@ const index = () => {
       };
       loopTribon([res.output_data]);
       const data = buildTreeArray(res.output_data.children[0].children)
-      console.log(data, 'data')
       res.output_data.children[0].children = data[0].children
     }
 
@@ -1377,10 +1376,21 @@ const index = () => {
       debug: false,
       autoProceed: true,
     });
+    const path = await resolveResource('Config.ini')
+
+    const config = await readTextFile(path)
+
+    const INIData = Utils.parseINIString(config)
+    let tusUrl = BasicConfig.TusUrl
+    if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TusUrl) {
+      tusUrl = INIData['ONCHAIN'].TusUrl
+    }
+
     uppy
       .use(Tus, {
-        endpoint: `http://192.168.0.101:1080/plm/files`,
+        endpoint: tusUrl,
         headers: {
+          // "Access-Control-Allow-Origin": "*"
           // Authorization: `${StorageController.token.get()}`,
         },
         chunkSize: 1 * 1024 * 1024,
@@ -3010,7 +3020,9 @@ const index = () => {
                       setSelectProduct(e);
                     }}
                     open={false}
+                    //@ts-ignore
                     clearIcon={false}
+                    //@ts-ignore
                     showArrow={false}
                   ></OnChainSelect>
                 </div>

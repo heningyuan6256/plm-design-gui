@@ -277,7 +277,6 @@ export class Utils {
       comment: /^\s*;.*$/
     };
     var value: any = {};
-    console.log(data, 'data')
     var lines = data.split(/\r\n|\r|\n/);
     var section: any = null;
     lines.forEach(function (line: any) {

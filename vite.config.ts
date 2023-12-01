@@ -14,6 +14,13 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
+    proxy: {
+      '/api/plm': {
+        target: 'http://124.71.151.153:8058/plm',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api\/plm/, ''),
+      },
+    }
   },
   resolve: {
     alias: {

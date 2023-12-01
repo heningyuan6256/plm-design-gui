@@ -1,9 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import API from "../utils/api";
-import { writeFile } from "@tauri-apps/api/fs";
-import { homeDir } from "@tauri-apps/api/path";
+import { readTextFile, writeFile } from "@tauri-apps/api/fs";
+import { homeDir, resolveResource } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
 import { sse } from "../utils/SSEService";
+import { Utils } from "../utils";
 
 export const fetchUserByToken = createAsyncThunk<any, string>(
   "users/fetchUserByToken",
@@ -17,7 +18,16 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
       );
       sse.userId = response.result.id
       sse.token = token
-      const sseUrl = `http://192.168.0.104:8058/plm/event/pull/${response.result.orgCode}/${response.result.id}`
+      const path = await resolveResource('Config.ini')
+
+      const config = await readTextFile(path)
+  
+      const INIData = Utils.parseINIString(config)
+      let severUrl = BasicConfig.ServerUrl
+      if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].ServerUrl) {
+          severUrl = INIData['ONCHAIN'].ServerUrl
+      }
+      const sseUrl = `${severUrl}/event/pull/${response.result.orgCode}/${response.result.id}`
       sse.connect(sseUrl)
       return response.result;
     } catch (error) {

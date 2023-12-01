@@ -95,7 +95,7 @@ class MqttService {
           const tc: any = matches?.args?.topic?.value || ''
           this.pid = pid
           this.publishTopic = tc
-          // this.pid = '3032'
+          // this.pid = '6192'
           // this.publishTopic = 'catia'
 
           if(this.publishTopic === 'Tribon') {
@@ -104,7 +104,7 @@ class MqttService {
 
           this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
           this.mqtt.on("connect", () => {
-            console.log("成功建立连接");
+            console.log("成功建立连接");  
           });
           this.mqtt.on("message", (topic, data: any) => {
             const value = this.formatData(data)
