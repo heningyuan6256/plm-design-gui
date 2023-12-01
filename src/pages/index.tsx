@@ -345,6 +345,26 @@ const index = () => {
     }
   }, [selectProduct, location.pathname]);
 
+  const getProductList = () => {
+    API.getProductList({
+      pageNo: "1",
+      pageSize: "1000",
+      filter: "1",
+      isSensitiveCheck: "true",
+      tenantId: "719",
+    }).then((res: any) => {
+      setProductOptions(
+        res.result.records.map((item: any) => {
+          return {
+            label: item.name,
+            value: item.id,
+          };
+        })
+      );
+      // setSelectProduct(res.result.records[0]?.id);
+    });
+  }
+
   // 获取当前产品数据
   useEffect(() => {
     API.getProductList({
@@ -1246,13 +1266,20 @@ const index = () => {
 
     const createLogArray: logItemType[] = [];
     successInstances.result.forEach((item: any) => {
-      if (item) {
+      if (item && item.code == 500) {
         createLogArray.push({
-          log: `${item.name} 创建成功， 编号:${item.number}`,
+          log: `${item.msg}`,
           dateTime: getCurrentTime(),
           id: Utils.generateSnowId(),
         });
-      }
+      } else
+        if (item && item.number) {
+          createLogArray.push({
+            log: `${item.name} 创建成功， 编号:${item.number}`,
+            dateTime: getCurrentTime(),
+            id: Utils.generateSnowId(),
+          });
+        }
     });
     warpperSetLog(() => {
       setLogData([...lastestLogData.current, ...createLogArray]);
@@ -1313,6 +1340,9 @@ const index = () => {
       }
     }
 
+    // 是否构建结构错误的标注
+    let buildStructError = false
+
     const loop = (struct: any, dealArray: any) => {
       for (let i = 0; i < struct.length; i++) {
         struct[i].attrMap = {};
@@ -1323,6 +1353,17 @@ const index = () => {
           struct[i][folder].onChain.flag != "exist" && nameNumberMap
             ? nameNumberMap[rowKey]?.instanceId
             : InstanceAttrsMap[rowKey][folder].onChain.insId;
+        if (!struct[i].insId) {
+          warpperSetLog(() => {
+            setLogData([...lastestLogData.current, {
+              log: `${struct[i].node_name} 节点实例未创建，构建结构失败`,
+              dateTime: getCurrentTime(),
+              id: Utils.generateSnowId(),
+            }])
+          })
+          buildStructError = true
+          return
+        }
         if (rowKey != getRowKeyOverWrite(leftData[0])) {
           struct[i].attrMap[structureAttrsMap["Qty"]] = dealArray.map[rowKey];
           if (mqttClient.publishTopic === 'Tribon') {
@@ -1346,26 +1387,29 @@ const index = () => {
     };
     loop(structureData, uniqueArrayByAttr(structureData));
 
-    console.log(structureData, "创建结构参数");
-    API.batchCreateStructure({
-      tenantId: "719",
-      userId: user.id,
-      itemCode: itemCode,
-      tabCode: tabCode,
-      instances: structureData,
-    });
-    warpperSetLog(() => {
-      setLogData([
-        ...lastestLogData.current,
-        {
-          log: ItemCode.isFile(itemCode)
-            ? "批量创建结构成功!"
-            : "批量创建BOM成功!",
-          dateTime: getCurrentTime(),
-          id: Utils.generateSnowId(),
-        },
-      ]);
-    });
+    console.log(buildStructError, structureData, "创建结构参数");
+    if (!buildStructError) {
+      API.batchCreateStructure({
+        tenantId: "719",
+        userId: user.id,
+        itemCode: itemCode,
+        tabCode: tabCode,
+        instances: structureData,
+      });
+      warpperSetLog(() => {
+        setLogData([
+          ...lastestLogData.current,
+          {
+            log: ItemCode.isFile(itemCode)
+              ? "批量创建结构成功!"
+              : "批量创建BOM成功!",
+            dateTime: getCurrentTime(),
+            id: Utils.generateSnowId(),
+          },
+        ]);
+      });
+    }
+
   };
 
   // 上传文件
@@ -1626,7 +1670,7 @@ const index = () => {
       const FileArray = [];
 
       for (let item of centerData) {
-        if (item.file.onChain.flag != "exist") {
+        if (item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number) {
           if (item.file_path && (mqttClient.publishTopic != 'Tribon')) {
             FileArray.push(
               new Promise(async (resolve, reject) => {
@@ -1754,7 +1798,7 @@ const index = () => {
         };
         const addAttachmentParams: any = [];
         centerData
-          .filter((item) => item.file.onChain.flag != "exist")
+          .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
           .forEach((item) => {
             if (item.step_path) {
               addAttachmentParams.push({
@@ -1793,15 +1837,18 @@ const index = () => {
             }
           });
 
-        const attchmentResult = await API.addInstanceAttributeAttachment({
-          tenantId: "719",
-          instanceAttrVos: addAttachmentParams,
-        });
-        console.log(attchmentResult, addAttachmentParams, "FileAttachment");
+        if (addAttachmentParams.length) {
+          const attchmentResult = await API.addInstanceAttributeAttachment({
+            tenantId: "719",
+            instanceAttrVos: addAttachmentParams,
+          });
+          console.log(attchmentResult, addAttachmentParams, "FileAttachment");
+        }
+
 
         //批量更新文件地址
         const updateInstances = centerData
-          .filter((item) => item.file.onChain.flag != "exist")
+          .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
           .map((item) => {
             return {
               id: nameNumberMap[getRowKey(item)]?.instanceId,
@@ -1856,16 +1903,16 @@ const index = () => {
       // 批量增加附件
 
 
-      warpperSetLog(() => {
-        setLogData([
-          ...lastestLogData.current,
-          {
-            log: "模型上传成功！",
-            dateTime: getCurrentTime(),
-            id: Utils.generateSnowId(),
-          },
-        ]);
-      });
+      // warpperSetLog(() => {
+      //   setLogData([
+      //     ...lastestLogData.current,
+      //     {
+      //       log: "模型上传成功！",
+      //       dateTime: getCurrentTime(),
+      //       id: Utils.generateSnowId(),
+      //     },
+      //   ]);
+      // });
       await dealCurrentBom(designData);
     } else if (name === "log") {
       setLogVisbile(true);
@@ -2871,6 +2918,11 @@ const index = () => {
                   size="small"
                   value={selectProduct}
                   options={productOptions}
+                  onDropdownVisibleChange={(visible) => {
+                    if(visible){
+                      getProductList()
+                    }
+                  }}
                   onChange={(e) => {
                     if (e) {
                       setSelectProduct(e);

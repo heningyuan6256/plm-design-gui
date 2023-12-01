@@ -19,6 +19,7 @@ const getUrl = async (str: string) => {
     if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TenantId) {
         tenantId = INIData['ONCHAIN'].TenantId
     }
+
     if (str.startsWith('/opendata')) {
         return {
             url: severUrl + str,

@@ -272,7 +272,7 @@ export class Utils {
 
   public static parseINIString(data: any) {
     var regex = {
-      section: /^\s*\s*([^]*)\s*\]\s*$/,
+      section: /^\s*\[\s*([^\]]*)\s*\]\s*$/,
       param: /^\s*([\w\.\-\_]+)\s*=\s*(.*?)\s*$/,
       comment: /^\s*;.*$/
     };

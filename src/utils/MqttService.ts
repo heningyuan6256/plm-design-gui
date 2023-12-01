@@ -74,8 +74,8 @@ class MqttService {
     resolveResource('Config.ini').then(resolvePath => {
       readTextFile(resolvePath).then(config => {
         const INIData = Utils.parseINIString(config)
-        if(INIData && INIData['[MQTT'] && INIData['[MQTT'].wsAddress) {
-          url =  INIData['[MQTT'].wsAddress
+        if(INIData && INIData['MQTT'] && INIData['MQTT'].wsAddress) {
+          url =  INIData['MQTT'].wsAddress
         }
         // 建立连接
         this.mqtt = mqtt.connect(url, {
@@ -95,8 +95,8 @@ class MqttService {
           const tc: any = matches?.args?.topic?.value || ''
           this.pid = pid
           this.publishTopic = tc
-          // this.pid = '6192'
-          // this.publishTopic = 'catia'
+          this.pid = '10552'
+          this.publishTopic = 'catia'
 
           if(this.publishTopic === 'Tribon') {
             this.machineId = "_00426-065-1283716-86439"

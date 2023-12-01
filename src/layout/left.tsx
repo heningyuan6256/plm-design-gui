@@ -119,10 +119,10 @@ const left: FC = () => {
           padding: "10px 0px",
         }}
         onClick={() => {
-          if (!mqttClient.publishTopic && item.path === '/preference') {
-            message.error('请打开设计工具')
-            return
-          }
+          // if (!mqttClient.publishTopic && item.path === '/preference') {
+          //   message.error('请打开设计工具')
+          //   return
+          // }
           setHoverButton(item.path);
           navigate(`${item.path}`);
         }}
