@@ -23,6 +23,10 @@ import { invoke } from "@tauri-apps/api";
 import { appWindow, getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { Command } from "@tauri-apps/api/shell";
 import { mqttClient } from "../utils/MqttService";
+import { getMatches } from "@tauri-apps/api/cli";
+import { listen } from '@tauri-apps/api/event'
+import { message } from "antd";
+import { openDesign } from "./pageLayout";
 // import CryptoJS from "crypto-js"
 
 interface LayoutProps {
@@ -56,6 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         // var originalText = bytes.toString(CryptoJS.enc.Utf8)
         // console.log(originalText,'originalText')
         mqttClient?.connect(BasicConfig.MqttConnectUrl, dynamicTopic);
+
         // const ffmpeg = Command.sidecar(
         //   "binaries/OnChain_DesignFusion",
         //   ["-t", "solidworks", "-m", "create-cube", "-o", '""'],
@@ -85,8 +90,62 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           );
         } catch (error) { }
         if (activeText) {
-          if(window.location.pathname === '/active') {
+          if (window.location.pathname === '/active') {
             if (!WebviewWindow.getByLabel('Login')?.isVisible()) {
+
+              // mqtt成功建立连接后，判断当前的打开方式是否是web打开，如果是，则自动登陆，然后将文件下载到本地然后调用打开openDesigner的方法
+              // getMatches().then(async (matches) => {
+              //   const matchPid = matches?.args?.pid?.value || ''
+              //   const matchTopic = matches?.args?.topic?.value || ''
+              //   // mqtt成功建立连接后，判断当前的打开方式是否是web打开，如果是，则自动登陆，然后将文件下载到本地然后调用打开openDesigner的方法
+              //   if (!matchTopic && matchPid) {
+              //     const regex = /onchain:\/\/openOnChainIns\/([^\/]+)\/([^\/]+)/;
+              //     const onchainUrl = matchPid as string
+              //     const inputString = onchainUrl.match(regex);
+              //     if (inputString) {
+              //       const [matchUrl, token, insId] = inputString
+              //       //自动登陆
+              //       console.log(matchUrl, token, insId)
+              //       const address = "123123"
+              //       mqttClient.publish({
+              //         type: CommandConfig.onchain_path,
+              //         input_data: PathConfig.login,
+              //         output_data: {
+              //           result: "ok",
+              //         },
+              //       });
+              //       dispatch(writeNetWork(address));
+              //       // 写入address
+              //       const NewRequest = new Request({});
+              //       NewRequest.initAddress(address, token);
+              //       const homeDirPath = await homeDir();
+              //       await writeFile(
+              //         `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
+              //         address
+              //       );
+              //       // await writeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
+              //       // `${name}---${psw}`)
+              //       const data = await dispatch(
+              //         fetchUserByToken(token) as any
+              //       ).unwrap();
+              //       if (data.id) {
+              //         await invoke("open_home", {
+              //           width: window.innerWidth,
+              //           height: window.innerHeight,
+              //         });
+              //         message.success("自动登陆成功")
+
+              //         const loginWindow = WebviewWindow.getByLabel("Login");
+              //         loginWindow?.close();
+              //       }
+
+              //     }
+
+              //   } else {
+              //     await invoke("open_login", {});
+              //   }
+
+              // })
               await invoke("open_login", {});
               // return
               // const loginWindow = WebviewWindow.getByLabel("Login");
@@ -94,10 +153,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               ActiveWindow?.close()
             }
           }
-          
+
 
           await invoke("init");
-
 
           let networkAddress = "";
           try {

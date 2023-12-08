@@ -72,7 +72,7 @@ export const openDesign = async ({
   currentWindow.setFocus();
   const versionOrderResult: any = await API.queryInsVersionOrder(insId);
   const orders = versionOrderResult.result[insId].orders;
-  console.log("收到打开设计工具命令");
+  const versions = versionOrderResult.result[insId].versions;
   API.getInstanceInfoById({
     instanceId: insId,
     authType: "read",
@@ -80,6 +80,7 @@ export const openDesign = async ({
     tenantId: "719",
     userId: userId,
     versionOrder: orders[orders.length - 1],
+    version: versions[versions.length - 1],
   })
     .then(async (ins: any) => {
       const attrMap = Utils.transformArrayToMap(
@@ -147,6 +148,7 @@ export const openDesign = async ({
             const fileFormat = instance.insDesc.substring(
               instance.insDesc.indexOf(".") + 1
             );
+
 
             if (
               ["CATProduct", "CATPart", "CATPRODUCT", "CATPART"].includes(

@@ -12,7 +12,7 @@ import OnChainLogo from "../assets/image/OnChainLogo.svg";
 import { BaseDirectory, createDir, readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { homeDir } from "@tauri-apps/api/path";
 import PlmLoading from "../components/PlmLoading";
-import { useAsyncEffect, useKeyPress, useMount } from "ahooks";
+import { useAsyncEffect, useKeyPress, useMount, useSafeState } from "ahooks";
 import userSvg from "../assets/image/user.svg";
 import { useDispatch } from "react-redux";
 import { writeNetWork } from "../models/network";
@@ -22,7 +22,11 @@ import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { invoke } from "@tauri-apps/api";
 import { WebviewWindow } from "@tauri-apps/api/window";
 import { mqttClient } from "../utils/MqttService";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Command } from '@tauri-apps/api/shell'
+import { getMatches } from "@tauri-apps/api/cli";
+import { openDesign } from "../layout/pageLayout";
+import { listen } from "@tauri-apps/api/event";
 
 export default function login() {
   const dispatch = useDispatch();
@@ -30,6 +34,7 @@ export default function login() {
   const [form] = Form.useForm();
   const loginSys = async () => {
     const data = await form.validateFields();
+
     const { name, psw, address } = data;
     const user: loginUserProps = {
       email: name,
@@ -55,7 +60,7 @@ export default function login() {
           address
         );
         await writeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
-        `${name}---${psw}`)
+          `${name}---${psw}`)
         const data = await dispatch(
           fetchUserByToken(res.result.token) as any
         ).unwrap();
@@ -74,6 +79,8 @@ export default function login() {
         message.error(err.message);
       });
   };
+
+  const [loading, setLoading] = useState<boolean>()
 
   const formItems: PlmFormItemProps[] = [
     {
@@ -149,25 +156,81 @@ export default function login() {
     loginSys();
   });
 
-  useMount(async() => {
-    const homeDirPath = await homeDir();
-    const contents = await readTextFile(
-      `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
-    );
-    const newWorkContent = await readTextFile(
-      `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
-    );
-    form.setFieldsValue({
-      name: contents.split('---')[0] || '',
-      psw: contents.split('---')[1] || '',
-      address:newWorkContent
+  useMount(async () => {
+    const openDesignInLogin = async (url: string) => {
+      const regex = /onchain:\/\/openOnChainIns\/([^\/]+)\/([^\/]+)\/([^\/]+)\/([^\/]+)/;
+      const onchainUrl = url as string
+      const inputString = onchainUrl.match(regex);
+      if (inputString) {
+        let [matchUrl, address, token, itemCode, insId] = inputString
+        token = decodeURIComponent(token)
+        dispatch(writeNetWork(address));
+        // 写入address
+        const NewRequest = new Request({});
+        NewRequest.initAddress(address, token);
+        const homeDirPath = await homeDir();
+        await writeFile(
+          `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
+          address
+        );
+        // await writeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
+        //   `${name}---${psw}`)
+        console.log(token,'token')
+        const data = await dispatch(
+          fetchUserByToken(token) as any
+        ).unwrap();
+        if (data.id) {
+          openDesign({
+            loading: () => {
+              setLoading(true)
+            },
+            cancelLoading: async () => {
+              setLoading(false)
+              await invoke("open_home", {
+                width: window.innerWidth,
+                height: window.innerHeight,
+              });
+              const loginWindow = WebviewWindow.getByLabel("Login");
+              loginWindow?.close();
+            },
+            network: address,
+            insId: insId,
+            userId: data.id,
+            itemCode: itemCode,
+          });
+        }
+      }
+    }
+    listen("onchain", async (matchUrl) => {
+      openDesignInLogin(matchUrl.payload as string)
     })
-    console.log(contents, 'contents')
+    getMatches().then(async (matches) => {
+      const matchUrl = matches?.args?.url?.value || ""
+      // mqtt成功建立连接后，判断当前的打开方式是否是web打开，如果是，则自动登陆，然后将文件下载到本地然后调用打开openDesigner的方法
+      if (matchUrl) {
+        openDesignInLogin(matchUrl as string)
+      } else {
+        const homeDirPath = await homeDir();
+        const contents = await readTextFile(
+          `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
+        );
+        const newWorkContent = await readTextFile(
+          `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
+        );
+        form.setFieldsValue({
+          name: contents.split('---')[0] || '',
+          psw: contents.split('---')[1] || '',
+          address: newWorkContent
+        })
+      }
+    })
+
+
   })
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <PlmLoading warrperClassName="flex">
+      <PlmLoading warrperClassName="flex" loading={loading}>
         <div className="w-240 bg-primary h-full flex items-center justify-center">
           <img width={144} src={OnChainLogo} alt="" />
         </div>

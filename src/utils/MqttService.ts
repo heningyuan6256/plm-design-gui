@@ -74,8 +74,8 @@ class MqttService {
     resolveResource('Config.ini').then(resolvePath => {
       readTextFile(resolvePath).then(config => {
         const INIData = Utils.parseINIString(config)
-        if(INIData && INIData['MQTT'] && INIData['MQTT'].wsAddress) {
-          url =  INIData['MQTT'].wsAddress
+        if (INIData && INIData['MQTT'] && INIData['MQTT'].wsAddress) {
+          url = INIData['MQTT'].wsAddress
         }
         // 建立连接
         this.mqtt = mqtt.connect(url, {
@@ -86,29 +86,32 @@ class MqttService {
           username: 'onchain',
           password: 'onchain111'
         });
-        getMatches().then((matches) => {
-  
+        getMatches().then(async (matches) => {
           console.log(matches, 'matches')
+          const matchPid = matches?.args?.pid?.value || ''
+          const matchTopic = matches?.args?.topic?.value || ''
           // do something with the { args, subcommand } matches
-          this.machineId =  topic ? `_${topic}` : ''
-          const pid: any = matches?.args?.pid?.value || ''
-          const tc: any = matches?.args?.topic?.value || ''
+          this.machineId = topic ? `_${topic}` : ''
+          const pid: any = matchPid
+          const tc: any = matchTopic
           this.pid = pid
           this.publishTopic = tc
-          this.pid = '10552'
-          this.publishTopic = 'catia'
+          // this.pid = '16104'
+          // this.publishTopic = 'catia'
 
-          if(this.publishTopic === 'Tribon') {
+          if (this.publishTopic === 'Tribon') {
             this.machineId = "_00426-065-1283716-86439"
           }
 
           this.mqtt.subscribe(`${BasicConfig.onchain_topic + this.machineId}`);
           this.mqtt.on("connect", () => {
-            console.log("成功建立连接");  
+            console.log("成功建立连接");
           });
+
+
           this.mqtt.on("message", (topic, data: any) => {
             const value = this.formatData(data)
-            if(value.input_data == 'cad_start'){
+            if (value.input_data == 'cad_start') {
               return
             }
             console.log(value, value.pid, this.pid, '收到消息')
@@ -116,14 +119,14 @@ class MqttService {
             if ((value.input_data === CommandConfig.cadShutDown) && (value.pid == this.pid)) {
               // 绑定的solidworks退出，该应用不退出
               this.publishTopic = ''
-              this.updatePid(JSON.stringify({pid: ''}))
+              this.updatePid(JSON.stringify({ pid: '' }))
               console.log('绑定的设计工具退出')
               return
               // console.log('退出');
               // const currentWindow = getCurrent();
               // currentWindow.close()
             }
-  
+
             // 判断当前发过来的进程pid不等于当前已经存在的pid,则原先的pid解除绑定
             if (value.pid != this.pid) {
               // 判断当前不在loading中
@@ -144,10 +147,10 @@ class MqttService {
                 return
               }
             }
-  
+
             const type = value.type;
             this.publishTopic = value.topic
-  
+
             if (value.input_data !== CommandConfig.cadShutDown) {
               this.updatePid(data)
             }
@@ -164,7 +167,7 @@ class MqttService {
       });
 
     })
-   
+
   }
 
   formatData(data: string): { type: string, pid: string, input_data: Record<string, any> | string, [k: string]: any } {

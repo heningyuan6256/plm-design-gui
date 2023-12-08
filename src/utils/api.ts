@@ -25,7 +25,7 @@ const API = {
    * 根据token获取用户信息
    * */
   getUserInfo: (params: Record<string, any>) => {
-    return NewRequest.get("/pdm/user/token", params);
+    return NewRequest.get("/pdm/user/token", params)
   },
 
   /**
@@ -64,7 +64,10 @@ const API = {
  * 根据实例Id获取实例详情
  * */
   getInstanceInfoById: (data: Record<string, any>) => {
-    return NewRequest.get("/opendata/instance", data);
+    return NewRequest.get("/opendata/instance", data).catch((e) => {
+      console.log(e,);
+
+    });
   },
 
   /**

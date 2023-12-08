@@ -10,7 +10,7 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
   "users/fetchUserByToken",
   async (token, { rejectWithValue }) => {
     try {
-      const response: any = await API.getUserInfo({ token: token });
+      const response: any = await API.getUserInfo({ token: decodeURI(token) });
       const homeDirPath = await homeDir();
       await writeFile(
         `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`,

@@ -135,6 +135,11 @@
           "name": "pid",
           "index": 2,
           "takesValue": true
+        },
+        {
+          "name": "url",
+          "index": 3,
+          "takesValue": true
         }
       ],
       "subcommands": {

@@ -7,6 +7,7 @@ mod app;
 mod config;
 use app::{menu, solidworks, window};
 use config::utils;
+use tauri::Manager;
 
 // use tauri::api::process::{Command, CommandEvent};
 // // extern crate libloading;
@@ -154,12 +155,12 @@ fn main() {
             tauri_plugin_deep_link::register("onchain", move |request| {
                 dbg!(&request); // 调用的时候会在控制台打印
                                 // 将参数传递到前端，前端使用listen监听
-                // handle.emit_all("test", request).unwrap();
+                handle.emit_all("onchain", request).unwrap();
                 // 但是经过尝试，我只能在应用已经打开的时候获取到传递的参数，大概率是因为第一次发送的时候，前端的监听事件还没有开启，插件的作者正在添加新的API:get_last_url实现
             })
             .unwrap();
             #[cfg(not(target_os = "macos"))]
-            if let Some(url) = std::env::args().nth(1) {
+            if let Some(url) = std::env::args().nth(2) {
                 // app.emit_all("test", url).unwrap();
             }
             Ok(())

@@ -38,6 +38,7 @@ import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { downloadDir, homeDir, resolveResource } from "@tauri-apps/api/path";
 import {
+  exists,
   readBinaryFile,
   readDir,
   readTextFile,
@@ -400,6 +401,12 @@ const index = () => {
       );
     }
   }, [selectNode]);
+
+  useEffect(() => {
+    if (leftData.length) {
+      setRightData(leftData);
+    }
+  }, [leftData]);
 
   // useAsyncEffect(async () => {
   //   if (leftData.length) {
@@ -1389,6 +1396,7 @@ const index = () => {
 
     console.log(buildStructError, structureData, "创建结构参数");
     if (!buildStructError) {
+      console.log("进入创建结构")
       API.batchCreateStructure({
         tenantId: "719",
         userId: user.id,
@@ -1455,7 +1463,7 @@ const index = () => {
                   : "上传中"
                   } ${((e[1]?.bytesUploaded / e[1]?.bytesTotal) * 100).toFixed(
                     2
-                  )}！`,
+                  )}%！`,
                 dateTime: getCurrentTime(),
                 id: `upload-${e[0]?.name}`,
               };
@@ -1474,7 +1482,7 @@ const index = () => {
                 log: `${e[0]?.name} 开始上传 ${(
                   (e[1]?.bytesUploaded / e[1]?.bytesTotal) *
                   100
-                ).toFixed(2)}！`,
+                ).toFixed(2)}%！`,
                 dateTime: getCurrentTime(),
                 id: `upload-${e[0]?.name}`,
               },
@@ -1498,7 +1506,7 @@ const index = () => {
         setLogData([
           ...lastestLogData.current,
           {
-            log: "实例上传中",
+            log: "模型上传开始。。。",
             dateTime: getCurrentTime(),
             id: Utils.generateSnowId(),
           },
@@ -1699,6 +1707,31 @@ const index = () => {
               })
             );
           }
+
+          
+          // if(item.file_path && mqttClient.publishTopic === 'catia') {
+          //   const stp_path = `${item.file_path.substring(0,item.file_path.lastIndexOf('.'))}.stp`
+
+          //   const existStp = await exists(stp_path);
+          //   if (existStp) {
+          //     item.stp_path = stp_path
+          //     FileArray.push(
+          //       new Promise(async (resolve, reject) => {
+          //         const arrayBufferData = await readBinaryFile(stp_path);
+          //         resolve({
+          //           name: `${stp_path.substring(
+          //             stp_path.lastIndexOf("\\") + 1
+          //           )}`,
+          //           data: new Blob([arrayBufferData]),
+          //           source: "Local",
+          //           isRemote: false,
+          //         });
+          //       })
+          //     );
+          //   }
+          // }
+          
+
           if (item.step_path) {
             FileArray.push(
               new Promise(async (resolve, reject) => {
@@ -1736,8 +1769,6 @@ const index = () => {
 
       const fileItems = await Promise.all([...FileArray]);
 
-      console.log(fileItems, "fileItems");
-
       mqttClient.publish({
         type: CommandConfig.setProductAttVal,
         attr_set: pluginUpdateNumber,
@@ -1765,7 +1796,7 @@ const index = () => {
         const setAttachmentValue = (
           item: any,
           apicode: string,
-          type: "drw" | "step"
+          type: "drw" | "step" | 'stp'
         ) => {
           const nameWidthFormat = `${item[`${type}_path`].substring(
             item[`${type}_path`].lastIndexOf("\\") + 1
@@ -1797,6 +1828,7 @@ const index = () => {
           }
         };
         const addAttachmentParams: any = [];
+
         centerData
           .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
           .forEach((item) => {
@@ -1817,7 +1849,26 @@ const index = () => {
                   };
                 }),
               });
-            } else if (item.drw_path) {
+            }
+            //  else if (item.stp_path) {
+            //   addAttachmentParams.push({
+            //     instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+            //     itemCode: BasicsItemCode.file,
+            //     tabCode: "10002008",
+            //     versionNumber: "Draft",
+            //     versionOrder: "1",
+            //     insAttrs: tabAttrs.map((attr: any) => {
+            //       return {
+            //         apicode: attr.apicode,
+            //         id: attr.id,
+            //         title: attr.name,
+            //         valueType: attr.valueType,
+            //         value: setAttachmentValue(item, attr.apicode, "stp"),
+            //       };
+            //     }),
+            //   });
+            // } 
+            else if (item.drw_path) {
               addAttachmentParams.push({
                 instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
                 itemCode: BasicsItemCode.file,
