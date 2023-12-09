@@ -5,6 +5,7 @@ interface PlmLoadingProps {
   warrperClassName?: string;
   className?: string;
   loading?: boolean;
+  loadingText?: string
 }
 
 const PlmLoading: FC<PlmLoadingProps> = ({
@@ -12,6 +13,7 @@ const PlmLoading: FC<PlmLoadingProps> = ({
   warrperClassName,
   className,
   loading,
+  loadingText
 }) => {
   const [process, setProcess] = useState<number>(30);
   const simulateProgress = () => {
@@ -22,13 +24,13 @@ const PlmLoading: FC<PlmLoadingProps> = ({
     // const interval = setInterval(incrementProgress, speed);
   };
 
-//   useEffect(() => {
-//     if (loading) {
-//       simulateProgress();
-//     } else {
-//     //   setProcess(100);
-//     }
-//   }, [loading]);
+  //   useEffect(() => {
+  //     if (loading) {
+  //       simulateProgress();
+  //     } else {
+  //     //   setProcess(100);
+  //     }
+  //   }, [loading]);
 
   return (
     <div className={`h-full w-full opacity-6 ${warrperClassName || ""}`}>
@@ -43,7 +45,7 @@ const PlmLoading: FC<PlmLoadingProps> = ({
                 style={{ fontFamily: "PingFang SC, PingFang SC-Medium" }}
               >
                 <span className="text-primary">
-                  Loading...{" "}
+                  {loadingText || "Loading..."}
                   {/* <span style={{ fontStyle: "italic" }}>{process}%</span> */}
                 </span>
               </div>

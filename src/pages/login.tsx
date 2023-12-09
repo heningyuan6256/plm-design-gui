@@ -28,6 +28,9 @@ import { getMatches } from "@tauri-apps/api/cli";
 import { openDesign } from "../layout/pageLayout";
 import { listen } from "@tauri-apps/api/event";
 
+
+export const regex = /onchain:\/\/openOnChainIns\/([^\/]+)\/([^\/]+)\/([^\/]+)\/([^\/]+)/;
+
 export default function login() {
   const dispatch = useDispatch();
 
@@ -158,7 +161,6 @@ export default function login() {
 
   useMount(async () => {
     const openDesignInLogin = async (url: string) => {
-      const regex = /onchain:\/\/openOnChainIns\/([^\/]+)\/([^\/]+)\/([^\/]+)\/([^\/]+)/;
       const onchainUrl = url as string
       const inputString = onchainUrl.match(regex);
       if (inputString) {
@@ -175,7 +177,6 @@ export default function login() {
         );
         // await writeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
         //   `${name}---${psw}`)
-        console.log(token,'token')
         const data = await dispatch(
           fetchUserByToken(token) as any
         ).unwrap();
@@ -202,14 +203,20 @@ export default function login() {
       }
     }
     listen("onchain", async (matchUrl) => {
+      // 当已经打开了登陆界面，然后通过浏览器打开
       openDesignInLogin(matchUrl.payload as string)
     })
+
+    // mqtt成功建立连接后，判断当前的打开方式是否是web打开，如果是，则自动登陆，然后将文件下载到本地然后调用打开openDesigner的方法
+
     getMatches().then(async (matches) => {
-      const matchUrl = matches?.args?.url?.value || ""
-      // mqtt成功建立连接后，判断当前的打开方式是否是web打开，如果是，则自动登陆，然后将文件下载到本地然后调用打开openDesigner的方法
-      if (matchUrl) {
-        openDesignInLogin(matchUrl as string)
+      const matchTopic = matches?.args?.topic?.value || ""
+      const matchPid = matches?.args?.pid?.value || ""
+      // 当通过浏览器进入登陆界面的时候
+      if (matchTopic && !matchPid) {
+        openDesignInLogin(matchTopic as string)
       } else {
+        // 正常情况的登陆
         const homeDirPath = await homeDir();
         const contents = await readTextFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.User}`,
@@ -230,7 +237,7 @@ export default function login() {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <PlmLoading warrperClassName="flex" loading={loading}>
+      <PlmLoading warrperClassName="flex" loading={loading} loadingText="正在打开设计工具">
         <div className="w-240 bg-primary h-full flex items-center justify-center">
           <img width={144} src={OnChainLogo} alt="" />
         </div>
