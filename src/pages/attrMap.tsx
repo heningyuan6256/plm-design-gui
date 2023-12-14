@@ -31,7 +31,7 @@ export enum settingType {
 export default function AttrMap() {
   const mappingRef = useRef<any>();
   const [attrList, setAttrList] = useState<Record<string, any>[]>([]);
-  const [topActiveKey, setTopActiveKey] = useState<string>('attr');
+  const [topActiveKey, setTopActiveKey] = useState<string>('preference');
   const [activeKey, setActiveKey] = useState<string>('sldprt');
   const [childActiveKey, setChildActiveKey] = useState(settingType.cadToFile)
   const [mappingData, setMappingData] = useState<any[]>([]);
