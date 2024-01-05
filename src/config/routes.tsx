@@ -7,7 +7,6 @@ import ErrorPage from "../pages/err";
 import Login from "../pages/login";
 import Home from "../pages/index";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Info from "../pages/info";
 import Stock from "../pages/stock";
 import Active from "../pages/active";
 import Query from "../pages/query";
@@ -21,50 +20,38 @@ export const RoutesWithSubRoutes = () => {
       path: "/center",
       element: <></>,
     },
-    // 登陆页
-    {
-      path: "/login",
-      element: <Login></Login>,
-    },
-
     // 激活界面
     {
       path: "/active",
       element: <Active></Active>,
     },
-    // 关于界面
-    // {
-    //   path: "/info",
-    //   element: <Info></Info>,
-    // },
-
     // 主页
-    {
-      path: "/",
-      errorElement: <ErrorPage />,
-      element: <PageLayout></PageLayout>,
-      children: [
-        {
-          path: "/home/:id",
-          element: <Home></Home>,
-        },
-        // 属性映射
-        {
-          path: "/preference",
-          element: <AttrMap></AttrMap>,
-        },
-        // 物料库
-        {
-          path: "/stock",
-          element: <Stock></Stock>,
-        },
-        // 库
-        {
-          path: "/query",
-          element: <Query></Query>,
-        },
-      ],
-    },
+    // {
+    //   path: "/",
+    //   errorElement: <ErrorPage />,
+    //   element: <PageLayout></PageLayout>,
+    //   children: [
+    //     {
+    //       path: "/home/:id",
+    //       element: <Home></Home>,
+    //     },
+    //     // 属性映射
+    //     {
+    //       path: "/preference",
+    //       element: <AttrMap></AttrMap>,
+    //     },
+    //     // 物料库
+    //     {
+    //       path: "/stock",
+    //       element: <Stock></Stock>,
+    //     },
+    //     // 库
+    //     {
+    //       path: "/query",
+    //       element: <Query></Query>,
+    //     },
+    //   ],
+    // },
   ]);
   return <RouterProvider router={router} />;
 };

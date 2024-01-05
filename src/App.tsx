@@ -7,8 +7,6 @@ import { ConfigProvider } from "antd";
 import { Provider } from "react-redux";
 import store from "./models/store";
 import Layout from "./layout";
-import { BasicConfig, CommandConfig } from "./constant/config";
-import { mqttClient } from "./utils/MqttService";
 // 连接mqtt
 // mqttClient.connect(BasicConfig.MqttConnectUrl);
 

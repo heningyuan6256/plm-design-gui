@@ -6,7 +6,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "OnChain-DesignFusion",
+    "productName": "OnChain-install",
     "version": "0.0.0"
   },
   "tauri": {
@@ -45,21 +45,6 @@
         "open": true,
         "sidecar": true,
         "scope": [
-          {
-            "name": "rundesign",
-            "cmd": "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
-            "args": true
-          },
-          {
-            "name": "runCatia",
-            "cmd": "D:\\Program Files\\Dassault Systemes\\B19\\win_b64\\code\\bin\\CATSTART.exe",
-            "args": true
-          },
-          {
-            "name": "reg",
-            "cmd": "reg",
-            "args": true
-          }
         ]
       },
       "protocol": {
@@ -107,13 +92,13 @@
         "fullscreen": false,
         "height": 347,
         "resizable": false,
-        "title": "OnChain-DesignFusion",
+        "title": "OnChain-install",
         "width": 648,
         "url": "/active",
         "label": "Active",
         "decorations": false,
         "center": true,
-        "visible": false
+        "visible": true
       }
     ],
     "systemTray": {
