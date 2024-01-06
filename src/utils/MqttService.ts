@@ -7,7 +7,7 @@ import { message } from "antd";
 import { BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 import { resolveResource } from '@tauri-apps/api/path';
 import { resolvePath } from "react-router-dom";
-import { regex } from "../pages/login";
+// import { regex } from "../pages/login";
 // import CryptoJS from "crypto-js"
 
 type EventFn = () => void;
@@ -64,13 +64,6 @@ class MqttService {
    * @return {*}
    */
   connect(url = BasicConfig.MqttConnectUrl, topic = "") {
-
-    // console.log(CryptoJS.AES.encrypt,'CryptoJS')
-    // var userSecret = CryptoJS.AES.encrypt('onchain', '0123456789abcdef0123456789abcdef').toString();
-
-    // var bytes = CryptoJS.SHA256.decrypt(userSecret, '0123456789abcdef0123456789abcdef');
-    // var originalText = bytes.toString(CryptoJS.enc.Utf8);
-    // console.log(originalText, 'originalText')
     // 获取相对路径
     resolveResource('Config.ini').then(resolvePath => {
       readTextFile(resolvePath).then(config => {
@@ -90,10 +83,10 @@ class MqttService {
         getMatches().then(async (matches) => {
           let matchPid = matches?.args?.pid?.value || ''
           let matchTopic = matches?.args?.topic?.value as string || ''
-          if (matchTopic.match(regex)) {
-            matchPid = ""
-            matchTopic = ""
-          }
+          // if (matchTopic.match(regex)) {
+          //   matchPid = ""
+          //   matchTopic = ""
+          // }
           //因为url传参数没办法覆写命令行，所以这里做了特殊处理
           // 如果判断topic是满足onchain://则，将matchpid 和matchTopic赋值为空，浏览器打开，无法确认打开的设计工具
 

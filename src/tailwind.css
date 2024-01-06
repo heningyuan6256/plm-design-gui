@@ -845,3 +845,7 @@ img {
 .PDFViewer ::-webkit-scrollbar-thumb{
   background: #e1e1e1;
 }
+
+textarea{
+  resize: none !important;
+}

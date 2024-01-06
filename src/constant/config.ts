@@ -59,3 +59,6 @@ export enum CommandConfig {
   /**solidworks进程退出登录*/
   cadShutDown = "cad_shutdown"
 }
+
+
+

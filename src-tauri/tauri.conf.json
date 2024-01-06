@@ -45,6 +45,10 @@
         "open": true,
         "sidecar": true,
         "scope": [
+          {
+            "name": "docker",
+            "cmd": "docker"
+          }
         ]
       },
       "protocol": {
@@ -77,7 +81,7 @@
         "wix": {
           "language": "zh-CN",
           "bannerPath": "./banner.png",
-          "dialogImagePath":"./dialogImage.png"
+          "dialogImagePath": "./dialogImage.png"
         },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
@@ -94,8 +98,8 @@
         "resizable": false,
         "title": "OnChain-install",
         "width": 648,
-        "url": "/active",
-        "label": "Active",
+        "url": "/center",
+        "label": "Center",
         "decorations": false,
         "center": true,
         "visible": true
@@ -110,23 +114,7 @@
       "longDescription": "",
       "beforeHelp": "",
       "afterHelp": "",
-      "args": [
-        {
-          "name": "topic",
-          "index": 1,
-          "takesValue": true
-        },
-        {
-          "name": "pid",
-          "index": 2,
-          "takesValue": true
-        },
-        {
-          "name": "url",
-          "index": 3,
-          "takesValue": true
-        }
-      ],
+      "args": [],
       "subcommands": {
         "subcommand-name": {}
       }

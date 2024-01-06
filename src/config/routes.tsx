@@ -3,22 +3,16 @@
  * Date: 2023/03/02 17:33:04
  * Description: 路由
  */
-import ErrorPage from "../pages/err";
-import Login from "../pages/login";
-import Home from "../pages/index";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Stock from "../pages/stock";
 import Active from "../pages/active";
-import Query from "../pages/query";
-import PageLayout from "../layout/pageLayout";
-import AttrMap from "../pages/attrMap";
+import Center from "../pages/center";
 
 export const RoutesWithSubRoutes = () => {
   const router = createBrowserRouter([
     // 客户端首页
     {
       path: "/center",
-      element: <></>,
+      element: <Center></Center>,
     },
     // 激活界面
     {
