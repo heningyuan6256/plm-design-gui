@@ -48,6 +48,11 @@
           {
             "name": "docker",
             "cmd": "docker"
+          },
+          {
+            "name": "ssh",
+            "cmd": "ssh",
+            "args": true
           }
         ]
       },
@@ -96,11 +101,11 @@
         "fullscreen": false,
         "height": 347,
         "resizable": false,
-        "title": "OnChain-install",
+        "title": "OnChain授权",
         "width": 648,
         "url": "/center",
         "label": "Center",
-        "decorations": false,
+        "decorations": true,
         "center": true,
         "visible": true
       }
