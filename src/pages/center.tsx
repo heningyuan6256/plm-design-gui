@@ -24,6 +24,7 @@ import IPut from "IPut";
 import { Controller, useForm } from "react-hook-form";
 import OnChainSvg from "../assets/image/OnChainLogo.svg";
 import PlmIcon from "../components/PlmIcon";
+import { appWindow } from "@tauri-apps/api/window";
 
 const FormLabel: FC<{ value: string }> = ({ value }) => {
   return (
@@ -267,10 +268,16 @@ const center: FC = () => {
             <PlmIcon
               style={{ color: "#DFE9F5", fontSize: "12px" }}
               name="minimize"
+              onClick={() => {
+                appWindow.minimize();
+              }}
             ></PlmIcon>
             <PlmIcon
               style={{ color: "#DFE9F5", fontSize: "12px", marginLeft: "12px" }}
               name="close"
+              onClick={() => {
+                appWindow.close();
+              }}
             ></PlmIcon>
           </div>
 
