@@ -5,16 +5,26 @@
 html,
 body,
 #root {
+  --spectrum-accent-background-color-default: #0563b2 !important;
+  --spectrum-button-color: #0563b2 !important;
   height: 100% !important;
   overflow: hidden;
   /* font-size: 12px; */
-  font-family: PingFang SC, PingFang SC-Regular;
+  font-family: PingFang SC, PingFang SC-Regular !important;
   font-weight: 400;
   color: #2c3652;
   user-select: none;
+  background: #fff;
   color: #2c3652;
   text-rendering: optimizeLegibility !important;
   -webkit-font-smoothing: antialiased !important;
+}
+
+#root > div {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: PingFang SC, PingFang SC-Regular !important;
 }
 
 * ::-webkit-scrollbar {
@@ -438,7 +448,7 @@ select {
 td .anticon-caret-right {
   margin-right: 2px !important;
 }
-td .anticon-caret-down{
+td .anticon-caret-down {
   margin-right: 2px !important;
 }
 /* 
@@ -730,28 +740,30 @@ img {
   text-overflow: ellipsis;
 }
 
-.ant-modal-content{
+.ant-modal-content {
   padding: 0px !important;
 }
-.ant-modal .ant-modal-content{
+.ant-modal .ant-modal-content {
   border-radius: 0px !important;
 }
-.ant-modal .ant-modal-header{
+.ant-modal .ant-modal-header {
   margin: 0px !important;
 }
 
-.ant-message-custom-content{
+.ant-message-custom-content {
   align-items: center;
   display: flex;
 }
-.ant-modal{
+.ant-modal {
   border: 1px solid #cdcdcd;
   background: #f1f1f1;
   padding-bottom: 0px;
 }
-.ant-modal-close{display: none;}
+.ant-modal-close {
+  display: none;
+}
 
-.ant-divider{
+.ant-divider {
   height: 100%;
   padding: 0px;
 }
@@ -759,31 +771,36 @@ img {
 .active_form {
   width: 240px;
 }
-.active_form .ant-form-item  {
-    margin-bottom: 9px !important;
-    height: 30px;
+.active_form .ant-form-item {
+  margin-bottom: 9px !important;
+  height: 30px;
 }
 
-.attr.ant-select-disabled .ant-select-selector{
+.attr.ant-select-disabled .ant-select-selector {
   border: 1px solid #ecedf0;
 }
 
-.attr.ant-select-disabled .ant-select-selection-item{
-  color: #B2B2B6 !important; 
+.attr.ant-select-disabled .ant-select-selection-item {
+  color: #b2b2b6 !important;
 }
 
-.attr.ant-select-disabled .ant-select-selector{
+.attr.ant-select-disabled .ant-select-selector {
   background: #ffffff !important;
 }
 
-.anticon-caret-right, .anticon-caret-down, .anticon-caret-up{
+.anticon-caret-right,
+.anticon-caret-down,
+.anticon-caret-up {
   transform: scale(0.7);
   color: lightgray;
 }
-.ant-collapse>.ant-collapse-item >.ant-collapse-header .ant-collapse-expand-icon{
+.ant-collapse
+  > .ant-collapse-item
+  > .ant-collapse-header
+  .ant-collapse-expand-icon {
   padding-inline-end: 0px !important;
 }
-.ant-tag{
+.ant-tag {
   line-height: 18px;
 }
 
@@ -837,15 +854,152 @@ img {
   border-color: transparent;
 }
 
-.text_line{
+.text_line {
   text-decoration: line-through !important;
   text-decoration-color: red !important;
 }
 
-.PDFViewer ::-webkit-scrollbar-thumb{
+.PDFViewer ::-webkit-scrollbar-thumb {
   background: #e1e1e1;
 }
 
-textarea{
+textarea {
   resize: none !important;
+}
+
+.react-ip-input input {
+  width: 72px !important;
+  height: 22px !important;
+}
+.react-ip-input {
+  white-space: nowrap;
+  margin-top: 8px !important;
+  padding: 0px !important;
+  width: 100% !important;
+  border-radius: 2px !important;
+  height: 24px !important;
+}
+
+/** register */
+.register_title {
+  font-size: 20px;
+  font-family: PingFang SC, PingFang SC-Semibold;
+  font-weight: 600 !important;
+  text-align: center;
+  color: #0563b2;
+  line-height: 25px;
+}
+.A-HlBa_spectrum-Field {
+  width: 100%;
+}
+
+.formlabel {
+  font-size: 12px;
+  font-family: PingFang SC, PingFang SC-Medium;
+  font-weight: bold;
+  text-align: left;
+  color: #2c3652;
+  line-height: 18px;
+  position: relative;
+  padding-left: 8px;
+}
+
+.formlabel::before {
+  position: absolute;
+  content: "";
+  left: 0px;
+  width: 2px;
+  top: 2px;
+  line-height: 18px;
+  height: 12px;
+  background: #0563b2;
+}
+.A-HlBa_spectrum-Field-field input,
+textarea,
+.react-ip-input {
+  border: 1px solid #ecedf0 !important;
+  border-radius: 2px;
+  font-size: 12px !important;
+  font-family: PingFang SC, PingFang SC-Regular !important;
+}
+
+.A-HlBa_spectrum-Field-field input {
+  height: 24px;
+  line-height: 24px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  font-family: PingFang SC, PingFang SC-Regular !important;
+}
+
+.A-HlBa_spectrum-Field-field input::placeholder,
+textarea::placeholder {
+  font-size: 12px !important;
+  font-family: PingFang SC, PingFang SC-Regular !important;
+  font-weight: Regular;
+  text-align: left;
+  color: #b2b2b6 !important;
+  line-height: 18px;
+}
+
+.register_head {
+}
+
+.register_foot {
+  height: 17px;
+  font-size: 12px;
+  font-family: PingFang SC, PingFang SC-Regular;
+  font-weight: 500;
+  text-align: left;
+  color: #2c3652;
+  line-height: 17px;
+  letter-spacing: 0.86px;
+}
+
+.register_cancel button {
+  margin-right: 8px;
+  width: 66px;
+  min-width: 66px;
+  border: 1px solid #cdcdcd;
+  cursor: pointer;
+  padding: 0px;
+  font-size: 12px !important;
+  font-family: PingFang SC, PingFang SC-Regular !important;
+}
+.register_confirm button {
+  /* background: #0563B2 !important; */
+  color: #fff;
+  cursor: pointer;
+  width: 66px;
+  min-width: 66px;
+  border-radius: 2px;
+  border: none !important;
+  outline: none;
+  --spectrum-button-color: #0563b2 !important;
+  font-family: PingFang SC, PingFang SC-Regular !important;
+  padding: 0px;
+  font-size: 12px !important;
+}
+
+.register_cancel button:active,
+.register_confirm button:active {
+  outline: none !important;
+}
+.toolbar i {
+  transition: color 0.3s;
+  cursor: pointer;
+}
+.toolbar i:hover {
+  color: #0563b2 !important;
+}
+
+table {
+  border-radius: 2px 2px 0px 0px !important;
+  font-size: 12px;
+  font-family: PingFang SC, PingFang SC-Regular;
+  font-weight: Regular;
+  color: #2c3652;
+  line-height: 18px;
+}
+table td {
+  padding: 2px 7px;
 }

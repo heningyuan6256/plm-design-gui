@@ -4,7 +4,6 @@
  * Description: 路由
  */
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Active from "../pages/active";
 import Center from "../pages/center";
 
 export const RoutesWithSubRoutes = () => {
@@ -15,10 +14,10 @@ export const RoutesWithSubRoutes = () => {
       element: <Center></Center>,
     },
     // 激活界面
-    {
-      path: "/active",
-      element: <Active></Active>,
-    },
+    // {
+    //   path: "/active",
+    //   element: <Active></Active>,
+    // },
     // 主页
     // {
     //   path: "/",

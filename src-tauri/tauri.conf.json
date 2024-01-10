@@ -99,13 +99,13 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 347,
+        "height": 420,
         "resizable": false,
         "title": "OnChain授权",
-        "width": 648,
+        "width": 700,
         "url": "/center",
         "label": "Center",
-        "decorations": true,
+        "decorations": false,
         "center": true,
         "visible": true
       }
