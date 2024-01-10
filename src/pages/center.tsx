@@ -25,8 +25,6 @@ import { Controller, useForm } from "react-hook-form";
 import OnChainSvg from "../assets/image/OnChainLogo.svg";
 import PlmIcon from "../components/PlmIcon";
 
-console.log(CryptoJS, "CryptoJS");
-
 const FormLabel: FC<{ value: string }> = ({ value }) => {
   return (
     <div className="formlabel">
@@ -36,66 +34,6 @@ const FormLabel: FC<{ value: string }> = ({ value }) => {
 };
 
 const center: FC = () => {
-  const form1Ref = useRef<any>(null);
-  const next = async () => {
-    console.log(form1Ref, "form1Ref");
-
-    {
-      /* TODO解析授权码获取超级管理员、功能模块，以及用户数 */
-    }
-
-    {
-      /* TODO安装所有的docker服务*/
-    }
-
-    {
-      /* TODO启动mysql数据库，连接mysql数据库然后修改用户数以及功能模块*/
-      // 加密每一个模块,生成一个带有密钥的对象「name,apicode,secret」
-      let decryptedData = null;
-      try {
-        const word =
-          "llI2oTmhCfPN7Y/ymgG6I8bYlQ6U+EeMRkJlBcKmqQTrqcgontPga0BkGdvV8iHPDrgEou/G8a1JsE61wQeeyvV5yvJXBc+RShME+Pl5AeC+AbI4IGMrfxojNs3/qVcSbp1T5CFCcv7Tfh6dqCemvw==";
-        const sKey = CryptoJS.enc.Utf8.parse("len16 secret key");
-
-        const decrypted = CryptoJS.AES.decrypt(word, sKey, {
-          iv: sKey,
-          mode: CryptoJS.mode.CBC, // CBC算法
-          padding: CryptoJS.pad.Pkcs7, //使用pkcs7 进行padding 后端需要注意
-        });
-
-        decryptedData = decrypted.toString(CryptoJS.enc.Utf8);
-
-        console.log(decrypted.toString(CryptoJS.enc.Utf8), "123");
-      } catch (error) {}
-      if (!decryptedData) {
-        alert("授权码不正确");
-        return;
-      }
-
-      setStep("2");
-
-      // const db = await Database.load(
-      //   "postgres://postgres:123456@192.168.0.104:32768/mk"
-      // );
-      // const res = await db.select("SELECT * FROM pdm_system_module", []);
-
-      // const updateRes = await db.execute(
-      //   `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE id = $2`,
-      //   ["123", "1640900750563016709"]
-      // );
-      // console.log(res, "res");
-      // db.close();
-    }
-
-    {
-      /* TODO修改网关*/
-    }
-
-    {
-      /* 远程进部署的服务器执行docker-compose命令启动服务*/
-    }
-  };
-
   const dropAreaRef = useRef<any>();
   useDrop(dropAreaRef, {
     onDom: (content: string, e) => {
@@ -118,13 +56,87 @@ const center: FC = () => {
     },
   });
 
-  let onSubmit = (res: any) => {
-    console.log(JSON.stringify(res), "JSON.stringify(res)");
+  let onSubmit = async (data: any) => {
+    // let data = Object.fromEntries(new FormData(res.currentTarget));
+    console.log(data, "s");
+
+    const db = await Database.load(
+      `postgres://postgres:${data.password}@${data.address}:32768/mk`
+    ).catch((err) => {
+      console.log(err, "err");
+      alert(err);
+    });
+    if (!db) {
+      return;
+    }
+
+    const res = await db.select("SELECT * FROM pdm_system_module", []);
+
+    const updateRes = await db.execute(
+      `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE id = $2`,
+      ["123", "1640900750563016709"]
+    );
+    console.log(res, "res");
+    db.close();
+
+    {
+      /* TODO修改网关*/
+    }
+
+    {
+      /* 远程进部署的服务器执行docker-compose命令启动服务*/
+    }
+
+    // console.log(JSON.stringify(res), "JSON.stringify(res)");
+  };
+
+  let onSubmitKey = (e: any) => {
+    e.preventDefault();
+    let data = Object.fromEntries(new FormData(e.currentTarget));
+    // console.log(getValues(),'ress');
+    // Get form data as an object.
+
+    {
+      /* TODO解析授权码获取超级管理员、功能模块，以及用户数 */
+    }
+
+    {
+      /* TODO安装所有的docker服务*/
+    }
+
+    {
+      /* TODO启动mysql数据库，连接mysql数据库然后修改用户数以及功能模块*/
+      // 加密每一个模块,生成一个带有密钥的对象「name,apicode,secret」
+      let decryptedData = null;
+      try {
+        const word = data.secret_key;
+        // "llI2oTmhCfPN7Y/ymgG6I8bYlQ6U+EeMRkJlBcKmqQTrqcgontPga0BkGdvV8iHPDrgEou/G8a1JsE61wQeeyvV5yvJXBc+RShME+Pl5AeC+AbI4IGMrfxojNs3/qVcSbp1T5CFCcv7Tfh6dqCemvw==";
+        const sKey = CryptoJS.enc.Utf8.parse("len16 secret key");
+
+        const decrypted = CryptoJS.AES.decrypt(word, sKey, {
+          iv: sKey,
+          mode: CryptoJS.mode.CBC, // CBC算法
+          padding: CryptoJS.pad.Pkcs7, //使用pkcs7 进行padding 后端需要注意
+        });
+
+        decryptedData = decrypted.toString(CryptoJS.enc.Utf8);
+      } catch (error) {}
+      console.log(decryptedData, "decryptedData");
+
+      if (!decryptedData) {
+        alert("授权码不正确");
+        return;
+      }
+
+      setStep("2");
+    }
   };
 
   let { handleSubmit, control } = useForm({
     defaultValues: {
       address: "192.168.0.104",
+      password: "",
+      account: "",
     },
   });
 
@@ -148,7 +160,7 @@ const center: FC = () => {
       >
         {step == "1" ? (
           <span className="register_confirm">
-            <Button variant="accent" onPressUp={next}>
+            <Button variant="accent" type="submit">
               下一步
             </Button>
           </span>
@@ -211,6 +223,7 @@ const center: FC = () => {
               const isCurrent = step == item.value;
               return (
                 <div
+                  key={item.value}
                   className={`flex items-center mr-4 relative ${
                     isCurrent ? "cursor-pointer" : "cursor-not-allowed"
                   }`}
@@ -275,16 +288,6 @@ const center: FC = () => {
                     <FormLabel value="服务器地址:"></FormLabel>
                     <IPut defaultValue={value} onChange={onChange}></IPut>
                   </div>
-                  // <TextField
-                  //   label="Name"
-                  //   name={name}
-                  //   value={value}
-                  //   onChange={onChange}
-                  //   onBlur={onBlur}
-                  //   ref={ref}
-                  //   isRequired
-                  //   errorMessage={error?.message}
-                  // />
                 )}
               />
               <div className="flex overflow-hidden mb-1">
@@ -292,38 +295,74 @@ const center: FC = () => {
                   className="flex-1 overflow-hidden"
                   style={{ paddingRight: "10px" }}
                 >
-                  <FormLabel value="数据库用户:"></FormLabel>
-
-                  <TextField placeholder="请输入账号" marginTop={"8px"} />
+                  <Controller
+                    control={control}
+                    name="account"
+                    rules={{ required: "account is required." }}
+                    render={({
+                      field: { name, value, onChange, onBlur, ref },
+                      fieldState: { invalid, error },
+                    }) => (
+                      <Fragment>
+                        <FormLabel value="数据库用户:"></FormLabel>
+                        <TextField
+                          value={value}
+                          placeholder="请输入账号"
+                          onChange={onChange}
+                          marginTop={"8px"}
+                        />
+                      </Fragment>
+                    )}
+                  />
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <FormLabel value="数据库密码:"></FormLabel>
-                  <TextField
-                    placeholder="请输入密码"
-                    marginTop={"8px"}
-                    type="password"
-                  ></TextField>
+                  <Controller
+                    control={control}
+                    name="password"
+                    rules={{ required: "password is required." }}
+                    render={({
+                      field: { name, value, onChange, onBlur, ref },
+                      fieldState: { invalid, error },
+                    }) => (
+                      <Fragment>
+                        <FormLabel value="数据库密码:"></FormLabel>
+                        <TextField
+                          value={value}
+                          placeholder="请输入密码"
+                          marginTop={"8px"}
+                          type="password"
+                          onChange={onChange}
+                          name="password"
+                        ></TextField>
+                      </Fragment>
+                    )}
+                  />
                 </div>
               </div>
               <Fragment>
                 <FormLabel value="模块:"></FormLabel>
                 <table style={{ borderCollapse: "collapse" }} border={2}>
-                  {[
-                    [{ name: "产品" }, { name: "测试1" }],
-                    [{ name: "测试2" }, { name: "测试2" }],
-                  ].map((row) => {
-                    return (
-                      <tr>
-                        {row.map((col) => {
-                          return (
-                            <td style={{ border: "1px solid #ecedf0" }}>
-                              {col.name}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
+                  <tbody>
+                    {[
+                      [{ name: "产品" }, { name: "测试1" }],
+                      [{ name: "测试2" }, { name: "测试23" }],
+                    ].map((row, index) => {
+                      return (
+                        <tr key={index}>
+                          {row.map((col) => {
+                            return (
+                              <td
+                                key={col.name}
+                                style={{ border: "1px solid #ecedf0" }}
+                              >
+                                {col.name}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
                 </table>
                 {/* <div className="flex" style={{ flexWrap: "wrap" }}>
                   {[
@@ -359,9 +398,35 @@ const center: FC = () => {
               {submitFoot()}
             </Form>
           ) : (
-            <Form ref={form1Ref} onSubmit={handleSubmit(onSubmit)}>
+            <Form onSubmit={onSubmitKey}>
+              {/* <Controller
+                control={control}
+                name="address"
+                rules={{ required: "address is required." }}
+                render={({
+                  field: { name, value, onChange, onBlur, ref },
+                  fieldState: { invalid, error },
+                }) => (
+                  <div>
+                    <FormLabel value="授权码:"></FormLabel>
+                    <TextArea name="secret_key" height={184}></TextArea>
+                  </div>
+                  // <TextField
+                  //   label="Name"
+                  //   name={name}
+                  //   value={value}
+                  //   onChange={onChange}
+                  //   onBlur={onBlur}
+                  //   ref={ref}
+                  //   isRequired
+                  //   errorMessage={error?.message}
+                  // />
+                )}
+              /> */}
+              {/* <div> */}
               <FormLabel value="授权码:"></FormLabel>
-              <TextArea height={184}></TextArea>
+              <TextArea name="secret_key" height={184}></TextArea>
+              {/* </div> */}
               {submitFoot()}
             </Form>
           )}

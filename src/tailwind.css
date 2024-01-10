@@ -1003,3 +1003,12 @@ table {
 table td {
   padding: 2px 7px;
 }
+
+.A-HlBa_spectrum-Field-field::after{
+  box-shadow: none !important;
+}
+
+.register_cancel button::after,
+.register_confirm button:after {
+  box-shadow: none !important;
+}
