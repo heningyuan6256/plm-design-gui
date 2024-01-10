@@ -22,7 +22,6 @@ import { BasicConfig, CommandConfig, PathConfig } from "../../constant/config";
 import { invoke } from "@tauri-apps/api";
 
 import { useSelector, useDispatch } from "react-redux";
-import { increment } from "../../models/count";
 import { mqttClient } from "../../utils/MqttService";
 import { Utils } from "../../utils";
 
