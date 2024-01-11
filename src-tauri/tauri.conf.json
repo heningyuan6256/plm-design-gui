@@ -101,14 +101,15 @@
         "fullscreen": false,
         "height": 420,
         "resizable": false,
-        "title": "OnChain授权",
+        "title": "OnChain PLM - 授权工具",
         "transparent": true,
         "width": 700,
         "url": "/center",
         "label": "Center",
         "decorations": false,
         "center": true,
-        "visible": true
+        "visible": true,
+        "fileDropEnabled": false
       }
     ],
     "systemTray": {

@@ -2,7 +2,7 @@ import { FC, Fragment, useEffect, useRef, useState } from "react";
 import Database from "tauri-plugin-sql-api";
 //@ts-ignore
 import CryptoJS from "crypto-js";
-import { useDrop } from "ahooks";
+import { useDrop, useMount } from "ahooks";
 import {
   ActionButton,
   Button,
@@ -16,16 +16,23 @@ import {
 import IPut from "IPut";
 import { Controller, useForm } from "react-hook-form";
 import OnChainSvg from "../assets/image/OnChainLogo.svg";
+import stickSvg from "../assets/image/stick.svg";
+import resetSvg from "../assets/image/reset.svg";
 import verticalLogo from "../assets/image/verticallogo.png";
 import whiteVerticalLogo from "../assets/image/whiteVerticalLogo.png";
+import addPng from "../assets/image/add.png";
 import successSvg from "../assets/image/success.svg";
 import PlmIcon from "../components/PlmIcon";
 import { LogicalSize, appWindow, getCurrent } from "@tauri-apps/api/window";
+import { clipboard } from "@tauri-apps/api";
 
-const FormLabel: FC<{ value: string }> = ({ value }) => {
+const FormLabel: FC<{ value: string; suffix?: any }> = ({ value, suffix }) => {
   return (
     <div className="formlabel">
-      <Text>{value}</Text>
+      <div>
+        <Text>{value}</Text>
+      </div>
+      {suffix}
     </div>
   );
 };
@@ -33,23 +40,88 @@ const FormLabel: FC<{ value: string }> = ({ value }) => {
 const center: FC = () => {
   let [isSuccess, setSuccess] = useState(false);
   let [viewDetail, setViewDetail] = useState(false);
+  const [dropVisible, setDropVisible] = useState(true);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+
   const dropAreaRef = useRef<any>();
+  const TextAreaRef = useRef<any>();
+  useEffect(() => {
+    window.addEventListener("drop", (e) => e.preventDefault(), false);
+    window.addEventListener("dragover", (e) => e.preventDefault(), false);
+  }, []);
+
+  useMount(() => {
+    document
+      .getElementById("textRefId")
+      ?.addEventListener("mouseleave", (e) => {
+        //@ts-ignore
+        e.target?.blur();
+      });
+
+    document.getElementById("textRefId")?.addEventListener("drop", (v: any) => {
+      const e = v.dataTransfer.files;
+      if (e[0] && e[0].name) {
+        if (e[0].name.substring(e[0].name.lastIndexOf(".") + 1) === "lic") {
+          if (typeof FileReader === "undefined") {
+            alert("该浏览器不支持File API");
+            return;
+          }
+          var reader = new FileReader(); // 创建新的FileReader对象
+          reader.onload = function (data) {
+            setDropVisible(false);
+            setValue("secret_key", String(data.target?.result));
+            // 将内容显示到页面上的指定位置（这里使用id为'output'的div）
+          };
+          reader.readAsText(e[0]); // 开始读取文件
+        } else {
+          alert("文件格式不对");
+        }
+      } else {
+      }
+      //@ts-ignore
+      e.target?.blur();
+    });
+  });
+
+  useEffect(() => {
+    if (!dropVisible) {
+      setIsDragging(false);
+    }
+  }, [dropVisible]);
   useDrop(dropAreaRef, {
-    onDom: (content: string, e) => {
-      console.log(content);
-      console.log(e);
-    },
+    onDom: (content: string, e) => {},
     onDragEnter: (e) => {
-      console.log(e);
+      setIsDragging(true);
       // console.log(e.path[0].className);
       // if (e.path[0].className === 'treeSpanText') {
       // }
     },
-    // onDragOver: (e) => {
-    //   console.log(e);
-    // },
+    onFiles: (e) => {
+      if (e[0] && e[0].name) {
+        if (e[0].name.substring(e[0].name.lastIndexOf(".") + 1) === "lic") {
+          if (typeof FileReader === "undefined") {
+            alert("该浏览器不支持File API");
+            return;
+          }
+          var reader = new FileReader(); // 创建新的FileReader对象
+          reader.onload = function (data) {
+            setDropVisible(false);
+            setValue("secret_key", String(data.target?.result));
+            // 将内容显示到页面上的指定位置（这里使用id为'output'的div）
+          };
+          reader.readAsText(e[0]); // 开始读取文件
+        } else {
+          alert("文件格式不对");
+        }
+      } else {
+      }
+    },
+    onDragOver: (e) => {
+      setIsDragging(true);
+    },
     onDragLeave: (e) => {
-      console.log(e);
+      setIsDragging(false);
+
       // if (e.path[0].className === 'treeSpanText') {
       // }
     },
@@ -112,6 +184,8 @@ const center: FC = () => {
   let onSubmitKey = (e: any) => {
     e.preventDefault();
     let data = Object.fromEntries(new FormData(e.currentTarget));
+    console.log(data, "data");
+
     if (!data.secret_key) {
       alert("授权码不能为空");
       return;
@@ -175,6 +249,12 @@ const center: FC = () => {
     },
   });
 
+  let { setValue, control: keyControl } = useForm({
+    defaultValues: {
+      secret_key: "",
+    },
+  });
+
   const tabList = [
     { label: "粘贴授权码", value: "1" },
     { label: "填写信息", value: "2" },
@@ -214,7 +294,7 @@ const center: FC = () => {
             <span className="register_cancel">
               <ActionButton
                 onPressUp={() => {
-                  setStep("1");
+                  alert("连接成功")
                 }}
               >
                 测试
@@ -446,6 +526,8 @@ const center: FC = () => {
     );
   }
 
+  console.log(isDragging, "isDragging");
+
   return (
     <div className="w-full h-full flex items-center justify-center py-5 pr-5 rounded-lg relative">
       <div
@@ -467,7 +549,7 @@ const center: FC = () => {
           <div>全新超融合云原生</div>
           <div>产品全生命周期赋能平台</div>
           <div className="absolute bottom-0 register_foot left-5">
-            授权工具 - 版本1.0.0
+            授权工具 - 版本3.0.0
           </div>
         </div>
         <div
@@ -717,34 +799,111 @@ const center: FC = () => {
             </Form>
           ) : (
             <Form onSubmit={onSubmitKey}>
-              {/* <Controller
-                control={control}
-                name="address"
-                rules={{ required: "address is required." }}
-                render={({
-                  field: { name, value, onChange, onBlur, ref },
-                  fieldState: { invalid, error },
-                }) => (
-                  <div>
-                    <FormLabel value="授权码:"></FormLabel>
-                    <TextArea name="secret_key" height={184}></TextArea>
-                  </div>
-                  // <TextField
-                  //   label="Name"
-                  //   name={name}
-                  //   value={value}
-                  //   onChange={onChange}
-                  //   onBlur={onBlur}
-                  //   ref={ref}
-                  //   isRequired
-                  //   errorMessage={error?.message}
-                  // />
-                )}
-              /> */}
-              {/* <div> */}
-              <FormLabel value="授权码:"></FormLabel>
-              <TextArea name="secret_key" height={184}></TextArea>
-              {/* </div> */}
+              <div className="relative">
+                <FormLabel
+                  value="授权码:"
+                  suffix={
+                    <div className="flex items-center key_suffix">
+                      <span
+                        onClick={() => {
+                          clipboard.readText().then((res) => {
+                            const text = res || ""
+                            setValue("secret_key", text);
+                            setIsDragging(false)
+                            setDropVisible(!text)
+                          });
+                        }}
+                        style={{ marginRight: "6px" }}
+                      >
+                        <Image src={stickSvg} width={12}></Image>
+                      </span>
+                      <span
+                        onClick={() => {
+                          setValue("secret_key", "");
+                          setDropVisible(true);
+                        }}
+                      >
+                        <Image src={resetSvg} width={12}></Image>
+                      </span>
+                    </div>
+                  }
+                ></FormLabel>
+
+                {/* {dropVisible ? ( */}
+                <div
+                  ref={dropAreaRef}
+                  className={`w-full bg-transparent absolute flex justify-center items-center`}
+                  style={{
+                    zIndex: dropVisible ? "20" : "-1",
+                    height: "184px",
+                    marginTop: "8px",
+                    border: isDragging ? "2px solid #0563B2" : "none",
+                    borderRadius: "2px",
+                    transition: "border 0.3s",
+                  }}
+                  onClick={() => {
+                    TextAreaRef.current.focus();
+                  }}
+                >
+                  {isDragging ? (
+                    <div
+                      style={{
+                        color: "#0563B2",
+                        fontWeight: "bold",
+                        fontSize: "12px",
+                      }}
+                    >
+                      拖拽中...
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="drag_icon">
+                        <Image src={addPng} width={24}></Image>
+                      </div>
+                      <div className="drag_text">拖动至此处粘贴</div>
+                    </div>
+                  )}
+                </div>
+                {/* ) : (
+                  <></>
+                )} */}
+
+                <Controller
+                  control={keyControl}
+                  name="secret_key"
+                  rules={{ required: "password is required." }}
+                  render={({
+                    field: { name, value, onChange, onBlur, ref },
+                    fieldState: { invalid, error },
+                  }) => (
+                    <Fragment>
+                      <div className="mt-2">
+                        <TextArea
+                          id="textRefId"
+                          ref={TextAreaRef}
+                          value={value}
+                          onFocus={() => {
+                            setDropVisible(false);
+                          }}
+                          zIndex={10}
+                          onBlur={(e: any) => {
+                            // 如果有值则不显示
+                            if (e.target?.value) {
+                              setDropVisible(false);
+                            } else {
+                              setDropVisible(true);
+                            }
+                          }}
+                          onChange={onChange}
+                          name="secret_key"
+                          height={184}
+                        ></TextArea>
+                      </div>
+                    </Fragment>
+                  )}
+                />
+              </div>
+
               {submitFoot()}
             </Form>
           )}
