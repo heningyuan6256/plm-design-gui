@@ -6,7 +6,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "OnChain-install",
+    "productName": "OnChain PLM - 授权工具",
     "version": "0.0.0"
   },
   "tauri": {
