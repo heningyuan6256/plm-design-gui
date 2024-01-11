@@ -70,7 +70,7 @@
       },
       "externalBin": [],
       "icon": ["icons/onchain.png", "icons/favicon.ico"],
-      "identifier": "com.ONCHAIN.build",
+      "identifier": "com.ONCHAININSTALL.build",
       "longDescription": "",
       "macOS": {
         "entitlements": null,

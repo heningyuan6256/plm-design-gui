@@ -890,7 +890,7 @@ textarea {
   line-height: 25px;
 }
 .A-HlBa_spectrum-Field {
-  width: 100%;
+  width: 100% !important;
 }
 
 .formlabel {
