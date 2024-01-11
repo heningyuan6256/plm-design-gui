@@ -102,6 +102,7 @@
         "height": 420,
         "resizable": false,
         "title": "OnChain授权",
+        "transparent": true,
         "width": 700,
         "url": "/center",
         "label": "Center",
@@ -112,6 +113,7 @@
     ],
     "systemTray": {
       "iconPath": "icons/20x20托盘图标.png",
+
       "iconAsTemplate": true
     },
     "cli": {

@@ -15,7 +15,7 @@ use tauri::{ command };
 
 #[command]
 pub fn chat_root() -> PathBuf {
-    tauri::api::path::home_dir().unwrap().join(".onChain")
+    tauri::api::path::home_dir().unwrap().join(".onChain-register")
 }
 
 #[command]

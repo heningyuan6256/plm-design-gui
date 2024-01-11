@@ -5,6 +5,7 @@
  */
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Center from "../pages/center";
+import ActiveSuccess from "../components/ActiveSuccess";
 
 export const RoutesWithSubRoutes = () => {
   const router = createBrowserRouter([
@@ -13,6 +14,10 @@ export const RoutesWithSubRoutes = () => {
       path: "/center",
       element: <Center></Center>,
     },
+    // {
+    //   path: "/activeSuccess",
+    //   element: <ActiveSuccess></ActiveSuccess>,
+    // },
     // 激活界面
     // {
     //   path: "/active",

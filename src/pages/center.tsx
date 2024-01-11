@@ -1,5 +1,3 @@
-import { Command } from "@tauri-apps/api/shell";
-// import { Button, Input } from "antd";
 import { FC, Fragment, useEffect, useRef, useState } from "react";
 import Database from "tauri-plugin-sql-api";
 //@ts-ignore
@@ -8,23 +6,21 @@ import { useDrop } from "ahooks";
 import {
   ActionButton,
   Button,
-  Checkbox,
   Form,
   Image,
-  Item,
-  LabeledValue,
-  TabList,
   Text,
   TextArea,
   TextField,
-  View,
 } from "@adobe/react-spectrum";
 //@ts-ignore
 import IPut from "IPut";
 import { Controller, useForm } from "react-hook-form";
 import OnChainSvg from "../assets/image/OnChainLogo.svg";
+import verticalLogo from "../assets/image/verticallogo.png";
+import whiteVerticalLogo from "../assets/image/whiteVerticalLogo.png";
+import successSvg from "../assets/image/success.svg";
 import PlmIcon from "../components/PlmIcon";
-import { appWindow } from "@tauri-apps/api/window";
+import { LogicalSize, appWindow, getCurrent } from "@tauri-apps/api/window";
 
 const FormLabel: FC<{ value: string }> = ({ value }) => {
   return (
@@ -35,6 +31,8 @@ const FormLabel: FC<{ value: string }> = ({ value }) => {
 };
 
 const center: FC = () => {
+  let [isSuccess, setSuccess] = useState(false);
+  let [viewDetail, setViewDetail] = useState(false);
   const dropAreaRef = useRef<any>();
   useDrop(dropAreaRef, {
     onDom: (content: string, e) => {
@@ -57,12 +55,30 @@ const center: FC = () => {
     },
   });
 
+  useEffect(() => {
+    const currentWindow = getCurrent();
+    if (isSuccess) {
+      if (viewDetail) {
+        currentWindow.setSize(new LogicalSize(486, 280)).then(() => {
+          currentWindow.center();
+        });
+      } else {
+        currentWindow.setSize(new LogicalSize(240, 198)).then(() => {
+          currentWindow.center();
+        });
+      }
+    } else {
+      currentWindow.setSize(new LogicalSize(700, 420)).then(() => {
+        currentWindow.center();
+      });
+    }
+  }, [isSuccess, viewDetail]);
+
   let onSubmit = async (data: any) => {
     // let data = Object.fromEntries(new FormData(res.currentTarget));
-    console.log(data, "s");
 
     const db = await Database.load(
-      `postgres://postgres:${data.password}@${data.address}:32768/mk`
+      `postgres://postgres:${data.password}@${data.address}:${data.port}/mk`
     ).catch((err) => {
       console.log(err, "err");
       alert(err);
@@ -77,8 +93,10 @@ const center: FC = () => {
       `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE id = $2`,
       ["123", "1640900750563016709"]
     );
-    console.log(res, "res");
+    console.log(updateRes, "res");
     db.close();
+
+    setSuccess(true);
 
     {
       /* TODO修改网关*/
@@ -94,6 +112,10 @@ const center: FC = () => {
   let onSubmitKey = (e: any) => {
     e.preventDefault();
     let data = Object.fromEntries(new FormData(e.currentTarget));
+    if (!data.secret_key) {
+      alert("授权码不能为空");
+      return;
+    }
     // console.log(getValues(),'ress');
     // Get form data as an object.
 
@@ -136,8 +158,20 @@ const center: FC = () => {
   let { handleSubmit, control } = useForm({
     defaultValues: {
       address: "192.168.0.104",
-      password: "",
-      account: "",
+      password: "123456",
+      account: "postgre",
+      port: "32768",
+      userCount: "99",
+    },
+  });
+
+  /**授权用户账号 */
+  let { control: detailControl } = useForm({
+    defaultValues: {
+      loginName: "192.168.0.104",
+      loginPassword: "123456",
+      userCount: "postgre",
+      Time: "永久授权",
     },
   });
 
@@ -177,6 +211,15 @@ const center: FC = () => {
                 上一步
               </ActionButton>
             </span>
+            <span className="register_cancel">
+              <ActionButton
+                onPressUp={() => {
+                  setStep("1");
+                }}
+              >
+                测试
+              </ActionButton>
+            </span>
             <span className="register_confirm">
               <Button variant="accent" type="submit">
                 授权
@@ -188,26 +231,242 @@ const center: FC = () => {
     );
   };
 
+  if (isSuccess) {
+    if (viewDetail) {
+      return (
+        <div className="detail h-full w-full text-center bg-white">
+          <div
+            data-tauri-drag-region
+            className="absolute top-0 w-full h-4 z-10"
+          ></div>
+          <div className="absolute top-2 right-2 toolbar">
+            <PlmIcon
+              style={{ color: "#DFE9F5", fontSize: "12px", marginLeft: "12px" }}
+              name="close"
+              onClick={() => {
+                appWindow.close();
+              }}
+            ></PlmIcon>
+          </div>
+          <div className="flex overflow-hidden h-full">
+            <div
+              className="bg-primary h-full flex justify-center items-center"
+              style={{ widows: "158px", minWidth: "158px", overflow: "hidden" }}
+            >
+              <Image src={whiteVerticalLogo} width={68} height={78}></Image>
+            </div>
+            <div
+              className="flex-1 overflow-hidden"
+              style={{ padding: "28px 30px 36px 30px" }}
+            >
+              <Form onSubmit={handleSubmit(onSubmit)}>
+                <div className="flex overflow-hidden">
+                  <div
+                    className="flex-1 overflow-hidden"
+                    style={{ paddingRight: "10px" }}
+                  >
+                    <Controller
+                      control={detailControl}
+                      name="loginName"
+                      rules={{ required: "account is required." }}
+                      render={({
+                        field: { name, value, onChange, onBlur, ref },
+                        fieldState: { invalid, error },
+                      }) => (
+                        <Fragment>
+                          <FormLabel value="授权账号:"></FormLabel>
+                          <TextField
+                            isReadOnly
+                            value={value}
+                            // placeholder="请输入账号"
+                            onChange={onChange}
+                            marginTop={"8px"}
+                          />
+                        </Fragment>
+                      )}
+                    />
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <Controller
+                      control={detailControl}
+                      name="loginPassword"
+                      rules={{ required: "password is required." }}
+                      render={({
+                        field: { name, value, onChange, onBlur, ref },
+                        fieldState: { invalid, error },
+                      }) => (
+                        <Fragment>
+                          <FormLabel value="授权密码:"></FormLabel>
+                          <TextField
+                            value={value}
+                            placeholder="请输入密码"
+                            isReadOnly
+                            marginTop={"8px"}
+                            type="password"
+                            onChange={onChange}
+                            name="password"
+                          ></TextField>
+                        </Fragment>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="flex overflow-hidden">
+                  <div
+                    className="flex-1 overflow-hidden"
+                    style={{ paddingRight: "10px" }}
+                  >
+                    <Controller
+                      control={detailControl}
+                      name="userCount"
+                      rules={{ required: "account is required." }}
+                      render={({
+                        field: { name, value, onChange, onBlur, ref },
+                        fieldState: { invalid, error },
+                      }) => (
+                        <Fragment>
+                          <FormLabel value="授权用户数"></FormLabel>
+                          <TextField
+                            value={value}
+                            placeholder="请输入账号"
+                            isReadOnly
+                            onChange={onChange}
+                            marginTop={"8px"}
+                          />
+                        </Fragment>
+                      )}
+                    />
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <Controller
+                      control={detailControl}
+                      name="Time"
+                      rules={{ required: "password is required." }}
+                      render={({
+                        field: { name, value, onChange, onBlur, ref },
+                        fieldState: { invalid, error },
+                      }) => (
+                        <Fragment>
+                          <FormLabel value="授权时间:"></FormLabel>
+                          <TextField
+                            value={value}
+                            placeholder="请输入密码"
+                            isReadOnly
+                            marginTop={"8px"}
+                            onChange={onChange}
+                          ></TextField>
+                        </Fragment>
+                      )}
+                    />
+                  </div>
+                </div>
+                <Fragment>
+                  <FormLabel value="当前授权模块:"></FormLabel>
+                  <table style={{ borderCollapse: "collapse" }} border={2}>
+                    <tbody>
+                      {[
+                        [{ name: "产品数据管理" }, { name: "项目管理" }],
+                        [{ name: "office/2D文件可视化" }, { name: "质量管理" }],
+                        [{ name: "3D 文件可视化" }, { name: "SBOM" }],
+                      ].map((row, index) => {
+                        return (
+                          <tr key={index}>
+                            {row.map((col) => {
+                              return (
+                                <td
+                                  key={col.name}
+                                  style={{ border: "1px solid #ecedf0" }}
+                                >
+                                  {col.name}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </Fragment>
+              </Form>
+            </div>
+          </div>
+          {/* <div className="flex justify-center pt-5">
+        <Image src={verticalLogo} width={68} height={78}></Image>
+      </div>
+      <div className="active_success flex justify-center">
+        <Image src={successSvg} width={16} height={16}></Image>{" "}
+        <span style={{ marginLeft: "6px" }}>授权成功</span>
+      </div>
+      <div>
+        <Button
+          variant="accent"
+          onPress={() => {
+            setViewDetail(true);
+          }}
+        >
+          查看授权内容
+        </Button>
+      </div> */}
+        </div>
+      );
+    }
+    return (
+      <div className="active h-full w-full text-center bg-white relative">
+        <div
+          data-tauri-drag-region
+          className="absolute top-0 w-full h-4 z-10"
+        ></div>
+        <div className="absolute top-2 right-2 toolbar z-20">
+          <PlmIcon
+            style={{ color: "#DFE9F5", fontSize: "12px", marginLeft: "12px" }}
+            name="close"
+            onClick={() => {
+              appWindow.close();
+            }}
+          ></PlmIcon>
+        </div>
+        <div className="flex justify-center pt-5">
+          <Image src={verticalLogo} width={68} height={78}></Image>
+        </div>
+        <div className="active_success flex justify-center">
+          <Image src={successSvg} width={16} height={16}></Image>{" "}
+          <span style={{ marginLeft: "6px" }}>授权成功</span>
+        </div>
+        <div>
+          <Button
+            variant="accent"
+            onPress={() => {
+              setViewDetail(true);
+            }}
+          >
+            查看授权内容
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      data-tauri-drag-region
-      className="w-full h-full flex items-center justify-center px-5 py-5"
-    >
+    <div className="w-full h-full flex items-center justify-center py-5 pr-5 rounded-lg relative">
+      <div
+        data-tauri-drag-region
+        className="absolute top-0 w-full h-4 z-10"
+      ></div>
       <div className="flex w-full overflow-hidden h-full">
         <div
           className="flex justify-center items-center register_title flex-col overflow-hidden relative"
           style={{
-            width: "264px",
-            minWidth: "264px",
+            width: "284px",
+            minWidth: "284px",
             borderRight: "1px solid #e3e7ef",
           }}
         >
-          <div className="absolute left-0 top-0 register_head">
+          <div className="absolute top-0 register_head left-5">
             <Image src={OnChainSvg} width={110}></Image>
           </div>
           <div>全新超融合云原生</div>
           <div>产品全生命周期赋能平台</div>
-          <div className="absolute left-0 bottom-0 register_foot">
+          <div className="absolute bottom-0 register_foot left-5">
             授权工具 - 版本1.0.0
           </div>
         </div>
@@ -215,7 +474,7 @@ const center: FC = () => {
           className="flex-1 overflow-hidden relative"
           style={{
             paddingLeft: "50px",
-            paddingTop: "50px",
+            paddingTop: "38px",
             paddingRight: "36px",
           }}
         >
@@ -283,21 +542,50 @@ const center: FC = () => {
 
           {step == "2" ? (
             <Form onSubmit={handleSubmit(onSubmit)}>
-              <Controller
-                control={control}
-                name="address"
-                rules={{ required: "address is required." }}
-                render={({
-                  field: { name, value, onChange, onBlur, ref },
-                  fieldState: { invalid, error },
-                }) => (
-                  <div className="mb-4">
-                    <FormLabel value="服务器地址:"></FormLabel>
-                    <IPut defaultValue={value} onChange={onChange}></IPut>
-                  </div>
-                )}
-              />
-              <div className="flex overflow-hidden mb-1">
+              <div className="flex overflow-hidden">
+                <div
+                  className="flex-1 overflow-hidden"
+                  style={{ paddingRight: "10px" }}
+                >
+                  <Controller
+                    control={control}
+                    name="address"
+                    rules={{ required: "address is required." }}
+                    render={({
+                      field: { name, value, onChange, onBlur, ref },
+                      fieldState: { invalid, error },
+                    }) => (
+                      <div className="overflow-hidden">
+                        <FormLabel value="服务器地址:"></FormLabel>
+                        <IPut defaultValue={value} onChange={onChange}></IPut>
+                      </div>
+                    )}
+                  />
+                </div>
+                <div className="overflow-hidden w-24">
+                  <Controller
+                    control={control}
+                    name="port"
+                    rules={{ required: "password is required." }}
+                    render={({
+                      field: { name, value, onChange, onBlur, ref },
+                      fieldState: { invalid, error },
+                    }) => (
+                      <Fragment>
+                        <FormLabel value="端口号:"></FormLabel>
+                        <TextField
+                          value={value}
+                          placeholder="请输入密码"
+                          marginTop={"8px"}
+                          onChange={onChange}
+                        ></TextField>
+                      </Fragment>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="flex overflow-hidden">
                 <div
                   className="flex-1 overflow-hidden"
                   style={{ paddingRight: "10px" }}
@@ -346,13 +634,36 @@ const center: FC = () => {
                   />
                 </div>
               </div>
+              <Controller
+                control={control}
+                name="userCount"
+                rules={{ required: "userCount is required." }}
+                render={({
+                  field: { name, value, onChange, onBlur, ref },
+                  fieldState: { invalid, error },
+                }) => (
+                  <div>
+                    <div>
+                      <FormLabel value="并发用户数:"></FormLabel>
+                    </div>
+
+                    <TextField
+                      isReadOnly
+                      value={value}
+                      onChange={onChange}
+                      marginTop={"8px"}
+                    />
+                  </div>
+                )}
+              />
               <Fragment>
                 <FormLabel value="模块:"></FormLabel>
                 <table style={{ borderCollapse: "collapse" }} border={2}>
                   <tbody>
                     {[
-                      [{ name: "产品" }, { name: "测试1" }],
-                      [{ name: "测试2" }, { name: "测试23" }],
+                      [{ name: "产品数据管理" }, { name: "项目管理" }],
+                      [{ name: "office/2D文件可视化" }, { name: "质量管理" }],
+                      [{ name: "3D 文件可视化" }, { name: "SBOM" }],
                     ].map((row, index) => {
                       return (
                         <tr key={index}>
@@ -438,14 +749,13 @@ const center: FC = () => {
             </Form>
           )}
         </div>
-
-        {/* <div className='w-14 h-20' ref={dropAreaRef}></div>
-        <div className="flex items-center justify-center">
-          <Button onClick={initOnChain} className="rounded-sm mt-3 mx-0">
-            授权
-          </Button>
-        </div> */}
       </div>
+      {/* <ActiveSuccess
+        isOpen={isOpen}
+        onClose={() => {
+          setOpen(false);
+        }}
+      ></ActiveSuccess> */}
     </div>
   );
 };

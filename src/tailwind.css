@@ -868,7 +868,7 @@ textarea {
 }
 
 .react-ip-input input {
-  width: 72px !important;
+  width: 48px !important;
   height: 22px !important;
 }
 .react-ip-input {
@@ -980,8 +980,7 @@ textarea::placeholder {
   font-size: 12px !important;
 }
 
-.register_cancel button:active,
-.register_confirm button:active {
+button:active {
   outline: none !important;
 }
 .toolbar i {
@@ -1004,11 +1003,36 @@ table td {
   padding: 2px 7px;
 }
 
-.A-HlBa_spectrum-Field-field::after{
+.A-HlBa_spectrum-Field-field::after {
   box-shadow: none !important;
 }
 
 .register_cancel button::after,
 .register_confirm button:after {
   box-shadow: none !important;
+}
+
+/* active page */
+
+.active .active_success {
+  margin: 9px;
+  font-size: 14px;
+  font-family: PingFang SC, PingFang SC-Medium;
+  font-weight: 500;
+  color: #2c3652;
+  line-height: 18px;
+}
+
+.active button {
+  border-radius: 2px !important;
+  outline: none;
+  --spectrum-button-color: #0563b2 !important;
+  font-family: PingFang SC, PingFang SC-Regular !important;
+  width: 200px;
+  height: 30px;
+  cursor: pointer;
+
+  font-size: 12px;
+  font-weight: Regular;
+  line-height: 18px;
 }
