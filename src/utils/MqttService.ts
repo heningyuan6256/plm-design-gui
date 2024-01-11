@@ -3,7 +3,7 @@ import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Utils } from ".";
 import { getCurrent, appWindow } from "@tauri-apps/api/window";
 import { getMatches } from '@tauri-apps/api/cli'
-import { message } from "antd";
+// import { message } from "antd";
 import { BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 import { resolveResource } from '@tauri-apps/api/path';
 import { resolvePath } from "react-router-dom";
@@ -144,7 +144,7 @@ class MqttService {
                 currentWindow.unminimize()
 
                 currentWindow.setFocus()
-                message.info("当前任务进行中，请等待")
+                // message.info("当前任务进行中，请等待")
                 return
               }
             }

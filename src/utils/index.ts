@@ -1,5 +1,5 @@
 import { find, isArray } from "lodash";
-import moment from "moment";
+// import moment from "moment";
 import { BasicConfig } from "../constant/config";
 import { ListCode } from "../constant/listCode";
 
@@ -104,143 +104,143 @@ export class Utils {
   };
 
   // 日期控制禁止选择
-  public static disabledDate = (dateRule: any, current: any) => {
-    // 小于今天
-    if (dateRule === "1") {
-      return current > moment().startOf("day");
-      // 小于等于今天
-    } else if (dateRule === "2") {
-      return current > moment(new Date());
-      // 等于今天
-    } else if (dateRule === "3") {
-      return (
-        moment(current).format("YYYY-MM-DD") !==
-        moment(new Date()).format("YYYY-MM-DD")
-      );
-      // 大于等于今天
-    } else if (dateRule === "4") {
-      //@ts-ignore
-      return current < moment(new Date(new Date() - 24 * 60 * 60 * 1000));
-      // 大于今天
-    } else if (dateRule === "5") {
-      return current < moment().endOf("day");
-    }
-  };
+  // public static disabledDate = (dateRule: any, current: any) => {
+  //   // 小于今天
+  //   if (dateRule === "1") {
+  //     return current > moment().startOf("day");
+  //     // 小于等于今天
+  //   } else if (dateRule === "2") {
+  //     return current > moment(new Date());
+  //     // 等于今天
+  //   } else if (dateRule === "3") {
+  //     return (
+  //       moment(current).format("YYYY-MM-DD") !==
+  //       moment(new Date()).format("YYYY-MM-DD")
+  //     );
+  //     // 大于等于今天
+  //   } else if (dateRule === "4") {
+  //     //@ts-ignore
+  //     return current < moment(new Date(new Date() - 24 * 60 * 60 * 1000));
+  //     // 大于今天
+  //   } else if (dateRule === "5") {
+  //     return current < moment().endOf("day");
+  //   }
+  // };
 
   // 生成动态formitem
-  public static generateFormItemProps = (
-    item: Record<string, any>,
-    listCodeMap: Record<string, any>,
-    extra?: { dateFormatter?: string }
-  ) => {
-    // 对应属性是需要弹出实例窗口
-    const instanceModalApicode = ["Suppliers"];
-    if (item.valueType === "1") {
-      return {
-        maxLength: item.allowLength || item.maxLength,
-        placeholder: item.explanation || "请输入" + item.name,
-      };
-    } else if (item.valueType === "2") {
-      return {
-        autoSize: false,
-        rows: item.fieldHeight,
-        maxLength: item.allowLength || item.maxLength,
-        placeholder: item.explanation || "请输入" + item.name,
-      };
-    } else if (item.valueType === "4") {
-      return {
-        placeholder: item.explanation || "请选择" + item.name,
-        min: item.minValue,
-        max: item.maxValue,
-        formatter:
-          item.displayFormat === "2"
-            ? (value: any) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-            : undefined,
-        parser:
-          item.displayFormat === "2"
-            ? (value: any) => value.replace(/\$\s?|(,*)/g, "")
-            : undefined,
-        precision: item.allowDigits ? item.allowDigits : -1,
-        style: {
-          width: "100%",
-        },
-        // maxLength: item.allowLength || item.maxLength,
-      };
-    } else if (item.valueType === "5" && item.listType !== "2") {
-      return {
-        mode: item.allowMultiple ? "multiple" : undefined,
-        showArrow: true,
-        popoverTable: instanceModalApicode.includes(item.apicode),
-        placeholder: item.explanation || "请选择" + item.name,
-        options: listCodeMap[item.listCode],
-      };
-    } else if (item.valueType === "5" && item.listType === "2") {
-      return {
-        showSearch: false,
-        placeholder: item.explanation || "请选择" + item.name,
-        treeData: listCodeMap[item.listCode],
-        treeCheckable: item.allowMultiple || false,
-        virtual: false,
-        treeCheckStrictly: item.allowMultiple || false,
-        allowClear: true,
-        showCheckedStrategy: "SHOW_ALL",
-        dropdownStyle: { maxHeight: 400, overflow: "auto" },
-      };
-    } else if (item.valueType === "6") {
-      return {
-        disabledDate:
-          item.dateRule && this.disabledDate.bind(this, item.dateRule),
-        style: {
-          width: "100%",
-        },
-        showTime: item.dateFormat == "0",
-        format:
-          item.dateFormat == "0"
-            ? extra?.dateFormatter || "YYYY-MM-DD HH:mm:ss"
-            : "YYYY-MM-DD",
-      };
-    } else if (item.valueType === "7") {
-      return {
-        disabledDate:
-          item.dateRule && this.disabledDate.bind(this, item.dateRule),
-        style: {
-          width: "100%",
-        },
-        showTime: item.dateFormat == "0",
-        format:
-          item.dateFormat == "0"
-            ? extra?.dateFormatter || "YYYY-MM-DD HH:mm:ss"
-            : "YYYY-MM-DD",
-      };
-    } else if (item.valueType === "8" || item.valueType === "9") {
-      return {
-        fileLimitSize:
-          item.allowFileSize &&
-          (item.allowFileSize ? item.allowFileSize * 1024 * 1024 : undefined),
-        allowedFileTypes:
-          item.allowFileType &&
-          (item.allowFileType.length !== 0 ? item.allowFileType : undefined),
-      };
-    } else if (item.valueType === "12" || item.valueType === "13") {
-      return {
-        placeholder: item.explanation,
-        min: item.minValue,
-        max: item.maxValue,
-        formatter:
-          item.displayFormat === "2"
-            ? (value: any) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-            : undefined,
-        parser:
-          item.displayFormat === "2"
-            ? (value: any) => value.replace(/\$\s?|(,*)/g, "")
-            : undefined,
-        precision: item.allowDigits ? item.allowDigits : -1,
-        style: {
-          width: "100%",
-        },
-      };
-    }
-  };
+  // public static generateFormItemProps = (
+  //   item: Record<string, any>,
+  //   listCodeMap: Record<string, any>,
+  //   extra?: { dateFormatter?: string }
+  // ) => {
+  //   // 对应属性是需要弹出实例窗口
+  //   const instanceModalApicode = ["Suppliers"];
+  //   if (item.valueType === "1") {
+  //     return {
+  //       maxLength: item.allowLength || item.maxLength,
+  //       placeholder: item.explanation || "请输入" + item.name,
+  //     };
+  //   } else if (item.valueType === "2") {
+  //     return {
+  //       autoSize: false,
+  //       rows: item.fieldHeight,
+  //       maxLength: item.allowLength || item.maxLength,
+  //       placeholder: item.explanation || "请输入" + item.name,
+  //     };
+  //   } else if (item.valueType === "4") {
+  //     return {
+  //       placeholder: item.explanation || "请选择" + item.name,
+  //       min: item.minValue,
+  //       max: item.maxValue,
+  //       formatter:
+  //         item.displayFormat === "2"
+  //           ? (value: any) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  //           : undefined,
+  //       parser:
+  //         item.displayFormat === "2"
+  //           ? (value: any) => value.replace(/\$\s?|(,*)/g, "")
+  //           : undefined,
+  //       precision: item.allowDigits ? item.allowDigits : -1,
+  //       style: {
+  //         width: "100%",
+  //       },
+  //       // maxLength: item.allowLength || item.maxLength,
+  //     };
+  //   } else if (item.valueType === "5" && item.listType !== "2") {
+  //     return {
+  //       mode: item.allowMultiple ? "multiple" : undefined,
+  //       showArrow: true,
+  //       popoverTable: instanceModalApicode.includes(item.apicode),
+  //       placeholder: item.explanation || "请选择" + item.name,
+  //       options: listCodeMap[item.listCode],
+  //     };
+  //   } else if (item.valueType === "5" && item.listType === "2") {
+  //     return {
+  //       showSearch: false,
+  //       placeholder: item.explanation || "请选择" + item.name,
+  //       treeData: listCodeMap[item.listCode],
+  //       treeCheckable: item.allowMultiple || false,
+  //       virtual: false,
+  //       treeCheckStrictly: item.allowMultiple || false,
+  //       allowClear: true,
+  //       showCheckedStrategy: "SHOW_ALL",
+  //       dropdownStyle: { maxHeight: 400, overflow: "auto" },
+  //     };
+  //   } else if (item.valueType === "6") {
+  //     return {
+  //       disabledDate:
+  //         item.dateRule && this.disabledDate.bind(this, item.dateRule),
+  //       style: {
+  //         width: "100%",
+  //       },
+  //       showTime: item.dateFormat == "0",
+  //       format:
+  //         item.dateFormat == "0"
+  //           ? extra?.dateFormatter || "YYYY-MM-DD HH:mm:ss"
+  //           : "YYYY-MM-DD",
+  //     };
+  //   } else if (item.valueType === "7") {
+  //     return {
+  //       disabledDate:
+  //         item.dateRule && this.disabledDate.bind(this, item.dateRule),
+  //       style: {
+  //         width: "100%",
+  //       },
+  //       showTime: item.dateFormat == "0",
+  //       format:
+  //         item.dateFormat == "0"
+  //           ? extra?.dateFormatter || "YYYY-MM-DD HH:mm:ss"
+  //           : "YYYY-MM-DD",
+  //     };
+  //   } else if (item.valueType === "8" || item.valueType === "9") {
+  //     return {
+  //       fileLimitSize:
+  //         item.allowFileSize &&
+  //         (item.allowFileSize ? item.allowFileSize * 1024 * 1024 : undefined),
+  //       allowedFileTypes:
+  //         item.allowFileType &&
+  //         (item.allowFileType.length !== 0 ? item.allowFileType : undefined),
+  //     };
+  //   } else if (item.valueType === "12" || item.valueType === "13") {
+  //     return {
+  //       placeholder: item.explanation,
+  //       min: item.minValue,
+  //       max: item.maxValue,
+  //       formatter:
+  //         item.displayFormat === "2"
+  //           ? (value: any) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  //           : undefined,
+  //       parser:
+  //         item.displayFormat === "2"
+  //           ? (value: any) => value.replace(/\$\s?|(,*)/g, "")
+  //           : undefined,
+  //       precision: item.allowDigits ? item.allowDigits : -1,
+  //       style: {
+  //         width: "100%",
+  //       },
+  //     };
+  //   }
+  // };
 
   //生成雪花Id
   public static generateSnowId = () => {
@@ -300,103 +300,103 @@ export class Utils {
     return value
   }
   // 获取只读元数据
-  public static renderReadonlyItem = ({
-    apicode,
-    formitem,
-    value,
-    record,
-  }: {
-    apicode?: string;
-    formitem: any;
-    value: string | any[];
-    record?: Record<string, any>;
-  }) => {
-    if (!formitem) {
-      return value;
-    }
-    if (!formitem.type) {
-      return '';
-    }
+  // public static renderReadonlyItem = ({
+  //   apicode,
+  //   formitem,
+  //   value,
+  //   record,
+  // }: {
+  //   apicode?: string;
+  //   formitem: any;
+  //   value: string | any[];
+  //   record?: Record<string, any>;
+  // }) => {
+  //   if (!formitem) {
+  //     return value;
+  //   }
+  //   if (!formitem.type) {
+  //     return '';
+  //   }
 
-    if (['Select', 'Cascader'].includes(formitem.type)) {
-      // console.log(value, 'vlaues');
-      // 多选的情况
-      if (formitem.props.mode === 'multiple') {
-        if (isArray(value)) {
-          return value
-            .map((v: any) => {
-              return this.getLabelInOptions({
-                value: v,
-                options: formitem?.props.options || [],
-              });
-            })
-            .join(',');
-        } else {
+  //   if (['Select', 'Cascader'].includes(formitem.type)) {
+  //     // console.log(value, 'vlaues');
+  //     // 多选的情况
+  //     if (formitem.props.mode === 'multiple') {
+  //       if (isArray(value)) {
+  //         return value
+  //           .map((v: any) => {
+  //             return this.getLabelInOptions({
+  //               value: v,
+  //               options: formitem?.props.options || [],
+  //             });
+  //           })
+  //           .join(',');
+  //       } else {
 
-          return value
-            ? value
-              .split(',')
-              .map((v: any) => {
-                return this.getLabelInOptions({
-                  value: v,
-                  options: formitem?.props.options || [],
-                });
-              })
-              .join(',')
-            : '';
-        }
-      } else {
-        return this.getLabelInOptions({
-          value,
-          options: formitem?.props.options || [],
-        });
-      }
-    } else if (['TreeSelect'].includes(formitem.type)) {
-      // 多选的情况
-      if (formitem.props?.treeCheckable && isArray(value)) {
-        return value
-          .map((v: any) => {
-            return this.getLabelInOptions({
-              value: typeof v !== 'string' ? v.value : v,
-              options: formitem?.props.treeData || [],
-            });
-          })
-          .join(',');
-      } else {
-        return this.getLabelInOptions({
-          value,
-          options: formitem?.props.treeData || [],
-        });
-      }
-    } else if (['Date'].includes(formitem.type)) {
-      if (value) {
-        const isMot = moment.isMoment(value);
-        if (isMot) {
-          const creation = value.creationData();
-          return value.format(formitem?.props?.format ?? (creation.format as string));
-        } else {
-          return moment(value).format(formitem?.props?.format ?? 'YYYY-MM-DD HH:mm:ss');
-        }
-      } else {
-        return '';
-      }
-    } else if (['CompositeForm'].includes(formitem.type)) {
-      if (value && typeof value === 'string') {
-        if (String(value)?.includes('~%~')) {
-          return `${value.split('~%~')[0] || ''}${find(formitem.props?.options, { id: value.split('~%~')[1] })?.name || ''}`;
-        } else {
-          return value;
-        }
-      }
-      return '';
-    } else {
-      if (isArray(value)) {
-        return value.join(',');
-      } else {
-        return value ?? '';
-      }
-    }
-  };
+  //         return value
+  //           ? value
+  //             .split(',')
+  //             .map((v: any) => {
+  //               return this.getLabelInOptions({
+  //                 value: v,
+  //                 options: formitem?.props.options || [],
+  //               });
+  //             })
+  //             .join(',')
+  //           : '';
+  //       }
+  //     } else {
+  //       return this.getLabelInOptions({
+  //         value,
+  //         options: formitem?.props.options || [],
+  //       });
+  //     }
+  //   } else if (['TreeSelect'].includes(formitem.type)) {
+  //     // 多选的情况
+  //     if (formitem.props?.treeCheckable && isArray(value)) {
+  //       return value
+  //         .map((v: any) => {
+  //           return this.getLabelInOptions({
+  //             value: typeof v !== 'string' ? v.value : v,
+  //             options: formitem?.props.treeData || [],
+  //           });
+  //         })
+  //         .join(',');
+  //     } else {
+  //       return this.getLabelInOptions({
+  //         value,
+  //         options: formitem?.props.treeData || [],
+  //       });
+  //     }
+  //   } else if (['Date'].includes(formitem.type)) {
+  //     if (value) {
+  //       const isMot = moment.isMoment(value);
+  //       if (isMot) {
+  //         const creation = value.creationData();
+  //         return value.format(formitem?.props?.format ?? (creation.format as string));
+  //       } else {
+  //         return moment(value).format(formitem?.props?.format ?? 'YYYY-MM-DD HH:mm:ss');
+  //       }
+  //     } else {
+  //       return '';
+  //     }
+  //   } else if (['CompositeForm'].includes(formitem.type)) {
+  //     if (value && typeof value === 'string') {
+  //       if (String(value)?.includes('~%~')) {
+  //         return `${value.split('~%~')[0] || ''}${find(formitem.props?.options, { id: value.split('~%~')[1] })?.name || ''}`;
+  //       } else {
+  //         return value;
+  //       }
+  //     }
+  //     return '';
+  //   } else {
+  //     if (isArray(value)) {
+  //       return value.join(',');
+  //     } else {
+  //       return value ?? '';
+  //     }
+  //   }
+  // };
   // 转换值
   public static getLabelInOptions = (params: {
     value: string | boolean | string[];
