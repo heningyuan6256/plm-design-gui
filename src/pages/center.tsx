@@ -530,10 +530,6 @@ const center: FC = () => {
               <Fragment>
                 {viewDetail ? (
                   <div className="detail h-full w-full text-center bg-white">
-                    <div
-                      data-tauri-drag-region
-                      className="absolute top-0 w-full h-4 z-10"
-                    ></div>
                     <div className="flex overflow-hidden h-full">
                       {/* <div
                         className="bg-primary h-full flex justify-center items-center"
