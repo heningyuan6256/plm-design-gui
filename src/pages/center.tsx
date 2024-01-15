@@ -31,6 +31,7 @@ import PlmIcon from "../components/PlmIcon";
 import { LogicalSize, appWindow, getCurrent } from "@tauri-apps/api/window";
 import { clipboard, invoke } from "@tauri-apps/api";
 import PlmLoading from "../components/PlmLoading";
+import { flatten } from "lodash";
 // 偏移量
 let iv = "0000000000000000";
 let secret_key = "OnChainPlmSecret";
@@ -118,7 +119,7 @@ const center: FC = () => {
     }
   }, [dropVisible]);
   useDrop(dropAreaRef, {
-    onDom: (content: string, e) => { },
+    onDom: (content: string, e) => {},
     onDragEnter: (e) => {
       setIsDragging(true);
       // console.log(e.path[0].className);
@@ -160,10 +161,10 @@ const center: FC = () => {
     var ciphertext = CryptoJS.AES.encrypt(message, secret_key, {
       iv: iv,
       mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
+      padding: CryptoJS.pad.Pkcs7,
     });
-    return ciphertext.toString()
-  }
+    return ciphertext.toString();
+  };
 
   // useEffect(() => {
   //   const currentWindow = getCurrent();
@@ -196,23 +197,25 @@ const center: FC = () => {
     if (!db) {
       return;
     }
-    
 
-    console.log(extraData, 'extraData');
-    console.log(modules, 'modules');
-    console.log(toSecret(maxUser), 'maxUser');
+    console.log(extraData, "extraData");
+    console.log(maxUser, "maxUser");
+    console.log(flatten(modules), "flatten(modules)");
+
+    console.log(toSecret(String(maxUser)), "maxUser");
 
     // 将数据加密塞入数据库
 
-
-
     const res = await db.select("SELECT * FROM pdm_system_module", []);
 
-    const updateRes = await db.execute(
-      `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE id = $2`,
-      ["123", "1640900750563016709"]
-    );
-    console.log(updateRes, "res");
+    for (let i = 0; i < flatten(modules).length; i++) {
+      const updateRes = await db.execute(
+        `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE id = $2`,
+        ["123", "1640900750563016709"]
+      );
+      console.log(updateRes, "res");
+    }
+
     db.close();
 
     setSuccess(true);
@@ -273,9 +276,7 @@ const center: FC = () => {
           padding: CryptoJS.pad.Pkcs7,
         });
         decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-      } catch (error) {
-
-      }
+      } catch (error) {}
 
       if (!decryptedData) {
         alert("授权码不正确");
@@ -283,19 +284,19 @@ const center: FC = () => {
       }
 
       const modules = JSON.parse(decryptedData).modules[0];
-      const array: any[] = []
+      const array: any[] = [];
       Object.keys(modules).forEach((item) => {
-        if (modules[item].status == 'on') {
+        if (modules[item].status == "on") {
           array.push({
             id: item,
             ...modules[item],
-          })
+          });
         }
       });
       const splitModules = splitArrayIntoPairs(array);
       setModules(splitModules);
       setMaxUser(splitModules[0][0].user_num);
-      setExtraData(JSON.parse(decryptedData))
+      setExtraData(JSON.parse(decryptedData));
       setStep("2");
     }
   };
@@ -467,8 +468,9 @@ const center: FC = () => {
                   return (
                     <div
                       key={item.value}
-                      className={`flex items-center mr-4 relative ${isCurrent ? "cursor-pointer" : "cursor-not-allowed"
-                        }`}
+                      className={`flex items-center mr-4 relative ${
+                        isCurrent ? "cursor-pointer" : "cursor-not-allowed"
+                      }`}
                     >
                       <div
                         className="h-3 w-3 overflow-hidden text-white flex items-center justify-center"
@@ -489,8 +491,8 @@ const center: FC = () => {
                                 ? blue1
                                 : blue2
                               : item.value == "1"
-                                ? lgBlue1
-                                : lgBlue2
+                              ? lgBlue1
+                              : lgBlue2
                           }
                           width={12}
                         ></Image>
@@ -563,7 +565,7 @@ const center: FC = () => {
                       </div> */}
                       <div
                         className="flex-1 overflow-hidden"
-                      // style={{ padding: "28px 30px 36px 30px" }}
+                        // style={{ padding: "28px 30px 36px 30px" }}
                       >
                         <Form>
                           <div className="flex overflow-hidden">
