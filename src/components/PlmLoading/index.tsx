@@ -1,3 +1,4 @@
+import { ProgressCircle } from "@adobe/react-spectrum";
 import { FC, Fragment, useEffect, useState } from "react";
 
 interface PlmLoadingProps {
@@ -5,7 +6,8 @@ interface PlmLoadingProps {
   warrperClassName?: string;
   className?: string;
   loading?: boolean;
-  loadingText?: string
+  loadingText?: string;
+  loadingChildren?: any;
 }
 
 const PlmLoading: FC<PlmLoadingProps> = ({
@@ -13,13 +15,13 @@ const PlmLoading: FC<PlmLoadingProps> = ({
   warrperClassName,
   className,
   loading,
-  loadingText
+  loadingText,
+  loadingChildren,
 }) => {
   const [process, setProcess] = useState<number>(30);
   const simulateProgress = () => {
     let progress = process;
     let speed = 1000; // 初始加载速度，单位是毫秒
-
 
     // const interval = setInterval(incrementProgress, speed);
   };
@@ -38,46 +40,12 @@ const PlmLoading: FC<PlmLoadingProps> = ({
       {loading ? (
         <Fragment>
           {" "}
-          <div className={`plm-loading absolute bg-white ${className || ""}`}>
-            <div style={{ width: "254px", minHeight: "50px", height: "50px" }}>
-              <div
-                className="mb-5 text-center text-xs"
-                style={{ fontFamily: "PingFang SC, PingFang SC-Medium" }}
-              >
-                <span className="text-primary">
-                  {loadingText || "Loading..."}
-                  {/* <span style={{ fontStyle: "italic" }}>{process}%</span> */}
-                </span>
-              </div>
-              <div className="flex items-center h-3" style={{ gap: "9px" }}>
-                <div
-                  className="h-3 flex items-center loading-warpper"
-                  style={{
-                    width: "255px",
-                    background: "#dfe9f5",
-                    borderRadius: "6px",
-                  }}
-                >
-                  {Array.from({ length: 7 })
-                    .fill({})
-                    .map((item, index) => {
-                      return (
-                        <div
-                          key={index}
-                          className={`bg-primary h-2.5 w-2.5 loading_square`}
-                          style={{
-                            opacity: (index + 1) * 0.15,
-                          }}
-                        ></div>
-                      );
-                    })}
-                </div>
-              </div>
-            </div>
+          <div className={`plm-loading absolute ${className || ""}`}>
+            {loadingChildren || <></>}
           </div>
-          <div
+          {/* <div
             className={`absolute top-0 h-full w-full opacity-0 bg-white`}
-          ></div>
+          ></div> */}
         </Fragment>
       ) : (
         <></>

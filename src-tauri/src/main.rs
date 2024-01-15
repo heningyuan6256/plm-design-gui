@@ -126,6 +126,7 @@ fn main() {
                 window::exist,
                 window::drag_window,
                 window::open_info,
+                window::take_screen_shot,
                 window::open_attr_map,
                 window::open_home,
                 window::open_stock,
