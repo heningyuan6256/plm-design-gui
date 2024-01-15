@@ -437,7 +437,7 @@ const center: FC = () => {
             style={{
               paddingLeft: "30px",
               paddingTop: "38px",
-              paddingRight: "36px",
+              paddingRight: "10px",
             }}
           >
             {!viewDetail && (
