@@ -20,6 +20,10 @@ import OnChainSvg from "../assets/image/OnChainLogo.svg";
 import stickSvg from "../assets/image/stick.svg";
 import resetSvg from "../assets/image/reset.svg";
 import verticalLogo from "../assets/image/verticallogo.png";
+import blue1 from "../assets/image/blue1.png";
+import blue2 from "../assets/image/blue2.png";
+import lgBlue1 from "../assets/image/lgBlue1.png";
+import lgBlue2 from "../assets/image/lgBlue2.png";
 import whiteVerticalLogo from "../assets/image/whiteVerticalLogo.png";
 import addPng from "../assets/image/add.png";
 import successSvg from "../assets/image/success.svg";
@@ -250,7 +254,15 @@ const center: FC = () => {
           padding: CryptoJS.pad.Pkcs7,
         });
         decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-      } catch (error) {}
+      } catch (error) {
+        
+      }
+
+      if (!decryptedData) {
+        alert("授权码不正确");
+        return;
+      }
+      
       const modules = JSON.parse(decryptedData).modules[0];
       const array = Object.keys(modules).map((item) => {
         return {
@@ -263,10 +275,9 @@ const center: FC = () => {
       setModules(splitModules);
       setMaxUser(splitModules[0][0].user_num);
 
-      if (!decryptedData) {
-        alert("授权码不正确");
-        return;
-      }
+      console.log(decryptedData,'decryptedData');
+      
+      
 
       setStep("2");
     }
@@ -385,10 +396,10 @@ const center: FC = () => {
 
   useEffect(() => {
     if (viewDetail && !isSuccess) {
-      invoke("take_screen_shot")
+      invoke("take_screen_shot");
       // html2canvas(document.body).then((canvas) => {
       //   console.log(canvas.toDataURL(),'13');
-         
+
       // });
     }
   }, [viewDetail, isSuccess]);
@@ -448,14 +459,26 @@ const center: FC = () => {
                         style={{
                           borderRadius: "50%",
                           marginRight: "6px",
-                          background: isCurrent ? "#0563B2" : "#dfe9f5",
-                          boxShadow: `0 0 0 2px ${
-                            isCurrent ? "#0563B2" : "#dfe9f5"
-                          }`,
-                          transform: "scale(0.8)",
+                          // background: isCurrent ? "#0563B2" : "#dfe9f5",
+                          // boxShadow: `0 0 0 2px ${
+                          //   isCurrent ? "#0563B2" : "#dfe9f5"
+                          // }`,
+                          // transform: "scale(0.8)",
                         }}
                       >
-                        {item.value}
+                        <Image
+                          src={
+                            isCurrent
+                              ? item.value == "1"
+                                ? blue1
+                                : blue2
+                              : item.value == "1"
+                              ? lgBlue1
+                              : lgBlue2
+                          }
+                          width={12}
+                        ></Image>
+                        {/* {item.value} */}
                       </div>{" "}
                       <span
                         style={{
@@ -479,7 +502,10 @@ const center: FC = () => {
               </div>
             )}
 
-            <div className="absolute top-0 right-0 toolbar" style={{lineHeight: '12px'}}>
+            <div
+              className="absolute top-0 right-0 toolbar"
+              style={{ lineHeight: "12px" }}
+            >
               <PlmIcon
                 style={{ color: "#DFE9F5", fontSize: "12px" }}
                 name="minimize"
