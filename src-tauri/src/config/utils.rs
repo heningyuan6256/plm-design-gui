@@ -13,6 +13,15 @@ use tauri::{ utils::config::Config };
 // AppHandle, Manager, Wry
 use tauri::{ command };
 
+
+use tauri::{Manager, Runtime};
+use window_shadows::set_shadow;
+ 
+pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
+  let window = app.get_window("Center").unwrap();
+  set_shadow(&window, true).expect("Unsupported platform!");
+}
+
 #[command]
 pub fn chat_root() -> PathBuf {
     tauri::api::path::home_dir().unwrap().join(".onChain-register")
