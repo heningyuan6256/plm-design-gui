@@ -27,14 +27,14 @@ import lgBlue2 from "../assets/image/lgBlue2.png";
 import whiteVerticalLogo from "../assets/image/whiteVerticalLogo.png";
 import addPng from "../assets/image/add.png";
 import successSvg from "../assets/image/success.svg";
+import hideSvg from "../assets/image/hide.svg";
+import showSvg from "../assets/image/show.svg";
 import PlmIcon from "../components/PlmIcon";
 import { LogicalSize, appWindow, getCurrent } from "@tauri-apps/api/window";
 import { clipboard, invoke } from "@tauri-apps/api";
 import PlmLoading from "../components/PlmLoading";
 import { flatten } from "lodash";
-// 偏移量
-let iv = "0000000000000000";
-let secret_key = "OnChainPlmSecret";
+
 // 分隔每两个对象的函数
 function splitArrayIntoPairs(arr: any) {
   const pairs = [];
@@ -71,6 +71,8 @@ const center: FC = () => {
   const [extraData, setExtraData] = useState<any>({});
   const [maxUser, setMaxUser] = useState<any>(0);
   const [canAuth, setCanAuth] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showPassword2, setShowPassword2] = useState<boolean>(false);
   const [isLoadingOpen, setIsLoadingOpen] = useState<boolean>(false);
 
   const dropAreaRef = useRef<any>();
@@ -158,6 +160,9 @@ const center: FC = () => {
   });
 
   const toSecret: any = (message: string) => {
+    // 偏移量
+    let iv = "0000000000000000";
+    let secret_key = "OnChainPlmSecret";
     var ciphertext = CryptoJS.AES.encrypt(message, secret_key, {
       iv: iv,
       mode: CryptoJS.mode.CBC,
@@ -263,13 +268,16 @@ const center: FC = () => {
         // 加密内容
         let message = word;
         // 密钥，长度必须为16
-
         // utf-8 转换
         // message = CryptoJS.enc.Utf8.parse(message);
+        // 偏移量
+        let iv = "0000000000000000";
+        let secret_key = "OnChainPlmSecret";
         secret_key = CryptoJS.enc.Utf8.parse(secret_key);
         iv = CryptoJS.enc.Utf8.parse(iv);
-
         // Decrypt
+        console.log(message, "message");
+
         var bytes = CryptoJS.AES.decrypt(message, secret_key, {
           iv: iv,
           mode: CryptoJS.mode.CBC,
@@ -282,6 +290,7 @@ const center: FC = () => {
         alert("授权码不正确");
         return;
       }
+      console.log(decryptedData, "decryptedData");
 
       const modules = JSON.parse(decryptedData).modules[0];
       const array: any[] = [];
@@ -414,7 +423,7 @@ const center: FC = () => {
 
   useEffect(() => {
     if (viewDetail && !isSuccess) {
-      invoke("take_screen_shot");
+      // invoke("take_screen_shot");
       // html2canvas(document.body).then((canvas) => {
       //   console.log(canvas.toDataURL(),'13');
 
@@ -585,7 +594,7 @@ const center: FC = () => {
                                     <FormLabel value="授权账号:"></FormLabel>
                                     <TextField
                                       isReadOnly
-                                      value={"admin"}
+                                      value={extraData.email}
                                       // placeholder="请输入账号"
                                       onChange={onChange}
                                       marginTop={"8px"}
@@ -603,18 +612,32 @@ const center: FC = () => {
                                   field: { name, value, onChange, onBlur, ref },
                                   fieldState: { invalid, error },
                                 }) => (
-                                  <Fragment>
+                                  <div style={{ position: "relative" }}>
                                     <FormLabel value="授权密码:"></FormLabel>
                                     <TextField
                                       value={"123456"}
-                                      placeholder="请输入密码"
                                       isReadOnly
                                       marginTop={"8px"}
                                       // type="password"
                                       onChange={onChange}
                                       name="password"
+                                      type={showPassword2 ? "text" : "password"}
                                     ></TextField>
-                                  </Fragment>
+                                    <span
+                                      onClick={() => {
+                                        setShowPassword2(!showPassword2);
+                                      }}
+                                      style={{ cursor: "pointer" }}
+                                    >
+                                      <Image
+                                        src={showPassword2 ? showSvg : hideSvg}
+                                        position={"absolute"}
+                                        width={12}
+                                        right={6}
+                                        bottom={12}
+                                      ></Image>
+                                    </span>
+                                  </div>
                                 )}
                               />
                             </div>
@@ -789,14 +812,30 @@ const center: FC = () => {
                           }) => (
                             <Fragment>
                               <FormLabel value="数据库密码:"></FormLabel>
-                              <TextField
-                                value={value}
-                                placeholder="请输入密码"
-                                marginTop={"8px"}
-                                type="password"
-                                onChange={onChange}
-                                name="password"
-                              ></TextField>
+                              <div style={{ position: "relative" }}>
+                                <TextField
+                                  value={value}
+                                  placeholder="请输入密码"
+                                  marginTop={"8px"}
+                                  type={showPassword ? "text" : "password"}
+                                  onChange={onChange}
+                                  name="password"
+                                ></TextField>
+                                <span
+                                  onClick={() => {
+                                    setShowPassword(!showPassword);
+                                  }}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <Image
+                                    src={showPassword ? showSvg : hideSvg}
+                                    position={"absolute"}
+                                    width={12}
+                                    right={6}
+                                    bottom={12}
+                                  ></Image>
+                                </span>
+                              </div>
                             </Fragment>
                           )}
                         />
