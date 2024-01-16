@@ -634,7 +634,7 @@ const center: FC = () => {
                                         position={"absolute"}
                                         width={12}
                                         right={6}
-                                        bottom={12}
+                                        bottom={6}
                                       ></Image>
                                     </span>
                                   </div>
@@ -832,7 +832,7 @@ const center: FC = () => {
                                     position={"absolute"}
                                     width={12}
                                     right={6}
-                                    bottom={12}
+                                    bottom={6}
                                   ></Image>
                                 </span>
                               </div>
