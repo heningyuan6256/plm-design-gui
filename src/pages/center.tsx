@@ -423,7 +423,7 @@ const center: FC = () => {
 
   useEffect(() => {
     if (viewDetail && !isSuccess) {
-      // invoke("take_screen_shot");
+      invoke("take_screen_shot");
       // html2canvas(document.body).then((canvas) => {
       //   console.log(canvas.toDataURL(),'13');
 
