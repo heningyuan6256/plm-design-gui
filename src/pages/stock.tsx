@@ -10,13 +10,14 @@ import { OnChainSelect, OnChainTable } from "onchain-ui";
 import { Fragment, useEffect, useState } from "react";
 import API from "../utils/api";
 import PageLayout, { openDesign } from "../layout/pageLayout";
-import { Input } from "antd";
+import { Input, message } from "antd";
 import { useSelector } from "react-redux";
 import { useKeyPress, useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
 import { BasicsItemCode } from "../constant/itemCode";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
+import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
@@ -24,6 +25,7 @@ const stock = () => {
   const [selectVal, setSelectVal] = useState<string>("");
   const [selectedRows, setSelectedRows] = useState<Record<string, any>[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<any>([]);
+  const [leftTreeLoading, setLeftTreeLoading] = useState<boolean>(false);
   const { value: user } = useSelector((state: any) => state.user);
   const [tableSelectedRows, setTableSelectedRows] = useState<
     Record<string, any>[]
@@ -49,14 +51,18 @@ const stock = () => {
   });
 
   useEffect(() => {
+    setLeftTreeLoading(true)
     API.getStock("719").then((res: any) => {
       const result = res.result.filter((item: any) => {
         return item.apicode === "ItemAdministrator";
       });
+      setLeftTreeLoading(false)
       setLeftTreeData(result);
       if (result.length > 0) {
         setSelectedRows([result[0]]);
       }
+    }).catch(() => {
+      setLeftTreeLoading(false)
     });
   }, []);
   useKeyPress("enter", () => {
@@ -106,6 +112,7 @@ const stock = () => {
               className="tree-table"
               bordered={false}
               dataSource={leftTreeData}
+              loading={leftTreeLoading}
               expandable={{
                 expandIconColumnIndex: 2,
                 indentSize: 12,
@@ -250,7 +257,7 @@ const stock = () => {
           >
             <span className="mr-1">物料库</span>
             {selectedRows[0] &&
-            selectedRows[0]?.apicode != "ItemAdministrator" ? (
+              selectedRows[0]?.apicode != "ItemAdministrator" ? (
               <Fragment>
                 <span className="mr-1">/</span>{" "}
                 <span className="text-primary">{selectedRows[0].name}</span>
@@ -302,18 +309,22 @@ const stock = () => {
               onRow={(row: any) => {
                 return {
                   onDoubleClick: async () => {
-                    openDesign({
-                      loading: () => {
-                        dispatch(setLoading(true));
-                      },
-                      cancelLoading: () => {
-                        dispatch(setLoading(false));
-                      },
-                      network: network,
-                      insId: row.insId,
-                      userId: user.id,
-                      itemCode: row.itemCode,
-                    });
+                    if (readPermission(row.number)) {
+                      openDesign({
+                        loading: () => {
+                          dispatch(setLoading(true));
+                        },
+                        cancelLoading: () => {
+                          dispatch(setLoading(false));
+                        },
+                        network: network,
+                        insId: row.insId,
+                        userId: user.id,
+                        itemCode: row.itemCode,
+                      });
+                    } else {
+                      message.error("没有权限")
+                    }
                   },
                 };
               }}
@@ -326,75 +337,78 @@ const stock = () => {
                 {
                   title: "编号",
                   dataIndex: "number",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
+                  // search: {
+                  //   type: "Input",
+                  // },
+                  // sorter: true,
                   render: (text: string) => {
-                    return <a>{text}</a>;
+                    return <a>{text}</a>
                   },
                 },
                 {
                   title: "描述",
                   dataIndex: "insDesc",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                  ellipsis: true,
+                  // search: {
+                  //   type: "Input",
+                  // },
+                  // sorter: true,
+                  // ellipsis: true,
+                  // render: (text: string) => {
+                  //   return renderIsPlmMosaic({ value: text, children: <div>{text}</div> });
+                  // },
                 },
                 {
                   title: "类型",
                   dataIndex: "objectName",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
+                  // render: (text: string) => {
+                  //   return renderIsPlmMosaic({ value: text, children: <div>{text}</div> });
+                  // },
+                  // search: {
+                  //   type: "Input",
+                  // },
+                  // sorter: true,
                 },
                 {
                   title: "生命周期",
                   dataIndex: "statusName",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                  render: (text, record: any) => {
-                    return (
-                      <PlmLifeCycle
-                        record={record}
-                        color={
-                          record.lifecycle && record.lifecycle.color
-                            ? record.lifecycle.color
-                            : "1"
-                        }
-                      >
-                        {text}
-                      </PlmLifeCycle>
-                    );
+                  // search: {
+                  //   type: "Input",
+                  // },
+                  // sorter: true,
+                  render: (text: string, record: any) => {
+                    return <PlmLifeCycle
+                      record={record}
+                      color={
+                        record.lifecycle && record.lifecycle.color
+                          ? record.lifecycle.color
+                          : "1"
+                      }
+                    >
+                      {text}
+                    </PlmLifeCycle>
                   },
                 },
                 {
                   title: "版本",
                   dataIndex: "insVersion",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
-                  render: (text, record) => {
-                    if (text === "Draft") {
-                      return "草稿";
-                    } else {
-                      return text && text.split(" ")[0];
-                    }
+                  // search: {
+                  //   type: "Input",
+                  // },
+                  // sorter: true,
+                  render: (text: string) => {
+                    return <div>{text === "Draft" ? "草稿" : text && text.split(" ")[0]}</div>
                   },
                 },
                 {
                   title: "生效时间",
                   dataIndex: "publishTime",
-                  search: {
-                    type: "Input",
-                  },
-                  sorter: true,
+                  // render: (text: string) => {
+                  //   return renderIsPlmMosaic({ value: text, children: <div>{text}</div> });
+                  // },
+                  // search: {
+                  //   type: "Input",
+                  // },
+                  // sorter: true,
                 },
               ]}
               selectedCell={{

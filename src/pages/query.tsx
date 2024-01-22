@@ -78,25 +78,64 @@ const query: FC = () => {
     },
   });
 
-  const GetConditionDsl = useRequest((data) => API.getConditionDsl(data), {
+  const GetConditionDsl = useRequest((data) => API.getPDMConditionDsl(data), {
     manual: true,
     onSuccess(res: any) {
-      const records = res.result.pageData.records.map((item: any) => {
-        const transferMap = Utils.transformArrayToMap(
-          item.baseSearchDto.searchStr,
-          "apiCode",
-          "attrValue"
-        );
-        return { ...item.baseSearchDto, ...transferMap };
-      });
-      setTableData(
-        records.filter((item: any) => {
-          return (
-            item.number.indexOf(selectVal) != -1 ||
-            item.insDesc.indexOf(selectVal) != -1
-          );
-        })
-      );
+      const dataSource =res.result.pageData?.records
+      for (let i of dataSource || []) {
+        i.insId = i.assembleId[0]
+        if (i.insAttrs) {
+          for (let j of i.insAttrs) {
+            // if (isChange) {
+            //   i[j.apicode] = j.attrValue;
+            //   if (j.color || j.dataId) {
+            //     i.color = j.color;
+            //     i.dataId = j.dataId;
+            //   }
+            // } else {
+            i[j.apicode] = j.attrValue;
+            if (j.color) {
+              i['color' + j.parentTabCode + j.apicode] = j.color;
+            }
+            if (j.dataId) {
+              i['dataId' + j.parentTabCode + j.apicode] = j.dataId;
+            }
+            // }
+          }
+        }
+        if (i.baseSearchDto) {
+          for (let j of i.baseSearchDto.attributeList || []) {
+            // if (isChange) {
+            i[j.apiCode] = j.listCnValue;
+            // } else {
+            //   i[j.apiCode + j.tabCode] = j.listCnValue;
+            // }
+            // i.baseSearchDto[k.apiCode + k.tabCode] = k.listCnValue;
+          }
+        }
+        if (i.otherSearchDto) {
+          for (let k of i.otherSearchDto.attributeList || []) {
+            i.otherSearchDto[k.apiCode + k.tabCode] = k.listCnValue;
+          }
+        }
+      }
+      setTableData(dataSource)
+      // const records = res.result.pageData.records.map((item: any) => {
+      //   const transferMap = Utils.transformArrayToMap(
+      //     item.baseSearchDto.searchStr,
+      //     "apiCode",
+      //     "attrValue"
+      //   );
+      //   return { ...item.baseSearchDto, ...transferMap };
+      // });
+      // setTableData(
+      //   records.filter((item: any) => {
+      //     return (
+      //       item.number.indexOf(selectVal) != -1 ||
+      //       item.insDesc.indexOf(selectVal) != -1
+      //     );
+      //   })
+      // );
     },
   });
 
@@ -109,23 +148,24 @@ const query: FC = () => {
   }, []);
 
   useEffect(() => {
-    API.getQueryColumns({ itemCode: "10001006" }).then((res: any) => {
-      console.log(res.result, "result");
-      setSearchColumn(res.result);
-    });
-  }, []);
+    if(selectedRows && selectedRows[0]) {
+      API.getQueryColumns({ itemCode: String(selectedRows[0].itemCode) }).then((res: any) => {
+        setSearchColumn(res.result);
+      });
+    }
+  }, [selectedRows]);
 
   const column = useMemo(() => {
     return [
       {
         title: "编号",
-        dataIndex: "number",
+        dataIndex: "Number",
         apicode: "Number",
         width: 180,
-        search: {
-          type: "Input",
-        },
-        sorter: true,
+        // search: {
+        //   type: "Input",
+        // },
+        // sorter: true,
         ellipsis: true,
         render: (data: string, record: Record<string, any>) => {
           return <a>{data}</a>;
@@ -134,33 +174,33 @@ const query: FC = () => {
       {
         title: "描述",
         ellipsis: true,
-        search: {
-          type: "Input",
-        },
+        // search: {
+        //   type: "Input",
+        // },
+        // sorter: true,
         width: 180,
-        dataIndex: "insDesc",
+        dataIndex: "Description",
         apicode: "Description",
-        sorter: true,
       },
 
       {
         title: "类型",
         ellipsis: true,
         width: 100,
-        dataIndex: "objectName",
+        dataIndex: "Category",
         apicode: "Category",
-        search: {
-          type: "Input",
-          props: {},
-        },
-        sorter: true,
+        // search: {
+        //   type: "Input",
+        //   props: {},
+        // },
+        // sorter: true,
       },
       {
         title: "状态",
         width: 70,
         ellipsis: true,
-        dataIndex: "statusName",
-        sorter: true,
+        dataIndex: "LifeCyclePhase",
+        // sorter: true,
         render: (text: string, record: any) => {
           return (
             <PlmLifeCycle
@@ -190,11 +230,11 @@ const query: FC = () => {
         title: "发布时间",
         width: 150,
         ellipsis: true,
-        search: {
-          type: "Date",
-        },
-        sorter: true,
-        dataIndex: "publishTime",
+        // search: {
+        //   type: "Date",
+        // },
+        // sorter: true,
+        dataIndex: "ReleaseTime",
         apicode: "ReleaseTime",
       },
       {
@@ -212,40 +252,40 @@ const query: FC = () => {
         //取属性外面的
         dataIndex: "CreateUser",
         apicode: "CreateUser",
-        sorter: true,
+        // sorter: true,
         // isUser: true,
       },
       {
         title: "创建时间",
         width: 150,
         ellipsis: true,
-        search: {
-          type: "Date",
-        },
-        sorter: true,
+        // search: {
+        //   type: "Date",
+        // },
+        // sorter: true,
         dataIndex: "createTime",
         apicode: "CreateTime",
       },
     ];
 
-    SearchColumn.map((item) => {
-      return {
-        ...item,
-        title: item.name,
-        dataIndex: item.apicode,
-        search: {
-          type: "Input",
-        },
-        sorter: true,
-        ellipsis: true,
-        render:
-          item.apicode === "Number" || item.apicode === "CreateUser"
-            ? (text: string) => {
-                return <a>{text}</a>;
-              }
-            : undefined,
-      };
-    });
+    // SearchColumn.map((item) => {
+    //   return {
+    //     ...item,
+    //     title: item.name,
+    //     dataIndex: item.apicode,
+    //     search: {
+    //       type: "Input",
+    //     },
+    //     sorter: true,
+    //     ellipsis: true,
+    //     render:
+    //       item.apicode === "Number" || item.apicode === "CreateUser"
+    //         ? (text: string) => {
+    //           return <a>{text}</a>;
+    //         }
+    //         : undefined,
+    //   };
+    // });
   }, [SearchColumn]);
 
   useEffect(() => {
@@ -257,12 +297,13 @@ const query: FC = () => {
         fields: SearchColumn.map((item) => {
           return { ...item, parentTabCode: 10002001 };
         }),
-        pageSize: 200,
+        whereUsedOpt: "",
+        pageSize: 50,
         userId: user.id,
         itemCode: selectedRows[0].itemCode,
       });
     }
-  }, [selectedRows]);
+  }, [SearchColumn]);
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -289,6 +330,7 @@ const query: FC = () => {
             rowKey={"id"}
             className="tree-table"
             bordered={false}
+            loading={loading}
             dataSource={leftTreeData}
             expandable={{
               expandIconColumnIndex: 2,
@@ -313,7 +355,6 @@ const query: FC = () => {
                 },
                 sorter: true,
                 render: (text, record: any) => {
-                  console.log(record, 'record')
                   return (
                     <div
                       className="cursor-pointer w-full overflow-hidden text-ellipsis"

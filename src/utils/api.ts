@@ -88,6 +88,15 @@ const API = {
   },
 
   /**
+    * PDM搜索dsl
+    * */
+  getPDMConditionDsl: (data: any) => {
+    return NewRequest.post("/pdm/search/getSearchData", {
+      ...data,
+      tenantId: "719",
+    });
+  },
+  /**
    * 获取搜索列头
    */
   getQueryColumns: (data: any) => {
