@@ -2049,8 +2049,16 @@ const index = () => {
             item.apicode === "CheckOutUser" ||
             item.apicode === "CheckOutDate") &&
           item.status &&
+          item.valueType != "6" &&
+          item.valueType != "7" &&
+          item.valueType != "8" &&
+          item.valueType != "9" &&
+          item.valueType != "10" &&
+          item.valueType != "11" &&
           item.valueType != "12" &&
-          item.valueType != "13"
+          item.valueType != "13" && 
+          item.valueType != "14" && 
+          item.valueType != "3"
       )
       .map((item) => {
         const formitem = {

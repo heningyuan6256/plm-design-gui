@@ -196,6 +196,7 @@ const query: FC = () => {
   useEffect(() => {
     if (selectedRows && selectedRows[0]) {
       API.getQueryColumns({ itemCode: String(selectedRows[0].itemCode) }).then((res: any) => {
+        scrollPage.pageNo = 1
         setSearchColumn(res.result);
       });
     }

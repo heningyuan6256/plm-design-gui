@@ -305,7 +305,7 @@ select {
   background: #e1e1e1;
 }
 
-* ::-webkit-scrollbar-track {
+* ::-webkit-scrollbar-track:vertical {
   background: linear-gradient(270deg, #ffffff, #ededed 100%);
   border-radius: 0;
   padding: 0px;
@@ -333,8 +333,15 @@ select {
   background: #e1e1e1;
 }
 
-.main ::-webkit-scrollbar-track {
+.main ::-webkit-scrollbar-track:vertical {
   background: linear-gradient(270deg, #ffffff, #ededed 100%);
+  border-radius: 0;
+  padding: 0px;
+  box-shadow: 0;
+}
+
+.main ::-webkit-scrollbar-track:horizontal {
+  background: #fff !important;
   border-radius: 0;
   padding: 0px;
   box-shadow: 0;
