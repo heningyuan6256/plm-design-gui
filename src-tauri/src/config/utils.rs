@@ -1,6 +1,7 @@
 use anyhow::Result;
 use log::info;
 use regex::Regex;
+use tauri::Runtime;
 // use serde_json::Value;
 use std::{
     // collections::HashMap,
@@ -11,7 +12,10 @@ use std::{
 // use tauri::updater::UpdateResponse;
 use tauri::{ utils::config::Config };
 // AppHandle, Manager, Wry
+use tauri::Manager;
 use tauri::{ command };
+
+use window_shadows::set_shadow;
 
 
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {

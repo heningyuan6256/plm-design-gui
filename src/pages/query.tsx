@@ -9,7 +9,7 @@ import { FC, useEffect, useMemo, useState } from "react";
 import API from "../utils/api";
 import { Input, message } from "antd";
 import { useSelector } from "react-redux";
-import { useKeyPress, useRequest } from "ahooks";
+import { useKeyPress, useReactive, useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
 import { OnChainTableColumnProps } from "onchain-ui/dist/esm/OnChainTable";
 import { Utils } from "../utils";
@@ -77,66 +77,112 @@ const query: FC = () => {
       setLeftTreeData(serachs);
     },
   });
+  const scrollPage = useReactive({
+    pageNo: 1,
+    pageSize: 50,
+    total: 0,
+  });
+
+  const sortAndFilters = useReactive({
+    sorter: '',
+    filters: '',
+  });
+  const getScrollTableData = async (isInit = false, refreshSize?: number) => {
+    const { pageNo, pageSize } = scrollPage;
+    const { filters, sorter } = sortAndFilters;
+
+    const res: any = await GetConditionDsl.runAsync({
+      actionType: "select",
+      dsl: selectedRows[0].content,
+      pageNo: pageNo,
+      fields: SearchColumn.map((item) => {
+        return { ...item, parentTabCode: 10002001 };
+      }),
+      whereUsedOpt: "",
+      pageSize: pageSize,
+      userId: user.id,
+      itemCode: selectedRows[0].itemCode,
+    });    
+
+    const dataSource = res.result.pageData?.records
+    const total = res.result.pageData?.total
+
+    for (let i of dataSource || []) {
+      i.insId = i.assembleId[0]
+      if (i.insAttrs) {
+        for (let j of i.insAttrs) {
+          // if (isChange) {
+          //   i[j.apicode] = j.attrValue;
+          //   if (j.color || j.dataId) {
+          //     i.color = j.color;
+          //     i.dataId = j.dataId;
+          //   }
+          // } else {
+          i[j.apicode] = j.attrValue;
+          if (j.color) {
+            i['color' + j.parentTabCode + j.apicode] = j.color;
+          }
+          if (j.dataId) {
+            i['dataId' + j.parentTabCode + j.apicode] = j.dataId;
+          }
+          // }
+        }
+      }
+      if (i.baseSearchDto) {
+        for (let j of i.baseSearchDto.attributeList || []) {
+          // if (isChange) {
+          i[j.apiCode] = j.listCnValue;
+          // } else {
+          //   i[j.apiCode + j.tabCode] = j.listCnValue;
+          // }
+          // i.baseSearchDto[k.apiCode + k.tabCode] = k.listCnValue;
+        }
+      }
+      if (i.otherSearchDto) {
+        for (let k of i.otherSearchDto.attributeList || []) {
+          i.otherSearchDto[k.apiCode + k.tabCode] = k.listCnValue;
+        }
+      }
+    }
+    // return {
+    // dataSource: dataSource,
+    // total: total
+    // }
+    scrollPage.total = total;
+    const records = dataSource;
+    if (records) {
+      if (isInit) {
+        setTableData(records);
+      } else {
+        setTableData([...tableData, ...records]);
+      }
+    } else {
+      setTableData([]);
+    }
+  }
+
 
   const GetConditionDsl = useRequest((data) => API.getPDMConditionDsl(data), {
     manual: true,
-    onSuccess(res: any) {
-      const dataSource =res.result.pageData?.records
-      for (let i of dataSource || []) {
-        i.insId = i.assembleId[0]
-        if (i.insAttrs) {
-          for (let j of i.insAttrs) {
-            // if (isChange) {
-            //   i[j.apicode] = j.attrValue;
-            //   if (j.color || j.dataId) {
-            //     i.color = j.color;
-            //     i.dataId = j.dataId;
-            //   }
-            // } else {
-            i[j.apicode] = j.attrValue;
-            if (j.color) {
-              i['color' + j.parentTabCode + j.apicode] = j.color;
-            }
-            if (j.dataId) {
-              i['dataId' + j.parentTabCode + j.apicode] = j.dataId;
-            }
-            // }
-          }
-        }
-        if (i.baseSearchDto) {
-          for (let j of i.baseSearchDto.attributeList || []) {
-            // if (isChange) {
-            i[j.apiCode] = j.listCnValue;
-            // } else {
-            //   i[j.apiCode + j.tabCode] = j.listCnValue;
-            // }
-            // i.baseSearchDto[k.apiCode + k.tabCode] = k.listCnValue;
-          }
-        }
-        if (i.otherSearchDto) {
-          for (let k of i.otherSearchDto.attributeList || []) {
-            i.otherSearchDto[k.apiCode + k.tabCode] = k.listCnValue;
-          }
-        }
-      }
-      setTableData(dataSource)
-      // const records = res.result.pageData.records.map((item: any) => {
-      //   const transferMap = Utils.transformArrayToMap(
-      //     item.baseSearchDto.searchStr,
-      //     "apiCode",
-      //     "attrValue"
-      //   );
-      //   return { ...item.baseSearchDto, ...transferMap };
-      // });
-      // setTableData(
-      //   records.filter((item: any) => {
-      //     return (
-      //       item.number.indexOf(selectVal) != -1 ||
-      //       item.insDesc.indexOf(selectVal) != -1
-      //     );
-      //   })
-      // );
-    },
+    // onSuccess(res: any) {
+
+    //   // const records = res.result.pageData.records.map((item: any) => {
+    //   //   const transferMap = Utils.transformArrayToMap(
+    //   //     item.baseSearchDto.searchStr,
+    //   //     "apiCode",
+    //   //     "attrValue"
+    //   //   );
+    //   //   return { ...item.baseSearchDto, ...transferMap };
+    //   // });
+    //   // setTableData(
+    //   //   records.filter((item: any) => {
+    //   //     return (
+    //   //       item.number.indexOf(selectVal) != -1 ||
+    //   //       item.insDesc.indexOf(selectVal) != -1
+    //   //     );
+    //   //   })
+    //   // );
+    // },
   });
 
   useKeyPress("enter", () => {
@@ -148,7 +194,7 @@ const query: FC = () => {
   }, []);
 
   useEffect(() => {
-    if(selectedRows && selectedRows[0]) {
+    if (selectedRows && selectedRows[0]) {
       API.getQueryColumns({ itemCode: String(selectedRows[0].itemCode) }).then((res: any) => {
         setSearchColumn(res.result);
       });
@@ -290,18 +336,7 @@ const query: FC = () => {
 
   useEffect(() => {
     if (selectedRows && selectedRows.length) {
-      GetConditionDsl.run({
-        actionType: "select",
-        dsl: selectedRows[0].content,
-        pageNo: 1,
-        fields: SearchColumn.map((item) => {
-          return { ...item, parentTabCode: 10002001 };
-        }),
-        whereUsedOpt: "",
-        pageSize: 50,
-        userId: user.id,
-        itemCode: selectedRows[0].itemCode,
-      });
+      getScrollTableData(true)
     }
   }, [SearchColumn]);
 
@@ -528,12 +563,24 @@ const query: FC = () => {
                     },
                   };
                 }}
+                canScroll
                 hideFooter
                 extraHeight={22}
                 columns={column as OnChainTableColumnProps}
                 selectedCell={{
                   dataIndex: "",
                   record: {},
+                }}
+                {...scrollPage}
+                onScroll={(pageNo) => {
+                  console.log(123,'123');
+                  
+                  scrollPage.pageNo = pageNo;
+                  getScrollTableData();
+                }}
+                onFilterAndSorter={() => {
+                  scrollPage.pageNo = 1;
+                  getScrollTableData(true);
                 }}
               ></OnChainTable>
             ) : (

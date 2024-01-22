@@ -4179,10 +4179,10 @@ onchain-pdf@1.1.21:
     react-contexify "^5.0.0"
     react-pdf "^5.7.2"
 
-onchain-ui@1.8.5:
-  version "1.8.5"
-  resolved "https://registry.yarnpkg.com/onchain-ui/-/onchain-ui-1.8.5.tgz#ea3ace4955da5d7b9142bfee3083f7dd3ec99037"
-  integrity sha512-tWWSPWomt57wan5FefR7Eq6TPBOA3QAS/MLOpUk3XVNWnIlsmuO6CP0M14f54OlO9HJlFtmZ3LZ7m7ZvG1yFTg==
+onchain-ui@1.8.6:
+  version "1.8.6"
+  resolved "https://registry.yarnpkg.com/onchain-ui/-/onchain-ui-1.8.6.tgz#1288caef4f4c42e59c73b04f1ff15c9042915998"
+  integrity sha512-S0/8+5LYR6R/hn444HRJKBbZ5ASvkAE5rj04LLkHLdisKgS2ZCPLUBtx3SORoagbQFIRc3HfbkQNrWX/pqTPLw==
   dependencies:
     "@chatscope/chat-ui-kit-react" "^1.10.1"
     "@chatscope/chat-ui-kit-styles" "^1.4.0"

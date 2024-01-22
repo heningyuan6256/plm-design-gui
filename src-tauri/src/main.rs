@@ -152,7 +152,7 @@ fn main() {
         ])
         .setup(|app| {
             let handle = app.handle();
-            utils::set_window_shadow()
+            utils::set_window_shadow(app);
             tauri_plugin_deep_link::register("onchain", move |request| {
                 dbg!(&request); // 调用的时候会在控制台打印
                                 // 将参数传递到前端，前端使用listen监听
