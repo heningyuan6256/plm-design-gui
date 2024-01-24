@@ -34,6 +34,7 @@ import { LogicalSize, appWindow, getCurrent } from "@tauri-apps/api/window";
 import { clipboard, invoke } from "@tauri-apps/api";
 import PlmLoading from "../components/PlmLoading";
 import { flatten } from "lodash";
+import { Utils } from "../utils";
 
 // 分隔每两个对象的函数
 function splitArrayIntoPairs(arr: any) {
@@ -163,6 +164,11 @@ const center: FC = () => {
     // 偏移量
     let iv = "0000000000000000";
     let secret_key = "OnChainPlmSecret";
+
+    message = CryptoJS.enc.Utf8.parse(message);
+    secret_key = CryptoJS.enc.Utf8.parse(secret_key);
+    iv = CryptoJS.enc.Utf8.parse(iv);
+
     var ciphertext = CryptoJS.AES.encrypt(message, secret_key, {
       iv: iv,
       mode: CryptoJS.mode.CBC,
@@ -171,28 +177,7 @@ const center: FC = () => {
     return ciphertext.toString();
   };
 
-  // useEffect(() => {
-  //   const currentWindow = getCurrent();
-  //   if (isSuccess) {
-  //     if (viewDetail) {
-  //       currentWindow.setSize(new LogicalSize(486, 280)).then(() => {
-  //         currentWindow.center();
-  //       });
-  //     } else {
-  //       currentWindow.setSize(new LogicalSize(240, 198)).then(() => {
-  //         currentWindow.center();
-  //       });
-  //     }
-  //   } else {
-  //     currentWindow.setSize(new LogicalSize(700, 420)).then(() => {
-  //       currentWindow.center();
-  //     });
-  //   }
-  // }, [isSuccess, viewDetail]);
-
   let onSubmit = async (data: any) => {
-    // let data = Object.fromEntries(new FormData(res.currentTarget));
-
     const db = await Database.load(
       `postgres://${data.account}:${data.password}@${data.address}:${data.port}/mk`
     ).catch((err) => {
@@ -207,18 +192,59 @@ const center: FC = () => {
     console.log(maxUser, "maxUser");
     console.log(flatten(modules), "flatten(modules)");
 
-    console.log(toSecret(String(maxUser)), "maxUser");
+    const modulesStatus = Utils.transformArrayToMap(
+      flatten(modules),
+      "id",
+      "status"
+    );
 
-    // 将数据加密塞入数据库
-
-    const res = await db.select("SELECT * FROM pdm_system_module", []);
-
-    for (let i = 0; i < flatten(modules).length; i++) {
-      const updateRes = await db.execute(
-        `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE id = $2`,
-        ["123", "1640900750563016709"]
+    // 将数据加密塞入数据库 修改模块
+    const dbModules: any = await db.select(
+      "SELECT * FROM pdm_system_module",
+      []
+    );
+    for (let i = 0; i < dbModules.length; i++) {
+      await db.execute(
+        `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE apicode = $2`,
+        [
+          toSecret(
+            JSON.stringify({
+              apicode: dbModules[i]?.apicode,
+              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+              active: modulesStatus[dbModules[i]?.apicode] === "on" ? "1" : "0",
+              kubeConfig: extraData.kubeConfig,
+            })
+          ),
+          dbModules[i].apicode,
+        ]
       );
-      console.log(updateRes, "res");
+    }
+
+    const mgnt_tenants: any = await db.select(
+      "SELECT * FROM plm_mgnt_tenants",
+      []
+    );
+    if (mgnt_tenants[0]) {
+      await db.execute(
+        `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2 WHERE org_id = $3`,
+        [
+          toSecret(
+            JSON.stringify({
+              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+              count: String(maxUser),
+              kubeConfig: extraData.kubeConfig,
+            })
+          ),
+          toSecret(
+            JSON.stringify({
+              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+              count: String(maxUser),
+              kubeConfig: extraData.kubeConfig,
+            })
+          ),
+          "719",
+        ]
+      );
     }
 
     db.close();
