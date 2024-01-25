@@ -2011,6 +2011,10 @@ const index = () => {
     } else if (name === "update") {
       if (selectNode) {
         const row = { ...selectNode, ...selectNode.file.onChain };
+        if(!row.insId) {
+          message.warning('当前文件还未上传')
+          return
+        }
         upadteData({ row: row });
       }
     } else if (name === "checkout") {
