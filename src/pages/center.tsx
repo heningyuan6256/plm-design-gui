@@ -343,6 +343,7 @@ const center: FC = () => {
       account: "postgres",
       port: "32768",
       userCount: "99",
+      name: "mk",
     },
   });
 
@@ -827,7 +828,7 @@ const center: FC = () => {
                           )}
                         />
                       </div>
-                      <div className="flex-1 overflow-hidden">
+                      <div className="flex-1 overflow-hidden" style={{ paddingRight: "10px" }}>
                         <Controller
                           control={control}
                           name="password"
@@ -861,6 +862,32 @@ const center: FC = () => {
                                     bottom={6}
                                   ></Image>
                                 </span>
+                              </div>
+                            </Fragment>
+                          )}
+                        />
+                      </div>
+
+                      <div className="overflow-hidden w-24">
+                        <Controller
+                          control={control}
+                          name="name"
+                          rules={{ required: "name is required." }}
+                          render={({
+                            field: { name, value, onChange, onBlur, ref },
+                            fieldState: { invalid, error },
+                          }) => (
+                            <Fragment>
+                              <FormLabel value="数据库名称:"></FormLabel>
+                              <div style={{ position: "relative" }}>
+                                <TextField
+                                  value={value}
+                                  placeholder="请输入数据库名称"
+                                  marginTop={"8px"}
+                                  type={"text"}
+                                  onChange={onChange}
+                                  name="name"
+                                ></TextField>
                               </div>
                             </Fragment>
                           )}
