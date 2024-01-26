@@ -416,13 +416,8 @@ const center: FC = () => {
                   setIsLoadingOpen(true);
                   let canContinue = true;
                   const data = getValues();
-                  console.log(
-                    `postgres://${data.account}:${data.password}@${data.address}:${data.port}/mk`,
-                    "123"
-                  );
-
                   await Database.load(
-                    `postgres://${data.account}:${data.password}@${data.address}:${data.port}/mk`
+                    `postgres://${data.account}:${data.password}@${data.address}:${data.port}/${data.name}`
                   ).catch((err) => {
                     canContinue = false;
                     alert(err);
@@ -828,7 +823,10 @@ const center: FC = () => {
                           )}
                         />
                       </div>
-                      <div className="flex-1 overflow-hidden" style={{ paddingRight: "10px" }}>
+                      <div
+                        className="flex-1 overflow-hidden"
+                        style={{ paddingRight: "10px" }}
+                      >
                         <Controller
                           control={control}
                           name="password"
