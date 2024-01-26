@@ -242,7 +242,7 @@ const center: FC = () => {
               kubeConfig: extraData.kubeConfig,
             })
           ),
-          "719",
+          mgnt_tenants[0].org_id,
         ]
       );
     }
@@ -343,7 +343,7 @@ const center: FC = () => {
       account: "postgres",
       port: "32768",
       userCount: "99",
-      name: "mk",
+      name: "mk-test",
     },
   });
 
@@ -356,6 +356,7 @@ const center: FC = () => {
     watchAllFields.account,
     watchAllFields.port,
     watchAllFields.password,
+    watchAllFields.name,
   ]);
 
   /**授权用户账号 */
