@@ -179,7 +179,7 @@ const center: FC = () => {
 
   let onSubmit = async (data: any) => {
     const db = await Database.load(
-      `postgres://${data.account}:${data.password}@${data.address}:${data.port}/mk`
+      `postgres://${data.account}:${data.password}@${data.address}:${data.port}/${data.name}`
     ).catch((err) => {
       console.log(err, "err");
       alert(err);
