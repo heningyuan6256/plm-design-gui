@@ -964,3 +964,7 @@ img {
   border-start-end-radius: 0px !important;
   border-end-end-radius: 0px !important;
 }
+
+.main .table_footer{
+  padding: 6px 0px;
+}

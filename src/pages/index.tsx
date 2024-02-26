@@ -22,7 +22,7 @@ import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
-import { Tabs, TabsProps, message, Image, Button } from "antd";
+import { Tabs, TabsProps, message, Image, Button, Input } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import filldown from "../assets/image/filldown.svg";
@@ -64,6 +64,7 @@ import { useLocation } from "react-router-dom";
 import moment from "moment";
 import { PDFViewer } from 'fuyun';
 import ADdata from "../../experimentData.json";
+import { MqttClient } from "mqtt";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -120,8 +121,9 @@ const index = () => {
 
   const lastestLogData = useLatest(logData);
 
-  const isNotMqtt = (client:string) => {
-    return mqttClient.publishTopic != client
+  const isNot2D = (client: string) => {
+    const arr = ['Altium']
+    return !arr.includes(mqttClient.publishTopic)
   }
 
   const [InstanceAttrsMap] = useState<{
@@ -342,7 +344,7 @@ const index = () => {
 
 
   useEffect(() => {
-    if (selectProduct && isNotMqtt(mqttClient.publishTopic)) {
+    if (selectProduct && isNot2D(mqttClient.publishTopic)) {
       dispatch(setLoading(true));
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
@@ -1091,15 +1093,15 @@ const index = () => {
 
 
   useEffect(() => {
-    if(selectProduct) {
+    if (selectProduct) {
       console.log(mqttClient.publishTopic);
       // 模拟AD假数据
-      if(mqttClient.publishTopic === 'Altium') {
-        setDesignData(ADdata.getCurrentBOM);  
+      if (mqttClient.publishTopic === 'Altium') {
+        setDesignData(ADdata.getCurrentBOM);
         dealCurrentBom(ADdata.getCurrentBOM);
       }
     }
-  },[selectProduct])
+  }, [selectProduct])
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
@@ -1727,7 +1729,7 @@ const index = () => {
             );
           }
 
-          
+
           // if(item.file_path && mqttClient.publishTopic === 'catia') {
           //   const stp_path = `${item.file_path.substring(0,item.file_path.lastIndexOf('.'))}.stp`
 
@@ -1749,7 +1751,7 @@ const index = () => {
           //     );
           //   }
           // }
-          
+
 
           if (item.step_path) {
             FileArray.push(
@@ -2030,7 +2032,7 @@ const index = () => {
     } else if (name === "update") {
       if (selectNode) {
         const row = { ...selectNode, ...selectNode.file.onChain };
-        if(!row.insId) {
+        if (!row.insId) {
           message.warning('当前文件还未上传')
           return
         }
@@ -2079,8 +2081,8 @@ const index = () => {
           item.valueType != "10" &&
           item.valueType != "11" &&
           item.valueType != "12" &&
-          item.valueType != "13" && 
-          item.valueType != "14" && 
+          item.valueType != "13" &&
+          item.valueType != "14" &&
           item.valueType != "3"
       )
       .map((item) => {
@@ -2979,6 +2981,282 @@ const index = () => {
     </div>
   </div>
 
+  if (!isNot2D(mqttClient.publishTopic)) {
+    return <div className="h-full w-full flex flex-col overflow-hidden">
+      <div className="w-full bg-base flex-1 flex flex-col overflow-hidden">
+        <PlmToolBar onClick={handleClick}></PlmToolBar>
+        <div className="flex-1 pt-2 gap-2 px-3.5">
+          <div
+            style={{
+              background: "linear-gradient(180deg,#f1f1f1 0%, #cdcdcd 100%)",
+            }}
+            className="w-full h-6 text-xs flex items-center pl-2.5 bg px-1.5"
+          >
+            导入
+          </div>
+          <div className="flex px-3.5" style={{ height: '62px' }}>
+            <div className="flex h-full items-center mr-10"><span className='text-xs'>文件路径：</span>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="请输入编号或描述"
+                  // value={selectVal}
+                  style={{ width: "360px" }}
+                // onChange={(e) => {
+                //   setSelectVal(e.target.value);
+                // }}
+                ></Input>
+                <div className="w-7 h-7 cursor-pointer rounded-sm border-outBorder border flex items-center justify-center bg-white">
+                  <PlmIcon
+                    onClick={() => {
+                      // setSelectedRows([...selectedRows]);
+                    }}
+                    name="search"
+                  ></PlmIcon>
+                </div>
+              </div>
+            </div>
+            <div className="flex h-full items-center"><span className='text-xs'>业务类型：</span>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="请输入编号或描述"
+                  // value={selectVal}
+                  style={{ width: "360px" }}
+                // onChange={(e) => {
+                //   setSelectVal(e.target.value);
+                // }}
+                ></Input>
+                <div className="w-7 h-7 cursor-pointer rounded-sm border-outBorder border flex items-center justify-center bg-white">
+                  <PlmIcon
+                    onClick={() => {
+                      // setSelectedRows([...selectedRows]);
+                    }}
+                    name="search"
+                  ></PlmIcon>
+                </div>
+              </div>
+            </div>
+          </div>
+          <OnChainTable
+            scroll={{ y: 72 }}
+            dataSource={[]}
+            columns={[
+              {
+                title: "图标",
+                dataIndex: "icon",
+                // search: {
+                //   type: "Input",
+                // },
+                fixed: true,
+                sorter: true,
+                width: 200,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: "文件名称",
+                dataIndex: "file_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 350,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: "文件位置",
+                dataIndex: "file_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 350,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+
+              {
+                title: "文件大小",
+                dataIndex: "file_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 200,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: "状态",
+                dataIndex: "status",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 250,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+            ]}
+            rowSelection={{
+              columnWidth: 19,
+              fixed: true,
+              // selectedRowKeys: fileSelectRows.length
+              //   ? fileSelectRows.map((item) => item?.id)
+              //   : [],
+              // onChange: (selectRowKeys, selectRows) => {
+              //   setFileSelectRows([selectRows.pop()]);
+              // },
+            }}>
+
+          </OnChainTable>
+          <OnChainTable
+            extraHeight={32}
+            dataSource={[]}
+            columns={[
+              {
+                title: "序号",
+                dataIndex: "index",
+                // search: {
+                //   type: "Input",
+                // },
+                fixed: true,
+                sorter: true,
+                width: 200,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: "编号",
+                dataIndex: "number",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 200,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: "状态",
+                dataIndex: "file_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 250,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: "物料名称",
+                dataIndex: "file_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 350,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+
+              {
+                title: "位号",
+                dataIndex: "file_name",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 200,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+              {
+                title: "数量",
+                dataIndex: "status",
+                search: {
+                  type: "Input",
+                },
+                sorter: true,
+                width: 150,
+                render: (text: string, record: any) => {
+                  return (
+                    <div className="text-ellipsis w-full overflow-hidden">
+                      {record.file.plugin.Description}
+                    </div>
+                  );
+                },
+              },
+            ]
+            }
+            rowSelection={{
+              columnWidth: 19,
+              fixed: true,
+              // selectedRowKeys: fileSelectRows.length
+              //   ? fileSelectRows.map((item) => item?.id)
+              //   : [],
+              // onChange: (selectRowKeys, selectRows) => {
+              //   setFileSelectRows([selectRows.pop()]);
+              // },
+            }}
+          >
+
+          </OnChainTable>
+        </div>
+      </div>
+    </div>
+  }
+
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       {/* <PlmModal></PlmModal> */}
@@ -2996,7 +3274,7 @@ const index = () => {
                   value={selectProduct}
                   options={productOptions}
                   onDropdownVisibleChange={(visible) => {
-                    if(visible){
+                    if (visible) {
                       getProductList()
                     }
                   }}

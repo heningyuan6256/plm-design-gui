@@ -105,7 +105,7 @@ class MqttService {
           this.pid = pid
           this.publishTopic = tc
           // this.pid = '18020'
-          // this.publishTopic = 'catia'
+          this.publishTopic = 'Altium'
 
           if (this.publishTopic === 'Tribon') {
             this.machineId = "_00426-065-1283716-86439"
