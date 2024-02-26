@@ -7,11 +7,11 @@
 import React, { Fragment, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import PlmLoading from "../components/PlmLoading";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import Head from "./head";
 import Foot from "./foot";
 import Left from "./left";
-import { TauriEvent } from "@tauri-apps/api/event";
+import { TauriEvent, listen } from "@tauri-apps/api/event";
 import { mqttClient } from "../utils/MqttService";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { getCurrent } from "@tauri-apps/api/window";
@@ -25,7 +25,7 @@ import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { Command } from "@tauri-apps/api/shell";
 import { message } from "antd";
 import { setLoading } from "../models/loading";
-import { useMemoizedFn } from "ahooks";
+import { useMemoizedFn, useMount } from "ahooks";
 interface LayoutProps {
   children?: React.ReactNode;
 }
@@ -257,6 +257,7 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
   const { value: loading } = useSelector((state: any) => state.loading);
   const { value: network } = useSelector((state: any) => state.network);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const openDesignWarpper = useMemoizedFn((insId: any) => {
     openDesign({
@@ -272,6 +273,17 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
       itemCode: "10001006",
     });
   });
+
+  useMount(() => {
+    listen("onchain", async (matchUrl: any) => {
+      console.log(matchUrl,',a');
+      if(matchUrl.payload === 'Altium'){
+        navigate(`/home/1`);
+        const currentWindow = getCurrent();
+        currentWindow.setFocus()
+      }
+    })
+  })
 
   useEffect(() => {
     sse.registerCallBack("open_design", (insId) => {

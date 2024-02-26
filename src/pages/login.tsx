@@ -202,9 +202,13 @@ export default function login() {
         }
       }
     }
-    listen("onchain", async (matchUrl) => {
-      // 当已经打开了登陆界面，然后通过浏览器打开
-      openDesignInLogin(matchUrl.payload as string)
+    listen("onchain", async (matchUrl: any) => {
+      if (matchUrl.payload === 'Altium') {
+        alert("请先登陆")
+      } else {
+        // 当已经打开了登陆界面，然后通过浏览器打开
+        openDesignInLogin(matchUrl.payload as string)
+      }
     })
 
     // mqtt成功建立连接后，判断当前的打开方式是否是web打开，如果是，则自动登陆，然后将文件下载到本地然后调用打开openDesigner的方法

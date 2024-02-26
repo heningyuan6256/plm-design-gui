@@ -8,6 +8,9 @@ mod config;
 use app::{menu, solidworks, window};
 use config::utils;
 use tauri::Manager;
+use std::collections::HashMap;
+use url::Url;
+use serde_urlencoded;
 
 // use tauri::api::process::{Command, CommandEvent};
 // // extern crate libloading;
@@ -154,9 +157,46 @@ fn main() {
             let handle = app.handle();
             utils::set_window_shadow(app);
             tauri_plugin_deep_link::register("onchain", move |request| {
-                dbg!(&request); // 调用的时候会在控制台打印
-                                // 将参数传递到前端，前端使用listen监听
+                // dbg!(&request);
+                // if let Ok(url) = Url::parse(&request) {
+                //     // Get path and query string
+                //     let path = url.path();
+                //     let query = url.query();
+                //     // Parse query string into a HashMap
+                //     if let Some(query) = query {
+                //         if let Ok(params) =
+                //             serde_urlencoded::from_str::<HashMap<String, String>>(query)
+                //         {
+                //             dbg!(&params);
+                //             handle.emit_all("onchain", (path, params)).unwrap();
+                //             // TODO: commented as in theory its best to also send the email to the app
+                //             // for now only token is sent
+                //             // handle
+                //             //     .emit_all("signed-in-token-and-email", (path, params))
+                //             //     .unwrap();
+                //         }
+                //     } else {
+                //         // handle.emit_all("onchain", request).unwrap();
+                //         // dbg!(&request);
+                //     }
+                // } else {
+                //     // handle.emit_all("onchain", request).unwrap();
+                //     // println!("Executing other logic...");
+                //     // dbg!(&request);
+                // }
+
+                // let reference = &request;
+                // dbg!(&request);
                 handle.emit_all("onchain", request).unwrap();
+                // if *reference == "Altium" {
+                //     // 执行其他逻辑
+                //     println!("Executing other logic...");
+                // } else {
+                //     println!("condition was false");
+                //     handle.emit_all("onchain", request).unwrap();
+                // }
+                // dbg!(&request); // 调用的时候会在控制台打印
+                                // 将参数传递到前端，前端使用listen监听
                 // 但是经过尝试，我只能在应用已经打开的时候获取到传递的参数，大概率是因为第一次发送的时候，前端的监听事件还没有开启，插件的作者正在添加新的API:get_last_url实现
             })
             .unwrap();
