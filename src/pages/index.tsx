@@ -63,6 +63,7 @@ import { setBom } from "../models/bom";
 import { useLocation } from "react-router-dom";
 import moment from "moment";
 import { PDFViewer } from 'fuyun';
+import ADdata from "../../experimentData.json";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -118,6 +119,10 @@ const index = () => {
   const selectedCellLatest = useLatest(selectedCell);
 
   const lastestLogData = useLatest(logData);
+
+  const isNotMqtt = (client:string) => {
+    return mqttClient.publishTopic != client
+  }
 
   const [InstanceAttrsMap] = useState<{
     [k: string]: {
@@ -334,8 +339,10 @@ const index = () => {
     };
   };
 
+
+
   useEffect(() => {
-    if (selectProduct) {
+    if (selectProduct && isNotMqtt(mqttClient.publishTopic)) {
       dispatch(setLoading(true));
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
@@ -1081,6 +1088,18 @@ const index = () => {
 
     }
   }, [selectNode, leftData]);
+
+
+  useEffect(() => {
+    if(selectProduct) {
+      console.log(mqttClient.publishTopic);
+      // 模拟AD假数据
+      if(mqttClient.publishTopic === 'Altium') {
+        setDesignData(ADdata.getCurrentBOM);  
+        dealCurrentBom(ADdata.getCurrentBOM);
+      }
+    }
+  },[selectProduct])
 
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
@@ -2911,11 +2930,6 @@ const index = () => {
       .then((res) => { })
       .catch((err) => { });
   };
-
-  useEffect(() => {
-    console.log(centerData, "centerData");
-  }, [centerData]);
-
 
 
   {/* 基本信息 */ }

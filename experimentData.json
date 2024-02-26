@@ -140,7 +140,7 @@
     "output_data": {
       "node_name": "assem_top",
       "pic_path": "",
-      "file_path": "D:\\SWFiles\\assem_top.SLDASM",
+      "file_path": "C:\\Users\\Administrator\\Desktop\\test3D\\Blade.SLDPRT",
       "model_type": "assembly",
       "property": [
         {
@@ -273,7 +273,7 @@
         {
           "node_name": "block<1>",
           "pic_path": "",
-          "file_path": "D:\\SWFiles\\block.SLDPRT",
+          "file_path": "C:\\Users\\Administrator\\Desktop\\test3D\\Blade.SLDPRT",
           "model_type": "part",
           "property": [
             {

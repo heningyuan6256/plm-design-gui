@@ -276,7 +276,6 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
 
   useMount(() => {
     listen("onchain", async (matchUrl: any) => {
-      console.log(matchUrl,',a');
       if(matchUrl.payload === 'Altium'){
         navigate(`/home/1`);
         const currentWindow = getCurrent();

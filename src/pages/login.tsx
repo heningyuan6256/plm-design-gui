@@ -217,7 +217,7 @@ export default function login() {
       const matchTopic = matches?.args?.topic?.value || ""
       const matchPid = matches?.args?.pid?.value || ""
       // 当通过浏览器进入登陆界面的时候
-      if (matchTopic && !matchPid) {
+      if (matchTopic && !matchPid && matchTopic != 'Altium') {
         openDesignInLogin(matchTopic as string)
       } else {
         // 正常情况的登陆
