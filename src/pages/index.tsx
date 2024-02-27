@@ -65,6 +65,7 @@ import moment from "moment";
 import { PDFViewer } from 'fuyun';
 import ADdata from "../../experimentData.json";
 import { MqttClient } from "mqtt";
+import { metadata } from "../utils/fs_extra";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -120,6 +121,11 @@ const index = () => {
   const selectedCellLatest = useLatest(selectedCell);
 
   const lastestLogData = useLatest(logData);
+
+  // 2D
+
+  const [file2D, setFile2D] = useState()
+  const [material2D, set2D] = useState()
 
   const isNot2D = (client: string) => {
     const arr = ['Altium']
@@ -416,6 +422,22 @@ const index = () => {
       setRightData(leftData);
     }
   }, [leftData]);
+
+  const getFolderFile = async (path: string) => {
+      const fileEntry = await readDir(path)
+      const loop = async (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          const file = await metadata(data[i].path)
+          Object.assign(data[i],file)
+          if (file.isDir) {
+            await loop(data[i].children || [])
+          }
+        }
+      }
+      await loop(fileEntry)
+      console.log(fileEntry,'fileEntry');
+      
+  }
 
   // useAsyncEffect(async () => {
   //   if (leftData.length) {
@@ -1100,6 +1122,7 @@ const index = () => {
         setDesignData(ADdata.getCurrentBOM);
         dealCurrentBom(ADdata.getCurrentBOM);
       }
+      getFolderFile("D:/example-design (2)")
     }
   }, [selectProduct])
 

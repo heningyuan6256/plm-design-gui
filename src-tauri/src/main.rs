@@ -208,6 +208,7 @@ fn main() {
         })
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| menu::menu_handle(app, event))
+        .plugin(tauri_plugin_fs_extra::init())
         .run(context)
         .expect("error while running tauri application");
 }
