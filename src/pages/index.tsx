@@ -1563,8 +1563,215 @@ const index = () => {
     return nameThumbMap;
   };
 
+
+  const create2DInstance = async ({ itemCode, nameFileUrlMap }: { itemCode: string, nameFileUrlMap: any }) => {
+    // 根据所选的产品去查询第一个型谱的id
+    const spectrumReturnV: any = await API.getProductSpectrumList(
+      selectProduct
+    );
+    const spectrum = spectrumReturnV.result[0].id;
+
+    const setVal = (row: any, col: any) => {
+      if (ItemCode.isFile(itemCode)) {
+        if (col.apicode === "ProductModel") {
+          return spectrum;
+        } else if (col.apicode === "Product") {
+          return selectProduct;
+        } else if (col.apicode === "FileUrl") {
+          return `/plm/files${(nameFileUrlMap[
+            row.name
+          ]).response.uploadURL.split("/plm/files")[1]
+            }?name=${row.name}&size=${row.size
+            }&extension=${row.name.substring(row.name.lastIndexOf('.') + 1)}`;
+        } else if (col.apicode === "Thumbnail") {
+          return "";
+        } else if (col.apicode === "FileFormat") {
+          return row.name.substring(row.name.lastIndexOf('.') + 1);
+        } else if (col.apicode === "FileSize") {
+          return row.size;
+        } else if (col.apicode === "Category") {
+          return "1459426710323851265";
+        } else if (col.apicode === "Description") {
+          return row.name.substring(0, row.name.lastIndexOf('.'));
+        } else {
+          return transferValue(row[col.apicode] || col.defValue || "");
+        }
+      } else {
+        if (col.apicode === "ProductModel") {
+          return spectrum;
+        } else if (col.apicode === "Product") {
+          return selectProduct;
+        } else if (col.apicode === "Category") {
+          return "1718507649423851521";
+        } else if (col.apicode === "Number") {
+          return "";
+        } else if (col.apicode === "Description") {
+          return row.Description;
+        } else {
+          return transferValue(row[col.apicode] || col.defValue || "");
+        }
+      }
+    };
+    const dealData = (
+      ItemCode.isFile(itemCode) ? [file2D[0], ...file2D[0].children].filter(item => item.name.indexOf('.') != -1) : [file2D[0], ...material2D]
+    )
+      .filter((item) => item.flag != "exist")
+      .map((item, index) => {
+        const Category = ItemCode.isMaterial(itemCode) ? "1459426710323851265" : "1718507649423851521";
+        return {
+          fileIndex: index,
+          itemCode: itemCode,
+          objectId: Category,
+          workspaceId: selectProduct,
+          node_name: item.name,
+          file_path: item.path,
+          tenantId: "719",
+          verifyCode: "200",
+          user: user.id,
+          insAttrs: (ItemCode.isFile(itemCode) ? Attrs : materialAttrs)
+            .filter((item) => item.status)
+            .map((v) => {
+              return {
+                ...v,
+                value: setVal(item, v),
+              };
+            }),
+        };
+      });
+
+    console.log(dealData, "创建参数");
+
+    const successInstances: any = await API.createInstances(dealData);
+
+    console.log(successInstances, "创建返回");
+
+    const createLogArray: logItemType[] = [];
+    successInstances.result.forEach((item: any) => {
+      if (item && item.code == 500) {
+        createLogArray.push({
+          log: `${item.msg}`,
+          dateTime: getCurrentTime(),
+          id: Utils.generateSnowId(),
+        });
+      } else
+        if (item && item.number) {
+          createLogArray.push({
+            log: `${item.name} 创建成功， 编号:${item.number}`,
+            dateTime: getCurrentTime(),
+            id: Utils.generateSnowId(),
+          });
+        }
+    });
+    warpperSetLog(() => {
+      setLogData([...lastestLogData.current, ...createLogArray]);
+    });
+
+    // if (ItemCode.isFile(itemCode)) {
+    //   return successInstances
+    // } else {
+    const successInstancesMap: any = {};
+    console.log(successInstances, "successInstances");
+
+    successInstances.result.forEach((item: any, index: number) => {
+      if (item.code == 2000) {
+        // tribon判断首先根据caizhiguige然后根据node_name
+        const rowKey = dealData[index].node_name
+        successInstancesMap[rowKey] = item;
+      }
+    });
+  }
+
+  const upload2D = async () => {
+    warpperSetLog(() => {
+      setLogData([
+        ...lastestLogData.current,
+        {
+          log: "设计原理图上传开始。。。",
+          dateTime: getCurrentTime(),
+          id: Utils.generateSnowId(),
+        },
+      ]);
+    });
+    dispatch(setLoading(true));
+    setLogVisbile(true);
+    console.log(file2D)
+    console.log(material2D)
+
+
+    const fileArry = [
+      {
+        name: file2D[0].name,
+        data: new Blob([await readBinaryFile(file2D[0].path)]),
+        source: "Local",
+        isRemote: false,
+      },
+    ]
+    const queryArr = (file2D[0].children || []).filter((item: any) => item.name.indexOf('.') != -1)
+
+    for (let i = 0; i < queryArr.length; i++) {
+      fileArry.push({
+        name: queryArr[i].name,
+        data: new Blob([await readBinaryFile(queryArr[i].path)]),
+        source: "Local",
+        isRemote: false,
+      })
+      warpperSetLog(() => {
+        setLogData([
+          ...lastestLogData.current,
+          {
+            log: "加载原理图 " + queryArr[i].name + ` (${i + 1}/${queryArr.length})`,
+            dateTime: getCurrentTime(),
+            id: Utils.generateSnowId(),
+          },
+        ]);
+      });
+    }
+
+    console.log(fileArry, 'fileArry');
+
+
+    // 首先创建所有的文件
+    // 首先上传所有的文件预览图
+    const nameFileUrlMap = await uploadFile(fileArry)
+    // 创建文件实例
+    await create2DInstance({ itemCode: BasicsItemCode.file, nameFileUrlMap: nameFileUrlMap })
+
+    // 创建文件结构
+    // const {
+    //   result: { records: structureAttrs },
+    // }: any = await API.getInstanceAttrs({
+    //   itemCode: BasicsItemCode.file,
+    //   tabCode: '10002016',
+    // });
+    // const c = Utils.transformArrayToMap(
+    //   structureAttrs,
+    //   "apicode",
+    //   "id"
+    // );
+
+    // const fileStructData = [
+    //   {
+    //     insId: 
+    //   }
+    // ]
+
+
+
+    // 创建物料
+    await create2DInstance({ itemCode: BasicsItemCode.material, nameFileUrlMap })
+    // 绑定父级物料以及父级文件
+    console.log(nameFileUrlMap, 'nameFileUrlMap');
+
+    dispatch(setLoading(false));
+
+  }
+
   const handleClick = async (name: string) => {
     if (name === "upload") {
+      if (!isNot2D(mqttClient.publishTopic)) {
+        upload2D()
+        return
+      }
       warpperSetLog(() => {
         setLogData([
           ...lastestLogData.current,
@@ -3265,6 +3472,67 @@ const index = () => {
           </OnChainTable>
         </div>
       </div>
+      <PlmModal
+        title={"上传日志"}
+        width={582}
+        open={logVisible}
+        onCancel={() => {
+          if (loading) {
+            message.error({
+              content: "上传中，请稍后",
+            });
+          } else {
+            setLogVisbile(false);
+          }
+        }}
+      >
+        <div style={{ padding: "12px 13px", background: "#f1f1f1" }}>
+          <div
+            ref={logWrapperRef}
+            className={
+              "w-full border border-outBorder overflow-auto bg-white"
+            }
+            style={{ height: "365px", padding: "12px" }}
+          >
+            {logData.map((item: any, index: number) => {
+              return (
+                <div key={index} className="flex text-xs">
+                  <div style={{ marginRight: "10px", marginBottom: "4px" }}>
+                    {item.dateTime}
+                  </div>
+                  <div>{item.log}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="h-12 flex justify-end items-center">
+          <Button
+            onClick={async () => {
+              downFile();
+            }}
+            style={{
+              borderRadius: "2px",
+              borderColor: "#57a8ed",
+              marginRight: "8px",
+            }}
+          >
+            下载错误日志
+          </Button>
+          <Button
+            onClick={async () => {
+              downFile();
+            }}
+            style={{
+              marginRight: "13px",
+              borderRadius: "2px",
+              borderColor: "#57a8ed",
+            }}
+          >
+            下载日志
+          </Button>
+        </div>
+      </PlmModal>
     </div>
   }
 
