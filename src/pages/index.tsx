@@ -1675,10 +1675,12 @@ const index = () => {
     successInstances.result.forEach((item: any, index: number) => {
       if (item.code == 2000) {
         // tribon判断首先根据caizhiguige然后根据node_name
-        const rowKey = dealData[index].node_name
-        successInstancesMap[rowKey] = item;
+        // const rowKey = dealData[index].node_name
+        successInstancesMap[`data${index}`] = item;
       }
     });
+
+    return successInstancesMap
   }
 
   const upload2D = async () => {
@@ -1734,36 +1736,150 @@ const index = () => {
     // 首先上传所有的文件预览图
     const nameFileUrlMap = await uploadFile(fileArry)
     // 创建文件实例
-    await create2DInstance({ itemCode: BasicsItemCode.file, nameFileUrlMap: nameFileUrlMap })
+    const nameNumberMap: any = await create2DInstance({ itemCode: BasicsItemCode.file, nameFileUrlMap: nameFileUrlMap })
 
     // 创建文件结构
-    // const {
-    //   result: { records: structureAttrs },
-    // }: any = await API.getInstanceAttrs({
-    //   itemCode: BasicsItemCode.file,
-    //   tabCode: '10002016',
-    // });
-    // const c = Utils.transformArrayToMap(
-    //   structureAttrs,
-    //   "apicode",
-    //   "id"
-    // );
+    const {
+      result: { records: structureAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.file,
+      tabCode: '10002016',
+    });
+    const structureAttrsMap = Utils.transformArrayToMap(
+      structureAttrs,
+      "apicode",
+      "id"
+    );
 
-    // const fileStructData = [
-    //   {
-    //     insId: 
-    //   }
-    // ]
+    const fileArr = Object.values(nameNumberMap).map((item: any) => item.instanceId)
+    console.log(fileArr, 'fileArr');
 
+    const fileStructData = [
+      {
+        insId: fileArr[0],
+        attrMap: {},
+        children: (file2D[0].children || []).filter((item: any) => item.name.indexOf('.') != -1).map((item: any, index: number) => {
+          return {
+            insId: fileArr[index + 1],
+            attrMap: {
+              [structureAttrsMap['Qty']]: '1'
+            }
+          }
+        }).filter((item: any) => item.insId)
+      }
+    ]
 
+    console.log(fileStructData, 'fileStructData')
+    API.batchCreateStructure({
+      tenantId: "719",
+      userId: user.id,
+      itemCode: BasicsItemCode.file,
+      tabCode: '10002016',
+      instances: fileStructData,
+    });
 
     // 创建物料
-    await create2DInstance({ itemCode: BasicsItemCode.material, nameFileUrlMap })
+    const nameNumberMaterialMap: any = await create2DInstance({ itemCode: BasicsItemCode.material, nameFileUrlMap })
     // 绑定父级物料以及父级文件
-    console.log(nameFileUrlMap, 'nameFileUrlMap');
 
-    dispatch(setLoading(false));
+    const {
+      result: { records: structureMaterialAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.material,
+      tabCode: '10002003',
+    });
+    const structureAttrsMaterialMap = Utils.transformArrayToMap(
+      structureMaterialAttrs,
+      "apicode",
+      "id"
+    );
 
+    const matArr = Object.values(nameNumberMaterialMap).map((item: any) => item.instanceId)
+    console.log(matArr, 'matArr');
+
+    const materialStructData = [
+      {
+        insId: matArr[0],
+        attrMap: {},
+        children: material2D.map((item: any, index: number) => {
+          return {
+            insId: matArr[index + 1],
+            attrMap: {
+              [structureAttrsMaterialMap['Qty']]: String(item.Quantity),
+              [structureAttrsMaterialMap['RefNumber']]: item.Designator
+            }
+          }
+        })
+      }
+    ]
+    console.log(materialStructData, 'materialStructData');
+    API.batchCreateStructure({
+      tenantId: "719",
+      userId: user.id,
+      itemCode: BasicsItemCode.material,
+      tabCode: '10002003',
+      instances: materialStructData,
+    });
+
+
+    const {
+      result: { records: designTabAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.material,
+      tabCode: "10002028",
+    });
+
+    const setVal = (row: any, col: any) => {
+      if (col.apicode === "ID") {
+        return fileArr[0];
+      } else if (col.apicode === "CorrespondingVersion") {
+        return "Draft";
+      } else {
+        return "";
+      }
+    };
+    const dealParams = [{
+      affectedInstanceIds: fileArr[0],
+      id: matArr[0],
+      itemCode: BasicsItemCode.material,
+      tabCode: 10002028,
+      tenantId: "719",
+      userId: user.id,
+      versionNumber: "Draft",
+      rowList: [
+        {
+          insAttrs: designTabAttrs
+            .filter((attr: any) => {
+              return ["ID", "CorrespondingVersion", "From"];
+            })
+            .map((attr: any) => {
+              return {
+                apicode: attr.apicode,
+                id: attr.id,
+                valueType: attr.valueType,
+                value: setVal({}, attr),
+              };
+            }),
+        },
+      ],
+    }]
+    API.bindFileAndMaterial({
+      tenantId: "719",
+      userId: user.id,
+      saveVos: dealParams,
+    }).then((res) => {
+      warpperSetLog(() => {
+        setLogData([
+          ...lastestLogData.current,
+          {
+            log: "上传成功",
+            dateTime: getCurrentTime(),
+            id: Utils.generateSnowId(),
+          },
+        ]);
+      });
+      dispatch(setLoading(false));
+    });
   }
 
   const handleClick = async (name: string) => {
@@ -3397,7 +3513,7 @@ const index = () => {
               },
               {
                 title: "编号",
-                dataIndex: "number",
+                dataIndex: "DesignItemId",
                 search: {
                   type: "Input",
                 },
