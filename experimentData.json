@@ -300,5 +300,2188 @@
     "type": "sw.2019.getCurrentBOM",
     "extra": "读取BOM结构",
     "topic": "sw"
+  },
+  "AltiumBom": {
+    "Version": "1.0.0.0",
+    "Variants": [
+      {
+        "Id": "No_Variant_Unique_Id",
+        "Items": [
+          {
+            "DesignItemId": "CMP-004-00022-2",
+            "Description": "Switching Diode (High Speed Switching), 80 V, 100 mA, 2-Pin SOD-923, RoHS, Tape and Reel",
+            "Designator": "D21,D22,D23,D25,D26,D27,D31,D34",
+            "Comment": "1SS400CSFH",
+            "Mpn": "1SS400CSFHT2RA",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-002-00067-1",
+            "Description": "MicroSD Card Connector, Hinge Type, -40 to 85 degC, 8-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "SKT3",
+            "Comment": "47219-2001",
+            "Mpn": "0472192001",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00063-1",
+            "Description": "Receptacle, Pitch 1 mm, 25 Position, Height 4.15 mm, -55 to 130 degC",
+            "Designator": "CN1,CN2",
+            "Comment": "91931-31125LF",
+            "Mpn": "91931-31125LF",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00070-1",
+            "Description": "Raspberry Pi Compute Module 3 socket",
+            "Designator": "CN11",
+            "Comment": "1746540-4-RPI-CM3",
+            "Mpn": "1746540-4",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00068-1",
+            "Description": "Card Edge Connector, Pitch 0.5 mm, 67 Position, Height 5.8 mm",
+            "Designator": "CN18,CN19,CN20,CN21",
+            "Comment": "10128798-005RLF",
+            "Mpn": "10128798-005RLF",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-002-00051-1",
+            "Description": "Header, Pitch 1.25 mm, 1 x 2 Position, Height 3.6 mm, -40 to 85 degC",
+            "Designator": "CN10",
+            "Comment": "0532610271",
+            "Mpn": "53261-0271",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00066-1",
+            "Description": "USB-A Connector, 30 V, 1.5 A, -40 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "CN16,CN17",
+            "Comment": "1050570001",
+            "Mpn": "105057-0001",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00049-1",
+            "Description": "Micro SD Card Connector, Pitch 1.1 mm, 8 Position, Height 1.4 mm, -25 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "SKT1,SKT2",
+            "Comment": "5033981892",
+            "Mpn": "503398-1892",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00050-1",
+            "Description": "Right Angle FFC/FPC Connector, 50 V, 0.5 A, -40 to 105 degC, RoHS, Tape and Reel",
+            "Designator": "CN22,CN23",
+            "Comment": "5051102291",
+            "Mpn": "505110-2291",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-00028-00001-1",
+            "Description": "WA-SMSI SMT Steel Spacer, M2 Thread Internal, Tin, RoHS, Tape and Reel",
+            "Designator": "ST3,ST4",
+            "Comment": "9774030243",
+            "Mpn": "9774030243R",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-00028-00003-1",
+            "Description": "WA-SMSI SMT Steel Spacer, M2 Thread Internal, Tin, RoHS, Tape and Reel",
+            "Designator": "ST1,ST2,ST5,ST6",
+            "Comment": "9774040243",
+            "Mpn": "9774040243R",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-006-00018-1",
+            "Description": "WE-LQS SMD Power Inductor, L=33 µH",
+            "Designator": "L1",
+            "Comment": "74404042330",
+            "Mpn": "74404042330",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-011-00012-1",
+            "Description": "WS-DISV 1.27 mm small compact SMD Dip Switch with top tape",
+            "Designator": "SW4",
+            "Comment": "416131160803",
+            "Mpn": "416131160803",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-003-00029-1",
+            "Description": "Crystal 32.768kHz 10ppm 7pF -40C +85C",
+            "Designator": "Y1",
+            "Comment": "ABS07-166-32.768KHZ-T",
+            "Mpn": "ABS07-166-32.768KHZ-T",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-011-00011-1",
+            "Description": "Ultra-small Surface-mounting Tactile Switches with High Contact Reliability, SPST-NO, -25 to 70 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "SW1,SW2,SW3",
+            "Comment": "B3U-1000P-B",
+            "Mpn": "B3U-1000P-B",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-002-00061-1",
+            "Description": "Disconnectable Crimp Style Connector, Pitch 1.25 mm, 1 x 2 Position, Height 4.05 mm, -25 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "CN14",
+            "Comment": "BM02B-GHS-TBT(LF)(SN)(N)",
+            "Mpn": "BM02B-GHS-TBT(LF)(SN)(N)-",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00053-1",
+            "Description": "Header, Pitch 1.25 mm, 1 x 4 Position, Height 4.05 mm, -25 to 85 degC",
+            "Designator": "CN5,CN7,CN9,CN13",
+            "Comment": "BM04B-GHS-TBT",
+            "Mpn": "BM04B-GHS-TBT(LF)(SN)(N)",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-002-00062-1",
+            "Description": "GH Disconnectable Crimp Style Connector, Pitch 1.25 mm, 1 x 5 Position, Height 4.05 mm, -25 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "CN6,CN8",
+            "Comment": "BM05B-GHS-TBT",
+            "Mpn": "BM05B-GHS-TBT(LF)(SN)(N)",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00052-1",
+            "Description": "Header, Pitch 1 mm, 1 x 6 Position, Height 4.25 mm, -25 to 85 degC",
+            "Designator": "CN12",
+            "Comment": "BM06B-SRSS-TB",
+            "Mpn": "BM06B-SRSS-TB(LF)(SN)",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00055-2",
+            "Description": "Chip Capacitor, 1µF +/-0.1%, 25V, 0603, Thickness 1 mm",
+            "Designator": "C3,C4,C142,C143",
+            "Comment": "Capacitor 1µF +/-0.1% 25V 0603",
+            "Mpn": "CL10A105KA8NNNC",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-001-00063-2",
+            "Description": "Chip Capacitor, 1µF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C29,C32,C83,C88,C95,C96,C104,C112,C115,C117,C124,C126,C127,C128,C136,C138,C144,C145,C217,C220,C221",
+            "Comment": "Capacitor 1µF +/-20% 10V 0402",
+            "Mpn": "CC0402KRX5R6BB105",
+            "Quantity": 21
+          },
+          {
+            "DesignItemId": "CMP-001-00078-2",
+            "Description": "Chip Capacitor, 1µF +/-40%, 50V, 0603, Thickness 1 mm",
+            "Designator": "C26",
+            "Comment": "Capacitor 1µF +/-40% 50V 0603",
+            "Mpn": "CL10A105KB8NNNC",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00066-2",
+            "Description": "Chip Capacitor, 1nF +/-20%, 50V, 0402, Thickness 0.33 mm",
+            "Designator": "C52,C53",
+            "Comment": "Capacitor 1nF +/-20% 50V 0402",
+            "Mpn": "885012205061",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00056-2",
+            "Description": "Chip Capacitor, 2,2µF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C25",
+            "Comment": "Capacitor 2,2µF +/-20% 10V 0402",
+            "Mpn": "GRM155R61A225KE95D",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00076-2",
+            "Description": "Chip Capacitor, 4.7µF +/-20%, 10V, 0603, Thickness 1 mm",
+            "Designator": "C84,C89,C97",
+            "Comment": "Capacitor 4.7µF +/-20% 10V 0603",
+            "Mpn": "CC0603KRX5R6BB475",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-001-00080-2",
+            "Description": "Chip Capacitor, 4.7µF +/-40%, 25V, 0805, Thickness 1.45 mm",
+            "Designator": "C141",
+            "Comment": "Capacitor 4.7µF +/-40% 25V 0805",
+            "Mpn": "08053D475MAT2A",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00059-2",
+            "Description": "Molded Tantalum Polymer Capacitor, 6.8 uF, +/- 20%, 35 V, -55 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "C2",
+            "Comment": "Capacitor 6.8µF +/-20% 35V B2",
+            "Mpn": "T521B685M035ATE150",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00075-2",
+            "Description": "Chip Capacitor, 10µF +/-20%, 10V, 0603, Thickness 1 mm",
+            "Designator": "C5,C6,C23,C24,C164,C167,C169,C172,C209,C211,C213",
+            "Comment": "Capacitor 10µF +/-20% 10V 0603",
+            "Mpn": "CL10A106KP8NNNC",
+            "Quantity": 11
+          },
+          {
+            "DesignItemId": "CMP-001-00079-2",
+            "Description": "Chip Capacitor, 10µF +/-20%, 25V, 0805, Thickness 1.45 mm",
+            "Designator": "C8,C9,C10,C11,C12,C13,C16,C17,C18,C19,C20,C21,C28,C33,C44,C45,C46,C47,C48,C49",
+            "Comment": "Capacitor 10µF +/-20% 25V 0805",
+            "Mpn": "GRM21BR61E106KA73L",
+            "Quantity": 20
+          },
+          {
+            "DesignItemId": "CMP-001-00069-2",
+            "Description": "Chip Capacitor, 10nF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C54,C71,C74,C75,C76,C77,C79,C81,C85,C90,C146,C149,C150,C153,C155,C166,C171,C215,C218",
+            "Comment": "Capacitor 10nF +/-20% 50V 0402",
+            "Mpn": "CC0402KRX7R9BB103",
+            "Quantity": 19
+          },
+          {
+            "DesignItemId": "CMP-001-00072-2",
+            "Description": "Chip Capacitor, 12pF +/-10%, 50V, 0402, Thickness 0.33 mm",
+            "Designator": "C110,C111,C134,C135",
+            "Comment": "Capacitor 12pF +/-10% 50V 0402",
+            "Mpn": "CGA2B2C0G1H120J050BA",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-001-00081-2",
+            "Description": "Chip Capacitor, 22µF +/-40%, 16V, 0805, Thickness 1.45 mm",
+            "Designator": "C59,C61,C64,C66,C92,C93,C98,C99,C100,C101,C102,C103,C173,C175,C178,C180,C182,C184,C187,C189,C191,C193,C196,C198,C200,C202,C205,C207",
+            "Comment": "Capacitor 22µF +/-40% 16V 0805",
+            "Mpn": "CL21A226MOCLRNC",
+            "Quantity": 28
+          },
+          {
+            "DesignItemId": "CMP-001-00062-2",
+            "Description": "Chip Capacitor, 22nF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C63,C68,C177,C181,C186,C190,C195,C199,C204,C208",
+            "Comment": "Capacitor 22nF +/-20% 10V 0402",
+            "Mpn": "C0402C223K8PACTU",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-001-00073-2",
+            "Description": "Chip Capacitor, 22pF +/-10%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C7,C91",
+            "Comment": "Capacitor 22pF +/-10% 50V 0402",
+            "Mpn": "04025A220JAT2A",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00082-2",
+            "Description": "Chip Capacitor, 47µF +/-40%, 6.3V, 0805, Thickness 1.45 mm",
+            "Designator": "C122,C123",
+            "Comment": "Capacitor 47µF +/-40% 6.3V 0805",
+            "Mpn": "JMK212BBJ476MG-T",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00071-2",
+            "Description": "Chip Capacitor, 47nF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C156",
+            "Comment": "Capacitor 47nF +/-20% 50V 0402",
+            "Mpn": "C1005X7R1H473K050BB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00061-2",
+            "Description": "Chip Capacitor, 100nF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C50,C51,C58,C60,C62,C65,C67,C69,C70,C72,C73,C78,C80,C82,C86,C87,C94,C105,C106,C107,C108,C109,C113,C114,C116,C118,C119,C120,C121,C125,C129,C130,C131,C132,C133,C137,C139,C154,C158,C160,C161,C162,C165,C170,C174,C176,C179,C183,C185,C188,C192,C194,C197,C201,C203,C206,C216,C219",
+            "Comment": "Capacitor 100nF +/-20% 10V 0402",
+            "Mpn": "CC0402KRX5R6BB104",
+            "Quantity": 58
+          },
+          {
+            "DesignItemId": "CMP-001-00065-2",
+            "Description": "Chip Capacitor, 100nF +/-20%, 25V, 0402, Thickness 0.6 mm",
+            "Designator": "C34,C35,C140,C147,C151,C210,C212,C214",
+            "Comment": "Capacitor 100nF +/-20% 25V 0402",
+            "Mpn": "CL05A104KA5NNNC",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-001-00067-2",
+            "Description": "Chip Capacitor, 100nF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C22,C27,C157,C159",
+            "Comment": "Capacitor 100nF +/-20% 50V 0402",
+            "Mpn": "CC0402KRX5R9BB104",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-001-00053-2",
+            "Description": "Molded Tantalum Polymer Capacitor, 150 uF, +/- 20%, 6.3 V, -55 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "C163,C168",
+            "Comment": "Capacitor 150µF +/-20% 6.3V B2",
+            "Mpn": "6TPE150MAZB",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00057-2",
+            "Description": "Chip Capacitor, 220nF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C1,C57",
+            "Comment": "Capacitor 220nF +/-20% 10V 0402",
+            "Mpn": "CC0402KRX5R6BB224",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00058-2",
+            "Description": "Molded Tantalum Polymer Capacitor, 330 uF, +/- 20%, 6.3 V, -55 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "C36,C37,C38,C39,C40,C41",
+            "Comment": "Capacitor 330µF +/-20% 6.3V D3",
+            "Mpn": "6TPF330M9L",
+            "Quantity": 6
+          },
+          {
+            "DesignItemId": "CMP-001-00077-2",
+            "Description": "Chip Capacitor, 470nF +/-20%, 25V, 0603, Thickness 1 mm",
+            "Designator": "C148,C152",
+            "Comment": "Capacitor 470nF +/-20% 25V 0603",
+            "Mpn": "CC0603KRX5R8BB474",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00068-2",
+            "Description": "Chip Capacitor, 470pF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C14,C15,C30,C31,C42,C43,C55",
+            "Comment": "Capacitor 470pF +/-20% 50V 0402",
+            "Mpn": "CC0402KRX7R9BB471",
+            "Quantity": 7
+          },
+          {
+            "DesignItemId": "CMP-001-00070-2",
+            "Description": "Chip Capacitor, 680pF +/-20%, 50V, 0402, Thickness 0.33 mm",
+            "Designator": "C56",
+            "Comment": "Capacitor 680pF +/-20% 50V 0402",
+            "Mpn": "GRM15XR71H681KA86D",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-015-00001-1",
+            "Description": "EMI Filter for T-Flash / MicroSD Interface, -40 to 85 degC, 16-Pin UDFN, Pb-Free, Tape and Reel",
+            "Designator": "U41,U42,U43",
+            "Comment": "CM1624-08DE",
+            "Mpn": "CM1624-08DE",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-004-00027-2",
+            "Description": "Common Cathode Silicon Dual Switching Diodes, 3-Pin SOT-723, Pb-Free, Tape and Reel",
+            "Designator": "D24",
+            "Comment": "DAN222M3T5G",
+            "Mpn": "DAN222M3T5G",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00055-1",
+            "Description": "Plug Connector, 50 V, 0.3 A, -45 to 125 degC, RoHS, Tape and Reel",
+            "Designator": "CN3,CN4",
+            "Comment": "DF12(3.0)-50DP-0.5V(86)",
+            "Mpn": "DF12(3.0)-50DP-0.5V(86)",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-013-00031-1",
+            "Description": "Digital Transistor (BRT), R1=10 kOhm, R2=10 kOhm, NPN Transistor, 3-Pin SOT-723, Pb-Free, Tape and Reel",
+            "Designator": "Q11,Q22,Q23",
+            "Comment": "DTC114EM3T5G",
+            "Mpn": "DTC114EM3T5G",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-002-00065-1",
+            "Description": "USB-C Connector, 20 V, 1.25 A, -30 to 80 degC, RoHS, Tape and Reel",
+            "Designator": "CN15",
+            "Comment": "DX07S024JJ3R1300",
+            "Mpn": "DX07S024JJ3R1300",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-004-00029-2",
+            "Description": "TVS diode, 4500W, 22V standoff, 29.5V clamp",
+            "Designator": "D1,D37",
+            "Comment": "ESDA24P140-1U3M",
+            "Mpn": "ESDA24P140-1U3M",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-004-00023-2",
+            "Description": "TVS DIODE 22V 41V 1610",
+            "Designator": "D13,D14,D33,D35,D36",
+            "Comment": "ESDA25P35-1U1M",
+            "Mpn": "ESDA25P35-1U1M",
+            "Quantity": 5
+          },
+          {
+            "DesignItemId": "CMP-004-00030-2",
+            "Description": "Single Line Low Capacitance Transil™, 5 V, -55 to 150 degC, 2-Pin SOD-882, RoHS, Tape and Reel",
+            "Designator": "D3,D4,D5,D6,D7,D8,D9,D10,D11,D12,D15,D16,D17,D18,D19,D20,D28,D29,D30",
+            "Comment": "ESDALC5-1BM2",
+            "Mpn": "ESDALC5-1BM2",
+            "Quantity": 19
+          },
+          {
+            "DesignItemId": "CMP-004-00025-1",
+            "Description": "Ultra Low Capacitance ESD Protection Array for High Speed Data Line Protection, 6-Pin UDFN, Pb-Free, Tape and Reel",
+            "Designator": "U20,U26,U28",
+            "Comment": "ESDR0502NMUTBG",
+            "Mpn": "ESDR0502NMUTBG",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-003-00028-1",
+            "Description": "Crystal, 24 MHz, +/- 10 ppm, -20 to 75 degC, 4-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "Y2,Y3",
+            "Comment": "FA-12824.0000MF10Z-W3",
+            "Mpn": "FA-12824.0000MF10Z-W3",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-013-00032-1",
+            "Description": "Asymmetric Dual N-Channel PowerTrench® Power Clip MOSFET, 30 V, -55 to 150 degC, 8-Pin PQFN, RoHS, Tape and Reel",
+            "Designator": "Q1,Q2",
+            "Comment": "FDPC5030SG",
+            "Mpn": "FDPC5030SG",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-005-00012-1",
+            "Description": "Fast Acting Fuse, 1 A, 32 V, -55 to 90 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "F4,F5,F7,F8",
+            "Comment": "FUSE-1A/32V-3",
+            "Mpn": "0467001.NRHF",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-005-00011-1",
+            "Description": "Fast Acting Fuse, 2 A, 32 V, -55 to 90 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "F2,F3",
+            "Comment": "FUSE-2A/32V-3",
+            "Mpn": "0467002.NRHF",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-005-00010-1",
+            "Description": "Surface Mount Fuses 7A 24V VFA SLIMLINE",
+            "Designator": "F1,F6",
+            "Comment": "FUSE-7A/24V-6",
+            "Mpn": "0429007.WRML",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-014-00001-1",
+            "Description": "High or Low Side Measurement, 2.7 to 5.5 V, -40 to 125 degC, 16-Pin QFN, RoHS, Tape and Reel",
+            "Designator": "U22",
+            "Comment": "INA230AIRGT",
+            "Mpn": "INA230AIRGTR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00148-2",
+            "Description": "Jumper 0402",
+            "Designator": "R1,R2,R3,R4,R5,R10,R13,R25,R39,R40,R43,R44,R76,R78,R82,R83,R92,R93,R94,R95,R96,R97,R98,R99,R102,R103,R104,R105,R120,R136,R137,R138,R139,R140,R141,R142,R143,R145,R187,R188,R194,R199,R201,R206,R209,R210,R221,R222,R223",
+            "Comment": "Jumper 0402",
+            "Mpn": "RC0402JR-070RL",
+            "Quantity": 49
+          },
+          {
+            "DesignItemId": "CMP-009-00175-2",
+            "Description": "Jumper 0603",
+            "Designator": "R64,R112,R119,R171",
+            "Comment": "Jumper 0603",
+            "Mpn": "CRCW06030000Z0EC",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-019-00045-1",
+            "Description": "Power Sequencer, 6-pin SOT-23, 250 Reel",
+            "Designator": "U10",
+            "Comment": "LM3880MFE-1AF",
+            "Mpn": "LM3880MFE-1AF/NOPB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00044-1",
+            "Description": "Micropower Buck Regulator with Integrated Boost and Catch Diode, 8-pin SON (DDB-8), -40 to 85 degC",
+            "Designator": "U1",
+            "Comment": "LT3470AIDDB",
+            "Mpn": "LT3470AIDDB#TRMPBF",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00046-1",
+            "Description": "Prioritized 2:1 PowerPath™ Controller, 2.5 to 40 V, -40 to 85 degC, 20-Pin QFN, RoHS",
+            "Designator": "U21",
+            "Comment": "LTC4418IUF",
+            "Mpn": "LTC4418IUF#TRPBF",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-031-00000-1",
+            "Description": "Low-Power Serial Real-Time Clock (RTC) with Alarm, 1.3 to 4.4 V, -40 to 85 degC, 16-Pin QFN, RoHS, Tape and Reel",
+            "Designator": "U13",
+            "Comment": "M41T62Q6F",
+            "Mpn": "M41T62Q6F",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00048-1",
+            "Description": "High Side Load Switch, 2.7 to 9 V, 7 A, 6.6 mOhm, -40 to 125 degC, 10-Pin QFN, RoHS",
+            "Designator": "U9,U11",
+            "Comment": "MIC95410YFL",
+            "Mpn": "MIC95410YFLTR",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-019-00047-1",
+            "Description": "Low RDSON Load Switch with Current Monitoring, 5.5 V, 7 A, -40 to 125 degC, 12-Pin QFN, RoHS",
+            "Designator": "U4,U6,U29,U31,U32,U34,U35,U37,U38,U40",
+            "Comment": "MP5087GG",
+            "Mpn": "MP5087GG-Z",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-00029-00000-1",
+            "Description": "MS Lihium Rechargeable Battery, 3 V, -20 to 60 degC, Tray",
+            "Designator": "BT1",
+            "Comment": "MS621FE-FL11E",
+            "Mpn": "MS621FE-FL11E",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-004-00024-2",
+            "Description": "Schottky Diodes & Rectifiers 1.0 Amp 40 Volt",
+            "Designator": "D32",
+            "Comment": "MSS1P4-M3/89A",
+            "Mpn": "MSS1P4-M3/89A",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-004-00026-2",
+            "Description": "Dual Common Cathode Schottky Barrier Diodes, 3-Pin SOT-723, Pb-Free, Tape and Reel",
+            "Designator": "D2",
+            "Comment": "NSR30CM3T5G",
+            "Mpn": "NSR30CM3T5G",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-015-00007-1",
+            "Description": "Remote 16-Bit I2C and SMBus I/O Expander with Interrupt Output and Configuration Registers, 2.3 to 5.5 V, -40 to 85 degC, 24-pin VQFN (RGE), Green (RoHS & no Sb/Br)",
+            "Designator": "U17,U18",
+            "Comment": "PCA9535RGE",
+            "Mpn": "PCA9535RGER",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-006-00019-1",
+            "Description": "Shielded Wirewound Inductor, 2.2 uH, +/- 20%, -20 to 120 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "L2,L3",
+            "Comment": "PCMB063T-2R2MS",
+            "Mpn": "PCMB063T-2R2MS",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-00028-00004-1",
+            "Description": "M2 PTH (2.5mm), 5mm pad",
+            "Designator": "PTH1,PTH2,PTH3,PTH4",
+            "Comment": "PTH-M2D5X5",
+            "Mpn": null,
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-007-00042-2",
+            "Description": "Chip LED 0402, Blue, 0.02 A, 3.1 to 3.7 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED3",
+            "Comment": "QBLP595-IB",
+            "Mpn": "QBLP595-IB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-007-00041-2",
+            "Description": "Chip LED 0402, Green, 0.02 A, 3.1 to 3.7 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED2,LED4,LED6,LED10,LED11,LED13,LED15,LED17,LED19,LED21",
+            "Comment": "QBLP595-IG",
+            "Mpn": "QBLP595-IG",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-007-00040-2",
+            "Description": "Chip LED 0402, Red, 0.02 A, 2.0 to 2.5 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED1,LED7",
+            "Comment": "QBLP595-R",
+            "Mpn": "QBLP595-R",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-007-00043-2",
+            "Description": "Chip LED 0402, Yellow, 0.02 A, 3.1 to 3.7 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED5,LED8,LED9,LED12,LED14,LED16,LED18,LED20,LED22",
+            "Comment": "QBLP595-Y",
+            "Mpn": "QBLP595-Y",
+            "Quantity": 9
+          },
+          {
+            "DesignItemId": "CMP-004-00028-2",
+            "Description": "DIODE SCHOTTKY 30V 100MA VMN2M",
+            "Designator": "D38,D39",
+            "Comment": "RB520CM-30",
+            "Mpn": "RB520CM-30T2R",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00160-2",
+            "Description": "Chip Resistor, 1,6 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R27",
+            "Comment": "Resistor 1K6 +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-071K6L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00157-2",
+            "Description": "Chip Resistor, 1 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R67,R69,R81,R144,R148,R211,R252,R253",
+            "Comment": "Resistor 1K +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-071KL",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-009-00118-2",
+            "Description": "Chip Resistor, 1 kOhms, +/-5%, 125 mW, -55 to 155 degC, 0805",
+            "Designator": "R175,R177,R179",
+            "Comment": "Resistor 1K +/-5% 0805 125 mW",
+            "Mpn": "RC0805JR-071KL",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-009-00165-2",
+            "Description": "Chip Resistor, 1 MOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R50,R53,R226,R228,R233,R235,R240,R242,R247,R249",
+            "Comment": "Resistor 1M +/-1 % 0402 63 mW",
+            "Mpn": "CRCW04021M00FKED",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-009-00151-2",
+            "Description": "Chip Resistor, 1 MOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R113,R146",
+            "Comment": "Resistor 1M +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-071ML",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00166-2",
+            "Description": "Chip Resistor, 2,2 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R84,R85,R86,R87,R88,R89,R90,R124",
+            "Comment": "Resistor 2K2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-072K2L",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-009-00138-2",
+            "Description": "Chip Resistor, 2 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R24",
+            "Comment": "Resistor 2K +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-072KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00129-2",
+            "Description": "Chip Resistor, 2,26 MOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R190",
+            "Comment": "Resistor 2M26 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-072M26L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00169-2",
+            "Description": "Chip Resistor, 2,49 MOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R191",
+            "Comment": "Resistor 2M49 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-072M49L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00128-2",
+            "Description": "Chip Resistor, 2,2 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R14,R16,R17",
+            "Comment": "Resistor 2R2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-072R2L",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-009-00172-2",
+            "Description": "Chip Resistor, 3,3 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R15",
+            "Comment": "Resistor 3R3  +/-5 % 0402 63 mW",
+            "Mpn": "CRCW04023R30JNED",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00158-2",
+            "Description": "Chip Resistor, 4,7 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R66,R128,R129,R130,R131,R132,R133,R134,R135",
+            "Comment": "Resistor 4K7  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-074K7L",
+            "Quantity": 9
+          },
+          {
+            "DesignItemId": "CMP-009-00174-2",
+            "Description": "Chip Resistor, 4,7 Ohms, +/-5 %, 125 mW, -55 to 155 degC, 0805",
+            "Designator": "R8,R9",
+            "Comment": "Resistor 4R7  +/-5 % 0805 125 mW",
+            "Mpn": "CRCW08054R70JNEA",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00136-2",
+            "Description": "Chip Resistor, 5,6 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R28",
+            "Comment": "Resistor 5K6  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-075K6L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00147-2",
+            "Description": "Chip Resistor, 6,2 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R21",
+            "Comment": "Resistor 6K2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-076K2L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00119-2",
+            "Description": "Chip Resistor, 0,007 Ohms, +/-1%, 63 mW, -55 to 155 degC, 1206",
+            "Designator": "R204",
+            "Comment": "Resistor 7mR +/-1% 1206 63 mW",
+            "Mpn": "KRL3216T4A-M-R007-F-T1",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00139-2",
+            "Description": "Chip Resistor, 8,2 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R29",
+            "Comment": "Resistor 8R2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-078R2L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00135-2",
+            "Description": "Chip Resistor, 9,1 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R37",
+            "Comment": "Resistor 9K1  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-079K1L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00149-2",
+            "Description": "Chip Resistor, 10 kOhms, +/-1 %, 63 mW, -55 to 125 degC, 0402",
+            "Designator": "R38,R54,R58,R59,R60,R61,R62,R80,R107,R109,R110,R117,R125,R147,R149,R150,R151,R152,R153,R154,R155,R156,R157,R158,R159,R160,R161,R162,R163,R164,R165,R166,R168,R169,R213,R214,R216,R217,R218,R220,R229,R230,R236,R237,R243,R244,R250,R251",
+            "Comment": "Resistor 10K  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0710KL",
+            "Quantity": 48
+          },
+          {
+            "DesignItemId": "CMP-009-00152-2",
+            "Description": "Chip Resistor, 10 Ohms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R207,R208",
+            "Comment": "Resistor 10R  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0710RL",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00173-2",
+            "Description": "Chip Resistor, 12 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R20,R121",
+            "Comment": "Resistor 12K  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0712KL",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00123-2",
+            "Description": "Chip Resistor, 22 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R178",
+            "Comment": "Resistor 22K  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0722KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00164-2",
+            "Description": "Chip Resistor, 22 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R106",
+            "Comment": "Resistor 22R  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-0722RL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00171-2",
+            "Description": "Chip Resistor, 25,5 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R23",
+            "Comment": "Resistor 25K5 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0725K5L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00143-2",
+            "Description": "Chip Resistor, 33 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R100,R101",
+            "Comment": "Resistor 33R  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-0733RL",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00154-2",
+            "Description": "Chip Resistor, 43,2 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R22",
+            "Comment": "Resistor 43K2 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0743K2L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00159-2",
+            "Description": "Chip Resistor, 44,2 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R215,R219",
+            "Comment": "Resistor 44K2 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0744K2L",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00137-2",
+            "Description": "Chip Resistor, 47,5 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R198",
+            "Comment": "Resistor 47K5 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0747K5L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00124-2",
+            "Description": "Chip Resistor, 53,6 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R49,R52,R225,R227,R232,R234,R239,R241,R246,R248",
+            "Comment": "Resistor 53K6 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0753K6L",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-009-00168-2",
+            "Description": "Chip Resistor, 100 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R6,R7,R18,R19,R30,R31,R32,R33,R34,R35,R36,R41,R42,R45,R46,R47,R48,R51,R55,R56,R57,R63,R68,R70,R71,R72,R73,R74,R75,R91,R108,R111,R114,R115,R116,R118,R122,R123,R126,R127,R170,R172,R174,R180,R181,R182,R183,R184,R185,R186,R189,R200,R202,R203,R205,R212,R224,R231,R238,R245",
+            "Comment": "Resistor 100K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07100KL",
+            "Quantity": 60
+          },
+          {
+            "DesignItemId": "CMP-009-00167-2",
+            "Description": "Chip Resistor, 100 Ohms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R176",
+            "Comment": "Resistor 100R +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07100RL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00176-2",
+            "Description": "Chip Resistor, 120 Ohms, +/-5 %, 0.1 W, -55 to 155 degC, 0603",
+            "Designator": "R65",
+            "Comment": "Resistor 120R +/-5 % 0603 0.1 W",
+            "Mpn": "CRCW0603120RJNEB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00133-2",
+            "Description": "Chip Resistor, 121 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R193",
+            "Comment": "Resistor 121K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07121KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00170-2",
+            "Description": "Chip Resistor, 187 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R79",
+            "Comment": "Resistor 187K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07187KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00163-2",
+            "Description": "Chip Resistor, 200 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R12",
+            "Comment": "Resistor 200K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07200KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00150-2",
+            "Description": "Chip Resistor, 237 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R197",
+            "Comment": "Resistor 237K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07237KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00131-2",
+            "Description": "Chip Resistor, 301 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R26",
+            "Comment": "Resistor 301K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07301KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00142-2",
+            "Description": "Chip Resistor, 316 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R192",
+            "Comment": "Resistor 316K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07316KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00134-2",
+            "Description": "Chip Resistor, 324 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R11",
+            "Comment": "Resistor 324K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07324KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00132-2",
+            "Description": "Chip Resistor, 330 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R167",
+            "Comment": "Resistor 330R +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-07330RL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00126-2",
+            "Description": "Chip Resistor, 383 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R77",
+            "Comment": "Resistor 383K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07383KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00122-2",
+            "Description": "Chip Resistor, 470 Ohms, +/-5%, 125 mW, -55 to 155 degC, 0805",
+            "Designator": "R173",
+            "Comment": "Resistor 470R +/-5% 0805 125 mW",
+            "Mpn": "CR0805-JW-471ELF",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00144-2",
+            "Description": "Chip Resistor, 768 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R195",
+            "Comment": "Resistor 768K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07768KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00125-2",
+            "Description": "Chip Resistor, 953 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R196",
+            "Comment": "Resistor 953K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07953KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-013-00026-1",
+            "Description": "Nch Small Signal MOSFET, 50 V, 200 mA, 3-Pin SOT723, RoHS, Tape and Reel",
+            "Designator": "Q4,Q7,Q8,Q9,Q10,Q12,Q13,Q15,Q24",
+            "Comment": "RUM002N05T2L",
+            "Mpn": "RUM002N05T2L",
+            "Quantity": 9
+          },
+          {
+            "DesignItemId": "CMP-013-00027-1",
+            "Description": "Pch Small Signal MOSFET, 20 V, 200 mA, 3-Pin SOT723, RoHS, Tape and Reel",
+            "Designator": "Q3,Q5,Q6,Q14",
+            "Comment": "RZM002P02T2L",
+            "Mpn": "RZM002P02T2L",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-013-00030-1",
+            "Description": "P-Channel (D-S) MOSFET, 30 V, 50 A, -50 to 150 degC, 8-Pin PowerPAK1212, RoHS, Tape and Reel",
+            "Designator": "Q16,Q17,Q18,Q19,Q20,Q21",
+            "Comment": "SISS27DN",
+            "Mpn": "SISS27DN-T1-GE3",
+            "Quantity": 6
+          },
+          {
+            "DesignItemId": "CMP-031-00002-1",
+            "Description": "CONFIGURABLE MULTIPLE-FUNCTION GATE, DRY0006A, LARGE T&R",
+            "Designator": "U3,U5,U7,U8,U30,U33,U36,U39",
+            "Comment": "SN74LVC1G57DRYR",
+            "Mpn": "SN74LVC1G57DRYR",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-020-00022-1",
+            "Description": "ARM® Cortex®-M4 STM32L4 Microcontroller IC 32-Bit 80MHz 512KB (512K x 8) FLASH 48-UFQFPN (7x7)",
+            "Designator": "U16",
+            "Comment": "STM32L452CEU6",
+            "Mpn": "STM32L452CEU6",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00042-1",
+            "Description": "Standalone USB PD Sink Controller with Short-to-VBUS Protections, 4.1 to 22 V, -45 to 105 degC, 24-Pin QFN, RoHS, Tape and Reel",
+            "Designator": "U19",
+            "Comment": "STUSB4500QTR",
+            "Mpn": "STUSB4500QTR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-011-00010-1",
+            "Description": "Precision Adjustable Current-Limited Power-Distribution Switch, 0.5 to 5.0 A Current Limit, -40 to 85 degC, 8-pin SON (DRB), Green (RoHS & no Sb/Br)",
+            "Designator": "U25,U27",
+            "Comment": "TPS2557DRB",
+            "Mpn": "TPS2557DRBR",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-019-00041-1",
+            "Description": "Fixed Frequency, 99% Duty Cycle Peak Current Mode Notebook System Power Controller",
+            "Designator": "U2",
+            "Comment": "TPS51220ARSNR",
+            "Mpn": "TPS51220ARSNR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00038-1",
+            "Description": "Step Down Converter, 3 MHz, 1.6 A, -45 to 85 degC, 8-Pin WSON, RoHS, Tape and Reel",
+            "Designator": "U12",
+            "Comment": "TPS62060DSG",
+            "Mpn": "TPS62060DSGR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-031-00004-1",
+            "Description": "ESD Protected, High-Speed USB 2.0 (480 Mbps) 1:2 Multiplexer / Demultiplexer Switch, 6 ohm RON, 2.5 to 3.3V, -40 to 85 degC, 10-Pin UQFN (RSE), Green (RoHS & no Sb/Br)",
+            "Designator": "U23,U24",
+            "Comment": "TS3USB221ARSER",
+            "Mpn": "TS3USB221ARSER",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-031-00003-1",
+            "Description": "IC SWITCH DUAL SPDT 10UQFN",
+            "Designator": "U15",
+            "Comment": "TS5A23159RSER",
+            "Mpn": "TS5A23159RSER",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-015-00006-1",
+            "Description": "Industrial Temperature Rated USB 2.0 Hi-Speed 7-Port Hub Controller, 3.3 V, -40 to 85 degC, 64-Pin QFN, RoHS, Tube",
+            "Designator": "U14",
+            "Comment": "USB2517I-JZX",
+            "Mpn": "USB2517I-JZX-TR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-006-00020-1",
+            "Description": "Inductor for Power Circuit, 2.2 uH, +/- 20%, -40 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "L4",
+            "Comment": "VLS252010HBX-2R2M-1",
+            "Mpn": "VLS252010HBX-2R2M-1",
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "Id": "9BB79065-F304-40A4-9DB0-6D788C05D4B5RGVmYXVsdA",
+        "Items": [
+          {
+            "DesignItemId": "CMP-004-00022-2",
+            "Description": "Switching Diode (High Speed Switching), 80 V, 100 mA, 2-Pin SOD-923, RoHS, Tape and Reel",
+            "Designator": "D21,D22,D23,D25,D26,D27,D31,D34",
+            "Comment": "1SS400CSFH",
+            "Mpn": "1SS400CSFHT2RA",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-002-00067-1",
+            "Description": "MicroSD Card Connector, Hinge Type, -40 to 85 degC, 8-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "SKT3",
+            "Comment": "47219-2001",
+            "Mpn": "0472192001",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00063-1",
+            "Description": "Receptacle, Pitch 1 mm, 25 Position, Height 4.15 mm, -55 to 130 degC",
+            "Designator": "CN1,CN2",
+            "Comment": "91931-31125LF",
+            "Mpn": "91931-31125LF",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00070-1",
+            "Description": "Raspberry Pi Compute Module 3 socket",
+            "Designator": "CN11",
+            "Comment": "1746540-4-RPI-CM3",
+            "Mpn": "1746540-4",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00068-1",
+            "Description": "Card Edge Connector, Pitch 0.5 mm, 67 Position, Height 5.8 mm",
+            "Designator": "CN18,CN19,CN20,CN21",
+            "Comment": "10128798-005RLF",
+            "Mpn": "10128798-005RLF",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-002-00051-1",
+            "Description": "Header, Pitch 1.25 mm, 1 x 2 Position, Height 3.6 mm, -40 to 85 degC",
+            "Designator": "CN10",
+            "Comment": "0532610271",
+            "Mpn": "53261-0271",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00066-1",
+            "Description": "USB-A Connector, 30 V, 1.5 A, -40 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "CN16,CN17",
+            "Comment": "1050570001",
+            "Mpn": "105057-0001",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00049-1",
+            "Description": "Micro SD Card Connector, Pitch 1.1 mm, 8 Position, Height 1.4 mm, -25 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "SKT1,SKT2",
+            "Comment": "5033981892",
+            "Mpn": "503398-1892",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00050-1",
+            "Description": "Right Angle FFC/FPC Connector, 50 V, 0.5 A, -40 to 105 degC, RoHS, Tape and Reel",
+            "Designator": "CN22,CN23",
+            "Comment": "5051102291",
+            "Mpn": "505110-2291",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-00028-00001-1",
+            "Description": "WA-SMSI SMT Steel Spacer, M2 Thread Internal, Tin, RoHS, Tape and Reel",
+            "Designator": "ST3,ST4",
+            "Comment": "9774030243",
+            "Mpn": "9774030243R",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-00028-00003-1",
+            "Description": "WA-SMSI SMT Steel Spacer, M2 Thread Internal, Tin, RoHS, Tape and Reel",
+            "Designator": "ST1,ST2,ST5,ST6",
+            "Comment": "9774040243",
+            "Mpn": "9774040243R",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-006-00018-1",
+            "Description": "WE-LQS SMD Power Inductor, L=33 µH",
+            "Designator": "L1",
+            "Comment": "74404042330",
+            "Mpn": "74404042330",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-011-00012-1",
+            "Description": "WS-DISV 1.27 mm small compact SMD Dip Switch with top tape",
+            "Designator": "SW4",
+            "Comment": "416131160803",
+            "Mpn": "416131160803",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-003-00029-1",
+            "Description": "Crystal 32.768kHz 10ppm 7pF -40C +85C",
+            "Designator": "Y1",
+            "Comment": "ABS07-166-32.768KHZ-T",
+            "Mpn": "ABS07-166-32.768KHZ-T",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-011-00011-1",
+            "Description": "Ultra-small Surface-mounting Tactile Switches with High Contact Reliability, SPST-NO, -25 to 70 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "SW1,SW2,SW3",
+            "Comment": "B3U-1000P-B",
+            "Mpn": "B3U-1000P-B",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-002-00061-1",
+            "Description": "Disconnectable Crimp Style Connector, Pitch 1.25 mm, 1 x 2 Position, Height 4.05 mm, -25 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "CN14",
+            "Comment": "BM02B-GHS-TBT(LF)(SN)(N)",
+            "Mpn": "BM02B-GHS-TBT(LF)(SN)(N)-",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00053-1",
+            "Description": "Header, Pitch 1.25 mm, 1 x 4 Position, Height 4.05 mm, -25 to 85 degC",
+            "Designator": "CN5,CN7,CN9,CN13",
+            "Comment": "BM04B-GHS-TBT",
+            "Mpn": "BM04B-GHS-TBT(LF)(SN)(N)",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-002-00062-1",
+            "Description": "GH Disconnectable Crimp Style Connector, Pitch 1.25 mm, 1 x 5 Position, Height 4.05 mm, -25 to 85 degC, RoHS, Tape and Reel",
+            "Designator": "CN6,CN8",
+            "Comment": "BM05B-GHS-TBT",
+            "Mpn": "BM05B-GHS-TBT(LF)(SN)(N)",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-002-00052-1",
+            "Description": "Header, Pitch 1 mm, 1 x 6 Position, Height 4.25 mm, -25 to 85 degC",
+            "Designator": "CN12",
+            "Comment": "BM06B-SRSS-TB",
+            "Mpn": "BM06B-SRSS-TB(LF)(SN)",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00055-2",
+            "Description": "Chip Capacitor, 1µF +/-0.1%, 25V, 0603, Thickness 1 mm",
+            "Designator": "C3,C4,C142,C143",
+            "Comment": "Capacitor 1µF +/-0.1% 25V 0603",
+            "Mpn": "CL10A105KA8NNNC",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-001-00063-2",
+            "Description": "Chip Capacitor, 1µF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C29,C32,C83,C88,C95,C96,C104,C112,C115,C117,C124,C126,C127,C128,C136,C138,C144,C145,C217,C220,C221",
+            "Comment": "Capacitor 1µF +/-20% 10V 0402",
+            "Mpn": "CC0402KRX5R6BB105",
+            "Quantity": 21
+          },
+          {
+            "DesignItemId": "CMP-001-00078-2",
+            "Description": "Chip Capacitor, 1µF +/-40%, 50V, 0603, Thickness 1 mm",
+            "Designator": "C26",
+            "Comment": "Capacitor 1µF +/-40% 50V 0603",
+            "Mpn": "CL10A105KB8NNNC",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00066-2",
+            "Description": "Chip Capacitor, 1nF +/-20%, 50V, 0402, Thickness 0.33 mm",
+            "Designator": "C52,C53",
+            "Comment": "Capacitor 1nF +/-20% 50V 0402",
+            "Mpn": "885012205061",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00056-2",
+            "Description": "Chip Capacitor, 2,2µF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C25",
+            "Comment": "Capacitor 2,2µF +/-20% 10V 0402",
+            "Mpn": "GRM155R61A225KE95D",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00076-2",
+            "Description": "Chip Capacitor, 4.7µF +/-20%, 10V, 0603, Thickness 1 mm",
+            "Designator": "C84,C89,C97",
+            "Comment": "Capacitor 4.7µF +/-20% 10V 0603",
+            "Mpn": "CC0603KRX5R6BB475",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-001-00080-2",
+            "Description": "Chip Capacitor, 4.7µF +/-40%, 25V, 0805, Thickness 1.45 mm",
+            "Designator": "C141",
+            "Comment": "Capacitor 4.7µF +/-40% 25V 0805",
+            "Mpn": "08053D475MAT2A",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00059-2",
+            "Description": "Molded Tantalum Polymer Capacitor, 6.8 uF, +/- 20%, 35 V, -55 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "C2",
+            "Comment": "Capacitor 6.8µF +/-20% 35V B2",
+            "Mpn": "T521B685M035ATE150",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00075-2",
+            "Description": "Chip Capacitor, 10µF +/-20%, 10V, 0603, Thickness 1 mm",
+            "Designator": "C5,C6,C23,C24,C164,C167,C169,C172,C209,C211,C213",
+            "Comment": "Capacitor 10µF +/-20% 10V 0603",
+            "Mpn": "CL10A106KP8NNNC",
+            "Quantity": 11
+          },
+          {
+            "DesignItemId": "CMP-001-00079-2",
+            "Description": "Chip Capacitor, 10µF +/-20%, 25V, 0805, Thickness 1.45 mm",
+            "Designator": "C8,C9,C10,C11,C12,C13,C16,C17,C18,C19,C20,C21,C28,C33,C44,C45,C46,C47,C48,C49",
+            "Comment": "Capacitor 10µF +/-20% 25V 0805",
+            "Mpn": "GRM21BR61E106KA73L",
+            "Quantity": 20
+          },
+          {
+            "DesignItemId": "CMP-001-00069-2",
+            "Description": "Chip Capacitor, 10nF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C54,C71,C74,C75,C76,C77,C79,C81,C85,C90,C146,C150,C155,C166,C171,C215,C218",
+            "Comment": "Capacitor 10nF +/-20% 50V 0402",
+            "Mpn": "CC0402KRX7R9BB103",
+            "Quantity": 17
+          },
+          {
+            "DesignItemId": "CMP-001-00072-2",
+            "Description": "Chip Capacitor, 12pF +/-10%, 50V, 0402, Thickness 0.33 mm",
+            "Designator": "C110,C111,C134,C135",
+            "Comment": "Capacitor 12pF +/-10% 50V 0402",
+            "Mpn": "CGA2B2C0G1H120J050BA",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-001-00081-2",
+            "Description": "Chip Capacitor, 22µF +/-40%, 16V, 0805, Thickness 1.45 mm",
+            "Designator": "C59,C61,C64,C66,C92,C93,C98,C99,C100,C101,C102,C103,C173,C175,C178,C180,C182,C184,C187,C189,C191,C193,C196,C198,C200,C202,C205,C207",
+            "Comment": "Capacitor 22µF +/-40% 16V 0805",
+            "Mpn": "CL21A226MOCLRNC",
+            "Quantity": 28
+          },
+          {
+            "DesignItemId": "CMP-001-00062-2",
+            "Description": "Chip Capacitor, 22nF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C63,C68,C177,C181,C186,C190,C195,C199,C204,C208",
+            "Comment": "Capacitor 22nF +/-20% 10V 0402",
+            "Mpn": "C0402C223K8PACTU",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-001-00073-2",
+            "Description": "Chip Capacitor, 22pF +/-10%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C7,C91",
+            "Comment": "Capacitor 22pF +/-10% 50V 0402",
+            "Mpn": "04025A220JAT2A",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00082-2",
+            "Description": "Chip Capacitor, 47µF +/-40%, 6.3V, 0805, Thickness 1.45 mm",
+            "Designator": "C122,C123",
+            "Comment": "Capacitor 47µF +/-40% 6.3V 0805",
+            "Mpn": "JMK212BBJ476MG-T",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00071-2",
+            "Description": "Chip Capacitor, 47nF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C156",
+            "Comment": "Capacitor 47nF +/-20% 50V 0402",
+            "Mpn": "C1005X7R1H473K050BB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-001-00061-2",
+            "Description": "Chip Capacitor, 100nF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C50,C51,C58,C60,C62,C65,C67,C69,C70,C72,C73,C78,C80,C82,C86,C87,C94,C105,C106,C107,C108,C109,C113,C114,C116,C118,C119,C120,C121,C125,C129,C130,C131,C132,C133,C137,C139,C154,C158,C160,C161,C162,C165,C170,C174,C176,C179,C183,C185,C188,C192,C194,C197,C201,C203,C206,C216,C219",
+            "Comment": "Capacitor 100nF +/-20% 10V 0402",
+            "Mpn": "CC0402KRX5R6BB104",
+            "Quantity": 58
+          },
+          {
+            "DesignItemId": "CMP-001-00065-2",
+            "Description": "Chip Capacitor, 100nF +/-20%, 25V, 0402, Thickness 0.6 mm",
+            "Designator": "C34,C35,C140,C147,C151,C210,C212,C214",
+            "Comment": "Capacitor 100nF +/-20% 25V 0402",
+            "Mpn": "CL05A104KA5NNNC",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-001-00067-2",
+            "Description": "Chip Capacitor, 100nF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C22,C27,C157,C159",
+            "Comment": "Capacitor 100nF +/-20% 50V 0402",
+            "Mpn": "CC0402KRX5R9BB104",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-001-00053-2",
+            "Description": "Molded Tantalum Polymer Capacitor, 150 uF, +/- 20%, 6.3 V, -55 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "C163,C168",
+            "Comment": "Capacitor 150µF +/-20% 6.3V B2",
+            "Mpn": "6TPE150MAZB",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00057-2",
+            "Description": "Chip Capacitor, 220nF +/-20%, 10V, 0402, Thickness 0.6 mm",
+            "Designator": "C1,C57",
+            "Comment": "Capacitor 220nF +/-20% 10V 0402",
+            "Mpn": "CC0402KRX5R6BB224",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00058-2",
+            "Description": "Molded Tantalum Polymer Capacitor, 330 uF, +/- 20%, 6.3 V, -55 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "C36,C37,C38,C39,C40,C41",
+            "Comment": "Capacitor 330µF +/-20% 6.3V D3",
+            "Mpn": "6TPF330M9L",
+            "Quantity": 6
+          },
+          {
+            "DesignItemId": "CMP-001-00077-2",
+            "Description": "Chip Capacitor, 470nF +/-20%, 25V, 0603, Thickness 1 mm",
+            "Designator": "C148,C152",
+            "Comment": "Capacitor 470nF +/-20% 25V 0603",
+            "Mpn": "CC0603KRX5R8BB474",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-001-00068-2",
+            "Description": "Chip Capacitor, 470pF +/-20%, 50V, 0402, Thickness 0.6 mm",
+            "Designator": "C14,C15,C30,C31,C42,C43,C55",
+            "Comment": "Capacitor 470pF +/-20% 50V 0402",
+            "Mpn": "CC0402KRX7R9BB471",
+            "Quantity": 7
+          },
+          {
+            "DesignItemId": "CMP-001-00070-2",
+            "Description": "Chip Capacitor, 680pF +/-20%, 50V, 0402, Thickness 0.33 mm",
+            "Designator": "C56",
+            "Comment": "Capacitor 680pF +/-20% 50V 0402",
+            "Mpn": "GRM15XR71H681KA86D",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-015-00001-1",
+            "Description": "EMI Filter for T-Flash / MicroSD Interface, -40 to 85 degC, 16-Pin UDFN, Pb-Free, Tape and Reel",
+            "Designator": "U41,U42,U43",
+            "Comment": "CM1624-08DE",
+            "Mpn": "CM1624-08DE",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-004-00027-2",
+            "Description": "Common Cathode Silicon Dual Switching Diodes, 3-Pin SOT-723, Pb-Free, Tape and Reel",
+            "Designator": "D24",
+            "Comment": "DAN222M3T5G",
+            "Mpn": "DAN222M3T5G",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-002-00055-1",
+            "Description": "Plug Connector, 50 V, 0.3 A, -45 to 125 degC, RoHS, Tape and Reel",
+            "Designator": "CN3,CN4",
+            "Comment": "DF12(3.0)-50DP-0.5V(86)",
+            "Mpn": "DF12(3.0)-50DP-0.5V(86)",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-013-00031-1",
+            "Description": "Digital Transistor (BRT), R1=10 kOhm, R2=10 kOhm, NPN Transistor, 3-Pin SOT-723, Pb-Free, Tape and Reel",
+            "Designator": "Q11,Q22,Q23",
+            "Comment": "DTC114EM3T5G",
+            "Mpn": "DTC114EM3T5G",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-002-00065-1",
+            "Description": "USB-C Connector, 20 V, 1.25 A, -30 to 80 degC, RoHS, Tape and Reel",
+            "Designator": "CN15",
+            "Comment": "DX07S024JJ3R1300",
+            "Mpn": "DX07S024JJ3R1300",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-004-00029-2",
+            "Description": "TVS diode, 4500W, 22V standoff, 29.5V clamp",
+            "Designator": "D1,D37",
+            "Comment": "ESDA24P140-1U3M",
+            "Mpn": "ESDA24P140-1U3M",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-004-00023-2",
+            "Description": "TVS DIODE 22V 41V 1610",
+            "Designator": "D13,D14,D33,D35,D36",
+            "Comment": "ESDA25P35-1U1M",
+            "Mpn": "ESDA25P35-1U1M",
+            "Quantity": 5
+          },
+          {
+            "DesignItemId": "CMP-004-00030-2",
+            "Description": "Single Line Low Capacitance Transil™, 5 V, -55 to 150 degC, 2-Pin SOD-882, RoHS, Tape and Reel",
+            "Designator": "D3,D4,D5,D6,D7,D8,D9,D10,D11,D12,D15,D16,D17,D18,D19,D20,D28,D29,D30",
+            "Comment": "ESDALC5-1BM2",
+            "Mpn": "ESDALC5-1BM2",
+            "Quantity": 19
+          },
+          {
+            "DesignItemId": "CMP-004-00025-1",
+            "Description": "Ultra Low Capacitance ESD Protection Array for High Speed Data Line Protection, 6-Pin UDFN, Pb-Free, Tape and Reel",
+            "Designator": "U20,U26,U28",
+            "Comment": "ESDR0502NMUTBG",
+            "Mpn": "ESDR0502NMUTBG",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-003-00028-1",
+            "Description": "Crystal, 24 MHz, +/- 10 ppm, -20 to 75 degC, 4-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "Y2,Y3",
+            "Comment": "FA-12824.0000MF10Z-W3",
+            "Mpn": "FA-12824.0000MF10Z-W3",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-013-00032-1",
+            "Description": "Asymmetric Dual N-Channel PowerTrench® Power Clip MOSFET, 30 V, -55 to 150 degC, 8-Pin PQFN, RoHS, Tape and Reel",
+            "Designator": "Q1,Q2",
+            "Comment": "FDPC5030SG",
+            "Mpn": "FDPC5030SG",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-005-00012-1",
+            "Description": "Fast Acting Fuse, 1 A, 32 V, -55 to 90 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "F4,F5,F7,F8",
+            "Comment": "FUSE-1A/32V-3",
+            "Mpn": "0467001.NRHF",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-005-00011-1",
+            "Description": "Fast Acting Fuse, 2 A, 32 V, -55 to 90 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "F2,F3",
+            "Comment": "FUSE-2A/32V-3",
+            "Mpn": "0467002.NRHF",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-005-00010-1",
+            "Description": "Surface Mount Fuses 7A 24V VFA SLIMLINE",
+            "Designator": "F1,F6",
+            "Comment": "FUSE-7A/24V-6",
+            "Mpn": "0429007.WRML",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-014-00001-1",
+            "Description": "High or Low Side Measurement, 2.7 to 5.5 V, -40 to 125 degC, 16-Pin QFN, RoHS, Tape and Reel",
+            "Designator": "U22",
+            "Comment": "INA230AIRGT",
+            "Mpn": "INA230AIRGTR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00148-2",
+            "Description": "Jumper 0402",
+            "Designator": "R1,R2,R3,R4,R5,R10,R13,R25,R43,R44,R78,R82,R83,R92,R93,R94,R95,R96,R97,R98,R99,R102,R103,R104,R105,R120,R136,R137,R138,R139,R140,R141,R142,R143,R145,R187,R188,R194,R199,R201,R206,R209,R210,R221,R222,R223",
+            "Comment": "Jumper 0402",
+            "Mpn": "RC0402JR-070RL",
+            "Quantity": 46
+          },
+          {
+            "DesignItemId": "CMP-009-00175-2",
+            "Description": "Jumper 0603",
+            "Designator": "R64,R112,R119,R171",
+            "Comment": "Jumper 0603",
+            "Mpn": "CRCW06030000Z0EC",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-019-00045-1",
+            "Description": "Power Sequencer, 6-pin SOT-23, 250 Reel",
+            "Designator": "U10",
+            "Comment": "LM3880MFE-1AF",
+            "Mpn": "LM3880MFE-1AF/NOPB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00044-1",
+            "Description": "Micropower Buck Regulator with Integrated Boost and Catch Diode, 8-pin SON (DDB-8), -40 to 85 degC",
+            "Designator": "U1",
+            "Comment": "LT3470AIDDB",
+            "Mpn": "LT3470AIDDB#TRMPBF",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00046-1",
+            "Description": "Prioritized 2:1 PowerPath™ Controller, 2.5 to 40 V, -40 to 85 degC, 20-Pin QFN, RoHS",
+            "Designator": "U21",
+            "Comment": "LTC4418IUF",
+            "Mpn": "LTC4418IUF#TRPBF",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-031-00000-1",
+            "Description": "Low-Power Serial Real-Time Clock (RTC) with Alarm, 1.3 to 4.4 V, -40 to 85 degC, 16-Pin QFN, RoHS, Tape and Reel",
+            "Designator": "U13",
+            "Comment": "M41T62Q6F",
+            "Mpn": "M41T62Q6F",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00048-1",
+            "Description": "High Side Load Switch, 2.7 to 9 V, 7 A, 6.6 mOhm, -40 to 125 degC, 10-Pin QFN, RoHS",
+            "Designator": "U9,U11",
+            "Comment": "MIC95410YFL",
+            "Mpn": "MIC95410YFLTR",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-019-00047-1",
+            "Description": "Low RDSON Load Switch with Current Monitoring, 5.5 V, 7 A, -40 to 125 degC, 12-Pin QFN, RoHS",
+            "Designator": "U4,U6,U29,U31,U32,U34,U35,U37,U38,U40",
+            "Comment": "MP5087GG",
+            "Mpn": "MP5087GG-Z",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-00029-00000-1",
+            "Description": "MS Lihium Rechargeable Battery, 3 V, -20 to 60 degC, Tray",
+            "Designator": "BT1",
+            "Comment": "MS621FE-FL11E",
+            "Mpn": "MS621FE-FL11E",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-004-00024-2",
+            "Description": "Schottky Diodes & Rectifiers 1.0 Amp 40 Volt",
+            "Designator": "D32",
+            "Comment": "MSS1P4-M3/89A",
+            "Mpn": "MSS1P4-M3/89A",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-004-00026-2",
+            "Description": "Dual Common Cathode Schottky Barrier Diodes, 3-Pin SOT-723, Pb-Free, Tape and Reel",
+            "Designator": "D2",
+            "Comment": "NSR30CM3T5G",
+            "Mpn": "NSR30CM3T5G",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-015-00007-1",
+            "Description": "Remote 16-Bit I2C and SMBus I/O Expander with Interrupt Output and Configuration Registers, 2.3 to 5.5 V, -40 to 85 degC, 24-pin VQFN (RGE), Green (RoHS & no Sb/Br)",
+            "Designator": "U17,U18",
+            "Comment": "PCA9535RGE",
+            "Mpn": "PCA9535RGER",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-006-00019-1",
+            "Description": "Shielded Wirewound Inductor, 2.2 uH, +/- 20%, -20 to 120 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "L2,L3",
+            "Comment": "PCMB063T-2R2MS",
+            "Mpn": "PCMB063T-2R2MS",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-00028-00004-1",
+            "Description": "M2 PTH (2.5mm), 5mm pad",
+            "Designator": "PTH1,PTH2,PTH3,PTH4",
+            "Comment": "PTH-M2D5X5",
+            "Mpn": null,
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-007-00042-2",
+            "Description": "Chip LED 0402, Blue, 0.02 A, 3.1 to 3.7 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED3",
+            "Comment": "QBLP595-IB",
+            "Mpn": "QBLP595-IB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-007-00041-2",
+            "Description": "Chip LED 0402, Green, 0.02 A, 3.1 to 3.7 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED2,LED4,LED6,LED10,LED11,LED13,LED15,LED17,LED19,LED21",
+            "Comment": "QBLP595-IG",
+            "Mpn": "QBLP595-IG",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-007-00040-2",
+            "Description": "Chip LED 0402, Red, 0.02 A, 2.0 to 2.5 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED1,LED7",
+            "Comment": "QBLP595-R",
+            "Mpn": "QBLP595-R",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-007-00043-2",
+            "Description": "Chip LED 0402, Yellow, 0.02 A, 3.1 to 3.7 V, -40 to 80 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "LED5,LED8,LED9,LED12,LED14,LED16,LED18,LED20,LED22",
+            "Comment": "QBLP595-Y",
+            "Mpn": "QBLP595-Y",
+            "Quantity": 9
+          },
+          {
+            "DesignItemId": "CMP-009-00160-2",
+            "Description": "Chip Resistor, 1,6 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R27",
+            "Comment": "Resistor 1K6 +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-071K6L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00157-2",
+            "Description": "Chip Resistor, 1 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R67,R69,R81,R144,R148,R211,R252,R253",
+            "Comment": "Resistor 1K +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-071KL",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-009-00118-2",
+            "Description": "Chip Resistor, 1 kOhms, +/-5%, 125 mW, -55 to 155 degC, 0805",
+            "Designator": "R175,R177,R179",
+            "Comment": "Resistor 1K +/-5% 0805 125 mW",
+            "Mpn": "RC0805JR-071KL",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-009-00165-2",
+            "Description": "Chip Resistor, 1 MOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R50,R53,R226,R228,R233,R235,R240,R242,R247,R249",
+            "Comment": "Resistor 1M +/-1 % 0402 63 mW",
+            "Mpn": "CRCW04021M00FKED",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-009-00151-2",
+            "Description": "Chip Resistor, 1 MOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R113,R146",
+            "Comment": "Resistor 1M +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-071ML",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00166-2",
+            "Description": "Chip Resistor, 2,2 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R84,R85,R86,R87,R88,R89,R90,R124",
+            "Comment": "Resistor 2K2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-072K2L",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-009-00138-2",
+            "Description": "Chip Resistor, 2 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R24",
+            "Comment": "Resistor 2K +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-072KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00129-2",
+            "Description": "Chip Resistor, 2,26 MOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R190",
+            "Comment": "Resistor 2M26 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-072M26L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00169-2",
+            "Description": "Chip Resistor, 2,49 MOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R191",
+            "Comment": "Resistor 2M49 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-072M49L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00128-2",
+            "Description": "Chip Resistor, 2,2 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R14,R16,R17",
+            "Comment": "Resistor 2R2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-072R2L",
+            "Quantity": 3
+          },
+          {
+            "DesignItemId": "CMP-009-00172-2",
+            "Description": "Chip Resistor, 3,3 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R15",
+            "Comment": "Resistor 3R3  +/-5 % 0402 63 mW",
+            "Mpn": "CRCW04023R30JNED",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00158-2",
+            "Description": "Chip Resistor, 4,7 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R66,R128,R129,R130,R131,R132,R133,R134,R135",
+            "Comment": "Resistor 4K7  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-074K7L",
+            "Quantity": 9
+          },
+          {
+            "DesignItemId": "CMP-009-00174-2",
+            "Description": "Chip Resistor, 4,7 Ohms, +/-5 %, 125 mW, -55 to 155 degC, 0805",
+            "Designator": "R8,R9",
+            "Comment": "Resistor 4R7  +/-5 % 0805 125 mW",
+            "Mpn": "CRCW08054R70JNEA",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00136-2",
+            "Description": "Chip Resistor, 5,6 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R28",
+            "Comment": "Resistor 5K6  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-075K6L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00147-2",
+            "Description": "Chip Resistor, 6,2 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R21",
+            "Comment": "Resistor 6K2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-076K2L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00119-2",
+            "Description": "Chip Resistor, 0,007 Ohms, +/-1%, 63 mW, -55 to 155 degC, 1206",
+            "Designator": "R204",
+            "Comment": "Resistor 7mR +/-1% 1206 63 mW",
+            "Mpn": "KRL3216T4A-M-R007-F-T1",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00139-2",
+            "Description": "Chip Resistor, 8,2 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R29",
+            "Comment": "Resistor 8R2  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-078R2L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00135-2",
+            "Description": "Chip Resistor, 9,1 kOhms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R37",
+            "Comment": "Resistor 9K1  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-079K1L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00149-2",
+            "Description": "Chip Resistor, 10 kOhms, +/-1 %, 63 mW, -55 to 125 degC, 0402",
+            "Designator": "R38,R54,R58,R59,R60,R61,R62,R80,R107,R109,R110,R117,R125,R147,R149,R150,R151,R152,R153,R154,R155,R156,R157,R158,R159,R160,R161,R162,R163,R164,R165,R166,R168,R169,R213,R214,R216,R217,R218,R220,R229,R230,R236,R237,R243,R244,R250,R251",
+            "Comment": "Resistor 10K  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0710KL",
+            "Quantity": 48
+          },
+          {
+            "DesignItemId": "CMP-009-00152-2",
+            "Description": "Chip Resistor, 10 Ohms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R207,R208",
+            "Comment": "Resistor 10R  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0710RL",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00173-2",
+            "Description": "Chip Resistor, 12 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R20,R121",
+            "Comment": "Resistor 12K  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0712KL",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00123-2",
+            "Description": "Chip Resistor, 22 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R178",
+            "Comment": "Resistor 22K  +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0722KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00164-2",
+            "Description": "Chip Resistor, 22 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R106",
+            "Comment": "Resistor 22R  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-0722RL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00171-2",
+            "Description": "Chip Resistor, 25,5 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R23",
+            "Comment": "Resistor 25K5 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0725K5L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00143-2",
+            "Description": "Chip Resistor, 33 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R100,R101",
+            "Comment": "Resistor 33R  +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-0733RL",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00154-2",
+            "Description": "Chip Resistor, 43,2 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R22",
+            "Comment": "Resistor 43K2 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0743K2L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00159-2",
+            "Description": "Chip Resistor, 44,2 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R215,R219",
+            "Comment": "Resistor 44K2 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0744K2L",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-009-00137-2",
+            "Description": "Chip Resistor, 47,5 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R198",
+            "Comment": "Resistor 47K5 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0747K5L",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00124-2",
+            "Description": "Chip Resistor, 53,6 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R49,R52,R225,R227,R232,R234,R239,R241,R246,R248",
+            "Comment": "Resistor 53K6 +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-0753K6L",
+            "Quantity": 10
+          },
+          {
+            "DesignItemId": "CMP-009-00168-2",
+            "Description": "Chip Resistor, 100 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R6,R7,R18,R19,R30,R35,R36,R41,R42,R45,R46,R47,R48,R51,R55,R56,R57,R63,R68,R70,R71,R72,R73,R74,R75,R108,R111,R114,R115,R116,R118,R122,R126,R127,R170,R172,R174,R180,R181,R182,R183,R184,R185,R186,R189,R200,R202,R203,R205,R212,R224,R231,R238,R245",
+            "Comment": "Resistor 100K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07100KL",
+            "Quantity": 54
+          },
+          {
+            "DesignItemId": "CMP-009-00167-2",
+            "Description": "Chip Resistor, 100 Ohms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R176",
+            "Comment": "Resistor 100R +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07100RL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00176-2",
+            "Description": "Chip Resistor, 120 Ohms, +/-5 %, 0.1 W, -55 to 155 degC, 0603",
+            "Designator": "R65",
+            "Comment": "Resistor 120R +/-5 % 0603 0.1 W",
+            "Mpn": "CRCW0603120RJNEB",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00133-2",
+            "Description": "Chip Resistor, 121 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R193",
+            "Comment": "Resistor 121K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07121KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00170-2",
+            "Description": "Chip Resistor, 187 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R79",
+            "Comment": "Resistor 187K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07187KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00163-2",
+            "Description": "Chip Resistor, 200 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R12",
+            "Comment": "Resistor 200K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07200KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00150-2",
+            "Description": "Chip Resistor, 237 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R197",
+            "Comment": "Resistor 237K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07237KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00131-2",
+            "Description": "Chip Resistor, 301 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R26",
+            "Comment": "Resistor 301K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07301KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00142-2",
+            "Description": "Chip Resistor, 316 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R192",
+            "Comment": "Resistor 316K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07316KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00134-2",
+            "Description": "Chip Resistor, 324 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R11",
+            "Comment": "Resistor 324K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07324KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00132-2",
+            "Description": "Chip Resistor, 330 Ohms, +/-5 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R167",
+            "Comment": "Resistor 330R +/-5 % 0402 63 mW",
+            "Mpn": "RC0402JR-07330RL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00126-2",
+            "Description": "Chip Resistor, 383 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R77",
+            "Comment": "Resistor 383K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07383KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00122-2",
+            "Description": "Chip Resistor, 470 Ohms, +/-5%, 125 mW, -55 to 155 degC, 0805",
+            "Designator": "R173",
+            "Comment": "Resistor 470R +/-5% 0805 125 mW",
+            "Mpn": "CR0805-JW-471ELF",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00144-2",
+            "Description": "Chip Resistor, 768 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R195",
+            "Comment": "Resistor 768K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07768KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-009-00125-2",
+            "Description": "Chip Resistor, 953 kOhms, +/-1 %, 63 mW, -55 to 155 degC, 0402",
+            "Designator": "R196",
+            "Comment": "Resistor 953K +/-1 % 0402 63 mW",
+            "Mpn": "RC0402FR-07953KL",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-013-00026-1",
+            "Description": "Nch Small Signal MOSFET, 50 V, 200 mA, 3-Pin SOT723, RoHS, Tape and Reel",
+            "Designator": "Q4,Q7,Q8,Q9,Q10,Q12,Q13,Q15,Q24",
+            "Comment": "RUM002N05T2L",
+            "Mpn": "RUM002N05T2L",
+            "Quantity": 9
+          },
+          {
+            "DesignItemId": "CMP-013-00027-1",
+            "Description": "Pch Small Signal MOSFET, 20 V, 200 mA, 3-Pin SOT723, RoHS, Tape and Reel",
+            "Designator": "Q3,Q5,Q6,Q14",
+            "Comment": "RZM002P02T2L",
+            "Mpn": "RZM002P02T2L",
+            "Quantity": 4
+          },
+          {
+            "DesignItemId": "CMP-013-00030-1",
+            "Description": "P-Channel (D-S) MOSFET, 30 V, 50 A, -50 to 150 degC, 8-Pin PowerPAK1212, RoHS, Tape and Reel",
+            "Designator": "Q16,Q17,Q18,Q19,Q20,Q21",
+            "Comment": "SISS27DN",
+            "Mpn": "SISS27DN-T1-GE3",
+            "Quantity": 6
+          },
+          {
+            "DesignItemId": "CMP-031-00002-1",
+            "Description": "CONFIGURABLE MULTIPLE-FUNCTION GATE, DRY0006A, LARGE T&R",
+            "Designator": "U3,U5,U7,U8,U30,U33,U36,U39",
+            "Comment": "SN74LVC1G57DRYR",
+            "Mpn": "SN74LVC1G57DRYR",
+            "Quantity": 8
+          },
+          {
+            "DesignItemId": "CMP-020-00022-1",
+            "Description": "ARM® Cortex®-M4 STM32L4 Microcontroller IC 32-Bit 80MHz 512KB (512K x 8) FLASH 48-UFQFPN (7x7)",
+            "Designator": "U16",
+            "Comment": "STM32L452CEU6",
+            "Mpn": "STM32L452CEU6",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00042-1",
+            "Description": "Standalone USB PD Sink Controller with Short-to-VBUS Protections, 4.1 to 22 V, -45 to 105 degC, 24-Pin QFN, RoHS, Tape and Reel",
+            "Designator": "U19",
+            "Comment": "STUSB4500QTR",
+            "Mpn": "STUSB4500QTR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-011-00010-1",
+            "Description": "Precision Adjustable Current-Limited Power-Distribution Switch, 0.5 to 5.0 A Current Limit, -40 to 85 degC, 8-pin SON (DRB), Green (RoHS & no Sb/Br)",
+            "Designator": "U25,U27",
+            "Comment": "TPS2557DRB",
+            "Mpn": "TPS2557DRBR",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-019-00041-1",
+            "Description": "Fixed Frequency, 99% Duty Cycle Peak Current Mode Notebook System Power Controller",
+            "Designator": "U2",
+            "Comment": "TPS51220ARSNR",
+            "Mpn": "TPS51220ARSNR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-019-00038-1",
+            "Description": "Step Down Converter, 3 MHz, 1.6 A, -45 to 85 degC, 8-Pin WSON, RoHS, Tape and Reel",
+            "Designator": "U12",
+            "Comment": "TPS62060DSG",
+            "Mpn": "TPS62060DSGR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-031-00004-1",
+            "Description": "ESD Protected, High-Speed USB 2.0 (480 Mbps) 1:2 Multiplexer / Demultiplexer Switch, 6 ohm RON, 2.5 to 3.3V, -40 to 85 degC, 10-Pin UQFN (RSE), Green (RoHS & no Sb/Br)",
+            "Designator": "U23,U24",
+            "Comment": "TS3USB221ARSER",
+            "Mpn": "TS3USB221ARSER",
+            "Quantity": 2
+          },
+          {
+            "DesignItemId": "CMP-031-00003-1",
+            "Description": "IC SWITCH DUAL SPDT 10UQFN",
+            "Designator": "U15",
+            "Comment": "TS5A23159RSER",
+            "Mpn": "TS5A23159RSER",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-015-00006-1",
+            "Description": "Industrial Temperature Rated USB 2.0 Hi-Speed 7-Port Hub Controller, 3.3 V, -40 to 85 degC, 64-Pin QFN, RoHS, Tube",
+            "Designator": "U14",
+            "Comment": "USB2517I-JZX",
+            "Mpn": "USB2517I-JZX-TR",
+            "Quantity": 1
+          },
+          {
+            "DesignItemId": "CMP-006-00020-1",
+            "Description": "Inductor for Power Circuit, 2.2 uH, +/- 20%, -40 to 105 degC, 2-Pin SMD, RoHS, Tape and Reel",
+            "Designator": "L4",
+            "Comment": "VLS252010HBX-2R2M-1",
+            "Mpn": "VLS252010HBX-2R2M-1",
+            "Quantity": 1
+          }
+        ]
+      }
+    ]
   }
 }

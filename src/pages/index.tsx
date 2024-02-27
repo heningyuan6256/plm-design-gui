@@ -12,6 +12,8 @@ import {
 import PlmIcon from "../components/PlmIcon";
 import PlmToolBar from "../components/PlmToolBar";
 import materialSvg from "../assets/image/childnode.svg";
+import pcbSvg from "../assets/image/pcb.svg";
+import docSvg from "../assets/image/doc.svg";
 import cubeSvg from "../assets/image/rootdirectory.svg";
 import fileCubeSvg from "../assets/image/cube.svg";
 import encodedSvg from "../assets/image/encoded.svg";
@@ -49,7 +51,7 @@ import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { dialog, invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
 import settingSvg from "../assets/image/setting.svg";
-import { cloneDeep, groupBy, isArray, merge, pick, remove, sortBy, unionBy, uniqBy, uniqWith } from "lodash";
+import { cloneDeep, groupBy, isArray, merge, pick, pickBy, remove, sortBy, unionBy, uniqBy, uniqWith } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
 import threeCubes from "../assets/image/threecubes.svg";
 import { settingType } from "./attrMap";
@@ -124,8 +126,9 @@ const index = () => {
 
   // 2D
 
-  const [file2D, setFile2D] = useState()
-  const [material2D, set2D] = useState()
+  const [file2D, setFile2D] = useState<any[]>([])
+  const [material2D, setMaterial2D] = useState<any[]>([])
+  const [expanded2DKeys, setExpanded2DKeys] = useState<any>([]);
 
   const isNot2D = (client: string) => {
     const arr = ['Altium']
@@ -424,19 +427,18 @@ const index = () => {
   }, [leftData]);
 
   const getFolderFile = async (path: string) => {
-      const fileEntry = await readDir(path)
-      const loop = async (data: any) => {
-        for (let i = 0; i < data.length; i++) {
-          const file = await metadata(data[i].path)
-          Object.assign(data[i],file)
-          if (file.isDir) {
-            await loop(data[i].children || [])
-          }
+    const fileEntry = await readDir(path)
+    const loop = async (data: any) => {
+      for (let i = 0; i < data.length; i++) {
+        const file = await metadata(data[i].path)
+        Object.assign(data[i], file)
+        if (file.isDir) {
+          await loop(data[i].children || [])
         }
       }
-      await loop(fileEntry)
-      console.log(fileEntry,'fileEntry');
-      
+    }
+    await loop(fileEntry)
+    return fileEntry
   }
 
   // useAsyncEffect(async () => {
@@ -1114,7 +1116,8 @@ const index = () => {
   }, [selectNode, leftData]);
 
 
-  useEffect(() => {
+  // 获取2D数据
+  useAsyncEffect(async () => {
     if (selectProduct) {
       console.log(mqttClient.publishTopic);
       // 模拟AD假数据
@@ -1122,7 +1125,23 @@ const index = () => {
         setDesignData(ADdata.getCurrentBOM);
         dealCurrentBom(ADdata.getCurrentBOM);
       }
-      getFolderFile("D:/example-design (2)")
+      const fileArr = await getFolderFile("D:/example-design (2)")
+      console.log(fileArr, 'fileArr');
+
+      const prj = fileArr.find(item => item.name?.substring(item.name?.lastIndexOf('.') + 1) === 'PrjPCB')
+      const lastData = fileArr.filter(item => item.name?.substring(item.name?.lastIndexOf('.') + 1) != 'PrjPCB')
+      if (prj) {
+        prj.children = lastData
+        setFile2D([prj])
+        setExpanded2DKeys([prj.name])
+      } else {
+        setFile2D([])
+      }
+      const adData = ADdata.AltiumBom.Variants[0].Items
+      adData.forEach((item: any, index: number) => {
+        item.no = index + 1
+      })
+      setMaterial2D(adData)
     }
   }, [selectProduct])
 
@@ -3060,8 +3079,9 @@ const index = () => {
             </div>
           </div>
           <OnChainTable
-            scroll={{ y: 72 }}
-            dataSource={[]}
+            scroll={{ y: 84 }}
+            dataSource={file2D}
+            total={file2D.length}
             columns={[
               {
                 title: "图标",
@@ -3074,60 +3094,48 @@ const index = () => {
                 width: 200,
                 render: (text: string, record: any) => {
                   return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
+                    <img
+                      style={{ display: 'inline', marginLeft: '10px' }}
+                      width={16}
+                      src={
+                        (record.children || []).length
+                          ? pcbSvg
+                          : docSvg
+                      }
+                      alt=""
+                    />
                   );
                 },
               },
               {
                 title: "文件名称",
-                dataIndex: "file_name",
+                dataIndex: "name",
                 search: {
                   type: "Input",
                 },
                 sorter: true,
                 width: 350,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
               },
               {
                 title: "文件位置",
-                dataIndex: "file_name",
+                dataIndex: "path",
                 search: {
                   type: "Input",
                 },
                 sorter: true,
                 width: 350,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
               },
-
               {
                 title: "文件大小",
-                dataIndex: "file_name",
+                dataIndex: "size",
                 search: {
                   type: "Input",
                 },
                 sorter: true,
                 width: 200,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
+                render: (text, record) => {
+                  return Utils.converBytes(text)
+                }
               },
               {
                 title: "状态",
@@ -3137,15 +3145,15 @@ const index = () => {
                 },
                 sorter: true,
                 width: 250,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
               },
             ]}
+            rowKey={'name'}
+            expandable={{
+              expandedRowKeys: expanded2DKeys,
+              onExpandedRowsChange: (expandedKeys) => {
+                setExpanded2DKeys(expandedKeys);
+              },
+            }}
             rowSelection={{
               columnWidth: 19,
               fixed: true,
@@ -3160,24 +3168,25 @@ const index = () => {
           </OnChainTable>
           <OnChainTable
             extraHeight={32}
-            dataSource={[]}
+            dataSource={material2D}
+            total={material2D.length}
             columns={[
               {
                 title: "序号",
-                dataIndex: "index",
+                dataIndex: "no",
                 // search: {
                 //   type: "Input",
                 // },
                 fixed: true,
                 sorter: true,
                 width: 200,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
+                // render: (text: string, record: any) => {
+                //   return (
+                //     <div>
+                //       {}
+                //     </div>
+                //   );
+                // },
               },
               {
                 title: "编号",
@@ -3187,13 +3196,6 @@ const index = () => {
                 },
                 sorter: true,
                 width: 200,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
               },
               {
                 title: "状态",
@@ -3203,62 +3205,48 @@ const index = () => {
                 },
                 sorter: true,
                 width: 250,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
               },
               {
                 title: "物料名称",
-                dataIndex: "file_name",
+                dataIndex: "Comment",
                 search: {
                   type: "Input",
                 },
                 sorter: true,
                 width: 350,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
               },
 
               {
                 title: "位号",
-                dataIndex: "file_name",
+                dataIndex: "Designator",
                 search: {
                   type: "Input",
                 },
                 sorter: true,
                 width: 200,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
+                // render: (text: string, record: any) => {
+                //   return (
+                //     <div className="text-ellipsis w-full overflow-hidden">
+                //       {record.file.plugin.Description}
+                //     </div>
+                //   );
+                // },
               },
               {
                 title: "数量",
-                dataIndex: "status",
+                dataIndex: "Quantity",
                 search: {
                   type: "Input",
                 },
                 sorter: true,
                 width: 150,
-                render: (text: string, record: any) => {
-                  return (
-                    <div className="text-ellipsis w-full overflow-hidden">
-                      {record.file.plugin.Description}
-                    </div>
-                  );
-                },
+                // render: (text: string, record: any) => {
+                //   return (
+                //     <div className="text-ellipsis w-full overflow-hidden">
+                //       {record.file.plugin.Description}
+                //     </div>
+                //   );
+                // },
               },
             ]
             }
