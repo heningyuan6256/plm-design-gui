@@ -3612,11 +3612,11 @@ const index = () => {
           >
             {logData.map((item: any, index: number) => {
               return (
-                <div key={index} className="flex text-xs">
-                  <div style={{ marginRight: "10px", marginBottom: "4px" }}>
+                <div key={index} className="flex text-xs whitespace-nowrap">
+                  <div className="whitespace-nowrap" style={{ marginRight: "10px", marginBottom: "4px" }}>
                     {item.dateTime}
                   </div>
-                  <div>{item.log}</div>
+                  <div className="whitespace-nowrap">{item.log}</div>
                 </div>
               );
             })}
