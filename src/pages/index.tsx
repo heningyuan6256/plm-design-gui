@@ -1607,6 +1607,10 @@ const index = () => {
           return "";
         } else if (col.apicode === "Description") {
           return row.Description;
+        } else if (col.apicode === "Unit") {
+          return "1452642664448032";
+        } else if (col.apicode === "materialName") {
+          return row.Comment;
         } else {
           return transferValue(row[col.apicode] || col.defValue || "");
         }
@@ -3491,8 +3495,12 @@ const index = () => {
           </OnChainTable>
           <OnChainTable
             extraHeight={32}
-            dataSource={material2D}
-            total={material2D.length}
+            rowKey={'no'}
+            dataSource={[{ Description: file2D[0]?.name, Comment: file2D[0]?.name, no: '0', DesignItemId: '0000', children: material2D }]}
+            total={material2D.length + 1}
+            expandable={{
+              expandedRowKeys: ['0'],
+            }}
             columns={[
               {
                 title: "序号",
@@ -3503,16 +3511,16 @@ const index = () => {
                 fixed: true,
                 sorter: true,
                 width: 200,
-                // render: (text: string, record: any) => {
-                //   return (
-                //     <div>
-                //       {}
-                //     </div>
-                //   );
-                // },
+                render: (text: string, record: any) => {
+                  return (
+                    <span style={{ marginLeft: '10px' }}>
+                      {text}
+                    </span>
+                  );
+                },
               },
               {
-                title: "编号",
+                title: "物料DesignId",
                 dataIndex: "DesignItemId",
                 search: {
                   type: "Input",
