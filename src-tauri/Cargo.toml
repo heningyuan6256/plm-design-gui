@@ -27,7 +27,7 @@ tauri-plugin-localhost = { git = "https://github.com/tauri-apps/plugins-workspac
 tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 screenshots = "0.8.6"
 window-shadows = "0.2.1"
-
+postgres="0.19.7"
 [dependencies.tauri-plugin-sql]
 git = "https://github.com/tauri-apps/plugins-workspace"
 branch = "v1"

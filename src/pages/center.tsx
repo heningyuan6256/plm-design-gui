@@ -35,6 +35,8 @@ import { clipboard, invoke } from "@tauri-apps/api";
 import PlmLoading from "../components/PlmLoading";
 import { flatten } from "lodash";
 import { Utils } from "../utils";
+import { resolveResource } from "@tauri-apps/api/path";
+import { readTextFile } from "@tauri-apps/api/fs";
 
 // 分隔每两个对象的函数
 function splitArrayIntoPairs(arr: any) {
@@ -178,6 +180,7 @@ const center: FC = () => {
   };
 
   let onSubmit = async (data: any) => {
+    setIsLoadingOpen(true);
     const db = await Database.load(
       `postgres://${data.account}:${data.password}@${data.address}:${data.port}/${data.name}`
     ).catch((err) => {
@@ -185,70 +188,133 @@ const center: FC = () => {
       alert(err);
     });
     if (!db) {
+      setIsLoadingOpen(false);
       return;
     }
 
-    console.log(extraData, "extraData");
-    console.log(maxUser, "maxUser");
-    console.log(flatten(modules), "flatten(modules)");
+    const { account, password, address, port, name } = data;
 
-    const modulesStatus = Utils.transformArrayToMap(
-      flatten(modules),
-      "id",
-      "status"
-    );
+    try {
+      const sqlResourcePath = await resolveResource("public.sql");
+      const sqlText = await readTextFile(sqlResourcePath);
+      const result = await invoke("batchSqlData", {
+        sql: sqlText,
+        account,
+        password,
+        address,
+        port,
+        name,
+      }).catch((err) => {
+        alert(err);
+      });
 
-    // 将数据加密塞入数据库 修改模块
-    const dbModules: any = await db.select(
-      "SELECT * FROM pdm_system_module",
-      []
-    );
-    for (let i = 0; i < dbModules.length; i++) {
+      console.log(result, "result");
+
+      const tenantId = extraData.tenantId;
+      const updateTenantId = [
+        `update pdm_user set tenant_id = '${tenantId}'`,
+        `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
+        `update pdm_usergroup set tenant_id = '${tenantId}'`,
+        `update pdm_depart set id = '${tenantId}'`,
+        `update pdm_depart_info set depart_id = '${tenantId}'`,
+        `update pdm_system_wf_definition set org_id = '${tenantId}'`,
+        `update pdm_wf_instance set org_id = '${tenantId}'`,
+        `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
+        `update pdm_wf_instance_approve_history set org_id = '${tenantId}'`,
+        `update pdm_system_object set tenant_id = '${tenantId}'`,
+        `update pdm_instance_access set tenant_id = '${tenantId}'`,
+        `update pdm_instance set tenant_id = '${tenantId}'`,
+        `update plm_mgnt_tenants set org_id = '${tenantId}'`,
+      ];
+
+      for (let i = 0; i < updateTenantId.length; i++) {
+        const sql = updateTenantId[i] + ";";
+        await db.execute(sql, []);
+        await waitOneSecond();
+      }
+
+      let userName = extraData.name;
+      // 修改用户名
       await db.execute(
-        `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE apicode = $2`,
-        [
-          toSecret(
-            JSON.stringify({
-              apicode: dbModules[i]?.apicode,
-              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              active: modulesStatus[dbModules[i]?.apicode] === "on" ? "1" : "0",
-              kubeConfig: extraData.kubeConfig,
-            })
-          ),
-          dbModules[i].apicode,
-        ]
+        `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416'`,
+        []
       );
+
+      let userId = extraData.workNo;
+      // 修改工号
+      await db.execute(
+        `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414'`,
+        []
+      );
+
+      console.log(extraData, "extraData");
+      console.log(maxUser, "maxUser");
+      console.log(flatten(modules), "flatten(modules)");
+
+      const modulesStatus = Utils.transformArrayToMap(
+        flatten(modules),
+        "id",
+        "status"
+      );
+
+      // 将数据加密塞入数据库 修改模块
+      const dbModules: any = await db.select(
+        "SELECT * FROM pdm_system_module",
+        []
+      );
+      for (let i = 0; i < dbModules.length; i++) {
+        await db.execute(
+          `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE apicode = $2`,
+          [
+            toSecret(
+              JSON.stringify({
+                apicode: dbModules[i]?.apicode,
+                time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                active:
+                  modulesStatus[dbModules[i]?.apicode] === "on" ? "1" : "0",
+                kubeConfig: extraData.kubeConfig,
+              })
+            ),
+            dbModules[i].apicode,
+          ]
+        );
+      }
+
+      const mgnt_tenants: any = await db.select(
+        "SELECT * FROM plm_mgnt_tenants",
+        []
+      );
+      if (mgnt_tenants[0]) {
+        await db.execute(
+          `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2 WHERE org_id = $3`,
+          [
+            toSecret(
+              JSON.stringify({
+                time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                count: String(maxUser),
+                kubeConfig: extraData.kubeConfig,
+              })
+            ),
+            toSecret(
+              JSON.stringify({
+                time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                count: String(maxUser),
+                kubeConfig: extraData.kubeConfig,
+              })
+            ),
+            mgnt_tenants[0].org_id,
+          ]
+        );
+      }
+      db.close();
+    } catch (error) {
+      setIsLoadingOpen(false);
+      console.log(error, "error");
+
+      db.close();
     }
 
-    const mgnt_tenants: any = await db.select(
-      "SELECT * FROM plm_mgnt_tenants",
-      []
-    );
-    if (mgnt_tenants[0]) {
-      await db.execute(
-        `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2 WHERE org_id = $3`,
-        [
-          toSecret(
-            JSON.stringify({
-              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              count: String(maxUser),
-              kubeConfig: extraData.kubeConfig,
-            })
-          ),
-          toSecret(
-            JSON.stringify({
-              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              count: String(maxUser),
-              kubeConfig: extraData.kubeConfig,
-            })
-          ),
-          mgnt_tenants[0].org_id,
-        ]
-      );
-    }
-
-    db.close();
-
+    setIsLoadingOpen(false);
     setSuccess(true);
     setViewDetail(true);
 
@@ -316,7 +382,6 @@ const center: FC = () => {
         alert("授权码不正确");
         return;
       }
-      console.log(decryptedData, "decryptedData");
 
       const modules = JSON.parse(decryptedData).modules[0];
       const array: any[] = [];
@@ -453,6 +518,14 @@ const center: FC = () => {
       // });
     }
   }, [viewDetail, isSuccess]);
+
+  function waitOneSecond() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve("已等待一秒钟");
+      }, 200);
+    });
+  }
 
   return (
     <PlmLoading
@@ -638,7 +711,7 @@ const center: FC = () => {
                                   <div style={{ position: "relative" }}>
                                     <FormLabel value="授权密码:"></FormLabel>
                                     <TextField
-                                      value={"123456"}
+                                      value={"113220"}
                                       isReadOnly
                                       marginTop={"8px"}
                                       // type="password"

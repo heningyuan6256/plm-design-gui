@@ -2,7 +2,7 @@
 
 mod app;
 mod config;
-use app::{ menu, solidworks, window };
+use app::{ menu, solidworks, window, file };
 use config::utils;
 use tauri::Manager;
 
@@ -15,7 +15,6 @@ use tauri::{ CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem };
 // use crate::{
 //     utils::{set_window_shadow}
 //   };
-  
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -28,6 +27,7 @@ const USE_LOCALHOST_SERVER: bool = false;
 #[cfg(not(debug_assertions))]
 const USE_LOCALHOST_SERVER: bool = true;
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+// 菜单点击事件
 
 fn main() {
     // let _a = call_dynamic();
@@ -136,6 +136,7 @@ fn main() {
                 window::open_home,
                 window::open_stock,
                 window::open_active,
+                file::batchSqlData,
                 // utils::create_chatgpt_prompts,
                 // utils::silent_install,
                 // utils::run_check_update,
