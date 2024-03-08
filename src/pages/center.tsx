@@ -31,7 +31,7 @@ import hideSvg from "../assets/image/hide.svg";
 import showSvg from "../assets/image/show.svg";
 import PlmIcon from "../components/PlmIcon";
 import { LogicalSize, appWindow, getCurrent } from "@tauri-apps/api/window";
-import { clipboard, invoke } from "@tauri-apps/api";
+import { clipboard, http, invoke } from "@tauri-apps/api";
 import PlmLoading from "../components/PlmLoading";
 import { flatten } from "lodash";
 import { Utils } from "../utils";
@@ -195,20 +195,20 @@ const center: FC = () => {
     const { account, password, address, port, name } = data;
 
     try {
-      const sqlResourcePath = await resolveResource("public.sql");
-      const sqlText = await readTextFile(sqlResourcePath);
-      const result = await invoke("batchSqlData", {
-        sql: sqlText,
-        account,
-        password,
-        address,
-        port,
-        name,
-      }).catch((err) => {
-        alert(err);
-      });
+      // const sqlResourcePath = await resolveResource("public.sql");
+      // const sqlText = await readTextFile(sqlResourcePath);
+      // const result = await invoke("batchSqlData", {
+      //   sql: sqlText,
+      //   account,
+      //   password,
+      //   address,
+      //   port,
+      //   name,
+      // }).catch((err) => {
+      //   alert(err);
+      // });
 
-      console.log(result, "result");
+      // console.log(result, "result");
 
       const tenantId = extraData.tenantId;
       const updateTenantId = [
@@ -319,6 +319,596 @@ const center: FC = () => {
 
       db.close();
     }
+    const date = new Date();
+    const year = date.getFullYear();
+    let month: any = date.getMonth() + 1;
+    let day: any = date.getDate();
+    month = month > 9 ? month : "0" + month;
+    day = day < 10 ? "0" + day : day;
+    const today = year + month + day;
+    // 初始化openData索引
+    const esPutUrl = `http://${address}:9220/${extraData.tenantId}_${today}`;
+    const esData = {
+      settings: {
+        number_of_shards: 1,
+        number_of_replicas: 0,
+        "index.refresh_interval": "5s",
+        analysis: {
+          analyzer: {
+            ik: {
+              tokenizer: "ik_max_word",
+            },
+          },
+          normalizer: {
+            lowercase_normalizer: {
+              type: "custom",
+              char_filter: [],
+              filter: ["lowercase"],
+            },
+          },
+        },
+      },
+      mappings: {
+        properties: {
+          instance: {
+            properties: {
+              insId: {
+                type: "keyword",
+              },
+              rid: {
+                type: "keyword",
+              },
+              productId: {
+                type: "keyword",
+              },
+              productName: {
+                type: "keyword",
+              },
+              itemCode: {
+                type: "integer",
+              },
+              itemName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              number: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insDesc: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              objectId: {
+                type: "keyword",
+              },
+              objectApicode: {
+                type: "keyword",
+              },
+              objectName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insVersionOrder: {
+                type: "keyword",
+              },
+              insVersion: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insVersionOrderUnbound: {
+                type: "keyword",
+              },
+              insVersionUnbound: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              statusName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              createName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              createTime: {
+                type: "date",
+                format: "yyyy-MM-dd HH:mm:ss",
+              },
+              updateName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              updateTime: {
+                type: "date",
+                format: "yyyy-MM-dd HH:mm:ss",
+              },
+              publishTime: {
+                type: "date",
+                format: "yyyy-MM-dd HH:mm:ss",
+              },
+              standardPartId: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              affectedIn: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insBom: {
+                type: "boolean",
+              },
+              checkout: {
+                type: "boolean",
+              },
+              priority: {
+                type: "boolean",
+              },
+              versionManager: {
+                type: "keyword",
+              },
+              archivingStatus: {
+                type: "keyword",
+              },
+              lifecycle: {
+                type: "nested",
+                properties: {
+                  id: {
+                    type: "keyword",
+                  },
+                  apicode: {
+                    type: "keyword",
+                  },
+                  name: {
+                    type: "keyword",
+                  },
+                  showName: {
+                    type: "keyword",
+                  },
+                  color: {
+                    type: "keyword",
+                  },
+                  status: {
+                    type: "boolean",
+                  },
+                  bomRule: {
+                    type: "keyword",
+                  },
+                  sort: {
+                    type: "integer",
+                  },
+                  code: {
+                    type: "integer",
+                  },
+                  isBase: {
+                    type: "boolean",
+                  },
+                  objectShowName: {
+                    type: "keyword",
+                  },
+                  objectBomRule: {
+                    type: "keyword",
+                  },
+                },
+              },
+              workflow: {
+                type: "nested",
+                properties: {
+                  changeId: {
+                    type: "keyword",
+                  },
+                  changeNumber: {
+                    type: "keyword",
+                  },
+                  changeItemCode: {
+                    type: "integer",
+                  },
+                  changeTypeName: {
+                    type: "keyword",
+                  },
+                  wfId: {
+                    type: "keyword",
+                  },
+                  wfName: {
+                    type: "keyword",
+                  },
+                  wfDefId: {
+                    type: "keyword",
+                  },
+                  wfDefName: {
+                    type: "keyword",
+                  },
+                  wfIsEnd: {
+                    type: "boolean",
+                  },
+                  wfIsCancel: {
+                    type: "boolean",
+                  },
+                  wfIsPublish: {
+                    type: "boolean",
+                  },
+                  crtNodeId: {
+                    type: "keyword",
+                  },
+                  crtNodeName: {
+                    type: "keyword",
+                  },
+                  crtNodeClazz: {
+                    type: "keyword",
+                  },
+                  crtNodeIntoTime: {
+                    type: "date",
+                    format: "yyyy-MM-dd HH:mm:ss",
+                  },
+                  waitingApprovalObjectInstanceIds: {
+                    type: "keyword",
+                  },
+                },
+              },
+              inProcessAttributes: {
+                type: "nested",
+                properties: {
+                  rid: {
+                    type: "keyword",
+                  },
+                  affectedInsId: {
+                    type: "keyword",
+                  },
+                  insVersionOrder: {
+                    type: "keyword",
+                  },
+                  insVersion: {
+                    type: "keyword",
+                  },
+                  rowId: {
+                    type: "keyword",
+                  },
+                  attrId: {
+                    type: "keyword",
+                  },
+                  apiCode: {
+                    type: "keyword",
+                  },
+                  itemCode: {
+                    type: "integer",
+                  },
+                  tabCode: {
+                    type: "integer",
+                  },
+                  attrValue: {
+                    type: "text",
+                    fields: {
+                      keyword: {
+                        type: "keyword",
+                        normalizer: "lowercase_normalizer",
+                      },
+                    },
+                  },
+                  datafrom: {
+                    type: "keyword",
+                  },
+                },
+              },
+              snapshotAttributes: {
+                type: "nested",
+                properties: {
+                  rid: {
+                    type: "keyword",
+                  },
+                  affectedInsId: {
+                    type: "keyword",
+                  },
+                  insVersionOrder: {
+                    type: "keyword",
+                  },
+                  insVersion: {
+                    type: "keyword",
+                  },
+                  rowId: {
+                    type: "keyword",
+                  },
+                  attrId: {
+                    type: "keyword",
+                  },
+                  apiCode: {
+                    type: "keyword",
+                  },
+                  itemCode: {
+                    type: "integer",
+                  },
+                  tabCode: {
+                    type: "integer",
+                  },
+                  attrValue: {
+                    type: "text",
+                    fields: {
+                      keyword: {
+                        type: "keyword",
+                        normalizer: "lowercase_normalizer",
+                      },
+                    },
+                  },
+                  datafrom: {
+                    type: "keyword",
+                  },
+                },
+              },
+            },
+          },
+          attribute: {
+            properties: {
+              rid: {
+                type: "keyword",
+              },
+              insId: {
+                type: "keyword",
+              },
+              insVersionOrder: {
+                type: "keyword",
+              },
+              insVersion: {
+                type: "keyword",
+              },
+              rowId: {
+                type: "keyword",
+              },
+              attrId: {
+                type: "keyword",
+              },
+              apiCode: {
+                type: "keyword",
+              },
+              itemCode: {
+                type: "integer",
+              },
+              tabCode: {
+                type: "integer",
+              },
+              attrValue: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              datafrom: {
+                type: "keyword",
+              },
+              rowInsId: {
+                type: "keyword",
+              },
+              affectedInsId: {
+                type: "keyword",
+              },
+              valueType: {
+                type: "keyword",
+              },
+              readonly: {
+                type: "keyword",
+              },
+              datafromId: {
+                type: "keyword",
+              },
+              view: {
+                type: "keyword",
+              },
+              name: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              listCnValue: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+            },
+          },
+          relations: {
+            type: "join",
+            relations: {
+              instance: "attribute",
+            },
+          },
+        },
+      },
+    };
+    const esPostUrl = `http://${address}:9220/_aliases`;
+    const esAlias = {
+      actions: [
+        {
+          add: {
+            index: `${extraData.tenantId}_${today}`,
+            alias: `${extraData.tenantId}`,
+          },
+        },
+      ],
+    };
+    const fetchEsPutUrlPromise = () => {
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(esPutUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: http.Body.json(esData),
+          })
+          .then((response) => {
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+    const fetchEsAliasPromise = () => {
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(esPostUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: http.Body.json(esAlias),
+          })
+          .then((response) => {
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+    const esPutResult: any = await fetchEsPutUrlPromise();
+    console.log(esPutResult, "esPutResult");
+    const esAliasResult: any = await fetchEsAliasPromise();
+    console.log(esAliasResult, "esAliasResult");
+
+    if (!esPutResult.acknowledged || !esAliasResult.acknowledged) {
+      alert("ES数据库初始化失败!");
+      return;
+    }
+
+    let cookies = "";
+
+    const fetchNebulaCookie = () => {
+      const nebulaData = {
+        address: "192.168.0.104",
+        port: 9669,
+      };
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(`http://${address}:7001/api-nebula/db/connect`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+            },
+            body: http.Body.json(nebulaData),
+          })
+          .then((response) => {
+            console.log(response);
+            cookies = `${response.rawHeaders["set-cookie"][0]};${response.rawHeaders["set-cookie"][1]}`;
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+
+    const createSpace = () => {
+      const nebulaData = {
+        gql: `CREATE SPACE ${`tenant_${extraData.tenantId}`} (vid_type = FIXED_STRING(50)) `,
+      };
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+              Cookie: cookies,
+            },
+            body: http.Body.json(nebulaData),
+          })
+          .then((response) => {
+            console.log(response);
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+
+    await fetchNebulaCookie();
+
+    await createSpace();
+
+    //192.168.0.104:7001/api-nebula/db/connect
 
     setIsLoadingOpen(false);
     setSuccess(true);
