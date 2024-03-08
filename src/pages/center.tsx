@@ -247,6 +247,12 @@ const center: FC = () => {
         []
       );
 
+      let userEmail = extraData.email;
+      await db.execute(
+        `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402'`,
+        []
+      );
+
       console.log(extraData, "extraData");
       console.log(maxUser, "maxUser");
       console.log(flatten(modules), "flatten(modules)");
