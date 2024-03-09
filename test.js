@@ -8,8 +8,6 @@ import {
   Button,
   Form,
   Image,
-  Item,
-  Picker,
   ProgressCircle,
   Text,
   TextArea,
@@ -35,7 +33,7 @@ import PlmIcon from "../components/PlmIcon";
 import { LogicalSize, appWindow, getCurrent } from "@tauri-apps/api/window";
 import { clipboard, http, invoke } from "@tauri-apps/api";
 import PlmLoading from "../components/PlmLoading";
-import { flatten, isEmpty } from "lodash";
+import { flatten } from "lodash";
 import { Utils } from "../utils";
 import { resolveResource } from "@tauri-apps/api/path";
 import { readTextFile } from "@tauri-apps/api/fs";
@@ -181,63 +179,6 @@ const center: FC = () => {
     return ciphertext.toString();
   };
 
-  const updateModules = async ({ db }: { db: any }) => {
-    const modulesStatus = Utils.transformArrayToMap(
-      flatten(modules),
-      "id",
-      "status"
-    );
-
-    // 将数据加密塞入数据库 修改模块
-    const dbModules: any = await db.select(
-      "SELECT * FROM pdm_system_module",
-      []
-    );
-    for (let i = 0; i < dbModules.length; i++) {
-      await db.execute(
-        `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE apicode = $2`,
-        [
-          toSecret(
-            JSON.stringify({
-              apicode: dbModules[i]?.apicode,
-              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              active: modulesStatus[dbModules[i]?.apicode] === "on" ? "1" : "0",
-              kubeConfig: extraData.kubeConfig,
-            })
-          ),
-          dbModules[i].apicode,
-        ]
-      );
-    }
-
-    const mgnt_tenants: any = await db.select(
-      "SELECT * FROM plm_mgnt_tenants",
-      []
-    );
-    if (mgnt_tenants[0]) {
-      await db.execute(
-        `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2 WHERE org_id = $3`,
-        [
-          toSecret(
-            JSON.stringify({
-              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              count: String(maxUser),
-              kubeConfig: extraData.kubeConfig,
-            })
-          ),
-          toSecret(
-            JSON.stringify({
-              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              count: String(maxUser),
-              kubeConfig: extraData.kubeConfig,
-            })
-          ),
-          mgnt_tenants[0].org_id,
-        ]
-      );
-    }
-  };
-
   let onSubmit = async (data: any) => {
     setIsLoadingOpen(true);
     const db = await Database.load(
@@ -251,7 +192,8 @@ const center: FC = () => {
       return;
     }
 
-    const { account, password, address, port, name, env } = data;
+    const { account, password, address, port, name, appAddress, appPort } =
+      data;
 
     try {
       // const sqlResourcePath = await resolveResource("public.sql");
@@ -269,443 +211,429 @@ const center: FC = () => {
 
       // console.log(result, "result");
 
-      // 判断里面是否被加密过
-      const moduleData = await db.select(`select * from pdm_system_module`);
+      const tenantId = extraData.tenantId;
+      const updateTenantId = [
+        `update pdm_user set tenant_id = '${tenantId}'`,
+        `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
+        `update pdm_usergroup set tenant_id = '${tenantId}'`,
+        `update pdm_depart set id = '${tenantId}'`,
+        `update pdm_depart_info set depart_id = '${tenantId}'`,
+        `update pdm_system_wf_definition set org_id = '${tenantId}'`,
+        `update pdm_wf_instance set org_id = '${tenantId}'`,
+        `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
+        `update pdm_wf_instance_approve_history set org_id = '${tenantId}'`,
+        `update pdm_system_object set tenant_id = '${tenantId}'`,
+        `update pdm_instance_access set tenant_id = '${tenantId}'`,
+        `update pdm_instance set tenant_id = '${tenantId}'`,
+        `update plm_mgnt_tenants set org_id = '${tenantId}'`,
+      ];
 
-      //@ts-ignore
-      const isInit = !moduleData[0]?.api_context;
+      for (let i = 0; i < updateTenantId.length; i++) {
+        const sql = updateTenantId[i] + ";";
+        await db.execute(sql, []);
+        await waitOneSecond();
+      }
 
-      console.log(isInit,'init');
-      
+      let userName = extraData.name;
+      // 修改用户名
+      await db.execute(
+        `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416'`,
+        []
+      );
 
-      //如果不是初始化，则不改数据，只修改模块
-      if (isInit) {
-        updateModules({ db });
-      } else {
-        const tenantId = extraData.tenantId;
-        const updateTenantId = [
-          `update pdm_user set tenant_id = '${tenantId}'`,
-          `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
-          `update pdm_usergroup set tenant_id = '${tenantId}'`,
-          `update pdm_depart set id = '${tenantId}'`,
-          `update pdm_depart_info set depart_id = '${tenantId}'`,
-          `update pdm_system_wf_definition set org_id = '${tenantId}'`,
-          `update pdm_wf_instance set org_id = '${tenantId}'`,
-          `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
-          `update pdm_wf_instance_approve_history set org_id = '${tenantId}'`,
-          `update pdm_system_object set tenant_id = '${tenantId}'`,
-          `update pdm_instance_access set tenant_id = '${tenantId}'`,
-          `update pdm_instance set tenant_id = '${tenantId}'`,
-          `update plm_mgnt_tenants set org_id = '${tenantId}'`,
-        ];
+      let userId = extraData.workNo;
+      // 修改工号
+      await db.execute(
+        `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414'`,
+        []
+      );
 
-        for (let i = 0; i < updateTenantId.length; i++) {
-          const sql = updateTenantId[i] + ";";
-          await db.execute(sql, []);
-          await waitOneSecond();
-        }
+      let userEmail = extraData.email;
+      await db.execute(
+        `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402'`,
+        []
+      );
 
-        let userName = extraData.name;
-        // 修改用户名
+      console.log(extraData, "extraData");
+      console.log(maxUser, "maxUser");
+      console.log(flatten(modules), "flatten(modules)");
+
+      const modulesStatus = Utils.transformArrayToMap(
+        flatten(modules),
+        "id",
+        "status"
+      );
+
+      // 将数据加密塞入数据库 修改模块
+      const dbModules: any = await db.select(
+        "SELECT * FROM pdm_system_module",
+        []
+      );
+      for (let i = 0; i < dbModules.length; i++) {
         await db.execute(
-          `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416'`,
-          []
+          `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE apicode = $2`,
+          [
+            toSecret(
+              JSON.stringify({
+                apicode: dbModules[i]?.apicode,
+                time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                active:
+                  modulesStatus[dbModules[i]?.apicode] === "on" ? "1" : "0",
+                kubeConfig: extraData.kubeConfig,
+              })
+            ),
+            dbModules[i].apicode,
+          ]
         );
+      }
 
-        let userId = extraData.workNo;
-        // 修改工号
+      const mgnt_tenants: any = await db.select(
+        "SELECT * FROM plm_mgnt_tenants",
+        []
+      );
+      if (mgnt_tenants[0]) {
         await db.execute(
-          `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414'`,
-          []
+          `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2 WHERE org_id = $3`,
+          [
+            toSecret(
+              JSON.stringify({
+                time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                count: String(maxUser),
+                kubeConfig: extraData.kubeConfig,
+              })
+            ),
+            toSecret(
+              JSON.stringify({
+                time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                count: String(maxUser),
+                kubeConfig: extraData.kubeConfig,
+              })
+            ),
+            mgnt_tenants[0].org_id,
+          ]
         );
+      }
 
-        let userEmail = extraData.email;
-        await db.execute(
-          `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402'`,
-          []
-        );
-        // console.log(extraData, "extraData");
-        updateModules({ db });
-
-        //初始化es
-
-        const date = new Date();
-        const year = date.getFullYear();
-        let month: any = date.getMonth() + 1;
-        let day: any = date.getDate();
-        month = month > 9 ? month : "0" + month;
-        day = day < 10 ? "0" + day : day;
-        const today = year + month + day;
-        // 初始化openData索引
-        const esPutUrl = `http://${address}:9220/${env}_${extraData.tenantId}_${today}`;
-        const esData = {
-          settings: {
-            number_of_shards: 1,
-            number_of_replicas: 0,
-            "index.refresh_interval": "5s",
-            analysis: {
-              analyzer: {
-                ik: {
-                  tokenizer: "ik_max_word",
-                },
+      // 修改数据
+      const fetchEsPutUrlPromise = () => {
+        return new Promise((resolve, reject) => {
+          http
+            .fetch("http://192.168.0.219:18080/plm/sys/initialization/data", {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
               },
-              normalizer: {
-                lowercase_normalizer: {
-                  type: "custom",
-                  char_filter: [],
-                  filter: ["lowercase"],
-                },
-              },
+              body: http.Body.json(esData),
+            })
+            .then((response) => {
+              return response;
+            })
+            .then((data) => {
+              resolve(data.data);
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        });
+      };
+
+      await fetchEsPutUrlPromise();
+      db.close();
+    } catch (error) {
+      setIsLoadingOpen(false);
+      console.log(error, "error");
+
+      db.close();
+    }
+    const date = new Date();
+    const year = date.getFullYear();
+    let month: any = date.getMonth() + 1;
+    let day: any = date.getDate();
+    month = month > 9 ? month : "0" + month;
+    day = day < 10 ? "0" + day : day;
+    const today = year + month + day;
+    // 初始化openData索引
+    const esPutUrl = `http://${address}:9220/${extraData.tenantId}_${today}`;
+    const esData = {
+      settings: {
+        number_of_shards: 1,
+        number_of_replicas: 0,
+        "index.refresh_interval": "5s",
+        analysis: {
+          analyzer: {
+            ik: {
+              tokenizer: "ik_max_word",
             },
           },
-          mappings: {
+          normalizer: {
+            lowercase_normalizer: {
+              type: "custom",
+              char_filter: [],
+              filter: ["lowercase"],
+            },
+          },
+        },
+      },
+      mappings: {
+        properties: {
+          instance: {
             properties: {
-              instance: {
-                properties: {
-                  insId: {
+              insId: {
+                type: "keyword",
+              },
+              rid: {
+                type: "keyword",
+              },
+              productId: {
+                type: "keyword",
+              },
+              productName: {
+                type: "keyword",
+              },
+              itemCode: {
+                type: "integer",
+              },
+              itemName: {
+                type: "text",
+                fields: {
+                  keyword: {
                     type: "keyword",
-                  },
-                  rid: {
-                    type: "keyword",
-                  },
-                  productId: {
-                    type: "keyword",
-                  },
-                  productName: {
-                    type: "keyword",
-                  },
-                  itemCode: {
-                    type: "integer",
-                  },
-                  itemName: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  number: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  insDesc: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  objectId: {
-                    type: "keyword",
-                  },
-                  objectApicode: {
-                    type: "keyword",
-                  },
-                  objectName: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  insVersionOrder: {
-                    type: "keyword",
-                  },
-                  insVersion: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  insVersionOrderUnbound: {
-                    type: "keyword",
-                  },
-                  insVersionUnbound: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  statusName: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  createName: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  createTime: {
-                    type: "date",
-                    format: "yyyy-MM-dd HH:mm:ss",
-                  },
-                  updateName: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  updateTime: {
-                    type: "date",
-                    format: "yyyy-MM-dd HH:mm:ss",
-                  },
-                  publishTime: {
-                    type: "date",
-                    format: "yyyy-MM-dd HH:mm:ss",
-                  },
-                  standardPartId: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  affectedIn: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
-                  },
-                  insBom: {
-                    type: "boolean",
-                  },
-                  checkout: {
-                    type: "boolean",
-                  },
-                  priority: {
-                    type: "boolean",
-                  },
-                  versionManager: {
-                    type: "keyword",
-                  },
-                  archivingStatus: {
-                    type: "keyword",
-                  },
-                  lifecycle: {
-                    type: "nested",
-                    properties: {
-                      id: {
-                        type: "keyword",
-                      },
-                      apicode: {
-                        type: "keyword",
-                      },
-                      name: {
-                        type: "keyword",
-                      },
-                      showName: {
-                        type: "keyword",
-                      },
-                      color: {
-                        type: "keyword",
-                      },
-                      status: {
-                        type: "boolean",
-                      },
-                      bomRule: {
-                        type: "keyword",
-                      },
-                      sort: {
-                        type: "integer",
-                      },
-                      code: {
-                        type: "integer",
-                      },
-                      isBase: {
-                        type: "boolean",
-                      },
-                      objectShowName: {
-                        type: "keyword",
-                      },
-                      objectBomRule: {
-                        type: "keyword",
-                      },
-                    },
-                  },
-                  workflow: {
-                    type: "nested",
-                    properties: {
-                      changeId: {
-                        type: "keyword",
-                      },
-                      changeNumber: {
-                        type: "keyword",
-                      },
-                      changeItemCode: {
-                        type: "integer",
-                      },
-                      changeTypeName: {
-                        type: "keyword",
-                      },
-                      wfId: {
-                        type: "keyword",
-                      },
-                      wfName: {
-                        type: "keyword",
-                      },
-                      wfDefId: {
-                        type: "keyword",
-                      },
-                      wfDefName: {
-                        type: "keyword",
-                      },
-                      wfIsEnd: {
-                        type: "boolean",
-                      },
-                      wfIsCancel: {
-                        type: "boolean",
-                      },
-                      wfIsPublish: {
-                        type: "boolean",
-                      },
-                      crtNodeId: {
-                        type: "keyword",
-                      },
-                      crtNodeName: {
-                        type: "keyword",
-                      },
-                      crtNodeClazz: {
-                        type: "keyword",
-                      },
-                      crtNodeIntoTime: {
-                        type: "date",
-                        format: "yyyy-MM-dd HH:mm:ss",
-                      },
-                      waitingApprovalObjectInstanceIds: {
-                        type: "keyword",
-                      },
-                    },
-                  },
-                  inProcessAttributes: {
-                    type: "nested",
-                    properties: {
-                      rid: {
-                        type: "keyword",
-                      },
-                      affectedInsId: {
-                        type: "keyword",
-                      },
-                      insVersionOrder: {
-                        type: "keyword",
-                      },
-                      insVersion: {
-                        type: "keyword",
-                      },
-                      rowId: {
-                        type: "keyword",
-                      },
-                      attrId: {
-                        type: "keyword",
-                      },
-                      apiCode: {
-                        type: "keyword",
-                      },
-                      itemCode: {
-                        type: "integer",
-                      },
-                      tabCode: {
-                        type: "integer",
-                      },
-                      attrValue: {
-                        type: "text",
-                        fields: {
-                          keyword: {
-                            type: "keyword",
-                            normalizer: "lowercase_normalizer",
-                          },
-                        },
-                      },
-                      datafrom: {
-                        type: "keyword",
-                      },
-                    },
-                  },
-                  snapshotAttributes: {
-                    type: "nested",
-                    properties: {
-                      rid: {
-                        type: "keyword",
-                      },
-                      affectedInsId: {
-                        type: "keyword",
-                      },
-                      insVersionOrder: {
-                        type: "keyword",
-                      },
-                      insVersion: {
-                        type: "keyword",
-                      },
-                      rowId: {
-                        type: "keyword",
-                      },
-                      attrId: {
-                        type: "keyword",
-                      },
-                      apiCode: {
-                        type: "keyword",
-                      },
-                      itemCode: {
-                        type: "integer",
-                      },
-                      tabCode: {
-                        type: "integer",
-                      },
-                      attrValue: {
-                        type: "text",
-                        fields: {
-                          keyword: {
-                            type: "keyword",
-                            normalizer: "lowercase_normalizer",
-                          },
-                        },
-                      },
-                      datafrom: {
-                        type: "keyword",
-                      },
-                    },
+                    normalizer: "lowercase_normalizer",
                   },
                 },
               },
-              attribute: {
+              number: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insDesc: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              objectId: {
+                type: "keyword",
+              },
+              objectApicode: {
+                type: "keyword",
+              },
+              objectName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insVersionOrder: {
+                type: "keyword",
+              },
+              insVersion: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insVersionOrderUnbound: {
+                type: "keyword",
+              },
+              insVersionUnbound: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              statusName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              createName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              createTime: {
+                type: "date",
+                format: "yyyy-MM-dd HH:mm:ss",
+              },
+              updateName: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              updateTime: {
+                type: "date",
+                format: "yyyy-MM-dd HH:mm:ss",
+              },
+              publishTime: {
+                type: "date",
+                format: "yyyy-MM-dd HH:mm:ss",
+              },
+              standardPartId: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              affectedIn: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              insBom: {
+                type: "boolean",
+              },
+              checkout: {
+                type: "boolean",
+              },
+              priority: {
+                type: "boolean",
+              },
+              versionManager: {
+                type: "keyword",
+              },
+              archivingStatus: {
+                type: "keyword",
+              },
+              lifecycle: {
+                type: "nested",
+                properties: {
+                  id: {
+                    type: "keyword",
+                  },
+                  apicode: {
+                    type: "keyword",
+                  },
+                  name: {
+                    type: "keyword",
+                  },
+                  showName: {
+                    type: "keyword",
+                  },
+                  color: {
+                    type: "keyword",
+                  },
+                  status: {
+                    type: "boolean",
+                  },
+                  bomRule: {
+                    type: "keyword",
+                  },
+                  sort: {
+                    type: "integer",
+                  },
+                  code: {
+                    type: "integer",
+                  },
+                  isBase: {
+                    type: "boolean",
+                  },
+                  objectShowName: {
+                    type: "keyword",
+                  },
+                  objectBomRule: {
+                    type: "keyword",
+                  },
+                },
+              },
+              workflow: {
+                type: "nested",
+                properties: {
+                  changeId: {
+                    type: "keyword",
+                  },
+                  changeNumber: {
+                    type: "keyword",
+                  },
+                  changeItemCode: {
+                    type: "integer",
+                  },
+                  changeTypeName: {
+                    type: "keyword",
+                  },
+                  wfId: {
+                    type: "keyword",
+                  },
+                  wfName: {
+                    type: "keyword",
+                  },
+                  wfDefId: {
+                    type: "keyword",
+                  },
+                  wfDefName: {
+                    type: "keyword",
+                  },
+                  wfIsEnd: {
+                    type: "boolean",
+                  },
+                  wfIsCancel: {
+                    type: "boolean",
+                  },
+                  wfIsPublish: {
+                    type: "boolean",
+                  },
+                  crtNodeId: {
+                    type: "keyword",
+                  },
+                  crtNodeName: {
+                    type: "keyword",
+                  },
+                  crtNodeClazz: {
+                    type: "keyword",
+                  },
+                  crtNodeIntoTime: {
+                    type: "date",
+                    format: "yyyy-MM-dd HH:mm:ss",
+                  },
+                  waitingApprovalObjectInstanceIds: {
+                    type: "keyword",
+                  },
+                },
+              },
+              inProcessAttributes: {
+                type: "nested",
                 properties: {
                   rid: {
                     type: "keyword",
                   },
-                  insId: {
+                  affectedInsId: {
                     type: "keyword",
                   },
                   insVersionOrder: {
@@ -741,25 +669,39 @@ const center: FC = () => {
                   datafrom: {
                     type: "keyword",
                   },
-                  rowInsId: {
+                },
+              },
+              snapshotAttributes: {
+                type: "nested",
+                properties: {
+                  rid: {
                     type: "keyword",
                   },
                   affectedInsId: {
                     type: "keyword",
                   },
-                  valueType: {
+                  insVersionOrder: {
                     type: "keyword",
                   },
-                  readonly: {
+                  insVersion: {
                     type: "keyword",
                   },
-                  datafromId: {
+                  rowId: {
                     type: "keyword",
                   },
-                  view: {
+                  attrId: {
                     type: "keyword",
                   },
-                  name: {
+                  apiCode: {
+                    type: "keyword",
+                  },
+                  itemCode: {
+                    type: "integer",
+                  },
+                  tabCode: {
+                    type: "integer",
+                  },
+                  attrValue: {
                     type: "text",
                     fields: {
                       keyword: {
@@ -768,361 +710,233 @@ const center: FC = () => {
                       },
                     },
                   },
-                  listCnValue: {
-                    type: "text",
-                    fields: {
-                      keyword: {
-                        type: "keyword",
-                        normalizer: "lowercase_normalizer",
-                      },
-                    },
+                  datafrom: {
+                    type: "keyword",
                   },
-                },
-              },
-              relations: {
-                type: "join",
-                relations: {
-                  instance: "attribute",
                 },
               },
             },
           },
-        };
-        const esPostUrl = `http://${address}:9220/_aliases`;
-        const esAlias = {
-          actions: [
-            {
-              add: {
-                index: `${env}_${extraData.tenantId}_${today}`,
-                alias: `${env}_${extraData.tenantId}`,
+          attribute: {
+            properties: {
+              rid: {
+                type: "keyword",
+              },
+              insId: {
+                type: "keyword",
+              },
+              insVersionOrder: {
+                type: "keyword",
+              },
+              insVersion: {
+                type: "keyword",
+              },
+              rowId: {
+                type: "keyword",
+              },
+              attrId: {
+                type: "keyword",
+              },
+              apiCode: {
+                type: "keyword",
+              },
+              itemCode: {
+                type: "integer",
+              },
+              tabCode: {
+                type: "integer",
+              },
+              attrValue: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              datafrom: {
+                type: "keyword",
+              },
+              rowInsId: {
+                type: "keyword",
+              },
+              affectedInsId: {
+                type: "keyword",
+              },
+              valueType: {
+                type: "keyword",
+              },
+              readonly: {
+                type: "keyword",
+              },
+              datafromId: {
+                type: "keyword",
+              },
+              view: {
+                type: "keyword",
+              },
+              name: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
+              },
+              listCnValue: {
+                type: "text",
+                fields: {
+                  keyword: {
+                    type: "keyword",
+                    normalizer: "lowercase_normalizer",
+                  },
+                },
               },
             },
-          ],
-        };
-        const fetchEsPutUrlPromise = () => {
-          return new Promise((resolve, reject) => {
-            http
-              .fetch(esPutUrl, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Access-Control-Allow-Origin": "*",
-                },
-                body: http.Body.json(esData),
-              })
-              .then((response) => {
-                return response;
-              })
-              .then((data) => {
-                resolve(data.data);
-              })
-              .catch((error) => {
-                reject(error);
-              });
+          },
+          relations: {
+            type: "join",
+            relations: {
+              instance: "attribute",
+            },
+          },
+        },
+      },
+    };
+    const esPostUrl = `http://${address}:9220/_aliases`;
+    const esAlias = {
+      actions: [
+        {
+          add: {
+            index: `${extraData.tenantId}_${today}`,
+            alias: `${extraData.tenantId}`,
+          },
+        },
+      ],
+    };
+    const fetchEsPutUrlPromise = () => {
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(esPutUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: http.Body.json(esData),
+          })
+          .then((response) => {
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
           });
-        };
-        const fetchEsAliasPromise = () => {
-          return new Promise((resolve, reject) => {
-            http
-              .fetch(esPostUrl, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Access-Control-Allow-Origin": "*",
-                },
-                body: http.Body.json(esAlias),
-              })
-              .then((response) => {
-                return response;
-              })
-              .then((data) => {
-                resolve(data.data);
-              })
-              .catch((error) => {
-                reject(error);
-              });
+      });
+    };
+    const fetchEsAliasPromise = () => {
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(esPostUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: http.Body.json(esAlias),
+          })
+          .then((response) => {
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
           });
-        };
-        const esPutResult: any = await fetchEsPutUrlPromise();
-        console.log(esPutResult, "esPutResult");
-        const esAliasResult: any = await fetchEsAliasPromise();
-        console.log(esAliasResult, "esAliasResult");
+      });
+    };
+    const esPutResult: any = await fetchEsPutUrlPromise();
+    console.log(esPutResult, "esPutResult");
+    const esAliasResult: any = await fetchEsAliasPromise();
+    console.log(esAliasResult, "esAliasResult");
 
-        if (!esPutResult.acknowledged || !esAliasResult.acknowledged) {
-          alert("ES数据库初始化失败!");
-          return;
-        }
-
-        let cookies = "";
-
-        const fetchNebulaCookie = () => {
-          const nebulaData = {
-            address: address,
-            port: 9669,
-          };
-          return new Promise((resolve, reject) => {
-            http
-              .fetch(`http://${address}:7001/api-nebula/db/connect`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Access-Control-Allow-Origin": "*",
-                  Authorization: "Bearer cm9vdDpuZWJ1bGE=",
-                },
-                body: http.Body.json(nebulaData),
-              })
-              .then((response) => {
-                console.log(response);
-                cookies = `${response.rawHeaders["set-cookie"][0]};${response.rawHeaders["set-cookie"][1]}`;
-                return response;
-              })
-              .then((data) => {
-                resolve(data.data);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-          });
-        };
-
-        const createSpace = () => {
-          const nebulaData = {
-            gql: `CREATE SPACE ${`tenant_${env}_${extraData.tenantId}`} (vid_type = FIXED_STRING(50)) `,
-          };
-          return new Promise((resolve, reject) => {
-            http
-              .fetch(`http://${address}:7001/api-nebula/db/exec`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Access-Control-Allow-Origin": "*",
-                  Authorization: "Bearer cm9vdDpuZWJ1bGE=",
-                  Cookie: cookies,
-                },
-                body: http.Body.json(nebulaData),
-              })
-              .then((response) => {
-                console.log(response);
-                return response;
-              })
-              .then((data) => {
-                resolve(data.data);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-          });
-        };
-
-        await fetchNebulaCookie();
-
-        await createSpace();
-
-        // 同步es数据
-        const syncInstance = () => {
-          return new Promise((resolve, reject) => {
-            http
-              .fetch(
-                `http://${address}:9220/${env}_${extraData.tenantId}_${today}/_doc/1535178992594558027?refresh`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                  },
-                  body: http.Body.json({
-                    insId: "1535178992594558027",
-                    rid: "1600698053558304",
-                    productId: "",
-                    productName: "",
-                    standardPartId: "",
-                    itemCode: 10001017,
-                    itemName: "用户",
-                    number: `${extraData.name}(${extraData.workNo})`,
-                    insDesc: `${extraData.email}`,
-                    objectId: "1000101700534091777",
-                    objectApicode: "user",
-                    objectName: "用户",
-                    insVersionOrder: "1",
-                    insVersion: "Draft",
-                    insVersionOrderUnbound: "1",
-                    insVersionUnbound: "Draft",
-                    statusName: "启用",
-                    archivingStatus: "",
-                    createName: "1535178992594558027",
-                    createDepart: "",
-                    createTime: "2022-07-18 16:36:09",
-                    updateName: "",
-                    updateTime: "1970-01-01 08:00:00",
-                    affectedIn: "",
-                    publishTime: null,
-                    insBom: false,
-                    checkout: false,
-                    priority: false,
-                    versionManager: "",
-                    lifecycle: {
-                      id: "",
-                      apicode: "",
-                      name: "",
-                      showName: "",
-                      color: "",
-                      status: false,
-                      bomRule: "",
-                      sort: 0,
-                      code: 0,
-                      isBase: false,
-                      objectShowName: "",
-                      objectBomRule: "",
-                    },
-                    workflow: {
-                      changeId: "",
-                      changeNumber: "",
-                      changeItemCode: 0,
-                      changeTypeName: "",
-                      wfId: "",
-                      wfName: "",
-                      wfDefId: "",
-                      wfDefName: "",
-                      wfIsEnd: false,
-                      wfIsCancel: false,
-                      wfIsPublish: false,
-                      crtNodeId: "",
-                      crtNodeName: "",
-                      crtNodeClazz: "",
-                      crtNodeIntoTime: null,
-                      waitingApprovalObjectInstanceIds: "",
-                    },
-                    inProcessAttributes: [],
-                    snapshotAttributes: [],
-                    relations: {
-                      name: "instance",
-                      parent: null,
-                    },
-                  }),
-                }
-              )
-              .then((response) => {
-                console.log(response);
-                return response;
-              })
-              .then((data) => {
-                resolve(data.data);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-          });
-        };
-        await syncInstance();
-
-        // 属性结构
-
-        const syncInstanceAttr = (data: any, attrId: string) => {
-          return new Promise((resolve, reject) => {
-            http
-              .fetch(
-                `http://${address}:9220/${env}_${extraData.tenantId}_${today}/_doc/${attrId}?routing=1535178992594558027`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                  },
-                  body: http.Body.json(data),
-                }
-              )
-              .then((response) => {
-                console.log(response);
-                return response;
-              })
-              .then((data) => {
-                resolve(data.data);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-          });
-        };
-
-        const object_attr: any = await db.select(
-          `SELECT * FROM pdm_system_base_attribute 
-          WHERE "item_code" = '10001017' AND ("tab_code" = '10002001' OR "tab_code" = '10002025' OR "tab_code" = '10002002')`
-        );
-
-        console.log(object_attr, "object_attr");
-
-        const object_attrMap: any = {};
-        object_attr.forEach((item: any) => {
-          object_attrMap[item.id] = item;
-        });
-
-        const attrArray = [
-          //@ts-ignore
-          (
-            await db.select("select * from pdm_instance_attribute_whererole")
-          ).map((item: any) => {
-            item.tabCode = "10002025";
-            return item;
-          }),
-          //@ts-ignore
-          (await db.select("select * from pdm_user_attribute_base")).map(
-            (item: any) => {
-              item.tabCode = "10002001";
-              return item;
-            }
-          ),
-          ,
-        ];
-
-        console.log(flatten(attrArray), "attrArray");
-
-        const PromiseAttr = flatten(attrArray).map((item: any) => {
-          return new Promise((resolve, reject) => {
-            resolve(
-              syncInstanceAttr(
-                {
-                  rid: item.id,
-                  productId: "",
-                  insId: item.instance_id,
-                  insVersionOrder: "1",
-                  insVersion: "Draft",
-                  rowId: item.row_id,
-                  attrId: item.attr_id,
-                  apiCode: object_attrMap[item.attr_id]?.apicode,
-                  itemCode: 10001017,
-                  tabCode: item.tabCode,
-                  attrValue: item.attr_value,
-                  dataFrom: "0",
-                  dataFromId: "",
-                  rowInsId: "",
-                  affectedInsId: "",
-                  valueType: object_attrMap[item.attr_id]?.value_type,
-                  readonly: object_attrMap[item.attr_id]?.readonly,
-                  view: "",
-                  name: object_attrMap[item.attr_id]?.name,
-                  listCnValue: item.attr_value,
-                  relations: {
-                    name: "attribute",
-                    parent: "1535178992594558027",
-                  },
-                },
-                item.attr_id
-              )
-            );
-          });
-        });
-
-        await Promise.all(PromiseAttr);
-
-        console.log(PromiseAttr, "attrArray");
-      }
-
-      db.close();
-    } catch (error) {
-      setIsLoadingOpen(false);
-      console.log(error, "error");
-      db.close();
+    if (!esPutResult.acknowledged || !esAliasResult.acknowledged) {
+      alert("ES数据库初始化失败!");
+      return;
     }
+
+    let cookies = "";
+
+    const fetchNebulaCookie = () => {
+      const nebulaData = {
+        address: address,
+        port: 9669,
+      };
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(`http://${address}:7001/api-nebula/db/connect`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+            },
+            body: http.Body.json(nebulaData),
+          })
+          .then((response) => {
+            console.log(response);
+            cookies = `${response.rawHeaders["set-cookie"][0]};${response.rawHeaders["set-cookie"][1]}`;
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+
+    const createSpace = () => {
+      const nebulaData = {
+        gql: `CREATE SPACE ${`tenant_${extraData.tenantId}`} (vid_type = FIXED_STRING(50)) `,
+      };
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+              Cookie: cookies,
+            },
+            body: http.Body.json(nebulaData),
+          })
+          .then((response) => {
+            console.log(response);
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+
+    await fetchNebulaCookie();
+
+    await createSpace();
+
+    //192.168.0.104:7001/api-nebula/db/connect
+
     setIsLoadingOpen(false);
     setSuccess(true);
     setViewDetail(true);
@@ -1212,13 +1026,14 @@ const center: FC = () => {
 
   let { handleSubmit, control, watch, getValues } = useForm({
     defaultValues: {
+      appAddress: "192.168.0.104",
+      appPort: "8067",
       address: "192.168.0.104",
       password: "123456",
       account: "postgres",
       port: "32768",
       userCount: "99",
-      name: "mk-708",
-      env: "dev",
+      name: "mk-test",
     },
   });
 
@@ -1351,8 +1166,8 @@ const center: FC = () => {
           <div
             className="flex justify-center items-center register_title flex-col overflow-hidden relative"
             style={{
-              width: "240px",
-              minWidth: "240px",
+              width: "284px",
+              minWidth: "284px",
               borderRight: "1px solid #e3e7ef",
             }}
           >
@@ -1643,6 +1458,50 @@ const center: FC = () => {
                       >
                         <Controller
                           control={control}
+                          name="appAddress"
+                          rules={{ required: "appAddress is required." }}
+                          render={({
+                            field: { name, value, onChange, onBlur, ref },
+                            fieldState: { invalid, error },
+                          }) => (
+                            <div className="overflow-hidden">
+                              <FormLabel value="应用服务器地址:"></FormLabel>
+                              <IPut
+                                defaultValue={value}
+                                onChange={onChange}
+                              ></IPut>
+                            </div>
+                          )}
+                        />
+                      </div>
+                      <div className="overflow-hidden w-24">
+                        <Controller
+                          control={control}
+                          name="appPort"
+                          rules={{ required: "appPort is required." }}
+                          render={({
+                            field: { name, value, onChange, onBlur, ref },
+                            fieldState: { invalid, error },
+                          }) => (
+                            <Fragment>
+                              <FormLabel value="端口号:"></FormLabel>
+                              <TextField
+                                value={value}
+                                marginTop={"8px"}
+                                onChange={onChange}
+                              ></TextField>
+                            </Fragment>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex overflow-hidden">
+                      <div
+                        className="flex-1 overflow-hidden"
+                        style={{ paddingRight: "10px" }}
+                      >
+                        <Controller
+                          control={control}
                           name="address"
                           rules={{ required: "address is required." }}
                           render={({
@@ -1659,10 +1518,7 @@ const center: FC = () => {
                           )}
                         />
                       </div>
-                      <div
-                        className="overflow-hidden w-24"
-                        style={{ paddingRight: "10px" }}
-                      >
+                      <div className="overflow-hidden w-24">
                         <Controller
                           control={control}
                           name="port"
@@ -1679,31 +1535,6 @@ const center: FC = () => {
                                 marginTop={"8px"}
                                 onChange={onChange}
                               ></TextField>
-                            </Fragment>
-                          )}
-                        />
-                      </div>
-
-                      <div className="overflow-hidden w-24">
-                        <Controller
-                          control={control}
-                          name="env"
-                          rules={{ required: "env is required." }}
-                          render={({
-                            field: { name, value, onChange, onBlur, ref },
-                            fieldState: { invalid, error },
-                          }) => (
-                            <Fragment>
-                              <FormLabel value="环境:"></FormLabel>
-                              <Picker
-                                items={[{ name: "dev" }, { name: "prod" }]}
-                                selectedKey={value}
-                                onSelectionChange={onChange}
-                              >
-                                {(item) => (
-                                  <Item key={item.name}>{item.name}</Item>
-                                )}
-                              </Picker>
                             </Fragment>
                           )}
                         />
@@ -1804,7 +1635,7 @@ const center: FC = () => {
                         />
                       </div>
                     </div>
-                    <Controller
+                    {/* <Controller
                       control={control}
                       name="userCount"
                       rules={{ required: "userCount is required." }}
@@ -1825,7 +1656,7 @@ const center: FC = () => {
                           />
                         </div>
                       )}
-                    />
+                    /> */}
                     <Fragment>
                       <FormLabel value="模块:"></FormLabel>
                       <div style={{ maxHeight: "72px", overflow: "auto" }}>
