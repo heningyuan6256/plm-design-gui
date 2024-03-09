@@ -245,6 +245,7 @@ const center: FC = () => {
     }
   };
 
+  console.log(extraData,'extraData');
   let onSubmit = async (data: any) => {
     setIsLoadingOpen(true);
     const db = await Database.load(
@@ -277,13 +278,13 @@ const center: FC = () => {
       // console.log(result, "result");
 
       // 判断里面是否被加密过
-      const moduleData = await db.select(`select * from pdm_system_module`);
+      const userData = await db.select(`select * from pdm_user`);
       //@ts-ignore
-      const isInit = !moduleData[0]?.api_context;
+      const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
       //如果不是初始化，则不改数据，只修改模块
-      if (isInit) {
-        updateModules({ db });
+      if (!isInit) {
+        await updateModules({ db });
       } else {
         // 更新部门的信息
         const tenantId = extraData.tenantId;
