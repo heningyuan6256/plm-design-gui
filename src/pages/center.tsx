@@ -235,7 +235,7 @@ const center: FC = () => {
           toSecret(
             JSON.stringify({
               time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              count: `${extraData.period} 00:00:00`,
+              endTime: `${extraData.period} 00:00:00`,
               kubeConfig: extraData.kubeConfig,
             })
           ),
