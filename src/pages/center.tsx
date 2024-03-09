@@ -216,7 +216,7 @@ const center: FC = () => {
     );
     if (mgnt_tenants[0]) {
       await db.execute(
-        `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2 WHERE org_id = $3`,
+        `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2, end_time = $3 WHERE org_id = $4`,
         [
           toSecret(
             JSON.stringify({
@@ -229,6 +229,13 @@ const center: FC = () => {
             JSON.stringify({
               time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
               count: String(maxUser),
+              kubeConfig: extraData.kubeConfig,
+            })
+          ),
+          toSecret(
+            JSON.stringify({
+              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+              count: `${extraData.period} 00:00:00`,
               kubeConfig: extraData.kubeConfig,
             })
           ),
@@ -271,24 +278,28 @@ const center: FC = () => {
 
       // 判断里面是否被加密过
       const moduleData = await db.select(`select * from pdm_system_module`);
-
       //@ts-ignore
       const isInit = !moduleData[0]?.api_context;
-
-      console.log(isInit,'init');
-      
 
       //如果不是初始化，则不改数据，只修改模块
       if (isInit) {
         updateModules({ db });
       } else {
+        // 更新部门的信息
         const tenantId = extraData.tenantId;
+        let userName = extraData.name;
+        let userId = extraData.workNo;
+        let userEmail = extraData.email;
+
         const updateTenantId = [
           `update pdm_user set tenant_id = '${tenantId}'`,
           `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
           `update pdm_usergroup set tenant_id = '${tenantId}'`,
           `update pdm_depart set id = '${tenantId}'`,
+          `update pdm_depart set apicode = '${extraData.uscc}'`,
           `update pdm_depart_info set depart_id = '${tenantId}'`,
+          `update pdm_depart_info set apicode = '${extraData.uscc}'`,
+          `update pdm_depart_info set bussiness = '${extraData.trade}'`,
           `update pdm_system_wf_definition set org_id = '${tenantId}'`,
           `update pdm_wf_instance set org_id = '${tenantId}'`,
           `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
@@ -297,6 +308,10 @@ const center: FC = () => {
           `update pdm_instance_access set tenant_id = '${tenantId}'`,
           `update pdm_instance set tenant_id = '${tenantId}'`,
           `update plm_mgnt_tenants set org_id = '${tenantId}'`,
+          `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416'`,
+          `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414'`,
+          `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402'`
+          
         ];
 
         for (let i = 0; i < updateTenantId.length; i++) {
@@ -304,31 +319,11 @@ const center: FC = () => {
           await db.execute(sql, []);
           await waitOneSecond();
         }
-
-        let userName = extraData.name;
-        // 修改用户名
-        await db.execute(
-          `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416'`,
-          []
-        );
-
-        let userId = extraData.workNo;
-        // 修改工号
-        await db.execute(
-          `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414'`,
-          []
-        );
-
-        let userEmail = extraData.email;
-        await db.execute(
-          `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402'`,
-          []
-        );
-        // console.log(extraData, "extraData");
         updateModules({ db });
 
-        //初始化es
 
+
+        //初始化es
         const date = new Date();
         const year = date.getFullYear();
         let month: any = date.getMonth() + 1;
