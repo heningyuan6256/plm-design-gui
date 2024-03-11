@@ -245,7 +245,7 @@ const center: FC = () => {
     }
   };
 
-  console.log(extraData,'extraData');
+  console.log(extraData, "extraData");
   let onSubmit = async (data: any) => {
     setIsLoadingOpen(true);
     const db = await Database.load(
@@ -298,8 +298,10 @@ const center: FC = () => {
           `update pdm_usergroup set tenant_id = '${tenantId}'`,
           `update pdm_depart set id = '${tenantId}'`,
           `update pdm_depart set apicode = '${extraData.uscc}'`,
+          `update pdm_depart set depart_name = '${extraData.tenantName}'`,
+          `update pdm_depart_info set depart_name = '${extraData.tenantName}'`,
           `update pdm_depart_info set depart_id = '${tenantId}'`,
-          `update pdm_depart_info set apicode = '${extraData.uscc}'`,
+          `update pdm_depart_info set unified_credit_code = '${extraData.uscc}'`,
           `update pdm_depart_info set bussiness = '${extraData.trade}'`,
           `update pdm_system_wf_definition set org_id = '${tenantId}'`,
           `update pdm_wf_instance set org_id = '${tenantId}'`,
@@ -311,8 +313,7 @@ const center: FC = () => {
           `update plm_mgnt_tenants set org_id = '${tenantId}'`,
           `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416'`,
           `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414'`,
-          `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402'`
-          
+          `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402'`,
         ];
 
         for (let i = 0; i < updateTenantId.length; i++) {
@@ -321,8 +322,6 @@ const center: FC = () => {
           await waitOneSecond();
         }
         updateModules({ db });
-
-
 
         //初始化es
         const date = new Date();
@@ -1201,7 +1200,11 @@ const center: FC = () => {
       const splitModules = splitArrayIntoPairs(array);
       setModules(splitModules);
       setMaxUser(splitModules[0][0].user_num);
-      setExtraData(JSON.parse(decryptedData));
+      const decData = JSON.parse(decryptedData)
+      // decData.tenantName = "南方精工"
+      // decData.tenantId = '719'
+      console.log(decData,'decData');
+      setExtraData(decData);
       setStep("2");
     }
   };
