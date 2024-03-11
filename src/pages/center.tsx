@@ -1318,7 +1318,6 @@ const center: FC = () => {
       const decData = JSON.parse(decryptedData);
       // decData.tenantName = "南方精工"
       decData.tenantId = decData.tenantCode;
-      decData.tenantId = "test10";
       console.log(decData, "decData");
       setExtraData(decData);
       setStep("2");
