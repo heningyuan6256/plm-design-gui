@@ -1200,10 +1200,10 @@ const center: FC = () => {
       const splitModules = splitArrayIntoPairs(array);
       setModules(splitModules);
       setMaxUser(splitModules[0][0].user_num);
-      const decData = JSON.parse(decryptedData)
+      const decData = JSON.parse(decryptedData);
       // decData.tenantName = "南方精工"
-      // decData.tenantId = '719'
-      console.log(decData,'decData');
+      decData.tenantId = decData.tenantCode;
+      console.log(decData, "decData");
       setExtraData(decData);
       setStep("2");
     }
