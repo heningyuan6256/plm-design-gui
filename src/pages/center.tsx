@@ -252,45 +252,46 @@ const center: FC = () => {
     const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
     // 如果不是初始化，则不改数据，只修改模块
-    // if (!isInit) {
-    //   await updateModules({ db });
-    // } else {
-    //   // 更新部门的信息
-    //   const tenantId = extraData.tenantId;
-    //   let userName = extraData.name;
-    //   let userId = extraData.workNo;
-    //   let userEmail = extraData.email;
+    if (!isInit) {
+      await updateModules({ db });
+    } else {
+      // 更新部门的信息
+      const tenantId = extraData.tenantId;
+      let userName = extraData.name;
+      let userId = extraData.workNo;
+      let userEmail = extraData.email;
 
-    //   const updateTenantId = [
-    //     `update pdm_user set tenant_id = '${tenantId}'`,
-    //     `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
-    //     `update pdm_usergroup set tenant_id = '${tenantId}'`,
-    //     `update pdm_depart set id = '${tenantId}'`,
-    //     `update pdm_depart set apicode = '${extraData.uscc}'`,
-    //     `update pdm_depart set depart_name = '${extraData.tenantName}'`,
-    //     `update pdm_depart_info set depart_name = '${extraData.tenantName}'`,
-    //     `update pdm_depart_info set depart_id = '${tenantId}'`,
-    //     `update pdm_depart_info set unified_credit_code = '${extraData.uscc}'`,
-    //     `update pdm_depart_info set bussiness = '${extraData.trade}'`,
-    //     `update pdm_system_wf_definition set org_id = '${tenantId}'`,
-    //     `update pdm_wf_instance set org_id = '${tenantId}'`,
-    //     `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
-    //     `update pdm_wf_instance_approve_history set org_id = '${tenantId}'`,
-    //     `update pdm_system_object set tenant_id = '${tenantId}'`,
-    //     `update pdm_instance_access set tenant_id = '${tenantId}'`,
-    //     `update pdm_instance set tenant_id = '${tenantId}'`,
-    //     `update plm_mgnt_tenants set org_id = '${tenantId}'`,
-    //     `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416' and instance_id = '1535178992594558027'`,
-    //     `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414' and instance_id = '1535178992594558027'`,
-    //     `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402' and instance_id = '1535178992594558027'`,
-    //   ];
+      const updateTenantId = [
+        `update pdm_user set tenant_id = '${tenantId}'`,
+        `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
+        `update pdm_usergroup set tenant_id = '${tenantId}'`,
+        `update pdm_depart set id = '${tenantId}'`,
+        `update pdm_depart set apicode = '${extraData.uscc}'`,
+        `update pdm_depart set depart_name = '${extraData.tenantName}'`,
+        `update pdm_depart_info set depart_name = '${extraData.tenantName}'`,
+        `update pdm_depart_info set depart_id = '${tenantId}'`,
+        `update pdm_depart_info set unified_credit_code = '${extraData.uscc}'`,
+        `update pdm_depart_info set bussiness = '${extraData.trade}'`,
+        `update pdm_system_wf_definition set org_id = '${tenantId}'`,
+        `update pdm_wf_instance set org_id = '${tenantId}'`,
+        `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
+        `update pdm_wf_instance_approve_history set org_id = '${tenantId}'`,
+        `update pdm_system_object set tenant_id = '${tenantId}'`,
+        `update pdm_instance_access set tenant_id = '${tenantId}'`,
+        `update pdm_instance set tenant_id = '${tenantId}'`,
+        `update plm_mgnt_tenants set org_id = '${tenantId}'`,
+        `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416' and instance_id = '1535178992594558027'`,
+        `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414' and instance_id = '1535178992594558027'`,
+        `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402' and instance_id = '1535178992594558027'`,
+      ];
 
-    //   for (let i = 0; i < updateTenantId.length; i++) {
-    //     const sql = updateTenantId[i] + ";";
-    //     await db.execute(sql, []);
-    //     await waitOneSecond();
-    //   }
-    //   updateModules({ db });
+      for (let i = 0; i < updateTenantId.length; i++) {
+        const sql = updateTenantId[i] + ";";
+        await db.execute(sql, []);
+        await waitOneSecond();
+      }
+      updateModules({ db });
+    }
   };
 
   const initEs = async (
@@ -1209,8 +1210,8 @@ const center: FC = () => {
     const { account, password, address, port, name, env } = data;
 
     try {
-      // await updateDB({ db });
-      // await initEs(data, db);
+      await updateDB({ db });
+      await initEs(data, db);
       await initNebula(data);
       // const sqlResourcePath = await resolveResource("public.sql");
       // const sqlText = await readTextFile(sqlResourcePath);
