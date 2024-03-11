@@ -282,7 +282,7 @@ const center: FC = () => {
       //@ts-ignore
       const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
-      //如果不是初始化，则不改数据，只修改模块
+      // 如果不是初始化，则不改数据，只修改模块
       if (!isInit) {
         await updateModules({ db });
       } else {
@@ -1110,6 +1110,101 @@ const center: FC = () => {
         await Promise.all(PromiseAttr);
 
         console.log(PromiseAttr, "attrArray");
+
+        const useNebula = () => {
+          const nebulaData = {
+            gql: `use ${`tenant_${env}_${extraData.tenantId}`}`,
+          };
+          return new Promise((resolve, reject) => {
+            http
+              .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                  Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                  Cookie: cookies,
+                },
+                body: http.Body.json(nebulaData),
+              })
+              .then((response) => {
+                console.log(response);
+                return response;
+              })
+              .then((data) => {
+                resolve(data.data);
+              })
+              .catch((error) => {
+                reject(error);
+              });
+          });
+        };
+
+        await useNebula();
+
+        const createNebulaInstance = () => {
+          const nebulaData = {
+            gql: `CREATE tag ${`instance`} (${`number`} string NOT NULL  )  `,
+          };
+          return new Promise((resolve, reject) => {
+            http
+              .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                  Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                  Cookie: cookies,
+                },
+                body: http.Body.json(nebulaData),
+              })
+              .then((response) => {
+                console.log(response);
+                return response;
+              })
+              .then((data) => {
+                resolve(data.data);
+              })
+              .catch((error) => {
+                reject(error);
+              });
+          });
+        };
+
+        await createNebulaInstance();
+
+        const createNebulaEdge = () => {
+          const nebulaData = {
+            gql: `CREATE edge ${`child`} (${`version`} string NOT NULL  )  `,
+          };
+          return new Promise((resolve, reject) => {
+            http
+              .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                  Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                  Cookie: cookies,
+                },
+                body: http.Body.json(nebulaData),
+              })
+              .then((response) => {
+                console.log(response);
+                return response;
+              })
+              .then((data) => {
+                resolve(data.data);
+              })
+              .catch((error) => {
+                reject(error);
+              });
+          });
+        };
+
+        await useNebula();
+
+        await createNebulaEdge();
       }
 
       db.close();
