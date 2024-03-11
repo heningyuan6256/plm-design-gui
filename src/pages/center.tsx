@@ -981,41 +981,43 @@ const center: FC = () => {
 
     console.log(flatten(attrArray), "attrArray");
 
-    const PromiseAttr = flatten(attrArray).map((item: any) => {
-      return new Promise((resolve, reject) => {
-        resolve(
-          syncInstanceAttr(
-            {
-              rid: item.id,
-              productId: "",
-              insId: item.instance_id,
-              insVersionOrder: "1",
-              insVersion: "Draft",
-              rowId: item.row_id,
-              attrId: item.attr_id,
-              apiCode: object_attrMap[item.attr_id]?.apicode,
-              itemCode: 10001017,
-              tabCode: item.tabCode,
-              attrValue: item.attr_value,
-              dataFrom: "0",
-              dataFromId: "",
-              rowInsId: "",
-              affectedInsId: "",
-              valueType: object_attrMap[item.attr_id]?.value_type,
-              readonly: object_attrMap[item.attr_id]?.readonly,
-              view: "",
-              name: object_attrMap[item.attr_id]?.name,
-              listCnValue: item.attr_value,
-              relations: {
-                name: "attribute",
-                parent: "1535178992594558027",
+    const PromiseAttr = flatten(attrArray)
+      .filter((item) => item)
+      .map((item: any) => {
+        return new Promise((resolve, reject) => {
+          resolve(
+            syncInstanceAttr(
+              {
+                rid: item.id,
+                productId: "",
+                insId: item.instance_id,
+                insVersionOrder: "1",
+                insVersion: "Draft",
+                rowId: item.row_id,
+                attrId: item.attr_id,
+                apiCode: object_attrMap[item.attr_id]?.apicode,
+                itemCode: 10001017,
+                tabCode: item.tabCode,
+                attrValue: item.attr_value,
+                dataFrom: "0",
+                dataFromId: "",
+                rowInsId: "",
+                affectedInsId: "",
+                valueType: object_attrMap[item.attr_id]?.value_type,
+                readonly: object_attrMap[item.attr_id]?.readonly,
+                view: "",
+                name: object_attrMap[item.attr_id]?.name,
+                listCnValue: item.attr_value,
+                relations: {
+                  name: "attribute",
+                  parent: "1535178992594558027",
+                },
               },
-            },
-            item.attr_id
-          )
-        );
+              item.attr_id
+            )
+          );
+        });
       });
-    });
 
     await Promise.all(PromiseAttr);
   };
