@@ -1022,6 +1022,10 @@ const center: FC = () => {
     await Promise.all(PromiseAttr);
   };
 
+  async function sleep(ms: any) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   const initNebula = async ({
     account,
     password,
@@ -1095,6 +1099,60 @@ const center: FC = () => {
 
     await createSpace();
 
+    let finded = false;
+    let count = 0;
+
+    const findExist = async () => {
+      const nebulaData = {
+        gql: `SHOW TAGS`,
+      };
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+              Cookie: cookies,
+            },
+            body: http.Body.json(nebulaData),
+          })
+          .then((response: any) => {
+            // 判断是否已经找到了这个tenantId
+            if (
+              (response?.data?.data?.tables || []).find(
+                (item: any) =>
+                  item.Name == `tenant_${env}_${extraData.tenantId}`
+              )
+            ) {
+              finded = true;
+            }
+            console.log(response, finded, "response111");
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+
+    // async function poll(delay: any) {
+    //   if (!finded && count < 6) {
+    //     await findExist();
+    //     count++;
+    //     console.log(`尝试第${count}次`);
+    //     await sleep(delay);
+    //     await poll(delay);
+    //   }
+    // }
+
+    // // 初始化调用，设置延迟时间为 4000 毫秒（4秒）
+    // await poll(4000);
+
     const useNebula = async () => {
       const nebulaData = {
         gql: `use ${`tenant_${env}_${extraData.tenantId}`}`,
@@ -1111,88 +1169,91 @@ const center: FC = () => {
             },
             body: http.Body.json(nebulaData),
           })
-          .then((response) => {
-            console.log(response);
+          .then(async(response:any) => {
+            if(response?.data?.code == -1 && count < 6) {
+              count++
+              console.log(`重试${count}`);
+              await sleep(5000)
+              await useNebula()
+            } else {
+              finded = true
+            }
             return response;
           })
           .then((data) => {
             resolve(data.data);
           })
-          .catch((error) => {
+          .catch(async(error) => {
             reject(error);
           });
       });
     };
 
-    const createNebulaInstance = async () => {
-      const nebulaData = {
-        gql: `CREATE tag ${`instance`} (${`number`} string NOT NULL  )  `,
+    await useNebula();
+
+
+    if (finded) {
+      const createNebulaInstance = async () => {
+        const nebulaData = {
+          gql: `CREATE tag ${`instance`} (${`number`} string NOT NULL  )  `,
+        };
+        return new Promise((resolve, reject) => {
+          http
+            .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                Cookie: cookies,
+              },
+              body: http.Body.json(nebulaData),
+            })
+            .then((response) => {
+              console.log(response);
+              return response;
+            })
+            .then((data) => {
+              resolve(data.data);
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        });
       };
-      return new Promise((resolve, reject) => {
-        http
-          .fetch(`http://${address}:7001/api-nebula/db/exec`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
-              Cookie: cookies,
-            },
-            body: http.Body.json(nebulaData),
-          })
-          .then((response) => {
-            console.log(response);
-            return response;
-          })
-          .then((data) => {
-            resolve(data.data);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      });
-    };
-
-    const createNebulaEdge = async () => {
-      const nebulaData = {
-        gql: `CREATE edge ${`child`} (${`version`} string NOT NULL  )  `,
+      const createNebulaEdge = async () => {
+        const nebulaData = {
+          gql: `CREATE edge ${`child`} (${`version`} string NOT NULL  )  `,
+        };
+        return new Promise((resolve, reject) => {
+          http
+            .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                Cookie: cookies,
+              },
+              body: http.Body.json(nebulaData),
+            })
+            .then((response) => {
+              console.log(response);
+              return response;
+            })
+            .then((data) => {
+              resolve(data.data);
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        });
       };
-      return new Promise((resolve, reject) => {
-        http
-          .fetch(`http://${address}:7001/api-nebula/db/exec`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
-              Cookie: cookies,
-            },
-            body: http.Body.json(nebulaData),
-          })
-          .then((response) => {
-            console.log(response);
-            return response;
-          })
-          .then((data) => {
-            resolve(data.data);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      });
-    };
-
-    setTimeout(async () => {
-      await useNebula();
-
       await createNebulaInstance();
-
       await createNebulaEdge();
-    }, 5000);
-
-    // console.log(PromiseAttr, "attrArray");
-
-    // }
+    } else {
+      alert("Nebula重试6次失败，请手动初始化Nebula！");
+    }
   };
 
   // 授权
@@ -1319,9 +1380,7 @@ const center: FC = () => {
       setModules(splitModules);
       setMaxUser(splitModules[0][0].user_num);
       const decData = JSON.parse(decryptedData);
-      // decData.tenantName = "南方精工"
       decData.tenantId = decData.tenantCode;
-      console.log(decData, "decData");
       setExtraData(decData);
       setStep("2");
     }
@@ -1334,7 +1393,7 @@ const center: FC = () => {
       account: "postgres",
       port: "32768",
       userCount: "99",
-      name: "mk-708",
+      name: "mk-709",
       env: "dev",
     },
   });
