@@ -245,11 +245,11 @@ const center: FC = () => {
     }
   };
 
-  const updateDB = async ({ db }: { db: any }) => {
-    // 判断里面是否被加密过
-    const userData = await db.select(`select * from pdm_user`);
-    //@ts-ignore
-    const isInit = userData[0]?.tenant_id != extraData.tenantId;
+  const updateDB = async ({ db, isInit }: { db: any; isInit: boolean }) => {
+    // // 判断里面是否被加密过
+    // const userData = await db.select(`select * from pdm_user`);
+    // //@ts-ignore
+    // const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
     // 如果不是初始化，则不改数据，只修改模块
     if (!isInit) {
@@ -1169,28 +1169,27 @@ const center: FC = () => {
             },
             body: http.Body.json(nebulaData),
           })
-          .then(async(response:any) => {
-            if(response?.data?.code == -1 && count < 6) {
-              count++
+          .then(async (response: any) => {
+            if (response?.data?.code == -1 && count < 6) {
+              count++;
               console.log(`重试${count}`);
-              await sleep(5000)
-              await useNebula()
+              await sleep(5000);
+              await useNebula();
             } else {
-              finded = true
+              finded = true;
             }
             return response;
           })
           .then((data) => {
             resolve(data.data);
           })
-          .catch(async(error) => {
+          .catch(async (error) => {
             reject(error);
           });
       });
     };
 
     await useNebula();
-
 
     if (finded) {
       const createNebulaInstance = async () => {
@@ -1273,9 +1272,18 @@ const center: FC = () => {
     const { account, password, address, port, name, env } = data;
 
     try {
-      await updateDB({ db });
-      await initEs(data, db);
-      await initNebula(data);
+      // 判断里面是否被加密过
+      const userData = await db.select(`select * from pdm_user`);
+      //@ts-ignore
+      const isInit = userData[0]?.tenant_id != extraData.tenantId;
+
+      await updateDB({ db, isInit });
+
+      if (isInit) {
+        await initEs(data, db);
+        await initNebula(data);
+      }
+
       // const sqlResourcePath = await resolveResource("public.sql");
       // const sqlText = await readTextFile(sqlResourcePath);
       // const result = await invoke("batchSqlData", {
