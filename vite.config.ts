@@ -1,11 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import postcss from 'rollup-plugin-postcss';
+import postcss from "rollup-plugin-postcss";
+import nodePolyfills from 'vite-plugin-node-stdlib-browser'
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react(),nodePolyfills()],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   // prevent vite from obscuring rust errors
@@ -15,17 +14,17 @@ export default defineConfig({
     port: 1420,
     strictPort: true,
     proxy: {
-      '/api/plm': {
-        target: 'http://124.71.151.153:8058/plm',
+      "/api/plm": {
+        target: "http://124.71.151.153:8058/plm",
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api\/plm/, ''),
+        rewrite: (path) => path.replace(/^\/api\/plm/, ""),
       },
-    }
+    },
   },
   resolve: {
     alias: {
-      mqtt: "mqtt/dist/mqtt.js"
-    }
+      mqtt: "mqtt/dist/mqtt.js",
+    },
   },
   // to make use of `TAURI_DEBUG` and other env variables
   // https://tauri.studio/v1/api/config#buildconfig.beforedevcommand

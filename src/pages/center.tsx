@@ -39,6 +39,7 @@ import { flatten, isEmpty } from "lodash";
 import { Utils } from "../utils";
 import { resolveResource } from "@tauri-apps/api/path";
 import { readTextFile } from "@tauri-apps/api/fs";
+import * as minio from "minio";
 
 // 分隔每两个对象的函数
 function splitArrayIntoPairs(arr: any) {
@@ -255,43 +256,43 @@ const center: FC = () => {
     // if (!isInit) {
     //   await updateModules({ db });
     // } else {
-      // 更新部门的信息
-      const tenantId = extraData.tenantId;
-      let userName = extraData.name;
-      let userId = extraData.workNo;
-      let userEmail = extraData.email;
+    // 更新部门的信息
+    const tenantId = extraData.tenantId;
+    let userName = extraData.name;
+    let userId = extraData.workNo;
+    let userEmail = extraData.email;
 
-      const updateTenantId = [
-        `update pdm_user set tenant_id = '${tenantId}'`,
-        `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
-        `update pdm_usergroup set tenant_id = '${tenantId}'`,
-        `update pdm_system_calendar set tenant_id = '${tenantId}'`,
-        `update pdm_depart set id = '${tenantId}' where parent_id = NULL`,
-        `update pdm_depart set apicode = '${extraData.uscc}' where parent_id = NULL`,
-        `update pdm_depart set depart_name = '${extraData.tenantName}' where parent_id = NULL`,
-        `update pdm_depart_info set depart_name = '${extraData.tenantName}'`,
-        `update pdm_depart_info set depart_id = '${tenantId}'`,
-        `update pdm_depart_info set unified_credit_code = '${extraData.uscc}'`,
-        `update pdm_depart_info set bussiness = '${extraData.trade}'`,
-        `update pdm_system_wf_definition set org_id = '${tenantId}'`,
-        `update pdm_wf_instance set org_id = '${tenantId}'`,
-        `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
-        `update pdm_wf_instance_approve_history set org_id = '${tenantId}'`,
-        `update pdm_system_object set tenant_id = '${tenantId}'`,
-        `update pdm_instance_access set tenant_id = '${tenantId}'`,
-        `update pdm_instance set tenant_id = '${tenantId}'`,
-        `update plm_mgnt_tenants set org_id = '${tenantId}'`,
-        `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416' and instance_id = '1535178992594558027'`,
-        `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414' and instance_id = '1535178992594558027'`,
-        `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402' and instance_id = '1535178992594558027'`,
-      ];
+    const updateTenantId = [
+      `update pdm_user set tenant_id = '${tenantId}'`,
+      `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
+      `update pdm_usergroup set tenant_id = '${tenantId}'`,
+      `update pdm_system_calendar set tenant_id = '${tenantId}'`,
+      `update pdm_depart set id = '${tenantId}' where parent_id = NULL`,
+      `update pdm_depart set apicode = '${extraData.uscc}' where parent_id = NULL`,
+      `update pdm_depart set depart_name = '${extraData.tenantName}' where parent_id = NULL`,
+      `update pdm_depart_info set depart_name = '${extraData.tenantName}'`,
+      `update pdm_depart_info set depart_id = '${tenantId}'`,
+      `update pdm_depart_info set unified_credit_code = '${extraData.uscc}'`,
+      `update pdm_depart_info set bussiness = '${extraData.trade}'`,
+      `update pdm_system_wf_definition set org_id = '${tenantId}'`,
+      `update pdm_wf_instance set org_id = '${tenantId}'`,
+      `update pdm_wf_instance_nodes set org_id = '${tenantId}'`,
+      `update pdm_wf_instance_approve_history set org_id = '${tenantId}'`,
+      `update pdm_system_object set tenant_id = '${tenantId}'`,
+      `update pdm_instance_access set tenant_id = '${tenantId}'`,
+      `update pdm_instance set tenant_id = '${tenantId}'`,
+      `update plm_mgnt_tenants set org_id = '${tenantId}'`,
+      `update pdm_user_attribute_base set attr_value = '${userName}' where attr_id = '1000101723473598416' and instance_id = '1535178992594558027'`,
+      `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414' and instance_id = '1535178992594558027'`,
+      `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402' and instance_id = '1535178992594558027'`,
+    ];
 
-      for (let i = 0; i < updateTenantId.length; i++) {
-        const sql = updateTenantId[i] + ";";
-        await db.execute(sql, []);
-        await waitOneSecond();
-      }
-      updateModules({ db });
+    for (let i = 0; i < updateTenantId.length; i++) {
+      const sql = updateTenantId[i] + ";";
+      await db.execute(sql, []);
+      await waitOneSecond();
+    }
+    updateModules({ db });
     // }
   };
 
@@ -1291,6 +1292,28 @@ const center: FC = () => {
     }
   };
 
+  const updateMinio = async ({
+    account,
+    password,
+    address,
+    port,
+    name,
+    env,
+  }: any) => {
+    const minioClient = new minio.Client({
+      endPoint: `${address}`,
+      port: 9101,
+      useSSL: false,
+      accessKey: "onchainoss", //username
+      secretKey: "onchainoss", //password
+    });
+    const bucketName = "plm-backend1";
+    const exists = await minioClient.bucketExists(bucketName);
+    if (!exists) {
+      await minioClient.makeBucket(bucketName, "us-east-1");
+    }
+  };
+
   // 授权
   let onSubmit = async (data: any) => {
     setIsLoadingOpen(true);
@@ -1313,11 +1336,14 @@ const center: FC = () => {
       //@ts-ignore
       // const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
-      await updateDB({ db });
+      // await updateDB({ db });
 
-      // if (isInit) {
-      await initEs(data, db);
-      await initNebula(data);
+      // // if (isInit) {
+      // await initEs(data, db);
+      // await initNebula(data);
+
+      await updateMinio(data);
+
       // }
 
       // const sqlResourcePath = await resolveResource("public.sql");
@@ -1427,8 +1453,8 @@ const center: FC = () => {
       setMaxUser(splitModules[0][0].user_num);
       const decData = JSON.parse(decryptedData);
       decData.tenantId = decData.tenantCode;
-      console.log(decData,'decData');
-      
+      console.log(decData, "decData");
+
       setExtraData(decData);
       setStep("2");
     }
