@@ -266,6 +266,7 @@ const center: FC = () => {
         `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
         `update pdm_usergroup set tenant_id = '${tenantId}'`,
         `update pdm_depart set id = '${tenantId}'`,
+        `update pdm_system_calendar set id = '${tenantId}'`,
         `update pdm_depart set apicode = '${extraData.uscc}'`,
         `update pdm_depart set depart_name = '${extraData.tenantName}'`,
         `update pdm_depart_info set depart_name = '${extraData.tenantName}'`,
