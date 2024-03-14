@@ -1336,11 +1336,11 @@ const center: FC = () => {
       //@ts-ignore
       // const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
-      // await updateDB({ db });
+      await updateDB({ db });
 
       // // if (isInit) {
-      // await initEs(data, db);
-      // await initNebula(data);
+      await initEs(data, db);
+      await initNebula(data);
 
       await updateMinio(data);
 
