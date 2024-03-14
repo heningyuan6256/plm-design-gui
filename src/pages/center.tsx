@@ -245,16 +245,16 @@ const center: FC = () => {
     }
   };
 
-  const updateDB = async ({ db, isInit }: { db: any; isInit: boolean }) => {
+  const updateDB = async ({ db }: { db: any }) => {
     // // 判断里面是否被加密过
     // const userData = await db.select(`select * from pdm_user`);
     // //@ts-ignore
     // const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
     // 如果不是初始化，则不改数据，只修改模块
-    if (!isInit) {
-      await updateModules({ db });
-    } else {
+    // if (!isInit) {
+    //   await updateModules({ db });
+    // } else {
       // 更新部门的信息
       const tenantId = extraData.tenantId;
       let userName = extraData.name;
@@ -265,10 +265,10 @@ const center: FC = () => {
         `update pdm_user set tenant_id = '${tenantId}'`,
         `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
         `update pdm_usergroup set tenant_id = '${tenantId}'`,
-        `update pdm_depart set id = '${tenantId}'`,
-        `update pdm_system_calendar set id = '${tenantId}'`,
-        `update pdm_depart set apicode = '${extraData.uscc}'`,
-        `update pdm_depart set depart_name = '${extraData.tenantName}'`,
+        `update pdm_system_calendar set tenant_id = '${tenantId}'`,
+        `update pdm_depart set id = '${tenantId}' where parent_id = NULL`,
+        `update pdm_depart set apicode = '${extraData.uscc}' where parent_id = NULL`,
+        `update pdm_depart set depart_name = '${extraData.tenantName}' where parent_id = NULL`,
         `update pdm_depart_info set depart_name = '${extraData.tenantName}'`,
         `update pdm_depart_info set depart_id = '${tenantId}'`,
         `update pdm_depart_info set unified_credit_code = '${extraData.uscc}'`,
@@ -292,7 +292,7 @@ const center: FC = () => {
         await waitOneSecond();
       }
       updateModules({ db });
-    }
+    // }
   };
 
   const initEs = async (
@@ -770,58 +770,91 @@ const center: FC = () => {
         },
       ],
     };
-    const fetchEsPutUrlPromise = () => {
-      return new Promise((resolve, reject) => {
-        http
-          .fetch(esPutUrl, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
-            body: http.Body.json(esData),
-          })
-          .then((response) => {
-            return response;
-          })
-          .then((data) => {
-            resolve(data.data);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      });
-    };
-    const fetchEsAliasPromise = () => {
-      return new Promise((resolve, reject) => {
-        http
-          .fetch(esPostUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
-            body: http.Body.json(esAlias),
-          })
-          .then((response) => {
-            return response;
-          })
-          .then((data) => {
-            resolve(data.data);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      });
-    };
-    const esPutResult: any = await fetchEsPutUrlPromise();
-    console.log(esPutResult, "esPutResult");
-    const esAliasResult: any = await fetchEsAliasPromise();
-    console.log(esAliasResult, "esAliasResult");
 
-    if (!esPutResult.acknowledged || !esAliasResult.acknowledged) {
-      alert("ES数据库初始化失败!");
-      return;
+    const esListQueryUrl = `http://${address}:9220/${env}_${extraData.tenantId}/_search`;
+
+    // 获取所有的es空间
+    const fetchEs = async () => {
+      return new Promise((resolve, reject) => {
+        http
+          .fetch(esListQueryUrl, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            // body: http.Body.json(esListData),
+          })
+          .then((response) => {
+            console.log(response, "response");
+
+            return response;
+          })
+          .then((data) => {
+            resolve(data.data);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    };
+    const data: any = await fetchEs();
+    // 假如es有的话，则不创建新的空间 否则创建新的
+    if (data?._shards?.successful == 1) {
+    } else {
+      const fetchEsPutUrlPromise = () => {
+        return new Promise((resolve, reject) => {
+          http
+            .fetch(esPutUrl, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+              },
+              body: http.Body.json(esData),
+            })
+            .then((response) => {
+              return response;
+            })
+            .then((data) => {
+              resolve(data.data);
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        });
+      };
+      const fetchEsAliasPromise = () => {
+        return new Promise((resolve, reject) => {
+          http
+            .fetch(esPostUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+              },
+              body: http.Body.json(esAlias),
+            })
+            .then((response) => {
+              return response;
+            })
+            .then((data) => {
+              resolve(data.data);
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        });
+      };
+      const esPutResult: any = await fetchEsPutUrlPromise();
+      console.log(esPutResult, "esPutResult");
+      const esAliasResult: any = await fetchEsAliasPromise();
+      console.log(esAliasResult, "esAliasResult");
+
+      if (!esPutResult.acknowledged || !esAliasResult.acknowledged) {
+        alert("ES数据库初始化失败!");
+        return;
+      }
     }
 
     // 同步es数据;
@@ -952,7 +985,7 @@ const center: FC = () => {
 
     const object_attr: any = await db.select(
       `SELECT * FROM pdm_system_base_attribute
-          WHERE "item_code" = '10001017' AND ("tab_code" = '10002001' OR "tab_code" = '10002025' OR "tab_code" = '10002002')`
+        WHERE "item_code" = '10001017' AND ("tab_code" = '10002001' OR "tab_code" = '10002025' OR "tab_code" = '10002002')`
     );
 
     console.log(object_attr, "object_attr");
@@ -1053,9 +1086,10 @@ const center: FC = () => {
             },
             body: http.Body.json(nebulaData),
           })
-          .then((response) => {
-            console.log(response);
-            cookies = `${response.rawHeaders["set-cookie"][0]};${response.rawHeaders["set-cookie"][1]}`;
+          .then((response: any) => {
+            if (response.rawHeaders) {
+              cookies = `${response.rawHeaders["set-cookie"][0]};${response.rawHeaders["set-cookie"][1]}`;
+            }
             return response;
           })
           .then((data) => {
@@ -1066,7 +1100,6 @@ const center: FC = () => {
           });
       });
     };
-
     const createSpace = async () => {
       const nebulaData = {
         gql: `CREATE SPACE ${`tenant_${env}_${extraData.tenantId}`} (vid_type = FIXED_STRING(50)) `,
@@ -1098,14 +1131,15 @@ const center: FC = () => {
 
     await fetchNebulaCookie();
 
-    await createSpace();
+    if (!cookies) {
+      throw new Error("连接图数据库失败");
+    }
 
-    let finded = false;
-    let count = 0;
+    // 判断图数据库有没有，没有的话就创建，有的话就不执行
 
-    const findExist = async () => {
+    const showSpaces = async () => {
       const nebulaData = {
-        gql: `SHOW TAGS`,
+        gql: `show spaces;`,
       };
       return new Promise((resolve, reject) => {
         http
@@ -1119,17 +1153,8 @@ const center: FC = () => {
             },
             body: http.Body.json(nebulaData),
           })
-          .then((response: any) => {
-            // 判断是否已经找到了这个tenantId
-            if (
-              (response?.data?.data?.tables || []).find(
-                (item: any) =>
-                  item.Name == `tenant_${env}_${extraData.tenantId}`
-              )
-            ) {
-              finded = true;
-            }
-            console.log(response, finded, "response111");
+          .then((response) => {
+            console.log(response);
             return response;
           })
           .then((data) => {
@@ -1141,118 +1166,128 @@ const center: FC = () => {
       });
     };
 
-    // async function poll(delay: any) {
-    //   if (!finded && count < 6) {
-    //     await findExist();
-    //     count++;
-    //     console.log(`尝试第${count}次`);
-    //     await sleep(delay);
-    //     await poll(delay);
-    //   }
-    // }
+    const spacesWrapper: any = await showSpaces();
 
-    // // 初始化调用，设置延迟时间为 4000 毫秒（4秒）
-    // await poll(4000);
+    console.log(spacesWrapper, "spacesWrapper");
 
-    const useNebula = async () => {
-      const nebulaData = {
-        gql: `use ${`tenant_${env}_${extraData.tenantId}`}`,
-      };
-      return new Promise((resolve, reject) => {
-        http
-          .fetch(`http://${address}:7001/api-nebula/db/exec`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-              Authorization: "Bearer cm9vdDpuZWJ1bGE=",
-              Cookie: cookies,
-            },
-            body: http.Body.json(nebulaData),
-          })
-          .then(async (response: any) => {
-            if (response?.data?.code == -1 && count < 6) {
-              count++;
-              console.log(`重试${count}`);
-              await sleep(5000);
-              await useNebula();
-            } else {
-              finded = true;
-            }
-            return response;
-          })
-          .then((data) => {
-            resolve(data.data);
-          })
-          .catch(async (error) => {
-            reject(error);
-          });
-      });
-    };
+    const spaces = spacesWrapper?.data?.tables || [];
 
-    await useNebula();
+    const hasSapce = spaces.find(
+      (item: any) => item.Name === `tenant_${env}_${extraData.tenantId}`
+    );
 
-    if (finded) {
-      const createNebulaInstance = async () => {
-        const nebulaData = {
-          gql: `CREATE tag ${`instance`} (${`number`} string NOT NULL  )  `,
-        };
-        return new Promise((resolve, reject) => {
-          http
-            .fetch(`http://${address}:7001/api-nebula/db/exec`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                Authorization: "Bearer cm9vdDpuZWJ1bGE=",
-                Cookie: cookies,
-              },
-              body: http.Body.json(nebulaData),
-            })
-            .then((response) => {
-              console.log(response);
-              return response;
-            })
-            .then((data) => {
-              resolve(data.data);
-            })
-            .catch((error) => {
-              reject(error);
-            });
-        });
-      };
-      const createNebulaEdge = async () => {
-        const nebulaData = {
-          gql: `CREATE edge ${`child`} (${`version`} string NOT NULL  )  `,
-        };
-        return new Promise((resolve, reject) => {
-          http
-            .fetch(`http://${address}:7001/api-nebula/db/exec`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                Authorization: "Bearer cm9vdDpuZWJ1bGE=",
-                Cookie: cookies,
-              },
-              body: http.Body.json(nebulaData),
-            })
-            .then((response) => {
-              console.log(response);
-              return response;
-            })
-            .then((data) => {
-              resolve(data.data);
-            })
-            .catch((error) => {
-              reject(error);
-            });
-        });
-      };
-      await createNebulaInstance();
-      await createNebulaEdge();
+    if (hasSapce) {
+      return;
     } else {
-      alert("Nebula重试6次失败，请手动初始化Nebula！");
+      const space: any = await createSpace();
+
+      if (space?.code == -1) {
+        throw new Error(`创建图数据空间失败:${space.message}`);
+      }
+
+      let finded = false;
+      let count = 0;
+
+      const useNebula = async () => {
+        const nebulaData = {
+          gql: `use ${`tenant_${env}_${extraData.tenantId}`}`,
+        };
+        return new Promise((resolve, reject) => {
+          http
+            .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                Cookie: cookies,
+              },
+              body: http.Body.json(nebulaData),
+            })
+            .then(async (response: any) => {
+              if (response?.data?.code == -1 && count < 6) {
+                count++;
+                console.log(`重试${count}`);
+                await sleep(5000);
+                await useNebula();
+              } else {
+                finded = true;
+              }
+              return response;
+            })
+            .then((data) => {
+              resolve(data.data);
+            })
+            .catch(async (error) => {
+              reject(error);
+            });
+        });
+      };
+
+      await useNebula();
+
+      if (finded) {
+        const createNebulaInstance = async () => {
+          const nebulaData = {
+            gql: `CREATE tag ${`instance`} (${`number`} string NOT NULL  )  `,
+          };
+          return new Promise((resolve, reject) => {
+            http
+              .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                  Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                  Cookie: cookies,
+                },
+                body: http.Body.json(nebulaData),
+              })
+              .then((response) => {
+                console.log(response);
+                return response;
+              })
+              .then((data) => {
+                resolve(data.data);
+              })
+              .catch((error) => {
+                reject(error);
+              });
+          });
+        };
+        const createNebulaEdge = async () => {
+          const nebulaData = {
+            gql: `CREATE edge ${`child`} (${`version`} string NOT NULL  )  `,
+          };
+          return new Promise((resolve, reject) => {
+            http
+              .fetch(`http://${address}:7001/api-nebula/db/exec`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                  Authorization: "Bearer cm9vdDpuZWJ1bGE=",
+                  Cookie: cookies,
+                },
+                body: http.Body.json(nebulaData),
+              })
+              .then((response) => {
+                console.log(response);
+                return response;
+              })
+              .then((data) => {
+                resolve(data.data);
+              })
+              .catch((error) => {
+                reject(error);
+              });
+          });
+        };
+        await createNebulaInstance();
+        await createNebulaEdge();
+      } else {
+        alert("Nebula重试6次失败，请手动初始化Nebula！");
+      }
     }
   };
 
@@ -1274,16 +1309,16 @@ const center: FC = () => {
 
     try {
       // 判断里面是否被加密过
-      const userData = await db.select(`select * from pdm_user`);
+      // const userData = await db.select(`select * from pdm_user`);
       //@ts-ignore
-      const isInit = userData[0]?.tenant_id != extraData.tenantId;
+      // const isInit = userData[0]?.tenant_id != extraData.tenantId;
 
-      await updateDB({ db, isInit });
+      await updateDB({ db });
 
-      if (isInit) {
-        await initEs(data, db);
-        await initNebula(data);
-      }
+      // if (isInit) {
+      await initEs(data, db);
+      await initNebula(data);
+      // }
 
       // const sqlResourcePath = await resolveResource("public.sql");
       // const sqlText = await readTextFile(sqlResourcePath);
@@ -1301,14 +1336,16 @@ const center: FC = () => {
       // console.log(result, "result");
 
       db.close();
+
+      setIsLoadingOpen(false);
+      setSuccess(true);
+      setViewDetail(true);
     } catch (error) {
       setIsLoadingOpen(false);
       console.log(error, "error");
+      alert(error);
       db.close();
     }
-    setIsLoadingOpen(false);
-    setSuccess(true);
-    setViewDetail(true);
 
     {
       /* TODO修改网关*/
@@ -1390,6 +1427,8 @@ const center: FC = () => {
       setMaxUser(splitModules[0][0].user_num);
       const decData = JSON.parse(decryptedData);
       decData.tenantId = decData.tenantCode;
+      console.log(decData,'decData');
+      
       setExtraData(decData);
       setStep("2");
     }
