@@ -1307,7 +1307,7 @@ const center: FC = () => {
       accessKey: "onchainoss", //username
       secretKey: "onchainoss", //password
     });
-    const bucketName = "plm-backend1";
+    const bucketName = "plm-backend";
     const exists = await minioClient.bucketExists(bucketName);
     if (!exists) {
       await minioClient.makeBucket(bucketName, "us-east-1");
