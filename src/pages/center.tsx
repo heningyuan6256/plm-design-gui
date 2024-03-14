@@ -1919,7 +1919,13 @@ const center: FC = () => {
                           }) => (
                             <Fragment>
                               <FormLabel value="环境:"></FormLabel>
-                              <Picker
+                              <TextField
+                                value={value}
+                                // placeholder="请输入账号"
+                                onChange={onChange}
+                                marginTop={"8px"}
+                              />
+                              {/* <Picker
                                 items={[{ name: "dev" }, { name: "prod" }]}
                                 selectedKey={value}
                                 onSelectionChange={onChange}
@@ -1927,7 +1933,7 @@ const center: FC = () => {
                                 {(item) => (
                                   <Item key={item.name}>{item.name}</Item>
                                 )}
-                              </Picker>
+                              </Picker> */}
                             </Fragment>
                           )}
                         />
