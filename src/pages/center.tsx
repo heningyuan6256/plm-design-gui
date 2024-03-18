@@ -1344,13 +1344,13 @@ const center: FC = () => {
       await initEs(
         {
           ...data,
-          name: namespace,
+          env: namespace,
         },
         db
       );
       await initNebula({
         ...data,
-        name: namespace,
+        env: namespace,
       });
 
       // await updateMinio(data);
