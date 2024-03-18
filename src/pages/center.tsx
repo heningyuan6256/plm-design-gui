@@ -1330,7 +1330,7 @@ const center: FC = () => {
 
     const { account, password, address, port, name, env } = data;
 
-    const namespace = env.substr(env.lastIndexOf("-") + 1);
+    // const namespace = env.substr(env.lastIndexOf("-") + 1);
 
     try {
       // 判断里面是否被加密过
@@ -1341,17 +1341,8 @@ const center: FC = () => {
       await updateDB({ db });
 
       // // if (isInit) {
-      await initEs(
-        {
-          ...data,
-          env: namespace,
-        },
-        db
-      );
-      await initNebula({
-        ...data,
-        env: namespace,
-      });
+      await initEs(data, db);
+      await initNebula(data);
 
       // await updateMinio(data);
 
@@ -1920,7 +1911,10 @@ const center: FC = () => {
                           )}
                         />
                       </div>
-                      <div className="overflow-hidden w-24">
+                      <div
+                        className="overflow-hidden w-24"
+                        style={{ marginRight: "10px" }}
+                      >
                         <Controller
                           control={control}
                           name="port"
@@ -1942,7 +1936,7 @@ const center: FC = () => {
                         />
                       </div>
 
-                      {/* <div className="overflow-hidden w-24">
+                      <div className="overflow-hidden w-24">
                         <Controller
                           control={control}
                           name="env"
@@ -1961,7 +1955,7 @@ const center: FC = () => {
                             </Fragment>
                           )}
                         />
-                      </div> */}
+                      </div>
                     </div>
 
                     <div className="flex overflow-hidden">
