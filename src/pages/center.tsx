@@ -1330,6 +1330,8 @@ const center: FC = () => {
 
     const { account, password, address, port, name, env } = data;
 
+    const namespace = env.substr(env.lastIndexOf("-") + 1);
+
     try {
       // 判断里面是否被加密过
       // const userData = await db.select(`select * from pdm_user`);
@@ -1339,10 +1341,19 @@ const center: FC = () => {
       await updateDB({ db });
 
       // // if (isInit) {
-      await initEs(data, db);
-      await initNebula(data);
+      await initEs(
+        {
+          ...data,
+          name: namespace,
+        },
+        db
+      );
+      await initNebula({
+        ...data,
+        name: namespace,
+      });
 
-      await updateMinio(data);
+      // await updateMinio(data);
 
       // }
 
@@ -1909,10 +1920,7 @@ const center: FC = () => {
                           )}
                         />
                       </div>
-                      <div
-                        className="overflow-hidden w-24"
-                        style={{ paddingRight: "10px" }}
-                      >
+                      <div className="overflow-hidden w-24">
                         <Controller
                           control={control}
                           name="port"
@@ -1934,7 +1942,7 @@ const center: FC = () => {
                         />
                       </div>
 
-                      <div className="overflow-hidden w-24">
+                      {/* <div className="overflow-hidden w-24">
                         <Controller
                           control={control}
                           name="env"
@@ -1947,23 +1955,13 @@ const center: FC = () => {
                               <FormLabel value="环境:"></FormLabel>
                               <TextField
                                 value={value}
-                                // placeholder="请输入账号"
                                 onChange={onChange}
                                 marginTop={"8px"}
                               />
-                              {/* <Picker
-                                items={[{ name: "dev" }, { name: "prod" }]}
-                                selectedKey={value}
-                                onSelectionChange={onChange}
-                              >
-                                {(item) => (
-                                  <Item key={item.name}>{item.name}</Item>
-                                )}
-                              </Picker> */}
                             </Fragment>
                           )}
                         />
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="flex overflow-hidden">
