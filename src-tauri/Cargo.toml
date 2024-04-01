@@ -7,6 +7,9 @@ license = ""
 repository = ""
 edition = "2021"
 
+[env]
+STATIC_VCRUNTIME=false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
@@ -40,3 +43,9 @@ default = ["custom-protocol"]
 # this feature is used used for production builds where `devPath` points to the filesystem
 # DO NOT remove this
 custom-protocol = ["tauri/custom-protocol"]
+
+
+[target.'cfg(all(windows, target_env="msvc"))']
+rustflags = [
+    "-C", "target-feature=+crt-static"
+]
