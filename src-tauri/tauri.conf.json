@@ -109,7 +109,7 @@
       }
     ],
     "systemTray": {
-      "iconPath": "icons/20x20托盘图标.png",
+      "iconPath": "icons/onchain.png",
       "iconAsTemplate": true
     },
     "cli": {
