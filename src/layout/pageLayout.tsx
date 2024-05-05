@@ -370,9 +370,9 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
     mqttClient.loading = dataState;
   }, []);
 
-  if (!user.id) {
-    return <PlmLoading loading={true}></PlmLoading>;
-  }
+  // if (!user.id) {
+  //   return <PlmLoading loading={true}></PlmLoading>;
+  // }
 
   return (
     <PlmLoading loading={loading} warrperClassName="flex">
