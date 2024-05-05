@@ -359,79 +359,81 @@ export default function AttrMap() {
                   });
                   setFileAddress({ ...fileAddress, default: selected })
                 }
-              }, {
-                button: '选择',
-                text: 'SLDPRT模板文件:',
-                icon: 'document',
-                address: fileAddress.sldprt,
-                function: async () => {
-                  const selected = await open({
-                    multiple: false,
-                    directory: false,
-                    title: '选择SLDPRT模板文件',
-                    filters: [{
-                      name: 'prtdot',
-                      extensions: ['prtdot']
-                    }]
-                  });
-                  console.log(selected, 'selected');
+              },
+              // {
+              //   button: '选择',
+              //   text: 'SLDPRT模板文件:',
+              //   icon: 'document',
+              //   address: fileAddress.sldprt,
+              //   function: async () => {
+              //     const selected = await open({
+              //       multiple: false,
+              //       directory: false,
+              //       title: '选择SLDPRT模板文件',
+              //       filters: [{
+              //         name: 'prtdot',
+              //         extensions: ['prtdot']
+              //       }]
+              //     });
+              //     console.log(selected, 'selected');
 
-                  setFileAddress({ ...fileAddress, sldprt: selected })
-                }
-              },
-              {
-                button: '选择',
-                text: 'SLDASM模板文件:',
-                icon: 'document',
-                address: fileAddress.sldasm,
-                function: async () => {
-                  const selected = await open({
-                    multiple: false,
-                    directory: false,
-                    title: '选择SLDASM模板文件',
-                    filters: [{
-                      name: 'asmdot',
-                      extensions: ['asmdot']
-                    }]
-                  });
-                  setFileAddress({ ...fileAddress, sldasm: selected })
-                }
-              },
-              {
-                button: '选择',
-                text: 'CATPart模板文件:',
-                icon: 'document',
-                address: fileAddress.catpart,
-                function: async () => {
-                  const selected = await open({
-                    multiple: false,
-                    directory: false,
-                    title: '选择CATPart模板文件',
-                    filters: [{
-                      name: 'CATPart',
-                      extensions: ['CATPart']
-                    }]
-                  });
-                  setFileAddress({ ...fileAddress, catpart: selected })
-                }
-              }, {
-                button: '选择',
-                text: 'CATProduct模板文件:',
-                icon: 'document',
-                address: fileAddress.catproduct,
-                function: async () => {
-                  const selected = await open({
-                    multiple: false,
-                    directory: false,
-                    title: '选择CATProduct模板文件',
-                    filters: [{
-                      name: 'CATProduct',
-                      extensions: ['CATProduct']
-                    }]
-                  });
-                  setFileAddress({ ...fileAddress, catproduct: selected })
-                }
-              }].map((item, index) => {
+              //     setFileAddress({ ...fileAddress, sldprt: selected })
+              //   }
+              // },
+              // {
+              //   button: '选择',
+              //   text: 'SLDASM模板文件:',
+              //   icon: 'document',
+              //   address: fileAddress.sldasm,
+              //   function: async () => {
+              //     const selected = await open({
+              //       multiple: false,
+              //       directory: false,
+              //       title: '选择SLDASM模板文件',
+              //       filters: [{
+              //         name: 'asmdot',
+              //         extensions: ['asmdot']
+              //       }]
+              //     });
+              //     setFileAddress({ ...fileAddress, sldasm: selected })
+              //   }
+              // },
+              // {
+              //   button: '选择',
+              //   text: 'CATPart模板文件:',
+              //   icon: 'document',
+              //   address: fileAddress.catpart,
+              //   function: async () => {
+              //     const selected = await open({
+              //       multiple: false,
+              //       directory: false,
+              //       title: '选择CATPart模板文件',
+              //       filters: [{
+              //         name: 'CATPart',
+              //         extensions: ['CATPart']
+              //       }]
+              //     });
+              //     setFileAddress({ ...fileAddress, catpart: selected })
+              //   }
+              // }, {
+              //   button: '选择',
+              //   text: 'CATProduct模板文件:',
+              //   icon: 'document',
+              //   address: fileAddress.catproduct,
+              //   function: async () => {
+              //     const selected = await open({
+              //       multiple: false,
+              //       directory: false,
+              //       title: '选择CATProduct模板文件',
+              //       filters: [{
+              //         name: 'CATProduct',
+              //         extensions: ['CATProduct']
+              //       }]
+              //     });
+              //     setFileAddress({ ...fileAddress, catproduct: selected })
+              //   }
+              // }
+            ].map((item, index) => {
                 return <div key={index} style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
                   <div className="flex items-center justify-between" style={{ width: '600px' }}>
                     <div className="flex items-center">

@@ -10,7 +10,7 @@ export enum BasicConfig {
   /**设计工具dll名称*/
   pubgin_topic = "sw",
   /**设计工具dll版本*/
-  plugin_version = "2019",
+  plugin_version = "2020",
   /**onchain topic*/
   onchain_topic = "client_plugin",
   /**server url*/

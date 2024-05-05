@@ -19,7 +19,6 @@ import { BasicConfig } from "../constant/config";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { getClient, ResponseType } from "@tauri-apps/api/http";
-import { Command, open } from "@tauri-apps/api/shell";
 import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { openDesign } from "../layout/pageLayout";
 import { cloneDeep } from "lodash";

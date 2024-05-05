@@ -149,6 +149,7 @@ fn main() {
             // utils::script_path,
             // utils::user_script,
             utils::open_file,
+            utils::open_designer,
             // utils::clear_conf,
             // utils::merge,
             utils::gen_cmd,

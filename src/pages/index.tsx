@@ -2859,7 +2859,7 @@ const index = () => {
                         onClick={async () => {
                           if (record.flag === "exist") {
                             await open(
-                              `http://${network}:8017/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`
+                              `http://${network}/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`
                             );
                           }
                         }}

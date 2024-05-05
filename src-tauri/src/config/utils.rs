@@ -16,7 +16,13 @@ use tauri::Manager;
 use tauri::{ command };
 
 use window_shadows::set_shadow;
+use opener;
 
+
+#[command]
+pub fn open_designer(path: &str){
+    opener::open(path).map_err(|e| format!("Failed to open path: {}", e));
+}
 
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
     let window = app.get_window("Login").unwrap();

@@ -20,12 +20,13 @@ import API from "../utils/api";
 import { Utils } from "../utils";
 import { getClient, ResponseType } from "@tauri-apps/api/http";
 import { homeDir } from "@tauri-apps/api/path";
-import { createDir, writeBinaryFile } from "@tauri-apps/api/fs";
+import { createDir, readTextFile, writeBinaryFile, writeTextFile } from "@tauri-apps/api/fs";
 import { BasicsItemCode, ItemCode } from "../constant/itemCode";
-import { Command } from "@tauri-apps/api/shell";
+import { Command, open } from "@tauri-apps/api/shell";
 import { message } from "antd";
 import { setLoading } from "../models/loading";
-import { useMemoizedFn, useMount } from "ahooks";
+import { useAsyncEffect, useMemoizedFn, useMount } from "ahooks";
+import { invoke } from "@tauri-apps/api";
 interface LayoutProps {
   children?: React.ReactNode;
 }
@@ -94,16 +95,24 @@ export const openDesign = async ({
       const client = await getClient();
 
       try {
+        const homeDirPath = await homeDir();
+           const defaultSettingStr = await readTextFile(
+            `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`
+          );
+
+          const defaultSetting = JSON.parse(defaultSettingStr)
+
+          const downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
+
         API.downloadFile(fileUrl.split("/plm")[1])
-          .then((res) => {})
+          .then((res) => { })
           .catch(async (res) => {
-            const homeDirPath = await homeDir();
             await createDir(
-              `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}`,
+              `${downloadFolder}\\${fileName}`,
               { recursive: true }
             );
             await writeBinaryFile({
-              path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${instance.insDesc}`,
+              path: `${downloadFolder}\\${fileName}\\${instance.insDesc}`,
               contents: res,
             });
 
@@ -124,8 +133,7 @@ export const openDesign = async ({
             const loop = async (data: any) => {
               for (let i = 0; i < data.length; i++) {
                 const response: any = await client.get(
-                  `http://${network}/api/plm${
-                    data[i].attributes[attrMap["FileUrl"]].split("/plm")[1]
+                  `http://${network}/api/plm${data[i].attributes[attrMap["FileUrl"]].split("/plm")[1]
                   }`,
                   {
                     // the expected response type
@@ -134,7 +142,7 @@ export const openDesign = async ({
                 );
                 console.log(response);
                 await writeBinaryFile({
-                  path: `${homeDirPath}${BasicConfig.APPCacheFolder}/${fileName}/${data[i].insDesc}`,
+                  path: `${downloadFolder}\\${fileName}\\${data[i].insDesc}`,
                   contents: response.data,
                 });
                 if (data[i].children && data[i].children.length) {
@@ -144,99 +152,106 @@ export const openDesign = async ({
             };
             await loop(records || []);
             cancelLoading();
+            invoke("open_designer", {
+              path: `"${downloadFolder +
+                "\\" +
+                fileName +
+                "\\" +
+                instance.insDesc}"`
+            })
+            // const fileFormat = instance.insDesc.substring(
+            //   instance.insDesc.indexOf(".") + 1
+            // );
 
-            const fileFormat = instance.insDesc.substring(
-              instance.insDesc.indexOf(".") + 1
-            );
+          
 
+            // if (
+            //   ["catproduct", "catpart"].includes(
+            //     fileFormat.toLowerCase()
+            //   )
+            // ) {
+            //   const command = new Command(
+            //     "runCatia",
+            //     [
+            //       // installDir + "SOLIDWORKS.exe",
+            //       // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
+            //       "-object",
+            //       homeDirPath +
+            //       BasicConfig.APPCacheFolder +
+            //       "\\" +
+            //       fileName +
+            //       "\\" +
+            //       instance.insDesc,
+            //     ]
+            //     // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
+            //     // { encoding: "GBK" }
+            //   );
+            //   command.stderr.on("data", (args) => {
+            //     console.log("args", ...args);
+            //   });
 
-            if (
-              ["CATProduct", "CATPart", "CATPRODUCT", "CATPART"].includes(
-                fileFormat
-              )
-            ) {
-              const command = new Command(
-                "runCatia",
-                [
-                  // installDir + "SOLIDWORKS.exe",
-                  // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
-                  "-object",
-                  homeDirPath +
-                    BasicConfig.APPCacheFolder +
-                    "\\" +
-                    fileName +
-                    "\\" +
-                    instance.insDesc,
-                ]
-                // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
-                // { encoding: "GBK" }
-              );
-              command.stderr.on("data", (args) => {
-                console.log("args", ...args);
-              });
+            //   command.stdout.on("data", async (line: string) => {
+            //     console.log("line", ...line);
+            //   });
+            //   command.execute();
+            // } else if (
+            //   ["sldprt", "sldasm"].includes(fileFormat.toLowerCase())
+            // ) {
+            //   const regCommand = new Command(
+            //     "reg",
+            //     [
+            //       "query",
+            //       `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
+            //       "/v",
+            //       "SolidWorks Folder",
+            //     ],
+            //     { encoding: "GBK" }
+            //   );
+            //   // const homeDirPath = await homeDir();
+            //   regCommand.stdout.on("data", async (line: string) => {
+            //     const installDir = line
+            //       .replace("REG_SZ", "")
+            //       .replace("SolidWorks Folder", "")
+            //       .trim();
+            //     if (
+            //       installDir &&
+            //       installDir.indexOf("HKEY_LOCAL_MACHINE") == -1
+            //     ) {
+            //       // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
 
-              command.stdout.on("data", async (line: string) => {
-                console.log("line", ...line);
-              });
-              command.execute();
-            } else if (
-              ["sldprt", "sldasm", "SLDPRT", "SLDASM"].includes(fileFormat)
-            ) {
-              const regCommand = new Command(
-                "reg",
-                [
-                  "query",
-                  `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
-                  "/v",
-                  "SolidWorks Folder",
-                ],
-                { encoding: "GBK" }
-              );
-              // const homeDirPath = await homeDir();
-              regCommand.stdout.on("data", async (line: string) => {
-                const installDir = line
-                  .replace("REG_SZ", "")
-                  .replace("SolidWorks Folder", "")
-                  .trim();
-                if (
-                  installDir &&
-                  installDir.indexOf("HKEY_LOCAL_MACHINE") == -1
-                ) {
-                  // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
+            //       // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
+            //       // command.execute()
+            //       const command = new Command(
+            //         "start",
+            //         [
+            //           installDir + "SOLIDWORKS.exe",
+            //           // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
+            //           homeDirPath +
+            //           BasicConfig.APPCacheFolder +
+            //           "\\" +
+            //           fileName +
+            //           "\\" +
+            //           instance.insDesc,
+            //         ]
+            //         // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
+            //         // { encoding: "GBK" }
+            //       );
+            //       command.stderr.on("data", (args) => {
+            //         console.log("args", ...args);
+            //       });
 
-                  // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
-                  // command.execute()
-                  const command = new Command(
-                    "rundesign",
-                    [
-                      // installDir + "SOLIDWORKS.exe",
-                      // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
-                      homeDirPath +
-                        BasicConfig.APPCacheFolder +
-                        "\\" +
-                        fileName +
-                        "\\" +
-                        instance.insDesc,
-                    ]
-                    // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
-                    // { encoding: "GBK" }
-                  );
-                  command.stderr.on("data", (args) => {
-                    console.log("args", ...args);
-                  });
-
-                  command.stdout.on("data", async (line: string) => {
-                    console.log("line", ...line);
-                  });
-                  command.execute();
-                }
-              });
-              regCommand.stderr.on("data", (err) => {
-                message.error(err);
-                cancelLoading();
-              });
-              regCommand.execute();
-            }
+            //       command.stdout.on("data", async (line: string) => {
+            //         console.log("line", ...line);
+            //       });
+            //       command.execute();
+            //     }
+            //   });
+            //   regCommand.stderr.on("data", (err) => {
+            //     message.error(err);
+            //     cancelLoading();
+            //   });
+            //   regCommand.execute();
+            // }
           })
           .catch((err) => {
             message.error(err);
@@ -275,14 +290,54 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
   });
 
   useMount(() => {
+    // const command = new Command(
+    //   "start",
+    //   [
+    //     // installDir + "SOLIDWORKS.exe",
+    //     'start',
+    //     `D:\\SOLIDWORKS2020\\SOLIDWORKS\\SLDWORKS.exe`,
+    //     // homeDirPath +
+    //     //   BasicConfig.APPCacheFolder +
+    //     //   "\\" +
+    //     //   fileName +
+    //     //   "\\" +
+    //     //   instance.insDesc,
+    //   ],
+    //   // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
+    //   { encoding: "GBK" }
+    // );
+    // command.stderr.on("data", (args) => {
+    //   console.log("args", ...args);
+    // });
+
+    // command.stdout.on("data", async (line: string) => {
+    //   console.log("line", ...line);
+    // });
+    // command.execute();
+
+
     listen("onchain", async (matchUrl: any) => {
-      if(mqttClient.publishTopic === 'Altium'){
+      if (mqttClient.publishTopic === 'Altium') {
         navigate(`/home/${Math.random()}`);
         const currentWindow = getCurrent();
         currentWindow.setFocus()
       }
     })
   })
+
+  // useAsyncEffect(async()=>{
+  //   const homeDirPath = await homeDir();
+  //   const defaultSettingStr = await readTextFile(
+  //    `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`
+  //  );
+
+  //  const defaultSetting = JSON.parse(defaultSettingStr)
+
+  //  const downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
+  //  console.log(downloadFolder,'downloadFolder');
+  //  await writeTextFile(`${downloadFolder}\\aaa.txt`,"123")
+   
+  // }, [])
 
   useEffect(() => {
     sse.registerCallBack("open_design", (insId) => {
