@@ -76,22 +76,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         // const aa = await ffmpeg.execute();
 
         const homeDirPath = await homeDir();
-        const ActiveWindow = WebviewWindow.getByLabel("Active");
-        ActiveWindow?.hide()
+        // const ActiveWindow = WebviewWindow.getByLabel("Active");
+        // ActiveWindow?.hide()
 
-        let activeText = ''
-        try {
-          activeText = await readTextFile(
-            `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.Active}`
-          );
-        } catch (error) { }
-        if (activeText) {
-          if (window.location.pathname === '/active') {
-            if (!WebviewWindow.getByLabel('Login')?.isVisible()) {
-              await invoke("open_login", {});
-              ActiveWindow?.close()
-            }
-          }
+        // let activeText = ''
+        // try {
+        //   activeText = await readTextFile(
+        //     `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.Active}`
+        //   );
+        // } catch (error) { }
+          // if (window.location.pathname === '/active') {
+          //   if (!WebviewWindow.getByLabel('Login')?.isVisible()) {
+          //     await invoke("open_login", {});
+          //     ActiveWindow?.close()
+          //   }
+          // }
 
 
           await invoke("init");
@@ -139,10 +138,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             await invoke("exist", {});
             appWindow.close();
           }
-
-        } else {
-          ActiveWindow?.show()
-        }
+      
       }
     });
     command.stderr.on("data", (line) =>

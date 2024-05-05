@@ -1,0 +1,1 @@
+regsvr32 /s "%CD%\lib\SolidWorks_ADDIN\PLMDesignFusion.dll"

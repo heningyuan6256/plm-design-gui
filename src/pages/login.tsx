@@ -72,6 +72,9 @@ export default function login() {
             width: window.innerWidth,
             height: window.innerHeight,
           });
+          
+          await invoke("set_window_home_shadow")
+
           const loginWindow = WebviewWindow.getByLabel("Login");
           loginWindow?.close();
         }

@@ -19,7 +19,7 @@ use window_shadows::set_shadow;
 
 
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
-    let window = app.get_window("Active").unwrap();
+    let window = app.get_window("Login").unwrap();
     set_shadow(&window, true).expect("Unsupported platform!");
 }
 
@@ -27,6 +27,13 @@ pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
 pub fn chat_root() -> PathBuf {
     tauri::api::path::home_dir().unwrap().join(".onChain")
 }
+
+#[command]
+pub fn set_window_home_shadow(handle: tauri::AppHandle) {
+    let window = handle.get_window("Home").unwrap();
+    set_shadow(&window, true).expect("Unsupported platform!");
+}
+
 
 #[command]
 pub fn init() -> bool {

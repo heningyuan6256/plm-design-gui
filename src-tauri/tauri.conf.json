@@ -85,14 +85,16 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["Config.ini"],
+      "resources": ["Config.ini", "./lib"],
       "shortDescription": "",
       "targets": "all",
       "windows": {
         "wix": {
           "language": "zh-CN",
           "bannerPath": "./banner.png",
-          "dialogImagePath":"./dialogImage.png"
+          "dialogImagePath":"./dialogImage.png",
+          "fragmentPaths": ["solidworks_addIn.wxs"],
+          "componentRefs": ["MyFragmentRegistryEntries"]
         },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
@@ -109,11 +111,11 @@
         "resizable": false,
         "title": "OnChain-DesignFusion",
         "width": 648,
-        "url": "/active",
-        "label": "Active",
+        "url": "/login",
+        "label": "Login",
         "decorations": false,
         "center": true,
-        "visible": false
+        "visible": true
       }
     ],
     "systemTray": {

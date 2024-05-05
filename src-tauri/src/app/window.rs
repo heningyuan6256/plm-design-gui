@@ -34,6 +34,7 @@ pub async fn open_info(handle: tauri::AppHandle) {
 // 打开主页
 #[command]
 pub async fn open_home(handle: tauri::AppHandle) {
+    // utils::set_window_shadow(&handle);
     tauri::WindowBuilder
         ::new(&handle, "Home", tauri::WindowUrl::App("/query".into()))
         .inner_size(1440.0, 720.0)
