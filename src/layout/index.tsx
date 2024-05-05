@@ -85,60 +85,60 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         //     `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.Active}`
         //   );
         // } catch (error) { }
-          // if (window.location.pathname === '/active') {
-          //   if (!WebviewWindow.getByLabel('Login')?.isVisible()) {
-          //     await invoke("open_login", {});
-          //     ActiveWindow?.close()
-          //   }
-          // }
+        // if (window.location.pathname === '/active') {
+        //   if (!WebviewWindow.getByLabel('Login')?.isVisible()) {
+        //     await invoke("open_login", {});
+        //     ActiveWindow?.close()
+        //   }
+        // }
 
 
-          await invoke("init");
+        await invoke("init");
 
-          let networkAddress = "";
+        let networkAddress = "";
+        try {
+          networkAddress = await readTextFile(
+            `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
+          );
+        } catch (error) { }
+
+        if (networkAddress) {
+          // 写入address
+          const NewRequest = new Request({});
+
+          const homeDirPath = await homeDir();
+          await writeFile(
+            `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
+            networkAddress
+          );
+          dispatch(writeNetWork(networkAddress));
+
+          let tokenTxt = "";
           try {
-            networkAddress = await readTextFile(
-              `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
+            // 从本地获取token，如果能获取到token信息，则直接登录，token信息正确，则登录成功，否则重新输入，清空本地token文件
+            tokenTxt = await readTextFile(
+              `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`
             );
           } catch (error) { }
 
-          if (networkAddress) {
-            // 写入address
-            const NewRequest = new Request({});
-
-            const homeDirPath = await homeDir();
-            await writeFile(
-              `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
-              networkAddress
-            );
-            dispatch(writeNetWork(networkAddress));
-
-            let tokenTxt = "";
-            try {
-              // 从本地获取token，如果能获取到token信息，则直接登录，token信息正确，则登录成功，否则重新输入，清空本地token文件
-              tokenTxt = await readTextFile(
-                `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`
-              );
-            } catch (error) { }
-
-            if (tokenTxt) {
-              NewRequest.initAddress(networkAddress, tokenTxt);
-              dispatch(fetchUserByToken(tokenTxt) as any);
-            }
-          } else {
-            const homeDirPath = await homeDir();
-            try {
-              await removeFile(
-                `${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`
-              );
-              await removeFile(
-                `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
-              );
-            } catch (error) { }
-            await invoke("exist", {});
-            appWindow.close();
+          if (tokenTxt) {
+            NewRequest.initAddress(networkAddress, tokenTxt);
+            dispatch(fetchUserByToken(tokenTxt) as any);
           }
-      
+        } else {
+          const homeDirPath = await homeDir();
+          try {
+            await removeFile(
+              `${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`
+            );
+            await removeFile(
+              `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
+            );
+          } catch (error) { }
+          await invoke("exist", {});
+          appWindow.close();
+        }
+
       }
     });
     command.stderr.on("data", (line) =>
@@ -146,7 +146,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
     command.execute();
   }, []);
-  return <Fragment>{children}</Fragment>;
+  return <Fragment>
+    <div
+      data-tauri-drag-region
+      className="absolute top-0 w-full h-4 z-10"
+    ></div>
+    {children}
+  </Fragment>;
 };
 
 export default Layout;

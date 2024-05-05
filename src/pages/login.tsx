@@ -72,7 +72,7 @@ export default function login() {
       width: window.innerWidth,
       height: window.innerHeight,
     });
-    
+
     await invoke("set_window_home_shadow")
 
     const loginWindow = WebviewWindow.getByLabel("Login");
@@ -244,6 +244,10 @@ export default function login() {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
+      {/* <div
+        data-tauri-drag-region
+        className="absolute top-0 w-full h-4 z-10"
+      ></div> */}
       <PlmLoading warrperClassName="flex" loading={loading} loadingText="正在打开设计工具">
         <div className="w-240 bg-primary h-full flex items-center justify-center">
           <img width={144} src={OnChainLogo} alt="" />
