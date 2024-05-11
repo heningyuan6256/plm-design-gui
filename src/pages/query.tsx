@@ -15,13 +15,15 @@ import { OnChainTableColumnProps } from "onchain-ui/dist/esm/OnChainTable";
 import { Utils } from "../utils";
 import { createDir, writeBinaryFile } from "@tauri-apps/api/fs";
 import { homeDir } from "@tauri-apps/api/path";
-import { BasicConfig } from "../constant/config";
+import { BasicConfig, CommandConfig } from "../constant/config";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { getClient, ResponseType } from "@tauri-apps/api/http";
 import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { openDesign } from "../layout/pageLayout";
 import { cloneDeep } from "lodash";
+import { useMqttRegister } from "../hooks/useMqttRegister";
+import { mqttClient } from "../utils/MqttService";
 // import { dealMaterialData } from 'plm-wasm'
 
 const query: FC = () => {

@@ -50,3 +50,9 @@ registry = "https://mirrors.ustc.edu.cn/crates.io-index"
     },
 
    cargo.toml 增加 "devtools" 可以在生产环境打包
+
+
+  # 安装出现 无法定位程序输入点processprng
+  设计工具版本不能高于1.78.0
+
+  # creo的注入程序如果在虚拟机上，可能会报错

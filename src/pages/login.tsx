@@ -68,15 +68,15 @@ export default function login() {
           fetchUserByToken(res.result.token) as any
         ).unwrap();
         if (data.id) {
-    await invoke("open_home", {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
+          await invoke("open_home", {
+            width: window.innerWidth,
+            height: window.innerHeight,
+          });
 
-    await invoke("set_window_home_shadow")
+          await invoke("set_window_home_shadow")
 
-    const loginWindow = WebviewWindow.getByLabel("Login");
-    loginWindow?.close();
+          const loginWindow = WebviewWindow.getByLabel("Login");
+          loginWindow?.close();
         }
       })
       .catch((err) => {

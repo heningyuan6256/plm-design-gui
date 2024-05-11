@@ -30,7 +30,6 @@ const left: FC = () => {
 
   useEffect(() => {
     mqttClient.registerCallBack(CommandConfig.onchain_path, async (res) => {
-      console.log(res, 'res')
       if ((res.input_data === 'cad_start') || (res.input_data === CommandConfig.cadShutDown)) {
         return
       }
