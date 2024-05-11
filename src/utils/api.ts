@@ -1,5 +1,5 @@
 //  api.js
-import Request from "./request.js";
+import Request, { getUrl } from "./request.js";
 
 const NewRequest = new Request({});
 
@@ -290,6 +290,20 @@ const API = {
   */
   addInstanceAttributeAttachment: (data: any) => {
     return NewRequest.post('/pdm/attachment/batchImportInstanceAttributeAttachment', data)
+  },
+  /**
+   * 发送消息
+   */
+  sendMessage: (cmd: string, to: string, userId: string, message:string) => {
+    return new Promise(async (resolve, reject) => {
+      const formData = new FormData()
+      formData.append("cmd", cmd)
+      formData.append("to", to)
+      formData.append("userId", userId)
+      formData.append("message", message)
+      const { tenantId: tenantId } = await getUrl("/sse")
+      resolve(NewRequest.postFormData(`/event/send/${tenantId}`, formData))
+    })
   }
 };
 

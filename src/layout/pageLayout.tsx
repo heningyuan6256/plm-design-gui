@@ -38,6 +38,7 @@ export const openDesign = async ({
   userId,
   network,
   itemCode,
+  extra
 }: {
   loading: () => void;
   cancelLoading: () => void;
@@ -45,6 +46,9 @@ export const openDesign = async ({
   network: string;
   userId: string;
   itemCode: string;
+  extra?: {
+    onEvent?: (path: string) => any
+  }
 }) => {
   if (ItemCode.isMaterial(itemCode)) {
     const {
@@ -96,13 +100,13 @@ export const openDesign = async ({
 
       try {
         const homeDirPath = await homeDir();
-           const defaultSettingStr = await readTextFile(
-            `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`
-          );
+        const defaultSettingStr = await readTextFile(
+          `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`
+        );
 
-          const defaultSetting = JSON.parse(defaultSettingStr)
+        const defaultSetting = JSON.parse(defaultSettingStr)
 
-          const downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
+        const downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
 
         API.downloadFile(fileUrl.split("/plm")[1])
           .then((res) => { })
@@ -152,18 +156,26 @@ export const openDesign = async ({
             };
             await loop(records || []);
             cancelLoading();
-            invoke("open_designer", {
-              path: `"${downloadFolder +
+            if (extra && extra.onEvent) {
+              extra.onEvent(`"${downloadFolder +
                 "\\" +
                 fileName +
                 "\\" +
-                instance.insDesc}"`
-            })
+                instance.insDesc}"`)
+            } else {
+              invoke("open_designer", {
+                path: `"${downloadFolder +
+                  "\\" +
+                  fileName +
+                  "\\" +
+                  instance.insDesc}"`
+              })
+            }
             // const fileFormat = instance.insDesc.substring(
             //   instance.insDesc.indexOf(".") + 1
             // );
 
-          
+
 
             // if (
             //   ["catproduct", "catpart"].includes(
@@ -336,7 +348,7 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
   //  const downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
   //  console.log(downloadFolder,'downloadFolder');
   //  await writeTextFile(`${downloadFolder}\\aaa.txt`,"123")
-   
+
   // }, [])
 
   useEffect(() => {

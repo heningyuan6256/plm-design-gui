@@ -31,7 +31,7 @@ import filldown from "../assets/image/filldown.svg";
 import fillup from "../assets/image/fillup.svg";
 import checkout from "../assets/image/checkin.svg";
 import checkin from "../assets/image/checkout.svg";
-import { useAsyncEffect, useLatest } from "ahooks";
+import { useAsyncEffect, useLatest, useMemoizedFn } from "ahooks";
 import API from "../utils/api";
 import { Utils } from "../utils";
 import { BasicsItemCode, ItemCode } from "../constant/itemCode";
@@ -39,6 +39,7 @@ import { PlmFormForwardRefProps } from "onchain-ui/dist/esm/OnChainForm";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { downloadDir, homeDir, resolveResource } from "@tauri-apps/api/path";
+import { open as openFileDialog } from "@tauri-apps/api/dialog";
 import {
   exists,
   readBinaryFile,
@@ -68,6 +69,9 @@ import { PDFViewer } from 'fuyun';
 import ADdata from "../../experimentData.json";
 import { MqttClient } from "mqtt";
 import { metadata } from "../utils/fs_extra";
+import { sse } from "../utils/SSEService";
+import { confirm } from "@tauri-apps/api/dialog";
+import { openDesign } from "../layout/pageLayout";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -1015,6 +1019,14 @@ const index = () => {
       .then((res) => {
         updateSingleData(row);
         dispatch(setLoading(false));
+        API.sendMessage("ChildfileVersionOrderUpdate", "*", user.id, JSON.stringify({
+          instance: {
+            insId: row.insId,
+            insDesc: row.file.onChain.Description,
+            insVersionOrderUnbound:  row.file.onChain.Revision
+          },
+          from: user.name
+        }))
       })
       .catch(() => {
         dispatch(setLoading(false));
@@ -1072,6 +1084,47 @@ const index = () => {
       setCenterData(flattenData);
     }
   }, [selectNode, leftData]);
+
+  const ChildfileVersionOrderUpdate = useMemoizedFn((data: any) => {
+    let { instance = {}, from } = JSON.parse(data)
+    console.log(instance,'instance')
+    const childLevelData = leftData[0]?.children || []
+    if (childLevelData.find((item: any) => item?.file?.onChain?.insId == instance.insId)) {
+      confirm(`${from} 已将 ${instance.insDesc} 更新成最新的版次${instance.insVersionOrderUnbound}, 是否要更新本地文件`, { title: '文件更新', type: 'warning' }).then(async res => {
+        await openDesign({
+          loading: () => {
+            dispatch(setLoading(true));
+          },
+          cancelLoading: () => {
+            dispatch(setLoading(false));
+          },
+          network: network,
+          insId: instance.insId,
+          userId: user.id,
+          itemCode: "10001006",
+          extra: {
+            onEvent: (path) => {
+              openFileDialog({
+                defaultPath: path
+              })
+              // invoke("reveal_file", {
+              //   path: path
+              // })
+            }
+          }
+        });
+      })
+    }
+  })
+
+  useEffect(() => {
+    sse.registerCallBack("ChildfileVersionOrderUpdate", (data) => {
+      ChildfileVersionOrderUpdate(data)
+    })
+    return () => {
+      sse.unRegisterCallBack("ChildfileVersionOrderUpdate")
+    }
+  }, [])
 
   // 取出所有的属性
   useEffect(() => {
@@ -2337,6 +2390,17 @@ const index = () => {
             ]);
           });
         }
+
+        warpperSetLog(() => {
+          setLogData([
+            ...lastestLogData.current,
+            {
+              log: "上传成功！",
+              dateTime: getCurrentTime(),
+              id: Utils.generateSnowId(),
+            },
+          ]);
+        });
       }
 
 

@@ -5,7 +5,7 @@ import { resolveResource } from "@tauri-apps/api/path";
 import { Utils } from ".";
 import { BasicConfig } from "../constant/config";
 
-const getUrl = async (str: string) => {
+export const getUrl = async (str: string) => {
     const path = await resolveResource('Config.ini')
 
     const config = await readTextFile(path)
@@ -90,6 +90,30 @@ class Request {
                     resolve(this.interceptors.response(res));
                 })
                 .catch((err) => {
+                    reject(err);
+                });
+        });
+    };
+
+    postFormData = (url: string, data: FormData) => {
+        return new Promise(async (resolve, reject) => {
+            const requestBody = { ...data, ...this.interceptors.request.body };
+            const requestHeaders = { ...this.interceptors.request.headers };
+            this.interceptors.request.use();
+            const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
+            http
+                .fetch(serverUrl, {
+                    headers: requestHeaders,
+                    method: "POST",
+                    // 常规的json格式请求体发送
+                    body: http.Body.form(data),
+                })
+                .then((res) => {
+                    // res为请求成功的回调数据
+                    resolve(this.interceptors.response(res));
+                })
+                .catch((err) => {
+                    console.log(err,'errr')
                     reject(err);
                 });
         });

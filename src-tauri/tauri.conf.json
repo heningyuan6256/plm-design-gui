@@ -29,6 +29,7 @@
         "all": true
       },
       "http": {
+        "all": true,
         "scope": ["http://**", "https://**", "ws://**", "wss://**"]
       },
       "dialog": {

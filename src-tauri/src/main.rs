@@ -144,6 +144,7 @@ fn main() {
             utils::get_tauri_conf,
             utils::set_window_home_shadow,
             utils::exists,
+            utils::reveal_file,
             // utils::create_file,
             // utils::create_chatgpt_prompts,
             // utils::script_path,
