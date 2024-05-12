@@ -100,7 +100,7 @@ const API = {
    * 获取搜索列头
    */
   getQueryColumns: (data: any) => {
-    return NewRequest.get("/pdm/condition/getField", {
+    return NewRequest.get("/pdm/search/getField", {
       ...data,
       tenantId: "719",
     });

@@ -163,10 +163,9 @@ export default function login() {
 
   useMount(async () => {
     const openDesignInLogin = async (url: string) => {
-      console.log(url,'url')
+      console.log(url, 'url')
       const onchainUrl = url as string
       const inputString = onchainUrl.match(regex);
-      console.log(inputString,'inputString');
       if (inputString) {
         let [matchUrl, address, token, itemCode, insId] = inputString
         token = decodeURIComponent(token)
@@ -196,6 +195,21 @@ export default function login() {
             insId: insId,
             userId: data.id,
             itemCode: itemCode,
+            extra: {
+              onEvent: async (path:string) => {
+                await invoke("open_designer", {
+                  path: path
+                })
+                await invoke("open_home", {
+                  width: window.innerWidth,
+                  height: window.innerHeight,
+                });
+                setTimeout(() => {
+                  const loginWindow = WebviewWindow.getByLabel("Login");
+                  loginWindow?.close();
+                }, 200)
+              }
+            }
           });
         }
       }

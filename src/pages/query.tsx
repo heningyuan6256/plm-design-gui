@@ -165,25 +165,28 @@ const query: FC = () => {
 
   const GetConditionDsl = useRequest((data) => API.getPDMConditionDsl(data), {
     manual: true,
-    // onSuccess(res: any) {
-
-    //   // const records = res.result.pageData.records.map((item: any) => {
-    //   //   const transferMap = Utils.transformArrayToMap(
-    //   //     item.baseSearchDto.searchStr,
-    //   //     "apiCode",
-    //   //     "attrValue"
-    //   //   );
-    //   //   return { ...item.baseSearchDto, ...transferMap };
-    //   // });
-    //   // setTableData(
-    //   //   records.filter((item: any) => {
-    //   //     return (
-    //   //       item.number.indexOf(selectVal) != -1 ||
-    //   //       item.insDesc.indexOf(selectVal) != -1
-    //   //     );
-    //   //   })
-    //   // );
-    // },
+    onSuccess(res: any) {
+      console.log(res.result,'res.result.pageData');
+      
+      const records = (res.result?.pageData?.records || []).map((item: any) => {
+        const transferMap = Utils.transformArrayToMap(
+          item.insAttrs,
+          "apicode",
+          "attrValue"
+        );
+        return { ...item, ...transferMap };
+      });
+      console.log(records,'records');
+      
+      setTableData(
+        records.filter((item: any) => {
+          return (
+            item.Number.indexOf(selectVal) != -1 ||
+            item.Description.indexOf(selectVal) != -1
+          );
+        })
+      );
+    },
   });
 
   useKeyPress("enter", () => {
@@ -195,7 +198,7 @@ const query: FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedRows && selectedRows[0]) {
+    if (selectedRows && selectedRows[0] && selectedRows[0].itemCode) {
       API.getQueryColumns({ itemCode: String(selectedRows[0].itemCode) }).then((res: any) => {
         scrollPage.pageNo = 1
         setSearchColumn(res.result);

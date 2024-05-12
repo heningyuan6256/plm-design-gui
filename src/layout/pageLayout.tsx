@@ -173,15 +173,7 @@ export const openDesign = async ({
                   "\\" +
                   instance.insDesc}"`
               })
-              await invoke("open_home", {
-                width: window.innerWidth,
-                height: window.innerHeight,
-              });
-              setTimeout(() => {
-                const loginWindow = WebviewWindow.getByLabel("Login");
-                loginWindow?.close();
-                cancelLoading();
-              }, 200)
+              cancelLoading()
             }
             // const fileFormat = instance.insDesc.substring(
             //   instance.insDesc.indexOf(".") + 1
