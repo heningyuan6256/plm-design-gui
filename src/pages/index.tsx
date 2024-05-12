@@ -1023,7 +1023,7 @@ const index = () => {
           instance: {
             insId: row.insId,
             insDesc: row.file.onChain.Description,
-            insVersionOrderUnbound:  row.file.onChain.Revision
+            insVersionOrderUnbound:  row.file.onChain.Revision.replace("(", "").replace(")", "")
           },
           from: user.name
         }))
@@ -1090,7 +1090,7 @@ const index = () => {
     console.log(instance,'instance')
     const childLevelData = leftData[0]?.children || []
     if (childLevelData.find((item: any) => item?.file?.onChain?.insId == instance.insId)) {
-      confirm(`${from} 已将 ${instance.insDesc} 更新成最新的版次${instance.insVersionOrderUnbound}, 是否要更新本地文件`, { title: '文件更新', type: 'warning' }).then(async res => {
+      confirm(`${from} 已将 ${instance.insDesc} 更新成最新的版次 ${instance.insVersionOrderUnbound} , 是否要更新本地文件`, { title: '文件更新', type: 'warning' }).then(async res => {
         await openDesign({
           loading: () => {
             dispatch(setLoading(true));

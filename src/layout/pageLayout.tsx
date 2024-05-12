@@ -14,7 +14,7 @@ import Left from "./left";
 import { TauriEvent, listen } from "@tauri-apps/api/event";
 import { mqttClient } from "../utils/MqttService";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
-import { getCurrent } from "@tauri-apps/api/window";
+import { WebviewWindow, getCurrent } from "@tauri-apps/api/window";
 import { sse } from "../utils/SSEService";
 import API from "../utils/api";
 import { Utils } from "../utils";
@@ -75,7 +75,9 @@ export const openDesign = async ({
   await currentWindow.unminimize();
 
   currentWindow.setFocus();
-  const versionOrderResult: any = await API.queryInsVersionOrder(insId);
+  const versionOrderResult: any = await API.queryInsVersionOrder(insId).catch(() => {
+    cancelLoading();
+  });
   const orders = versionOrderResult.result[insId].orders;
   const versions = versionOrderResult.result[insId].versions;
   API.getInstanceInfoById({
@@ -155,21 +157,31 @@ export const openDesign = async ({
               }
             };
             await loop(records || []);
-            cancelLoading();
+
             if (extra && extra.onEvent) {
               extra.onEvent(`"${downloadFolder +
                 "\\" +
                 fileName +
                 "\\" +
                 instance.insDesc}"`)
+              cancelLoading();
             } else {
-              invoke("open_designer", {
+              await invoke("open_designer", {
                 path: `"${downloadFolder +
                   "\\" +
                   fileName +
                   "\\" +
                   instance.insDesc}"`
               })
+              await invoke("open_home", {
+                width: window.innerWidth,
+                height: window.innerHeight,
+              });
+              setTimeout(() => {
+                const loginWindow = WebviewWindow.getByLabel("Login");
+                loginWindow?.close();
+                cancelLoading();
+              }, 200)
             }
             // const fileFormat = instance.insDesc.substring(
             //   instance.insDesc.indexOf(".") + 1
@@ -352,9 +364,9 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
   // }, [])
 
   useEffect(() => {
-    sse.registerCallBack("open_design", (insId) => {
-      openDesignWarpper(insId);
-    });
+    // sse.registerCallBack("open_design", (insId) => {
+    //   openDesignWarpper(insId);
+    // });
     const currentWindow = getCurrent();
     currentWindow.listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async (e) => {
       mqttClient.publish({
@@ -371,7 +383,7 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
     });
 
     return () => {
-      sse.unRegisterCallBack("open_design");
+      // sse.unRegisterCallBack("open_design");
     };
   }, []);
 

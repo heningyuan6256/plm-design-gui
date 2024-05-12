@@ -74,7 +74,6 @@ export default function login() {
           });
 
           await invoke("set_window_home_shadow")
-
           const loginWindow = WebviewWindow.getByLabel("Login");
           loginWindow?.close();
         }
@@ -164,8 +163,10 @@ export default function login() {
 
   useMount(async () => {
     const openDesignInLogin = async (url: string) => {
+      console.log(url,'url')
       const onchainUrl = url as string
       const inputString = onchainUrl.match(regex);
+      console.log(inputString,'inputString');
       if (inputString) {
         let [matchUrl, address, token, itemCode, insId] = inputString
         token = decodeURIComponent(token)
@@ -190,12 +191,6 @@ export default function login() {
             },
             cancelLoading: async () => {
               setLoading(false)
-              await invoke("open_home", {
-                width: window.innerWidth,
-                height: window.innerHeight,
-              });
-              const loginWindow = WebviewWindow.getByLabel("Login");
-              loginWindow?.close();
             },
             network: address,
             insId: insId,
