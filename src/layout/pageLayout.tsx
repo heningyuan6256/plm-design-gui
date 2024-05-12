@@ -108,7 +108,14 @@ export const openDesign = async ({
 
         const defaultSetting = JSON.parse(defaultSettingStr)
 
-        const downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
+         let downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
+
+         downloadFolder = `${downloadFolder}\\${instance.productName}`
+
+         await createDir(
+          `${downloadFolder}`,
+          { recursive: true }
+        );
 
         API.downloadFile(fileUrl.split("/plm")[1])
           .then((res) => { })
@@ -136,7 +143,7 @@ export const openDesign = async ({
               versionOrder: ins.result.readInstanceVo.insVersionOrder,
             });
 
-            const loop = async (data: any) => {
+            const loop = async (data: any, folder: string) => {
               for (let i = 0; i < data.length; i++) {
                 const response: any = await client.get(
                   `http://${network}/api/plm${data[i].attributes[attrMap["FileUrl"]].split("/plm")[1]
@@ -146,17 +153,24 @@ export const openDesign = async ({
                     responseType: ResponseType.Binary,
                   }
                 );
-                console.log(response);
+                const fileName = data[i].attributes[attrMap["Description"]];
+                await createDir(
+                  `${folder}\\${fileName}`,
+                  { recursive: true }
+                );
                 await writeBinaryFile({
-                  path: `${downloadFolder}\\${fileName}\\${data[i].insDesc}`,
+                  path: `${folder}\\${fileName}\\${data[i].insDesc}`,
                   contents: response.data,
                 });
                 if (data[i].children && data[i].children.length) {
-                  loop(data[i].children);
+                  loop(data[i].children, `${folder}\\${fileName}`);
                 }
               }
             };
-            await loop(records || []);
+
+            if(records?.length) {
+              await loop(records || [], `${downloadFolder}\\${fileName}`);
+            }
 
             if (extra && extra.onEvent) {
               extra.onEvent(`"${downloadFolder +
@@ -175,99 +189,6 @@ export const openDesign = async ({
               })
               cancelLoading()
             }
-            // const fileFormat = instance.insDesc.substring(
-            //   instance.insDesc.indexOf(".") + 1
-            // );
-
-
-
-            // if (
-            //   ["catproduct", "catpart"].includes(
-            //     fileFormat.toLowerCase()
-            //   )
-            // ) {
-            //   const command = new Command(
-            //     "runCatia",
-            //     [
-            //       // installDir + "SOLIDWORKS.exe",
-            //       // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
-            //       "-object",
-            //       homeDirPath +
-            //       BasicConfig.APPCacheFolder +
-            //       "\\" +
-            //       fileName +
-            //       "\\" +
-            //       instance.insDesc,
-            //     ]
-            //     // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
-            //     // { encoding: "GBK" }
-            //   );
-            //   command.stderr.on("data", (args) => {
-            //     console.log("args", ...args);
-            //   });
-
-            //   command.stdout.on("data", async (line: string) => {
-            //     console.log("line", ...line);
-            //   });
-            //   command.execute();
-            // } else if (
-            //   ["sldprt", "sldasm"].includes(fileFormat.toLowerCase())
-            // ) {
-            //   const regCommand = new Command(
-            //     "reg",
-            //     [
-            //       "query",
-            //       `HKEY_LOCAL_MACHINE\\SOFTWARE\\SolidWorks\\SOLIDWORKS ${BasicConfig.plugin_version}\\Setup`,
-            //       "/v",
-            //       "SolidWorks Folder",
-            //     ],
-            //     { encoding: "GBK" }
-            //   );
-            //   // const homeDirPath = await homeDir();
-            //   regCommand.stdout.on("data", async (line: string) => {
-            //     const installDir = line
-            //       .replace("REG_SZ", "")
-            //       .replace("SolidWorks Folder", "")
-            //       .trim();
-            //     if (
-            //       installDir &&
-            //       installDir.indexOf("HKEY_LOCAL_MACHINE") == -1
-            //     ) {
-            //       // console.log(installDir + "SOLIDWORKS.exe",homeDirPath + BasicConfig.APPCacheFolder + '\\' + fileName + '\\' +  instance.insDesc,'installDir');
-
-            //       // let command = new Command('PlayerLogic', ['SOLIDWORKS.exe'], { cwd: 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS' })
-            //       // command.execute()
-            //       const command = new Command(
-            //         "start",
-            //         [
-            //           installDir + "SOLIDWORKS.exe",
-            //           // 'C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SOLIDWORKS.exe',
-            //           homeDirPath +
-            //           BasicConfig.APPCacheFolder +
-            //           "\\" +
-            //           fileName +
-            //           "\\" +
-            //           instance.insDesc,
-            //         ]
-            //         // {cwd: "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS
-            //         // { encoding: "GBK" }
-            //       );
-            //       command.stderr.on("data", (args) => {
-            //         console.log("args", ...args);
-            //       });
-
-            //       command.stdout.on("data", async (line: string) => {
-            //         console.log("line", ...line);
-            //       });
-            //       command.execute();
-            //     }
-            //   });
-            //   regCommand.stderr.on("data", (err) => {
-            //     message.error(err);
-            //     cancelLoading();
-            //   });
-            //   regCommand.execute();
-            // }
           })
           .catch((err) => {
             message.error(err);
