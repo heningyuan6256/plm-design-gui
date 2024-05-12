@@ -153,7 +153,7 @@ export default function AttrMap() {
   }
 
   useAsyncEffect(async () => {
-    if (topActiveKey === 'attr') {
+    // if (topActiveKey === 'attr') {
       dispatch(setLoading(true));
       let text = ''
       try {
@@ -163,29 +163,31 @@ export default function AttrMap() {
       } catch (e) {
 
       }
+      console.log(text,'text');
+      
       if (text) {
         const fileAddressScope = JSON.parse(text)
         setFileAddress(fileAddressScope)
-
-        if (fileAddressScope[activeKey]) {
-          mqttClient.publish({
-            type: CommandConfig.getProductTypeAtt,
-            input_data: {
-              template_path:
-                fileAddressScope[activeKey].substring(0, fileAddressScope[activeKey].lastIndexOf('\\')),
-            },
-          });
-        } else {
-          message.error('请选择相对应的模板文件')
-          dispatch(setLoading(false));
-          clearData()
-        }
+        dispatch(setLoading(false));
+        // if (fileAddressScope[activeKey]) {
+        //   mqttClient.publish({
+        //     type: CommandConfig.getProductTypeAtt,
+        //     input_data: {
+        //       template_path:
+        //         fileAddressScope[activeKey].substring(0, fileAddressScope[activeKey].lastIndexOf('\\')),
+        //     },
+        //   });
+        // } else {
+        //   message.error('请选择相对应的模板文件')
+        //   dispatch(setLoading(false));
+        //   clearData()
+        // }
       } else {
-        message.error('请选择相对应的模板文件')
+        // message.error('请选择相对应的模板文件')
         dispatch(setLoading(false));
         clearData()
       }
-    }
+    // }
   }, [activeKey, childActiveKey, topActiveKey]);
 
   // 监听属性映射
@@ -351,7 +353,8 @@ export default function AttrMap() {
                 button: '更改',
                 icon: 'file1',
                 text: '默认文件下载地址:',
-                address: fileAddress.default, function: async () => {
+                address: fileAddress.default,
+                function: async () => {
                   const selected = await open({
                     multiple: false,
                     directory: true,

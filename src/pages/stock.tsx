@@ -18,6 +18,7 @@ import { BasicsItemCode } from "../constant/itemCode";
 import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
+import { invoke } from "@tauri-apps/api";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
@@ -321,6 +322,11 @@ const stock = () => {
                         insId: row.insId,
                         userId: user.id,
                         itemCode: row.itemCode,
+                        extra: {
+                          onEvent: async(path) => {
+                            await invoke("open_designer",{path:`${path.substring(0, path.lastIndexOf('\\'))}"`})
+                          }
+                        }
                       });
                     } else {
                       message.error("没有权限")

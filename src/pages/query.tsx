@@ -24,6 +24,8 @@ import { openDesign } from "../layout/pageLayout";
 import { cloneDeep } from "lodash";
 import { useMqttRegister } from "../hooks/useMqttRegister";
 import { mqttClient } from "../utils/MqttService";
+import { Command } from "@tauri-apps/api/shell";
+import { invoke } from "@tauri-apps/api";
 // import { dealMaterialData } from 'plm-wasm'
 
 const query: FC = () => {
@@ -103,7 +105,7 @@ const query: FC = () => {
       pageSize: pageSize,
       userId: user.id,
       itemCode: selectedRows[0].itemCode,
-    });    
+    });
 
     const dataSource = res.result.pageData?.records
     const total = res.result.pageData?.total
@@ -166,8 +168,8 @@ const query: FC = () => {
   const GetConditionDsl = useRequest((data) => API.getPDMConditionDsl(data), {
     manual: true,
     onSuccess(res: any) {
-      console.log(res.result,'res.result.pageData');
-      
+      console.log(res.result, 'res.result.pageData');
+
       const records = (res.result?.pageData?.records || []).map((item: any) => {
         const transferMap = Utils.transformArrayToMap(
           item.insAttrs,
@@ -176,8 +178,8 @@ const query: FC = () => {
         );
         return { ...item, ...transferMap };
       });
-      console.log(records,'records');
-      
+      console.log(records, 'records');
+
       setTableData(
         records.filter((item: any) => {
           return (
@@ -564,6 +566,11 @@ const query: FC = () => {
                         insId: row.insId,
                         userId: user.id,
                         itemCode: row.itemCode,
+                        extra: {
+                          onEvent: async(path) => {
+                            await invoke("open_designer",{path:`${path.substring(0, path.lastIndexOf('\\'))}"`})
+                          }
+                        }
                       });
                     },
                   };
@@ -578,8 +585,8 @@ const query: FC = () => {
                 }}
                 {...scrollPage}
                 onScroll={(pageNo) => {
-                  console.log(123,'123');
-                  
+                  console.log(123, '123');
+
                   scrollPage.pageNo = pageNo;
                   getScrollTableData();
                 }}

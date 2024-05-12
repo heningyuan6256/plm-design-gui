@@ -47,6 +47,11 @@
         "sidecar": true,
         "scope": [
           {
+            "name": "explorer",
+            "cmd": "explorer",
+            "args": true
+          },
+          {
             "name": "reg",
             "cmd": "reg",
             "args": true
