@@ -113,6 +113,7 @@ const index = () => {
   const [selectNode, setSelectNode] = useState<Record<string, any>>();
   const [productOptions, setProductOptions] = useState<any[]>();
   const [selectProduct, setSelectProduct] = useState<string>("");
+  const latestProduct = useLatest(selectProduct)
   const [cacheItemNumber, setCacheItemNumber] = useState({});
   const [fileSelectRows, setFileSelectRows] = useState<any[]>([]);
   const [materialSelectRows, setMaterialSelectRows] = useState<any>([]);
@@ -592,8 +593,9 @@ const index = () => {
     const nameList = [
       ...new Set(flattenData.map((item) => getFileNameWithFormat(item))),
     ];
+    console.log(latestProduct.current, 'latestProduct.current')
     const judgeFileResult: any = await API.judgeFileExist({
-      productId: selectProduct,
+      productId: latestProduct.current,
       fileNameList: nameList,
       itemCodes: [BasicsItemCode.file],
       userId: user.id,
@@ -617,6 +619,9 @@ const index = () => {
 
       const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
       const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
+
+      console.log(judgeFileResult.result, 'judgeFileResult.result');
+
 
       // 为每一个赋值id属性
       // 判断有实例在系统中
@@ -653,10 +658,27 @@ const index = () => {
             .forEach((attr: any) => {
               materialOnChainAttrs[attr.apicode] =
                 materialDataMap["10002044"][0].attributes[attr.id] || '';
-
-              // materialPluginAttrs[attr.apicode] = ''
             });
         }
+      } else {
+        // 重置产品变化后带来的更新
+        onChainAttrs.flag = "add";
+        onChainAttrs.insId = "";
+        totalAttrs
+          .filter((attr: any) => attr.status)
+          .forEach((attr: any) => {
+            // 判断节点在当前实例中
+            onChainAttrs[attr.apicode] = "";
+            onChainAttrs.checkOut = "";
+          });
+        materialOnChainAttrs.insId = "";
+        materialOnChainAttrs.checkOut = "";
+        materialOnChainAttrs.flag = "add";
+        totalMaterialAttrs
+          .filter((attr: any) => attr.status)
+          .forEach((attr: any) => {
+            materialOnChainAttrs[attr.apicode] = '';
+          });
       }
 
       // 树状结构是设计工具给的，每一个节点都有设计工具给的属性
@@ -1023,7 +1045,7 @@ const index = () => {
           instance: {
             insId: row.insId,
             insDesc: row.file.onChain.Description,
-            insVersionOrderUnbound:  row.file.onChain.Revision.replace("(", "").replace(")", "")
+            insVersionOrderUnbound: row.file.onChain.Revision.replace("(", "").replace(")", "")
           },
           from: user.name
         }))
@@ -1087,7 +1109,7 @@ const index = () => {
 
   const ChildfileVersionOrderUpdate = useMemoizedFn((data: any) => {
     let { instance = {}, from } = JSON.parse(data)
-    console.log(instance,'instance')
+    console.log(instance, 'instance')
     const childLevelData = leftData[0]?.children || []
     if (childLevelData.find((item: any) => item?.file?.onChain?.insId == instance.insId)) {
       confirm(`${from} 已将 ${instance.insDesc} 更新成最新的版次 ${instance.insVersionOrderUnbound} , 是否要更新本地文件`, { title: '文件更新', type: 'warning' }).then(async res => {
@@ -1171,7 +1193,7 @@ const index = () => {
 
   // 获取2D数据
   useAsyncEffect(async () => {
-    if (selectProduct) {
+    if (selectProduct && !isNot2D(mqttClient.publishTopic)) {
       console.log(mqttClient.publishTopic);
       // 模拟AD假数据
       if (mqttClient.publishTopic === 'Altium') {
