@@ -277,9 +277,9 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
   // }, [])
 
   useEffect(() => {
-    // sse.registerCallBack("open_design", (insId) => {
-    //   openDesignWarpper(insId);
-    // });
+    sse.registerCallBack("open_design", (insId) => {
+      openDesignWarpper(insId);
+    });
     const currentWindow = getCurrent();
     currentWindow.listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async (e) => {
       mqttClient.publish({
@@ -296,7 +296,7 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
     });
 
     return () => {
-      // sse.unRegisterCallBack("open_design");
+      sse.unRegisterCallBack("open_design");
     };
   }, []);
 
