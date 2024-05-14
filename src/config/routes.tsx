@@ -13,6 +13,7 @@ import Active from "../pages/active";
 import Query from "../pages/query";
 import PageLayout from "../layout/pageLayout";
 import AttrMap from "../pages/attrMap";
+import Message from "../pages/message";
 
 export const RoutesWithSubRoutes = () => {
   const router = createBrowserRouter([
@@ -32,6 +33,7 @@ export const RoutesWithSubRoutes = () => {
       path: "/active",
       element: <Active></Active>,
     },
+    //聊天界面
     // 关于界面
     // {
     //   path: "/info",
@@ -47,6 +49,10 @@ export const RoutesWithSubRoutes = () => {
         {
           path: "/home/:id",
           element: <Home></Home>,
+        },
+        {
+          path: "/message",
+          element: <Message></Message>,
         },
         // 属性映射
         {

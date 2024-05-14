@@ -19,7 +19,7 @@ export interface PlmToolBarProps {
   onClick: (name: string) => void;
 }
 
-const PlmToolBar: FC<PlmToolBarProps> = (props) => {
+const PlmMessageToolBar: FC<PlmToolBarProps> = (props) => {
 
   // 按钮
   const renderButton = (image: string, txt: string, name: string) => {
@@ -40,29 +40,12 @@ const PlmToolBar: FC<PlmToolBarProps> = (props) => {
     <div className="w-full  py-3.5 flex h-76 border-b border-outBorder">
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
-          {renderButton(upload, "上传", "upload")}
+          {renderButton(upload, "已读", "upload")}
+          {renderButton(upload, "删除", "upload")}
         </div>
         <div className="scale-90 text-xs text-littleGrey text-center">
           操作
         </div>
-      </div>
-      <div className="px-4 border-r border-r-outBorder">
-        <div className="flex gap-3 mb-1">
-        {renderButton(topupdate, `更新`, "update")}
-          {renderButton(checkout, `签出`, "checkout")}
-          {renderButton(cancelcheckin, "取消签出", "cancelcheckout")}
-          {renderButton(checkin, "签入", "checkin")}
-        </div>
-        <div className="scale-90 text-xs text-littleGrey text-center">
-          刷新
-        </div>
-      </div>
-      <div className="px-4 border-r border-r-outBorder">
-        <div className="flex gap-3 mb-1">
-          {renderButton(renovate, "刷新", "refresh")}
-          {renderButton(record, "上传日志", "log")}
-        </div>
-        <div className="scale-90 text-xs text-littleGrey text-center">其他</div>
       </div>
       <div className="px-4">
         <div className="flex gap-3 mb-1">
@@ -76,4 +59,4 @@ const PlmToolBar: FC<PlmToolBarProps> = (props) => {
   );
 };
 
-export default PlmToolBar;
+export default PlmMessageToolBar;

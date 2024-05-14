@@ -11,6 +11,8 @@ import menuUpload from "../assets/image/menuUpload.svg";
 import menuUploadHover from "../assets/image/menuUpload (1).svg";
 import menuSetting from "../assets/image/menuSetting.svg";
 import menuSettingHover from "../assets/image/menuSetting (1).svg";
+import messageImg from "../assets/image/front-message.svg";
+import messageImgHover from "../assets/image/front-messagehover.svg";
 import { mqttClient } from "../utils/MqttService";
 import { appWindow } from "@tauri-apps/api/window";
 import { useSelector } from "react-redux";
@@ -94,6 +96,13 @@ const left: FC = () => {
       path: "/home/id",
       location: "left",
     },
+    // {
+    //   title: "聊天",
+    //   icon: messageImg,
+    //   hoverIcon: messageImgHover,
+    //   path: "/message",
+    //   location: "right",
+    // },
     {
       title: "属性映射",
       icon: menuSetting,
