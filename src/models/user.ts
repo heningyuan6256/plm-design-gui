@@ -28,6 +28,7 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
           severUrl = INIData['ONCHAIN'].ServerUrl
       }
       const sseUrl = `${severUrl}/event/pull/${response.result.orgCode}/${response.result.id}`
+      sse.tenantId = response.result.orgCode
       sse.connect(sseUrl)
       return response.result;
     } catch (error) {

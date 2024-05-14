@@ -78,6 +78,7 @@ class Request {
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
             const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
+            console.log({ ...requestBody, tenantId: tenantId }, "postData")
             http
                 .fetch(serverUrl, {
                     headers: requestHeaders,
@@ -113,7 +114,7 @@ class Request {
                     resolve(this.interceptors.response(res));
                 })
                 .catch((err) => {
-                    console.log(err,'errr')
+                    console.log(err, 'errr')
                     reject(err);
                 });
         });
@@ -137,6 +138,7 @@ class Request {
                     resolve(this.interceptors.response(res));
                 })
                 .catch((err) => {
+                    console.log(url, data, headers, err, 'err')
                     reject(err);
                 });
         });
@@ -153,7 +155,7 @@ class Request {
                     headers: requestHeaders,
                     method: "PUT",
                     // 常规的json格式请求体发送
-                    body: http.Body.json({...requestQuery, tenantId: tenantId}),
+                    body: http.Body.json({ ...requestQuery, tenantId: tenantId }),
                     // query: requestQuery,
                     ...headers
                 })
@@ -177,13 +179,14 @@ class Request {
                     headers: requestHeaders,
                     method: "GET",
                     // 常规的json格式请求体发送
-                    query: {...requestQuery, tenantId: tenantId},
+                    query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
                 .then((res) => {
                     resolve(this.interceptors.response(res));
                 })
                 .catch((err) => {
+                    console.log(url, data, headers, err, 'err')
                     reject(err);
                 });
         });

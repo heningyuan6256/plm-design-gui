@@ -18,12 +18,14 @@ class SSEService {
   callBackMapping: Record<string, any>;
   userId: string;
   token: string;
+  tenantId: string
   constructor(url: string = 'http://localhost:8080/sse') {
     this.baseUrl = url;
     this.es = {} as EventSourcePolyfill;
     this.callBackMapping = {};
     this.userId = ''
     this.token = ''
+    this.tenantId = ''
   }
 
   /**

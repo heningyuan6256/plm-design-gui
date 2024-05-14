@@ -375,7 +375,7 @@ const index = () => {
       pageSize: "1000",
       filter: "1",
       isSensitiveCheck: "true",
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
     }).then((res: any) => {
       setProductOptions(
         res.result.records.map((item: any) => {
@@ -396,7 +396,7 @@ const index = () => {
       pageSize: "1000",
       filter: "1",
       isSensitiveCheck: "true",
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
     }).then((res: any) => {
       setProductOptions(
         res.result.records.map((item: any) => {
@@ -778,7 +778,7 @@ const index = () => {
       authType: "read",
       tabCode: "10002001",
       userId: user.id,
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
     }).then((res: any) => {
       res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
         const rowKey = getRowKey(row);
@@ -811,7 +811,7 @@ const index = () => {
           authType: "read",
           tabCode: "10002001",
           userId: user.id,
-          tenantId: "719",
+          tenantId: sse.tenantId || "719",
         }).then((res: any) => {
           row.file.onChain.checkOut = res.result.readInstanceVo.checkout;
           row.file.onChain.Revision = res.result.readInstanceVo.insVersionOrder;
@@ -872,7 +872,7 @@ const index = () => {
       pageSize: "500",
       tabCode: "10002016",
       tabCodes: "10002016",
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
       userId: user.id,
       version: row.Version,
       versionOrder: row.file.onChain.Revision,
@@ -888,7 +888,7 @@ const index = () => {
           .map((item: any) => item.insId)
           .join(","),
         deleteRowIds: records.map((item: any) => item.rowId),
-        tenantId: "719",
+        tenantId: sse.tenantId || "719",
         userId: user.id,
         versionNumber: row.Version,
       };
@@ -926,9 +926,11 @@ const index = () => {
       }
     };
 
-    const flattenData = (
+    const flattenData = uniqBy((
       InstanceAttrsMap[getRowKey(row)].origin.children || []
-    ).filter((item: any) => {
+    ), (item) => {
+      return getRowKey(item)
+    }).filter((item: any) => {
       return getRowKey(item) != getRowKey(row);
     });
 
@@ -956,7 +958,7 @@ const index = () => {
         tabCode: "10002016",
         rowList: dealParams,
         id: row.file.onChain.insId,
-        tenantId: "719",
+        tenantId: sse.tenantId || "719",
         userId: user.id,
         versionNumber: row.Version,
       });
@@ -1009,7 +1011,7 @@ const index = () => {
             };
           }
         }),
-        tenantId: "719",
+        tenantId: sse.tenantId || "719",
       },
     ];
     console.log(updateInstances, "签出签入更新模型的属性");
@@ -1017,7 +1019,7 @@ const index = () => {
     if (updateInstances.length) {
       await API.batchUpdate({
         instances: updateInstances,
-        tenantId: "719",
+        tenantId: sse.tenantId || "719",
         userId: user.id,
       });
       warpperSetLog(() => {
@@ -1388,7 +1390,7 @@ const index = () => {
           guige: item.guige,
           node_name: item.node_name,
           file_path: item.file_path,
-          tenantId: "719",
+          tenantId: sse.tenantId || "719",
           verifyCode: "200",
           user: user.id,
           material: item.material,
@@ -1536,7 +1538,7 @@ const index = () => {
     if (!buildStructError) {
       console.log("进入创建结构")
       API.batchCreateStructure({
-        tenantId: "719",
+        tenantId: sse.tenantId || "719",
         userId: user.id,
         itemCode: itemCode,
         tabCode: tabCode,
@@ -1704,7 +1706,7 @@ const index = () => {
           workspaceId: selectProduct,
           node_name: item.name,
           file_path: item.path,
-          tenantId: "719",
+          tenantId: sse.tenantId || "719",
           verifyCode: "200",
           user: user.id,
           insAttrs: (ItemCode.isFile(itemCode) ? Attrs : materialAttrs)
@@ -1850,7 +1852,7 @@ const index = () => {
 
     console.log(fileStructData, 'fileStructData')
     API.batchCreateStructure({
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
       userId: user.id,
       itemCode: BasicsItemCode.file,
       tabCode: '10002016',
@@ -1893,7 +1895,7 @@ const index = () => {
     ]
     console.log(materialStructData, 'materialStructData');
     API.batchCreateStructure({
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
       userId: user.id,
       itemCode: BasicsItemCode.material,
       tabCode: '10002003',
@@ -1922,7 +1924,7 @@ const index = () => {
       id: matArr[0],
       itemCode: BasicsItemCode.material,
       tabCode: 10002028,
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
       userId: user.id,
       versionNumber: "Draft",
       rowList: [
@@ -1943,7 +1945,7 @@ const index = () => {
       ],
     }]
     API.bindFileAndMaterial({
-      tenantId: "719",
+      tenantId: sse.tenantId || "719",
       userId: user.id,
       saveVos: dealParams,
     }).then((res) => {
@@ -2069,7 +2071,7 @@ const index = () => {
         //         workspaceId: selectProduct,
         //         node_name: item.name,
         //         file_path: item.path,
-        //         tenantId: "719",
+        //         tenantId: sse.tenantId || "719",
         //         verifyCode: "200",
         //         user: user.id,
         //         insAttrs: (Attrs)
@@ -2355,7 +2357,7 @@ const index = () => {
 
         if (addAttachmentParams.length) {
           const attchmentResult = await API.addInstanceAttributeAttachment({
-            tenantId: "719",
+            tenantId: sse.tenantId || "719",
             instanceAttrVos: addAttachmentParams,
           });
           console.log(attchmentResult, addAttachmentParams, "FileAttachment");
@@ -2392,13 +2394,13 @@ const index = () => {
                   };
                 }
               }),
-              tenantId: "719",
+              tenantId: sse.tenantId || "719",
             };
           });
         if (updateInstances.length) {
           await API.batchUpdate({
             instances: updateInstances,
-            tenantId: "719",
+            tenantId: sse.tenantId || "719",
             userId: user.id,
           });
           warpperSetLog(() => {
@@ -3126,7 +3128,7 @@ const index = () => {
                         id: successInstances[item].instanceId,
                         itemCode: BasicsItemCode.material,
                         tabCode: 10002028,
-                        tenantId: "719",
+                        tenantId: sse.tenantId || "719",
                         userId: user.id,
                         versionNumber: "Draft",
                         rowList: [
@@ -3149,7 +3151,7 @@ const index = () => {
                     }
                   );
                   API.bindFileAndMaterial({
-                    tenantId: "719",
+                    tenantId: sse.tenantId || "719",
                     userId: user.id,
                     saveVos: dealParams,
                   }).then((res) => {
