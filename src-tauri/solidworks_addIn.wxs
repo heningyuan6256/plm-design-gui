@@ -6,28 +6,113 @@
     <DirectoryRef Id="TARGETDIR">
       <!-- groups together the registry entries to be installed -->
       <!-- Note the unique `Id` we provide here -->
-      <Component Id="MyFragmentRegistryEntries" Guid="*">
-        <!-- the registry key will be under
-             HKEY_CURRENT_USER\Software\MyCompany\MyApplicationName -->
-        <!-- Tauri uses the second portion of the
-             bundle identifier as the `MyCompany` name
-             (e.g. `tauri-apps` in `com.tauri-apps.test`)  -->
-        <RegistryKey
-          Root="HKCU"
-          Key="Software\MyCompany\MyApplicationName1"
-          Action="createAndRemoveOnUninstall"
-        >
-          <!-- values to persist on the registry -->
-          <RegistryValue
-            Type="integer"
-            Name="SomeIntegerValue"
-            Value="1"
-            KeyPath="yes"
-          />
-          <RegistryValue Type="string" Value="Default Value" />
-        </RegistryKey>
+      <Component Id="MyFragmentRegistryEntries" Guid="11111114-2222-3333-4444-555555555555">
+       <IniFile
+          Id="Ini1"
+          Action="createLine"
+          Directory="INSTALLDIR"
+          Section="MQTT"
+          Name="Config.ini"
+          Key="ServerAddress"
+          Value="tcp://[IPPART5].[IPPART6].[IPPART7].[IPPART8]:1883" 
+        />
+        <IniFile
+          Id="Ini2"
+          Action="createLine"
+          Directory="INSTALLDIR"
+          Section="MQTT"
+          Name="Config.ini"
+          Key="wsAddress"
+          Value="ws://[IPPART5].[IPPART6].[IPPART7].[IPPART8]:8085/mqtt" 
+        />
+
+        <IniFile
+          Id="Ini3"
+          Action="createLine"
+          Directory="INSTALLDIR"
+          Section="USER"
+          Name="Config.ini"
+          Key="name"
+          Value="jhEtAVEMxHPA1RgQmQiK1gAAAAAAAAA=" 
+        />
+
+        <IniFile
+          Id="Ini4"
+          Action="createLine"
+          Directory="INSTALLDIR"
+          Section="USER"
+          Name="Config.ini"
+          Key="psw"
+          Value="x1gp6lk1ws008RRH+72fLgAAAAAAAAAAAAA=" 
+        />
+
+        <IniFile
+          Id="Ini5"
+          Action="createLine"
+          Directory="INSTALLDIR"
+          Section="ONCHAIN"
+          Name="Config.ini"
+          Key="ServerUrl"
+          Value="http://[IPPART1].[IPPART2].[IPPART3].[IPPART4]:8068/plm" 
+        />
+
+        <IniFile
+          Id="Ini6"
+          Action="createLine"
+          Directory="INSTALLDIR"
+          Section="ONCHAIN"
+          Name="Config.ini"
+          Key="TusUrl"
+          Value="http://[IPPART5].[IPPART6].[IPPART7].[IPPART8]:1080/plm/files" 
+        />
+
       </Component>
     </DirectoryRef>
+      <UI>
+         <Dialog Id="EnterIpDialog" Width="370" Height="270" Title="配置服务器地址">
+    <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="下一步">
+        <Publish Event="EndDialog" Value="Return" />
+    </Control>
+    <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="取消">
+        <Publish Event="SpawnDialog" Value="CancelDlg" />
+    </Control>
+
+    <!-- 服务器IP地址输入 -->
+    <Control Id="IPLabel" Type="Text" X="48" Y="30" Width="280" Height="16" Transparent="yes" Text="请输入服务器IP地址:" />
+    <Control Id="IPPart1" Type="Edit" X="48" Y="50" Width="40" Height="18" Property="IPPART1" />
+    <Control Id="Dot1" Type="Text" X="90" Y="50" Width="10" Height="18" Transparent="yes" Text="." />
+    <Control Id="IPPart2" Type="Edit" X="100" Y="50" Width="40" Height="18" Property="IPPART2" />
+    <Control Id="Dot2" Type="Text" X="142" Y="50" Width="10" Height="18" Transparent="yes" Text="." />
+    <Control Id="IPPart3" Type="Edit" X="152" Y="50" Width="40" Height="18" Property="IPPART3" />
+    <Control Id="Dot3" Type="Text" X="194" Y="50" Width="10" Height="18" Transparent="yes" Text="." />
+    <Control Id="IPPart4" Type="Edit" X="204" Y="50" Width="40" Height="18" Property="IPPART4" />
+
+
+    <!-- 中间件IP地址输入 -->
+    <Control Id="MiddelIPLabel" Type="Text" X="48" Y="90" Width="280" Height="16" Transparent="yes" Text="请输入中间件IP地址:" />
+    <Control Id="IPPart5" Type="Edit" X="48" Y="110" Width="40" Height="18" Property="IPPART5" />
+    <Control Id="Dot4" Type="Text" X="90" Y="110" Width="10" Height="18" Transparent="yes" Text="." />
+    <Control Id="IPPart6" Type="Edit" X="100" Y="110" Width="40" Height="18" Property="IPPART6" />
+    <Control Id="Dot5" Type="Text" X="142" Y="110" Width="10" Height="18" Transparent="yes" Text="." />
+    <Control Id="IPPart7" Type="Edit" X="152" Y="110" Width="40" Height="18" Property="IPPART7" />
+    <Control Id="Dot6" Type="Text" X="194" Y="110" Width="10" Height="18" Transparent="yes" Text="." />
+    <Control Id="IPPart8" Type="Edit" X="204" Y="110" Width="40" Height="18" Property="IPPART8" />
+</Dialog>
+
+          <InstallUISequence>
+              <Show Dialog="EnterIpDialog" Before="ProgressDlg">10</Show>
+          </InstallUISequence>
+      </UI>
+      <Property Id="IPPART1" Value="124" />
+        <Property Id="IPPART2" Value="71" />
+        <Property Id="IPPART3" Value="151" />
+        <Property Id="IPPART4" Value="153" />
+
+        <Property Id="IPPART5" Value="124" />
+        <Property Id="IPPART6" Value="71" />
+        <Property Id="IPPART7" Value="151" />
+        <Property Id="IPPART8" Value="153" />
+
 
     <CustomAction 
         Id="testVBScript" 
@@ -37,12 +122,10 @@
         ExeCommand="&quot;[SystemFolder]cmd.exe&quot; /c &quot;[INSTALLDIR]/lib/SolidWorks_ADDIN/addInDll.bat&quot;"
         Directory="INSTALLDIR">
     </CustomAction>
-    
-
     <InstallExecuteSequence>
-<Custom Action="testVBScript" Before="InstallFinalize" />
-</InstallExecuteSequence>
-    
+      <Custom Action="testVBScript" Before="InstallFinalize" />
+      <!-- <Custom Action="UpdateIniFile" Before="InstallFinalize"></Custom> -->
+    </InstallExecuteSequence>
+    <!-- <IniFile Id="UpdateIniFile" Action="addTag" Directory="INSTALLFOLDER" Key="SectionName" Name="example.ini" Section="MySection" Value="[IPPART1]" />         -->
     </Fragment>
-    
 </Wix>

@@ -4,6 +4,7 @@ import { readTextFile } from "@tauri-apps/api/fs";
 import { resolveResource } from "@tauri-apps/api/path";
 import { Utils } from ".";
 import { BasicConfig } from "../constant/config";
+import { sse } from "./SSEService";
 
 export const getUrl = async (str: string) => {
     const path = await resolveResource('Config.ini')
@@ -12,13 +13,13 @@ export const getUrl = async (str: string) => {
 
     const INIData = Utils.parseINIString(config)
     let severUrl = BasicConfig.ServerUrl
-    let tenantId = BasicConfig.TenantId
+    let tenantId = sse.tenantId || BasicConfig.TenantId
     if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].ServerUrl) {
         severUrl = INIData['ONCHAIN'].ServerUrl
     }
-    if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TenantId) {
-        tenantId = INIData['ONCHAIN'].TenantId
-    }
+    // if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TenantId) {
+    //     tenantId = INIData['ONCHAIN'].TenantId
+    // }
 
     if (str.startsWith('/opendata')) {
         return {

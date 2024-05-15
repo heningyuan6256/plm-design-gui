@@ -87,8 +87,8 @@
       "windows": {
         "wix": {
           "language": "zh-CN",
-          "bannerPath": "./banner.png",
-          "dialogImagePath":"./dialogImage.png",
+          "bannerPath": "./banner.bmp",
+          "dialogImagePath":"./dialogImage.bmp",
           "fragmentPaths": ["solidworks_addIn.wxs"],
           "componentRefs": ["MyFragmentRegistryEntries"]
         },
