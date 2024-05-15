@@ -4,6 +4,7 @@ import userReducer from "./user";
 import networkReducer from "./network";
 import loadingReducer from "./loading";
 import bomReducer from './bom'
+import MessageReducer from './message'
 // import mqttReducer from "./mqtt";
 
 export default configureStore({
@@ -11,6 +12,7 @@ export default configureStore({
     counter: counterReducer,
     user: userReducer,
     network: networkReducer,
+    message: MessageReducer,
     loading: loadingReducer,
     // mqtt: mqttReducer,
     bom: bomReducer

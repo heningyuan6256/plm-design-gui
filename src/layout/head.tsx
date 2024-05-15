@@ -18,6 +18,7 @@ import { mqttClient } from "../utils/MqttService";
 
 const Head: FC = () => {
   const [isMaximized, setisMaximized] = useState<boolean>(false);
+  const [fixed, setFixed] = useState(false)
 
   useEffect(() => {
     const win = getCurrent();
@@ -80,6 +81,25 @@ const Head: FC = () => {
       <div></div>
       <div></div>
       <div className='scale-75'>
+      {/* <PlmIcon
+          name="tips"
+          onClick={async () => {
+            // const data = await invoke("call_dynamic");
+
+            // console.log(data, 'data');
+            appWindow.minimize();
+          }}
+          className="text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton text-sm"
+        ></PlmIcon> */}
+        <PlmIcon
+          name="thumbtack"
+          onClick={async () => {
+            const fix = !fixed
+            setFixed(fix)
+            appWindow.setAlwaysOnTop(fix)
+          }}
+          className={`${fixed ? 'shadow-2xl bg-hoverHeadButton': ''} text-sm text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton`}
+        ></PlmIcon>
         <PlmIcon
           name="minimize"
           onClick={async () => {
@@ -88,17 +108,17 @@ const Head: FC = () => {
             // console.log(data, 'data');
             appWindow.minimize();
           }}
-          className="text-xs text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
+          className="text-sm text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
         <PlmIcon
           name={isMaximized ? "reduce" : "amplify"}
           onClick={() => appWindow.toggleMaximize()}
-          className="text-xs text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
+          className="text-sm text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
         <PlmIcon
           name="close"
           // onClick={() => exit()}
-          onClick={() =>  {
+          onClick={() => {
             mqttClient.publish({
               type: CommandConfig.onchain_path,
               input_data: PathConfig.login,
@@ -108,9 +128,9 @@ const Head: FC = () => {
             });
             setTimeout(() => {
               appWindow.close()
-            },200)
+            }, 200)
           }}
-          className="text-xs text-white cursor-pointer hover:shadow-2xl hover:bg-hoverHeadButton"
+          className="text-sm text-white cursor-pointer hover:shadow-2xl hover:bg-hoverHeadButton"
         ></PlmIcon>
       </div>
     </div>

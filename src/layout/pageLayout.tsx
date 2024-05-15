@@ -27,6 +27,7 @@ import { message } from "antd";
 import { setLoading } from "../models/loading";
 import { useAsyncEffect, useMemoizedFn, useMount } from "ahooks";
 import { invoke } from "@tauri-apps/api";
+import { fetchMessageData } from "../models/message";
 interface LayoutProps {
   children?: React.ReactNode;
 }
@@ -225,6 +226,16 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
       itemCode: "10001006",
     });
   });
+
+  useAsyncEffect(async() => {
+    if(user.id){
+      dispatch(fetchMessageData({
+        parInsId: user.id,
+        pageNo: "1",
+        pageSize: "1000"
+      }) as any)
+    }
+  }, [user])
 
   useMount(() => {
     // const command = new Command(

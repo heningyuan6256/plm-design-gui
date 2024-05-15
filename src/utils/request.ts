@@ -73,19 +73,19 @@ class Request {
         this.interceptors.request.headers.Authorization = token
     };
 
-    post = (url: string, data: Record<string, any>) => {
+    post = (url: string, data: any) => {
         return new Promise(async (resolve, reject) => {
-            const requestBody = { ...data, ...this.interceptors.request.body };
             const requestHeaders = { ...this.interceptors.request.headers };
             this.interceptors.request.use();
             const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
-            console.log({ ...requestBody, tenantId: tenantId }, "postData")
+            const requestBody = (data instanceof Array) ? data : { ...data, ...this.interceptors.request.body, tenantId: tenantId };
+            console.log(requestBody,'requestBody')
             http
                 .fetch(serverUrl, {
                     headers: requestHeaders,
                     method: "POST",
                     // 常规的json格式请求体发送
-                    body: http.Body.json({ ...requestBody, tenantId: tenantId }),
+                    body: http.Body.json(requestBody),
                 })
                 .then((res) => {
                     // res为请求成功的回调数据

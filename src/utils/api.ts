@@ -294,7 +294,7 @@ const API = {
   /**
    * 发送消息
    */
-  sendMessage: (cmd: string, to: string, userId: string, message:string) => {
+  sendMessage: (cmd: string, to: string, userId: string, message: string) => {
     return new Promise(async (resolve, reject) => {
       const formData = new FormData()
       formData.append("cmd", cmd)
@@ -304,7 +304,43 @@ const API = {
       const { tenantId: tenantId } = await getUrl("/sse")
       resolve(NewRequest.postFormData(`/event/send/${tenantId}`, formData))
     })
-  }
+  },
+  /**
+  * 获取聊天数据
+  */
+  getChatData: (data: {
+    parInsId: string,
+    pageNo: string,
+    pageSize: string
+  }) => {
+    return NewRequest.get('/pdm/cad/msgs', data)
+  },
+
+  /**
+  * 添加聊天消息
+  */
+  postMessageData: (data: {
+    createBy: string,
+    msgContent: string,
+    msgStatus: boolean,
+    parInsId: string
+  }[]) => {
+    return NewRequest.post('/pdm/cad/msg', data)
+  },
+
+  /**
+  * 已读聊天消息
+  */
+   readMessageData: (ids: string) => {
+    return NewRequest.put('/pdm/cad/msgs', {ids: ids})
+  },
+
+  //  /**
+  // * 删除聊天消息
+  // */
+  //  readMessageData: (ids: string) => {
+  //   return NewRequest.put('/pdm/cad/msgs', {ids: ids})
+  // },
 };
 
 export default API;

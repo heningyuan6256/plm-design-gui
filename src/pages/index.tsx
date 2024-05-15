@@ -72,6 +72,8 @@ import { metadata } from "../utils/fs_extra";
 import { sse } from "../utils/SSEService";
 import { confirm } from "@tauri-apps/api/dialog";
 import { openDesign } from "../layout/pageLayout";
+import { readPermission } from "../components/PlmMosaic";
+import { fetchMessageData } from "../models/message";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
@@ -620,9 +622,6 @@ const index = () => {
       const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
       const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
 
-      console.log(judgeFileResult.result, 'judgeFileResult.result');
-
-
       // 为每一个赋值id属性
       // 判断有实例在系统中
       if (judgeFileResult.result) {
@@ -1040,14 +1039,38 @@ const index = () => {
       insSize: String(row.FileSize),
       insName: row.file.onChain.Description,
     })
-      .then((res) => {
+      .then(async (res) => {
         updateSingleData(row);
         dispatch(setLoading(false));
+
+        const {
+          result: { records },
+        }: any = await API.queryInstanceTab({
+          instanceId: row.file.onChain.insId,
+          itemCode: BasicsItemCode.file,
+          pageNo: "1",
+          pageSize: "500",
+          tabCode: "10002009",
+          tabCodes: "10002009",
+          tenantId: sse.tenantId || "719",
+          userId: user.id,
+          // version: row.Version,
+          // versionOrder: row.file.onChain.Revision,
+        });
+
+        const revision = row.file.onChain.Revision.replace("(", "").replace(")", "")
+
+        const params = records.filter((item:any) => readPermission(item.createName)).map((item: any) => {
+          return { createBy: user.id, parInsId: item.createName, msgStatus: false, msgContent: `${user.name} 已将 ${row.file.onChain.Description} 更新成最新的版次 ${revision}` }
+        })
+
+        API.postMessageData(params)
+
         API.sendMessage("ChildfileVersionOrderUpdate", "*", user.id, JSON.stringify({
           instance: {
             insId: row.insId,
             insDesc: row.file.onChain.Description,
-            insVersionOrderUnbound: row.file.onChain.Revision.replace("(", "").replace(")", "")
+            insVersionOrderUnbound: revision
           },
           from: user.name
         }))
@@ -1111,10 +1134,21 @@ const index = () => {
 
   const ChildfileVersionOrderUpdate = useMemoizedFn((data: any) => {
     let { instance = {}, from } = JSON.parse(data)
-    console.log(instance, 'instance')
+    if(from === user.name) {
+      return
+    }
     const childLevelData = leftData[0]?.children || []
     if (childLevelData.find((item: any) => item?.file?.onChain?.insId == instance.insId)) {
-      confirm(`${from} 已将 ${instance.insDesc} 更新成最新的版次 ${instance.insVersionOrderUnbound} , 是否要更新本地文件`, { title: '文件更新', type: 'warning' }).then(async res => {
+      const content = `${from} 已将 ${instance.insDesc} 更新成最新的版次 ${instance.insVersionOrderUnbound} , 是否要更新本地文件`
+      dispatch(fetchMessageData({
+        parInsId: user.id,
+        pageNo: "1",
+        pageSize: "1000"
+      }) as any)
+      confirm(content, { title: '文件更新', type: 'warning' }).then(async res => {
+        if(!res){
+          return
+        }
         await openDesign({
           loading: () => {
             dispatch(setLoading(true));
@@ -1128,7 +1162,7 @@ const index = () => {
           itemCode: "10001006",
           extra: {
             onEvent: async (path) => {
-              await invoke("open_designer",{path:`${path.substring(0, path.lastIndexOf('\\'))}"`})
+              await invoke("open_designer", { path: `${path.substring(0, path.lastIndexOf('\\'))}"` })
               // openFileDialog({
               //   defaultPath: path
               // })

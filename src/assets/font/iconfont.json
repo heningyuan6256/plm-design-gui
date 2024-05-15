@@ -6,6 +6,34 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "26172642",
+      "name": "提示",
+      "font_class": "tips",
+      "unicode": "e70a",
+      "unicode_decimal": 59146
+    },
+    {
+      "icon_id": "40354138",
+      "name": "front-help mini",
+      "font_class": "a-front-helpmini",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "40354091",
+      "name": "thumbtack",
+      "font_class": "thumbtack",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "36990372",
+      "name": "fail",
+      "font_class": "fail",
+      "unicode": "e739",
+      "unicode_decimal": 59193
+    },
+    {
       "icon_id": "36679599",
       "name": "success",
       "font_class": "success",

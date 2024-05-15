@@ -19,13 +19,14 @@ import { useSelector } from "react-redux";
 import { invoke } from "@tauri-apps/api";
 import PlmModal from "../components/PlmModal";
 import Info from "../pages/info";
-import { message } from "antd";
+import { Badge, message } from "antd";
 import { Utils } from "../utils";
 
 const left: FC = () => {
   const [hoverButton, setHoverButton] = useState<string>("");
   const [infoVisible, setInfoVisible] = useState<boolean>(false);
   const { value: bom } = useSelector((state: any) => state.bom);
+  const { unReadCount } = useSelector((state: any) => state.message);
   const navigate = useNavigate();
   const location = useLocation();
   // // 监听路由
@@ -96,13 +97,13 @@ const left: FC = () => {
       path: "/home/id",
       location: "left",
     },
-    // {
-    //   title: "聊天",
-    //   icon: messageImg,
-    //   hoverIcon: messageImgHover,
-    //   path: "/message",
-    //   location: "right",
-    // },
+    {
+      title: "聊天",
+      icon: messageImg,
+      hoverIcon: messageImgHover,
+      path: "/message",
+      location: "right",
+    },
     {
       title: "属性映射",
       icon: menuSetting,
@@ -117,6 +118,15 @@ const left: FC = () => {
     return item
   });
   const renderToolItem = (item: any) => {
+    const itemNode = <img
+      className="w-4"
+      src={
+        item.path === hoverButton || location.pathname == item.path || location.pathname.indexOf(item.path) != -1
+          ? item.hoverIcon
+          : item.icon
+      }
+      alt=""
+    />
     return (
       <div
         key={item.path}
@@ -141,15 +151,11 @@ const left: FC = () => {
           setHoverButton("");
         }}
       >
-        <img
-          className="w-4"
-          src={
-            item.path === hoverButton || location.pathname == item.path || location.pathname.indexOf(item.path) != -1
-              ? item.hoverIcon
-              : item.icon
-          }
-          alt=""
-        />
+        {
+          item.path === '/message' ? <Badge count={unReadCount} size="small">
+            {itemNode}
+          </Badge> : itemNode
+        }
       </div>
     );
   };

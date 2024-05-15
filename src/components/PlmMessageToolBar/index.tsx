@@ -8,7 +8,8 @@ import cancelcheckin from "../../assets/image/topcancelcheckin.svg";
 import checkout from "../../assets/image/topcheckin.svg";
 import checkin from "../../assets/image/topcheckout.svg";
 
-import upload from "../../assets/image/topupload.svg";
+import Delete from "../../assets/image/delete.svg";
+import ReadBlue from "../../assets/image/readblue.svg";
 import record from "../../assets/image/toprecord.svg";
 // import quit from "../../assets/image/quit.svg";
 // import about from "../../assets/image/topabout.svg";
@@ -40,8 +41,8 @@ const PlmMessageToolBar: FC<PlmToolBarProps> = (props) => {
     <div className="w-full  py-3.5 flex h-76 border-b border-outBorder">
       <div className="px-4 border-r border-r-outBorder">
         <div className="flex gap-3 mb-1">
-          {renderButton(upload, "已读", "upload")}
-          {renderButton(upload, "删除", "upload")}
+          {renderButton(ReadBlue, "已读", "read")}
+          {renderButton(Delete, "删除", "delete")}
         </div>
         <div className="scale-90 text-xs text-littleGrey text-center">
           操作
