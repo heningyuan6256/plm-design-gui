@@ -18,6 +18,11 @@ use serde_urlencoded;
 use tauri::{utils::config::AppUrl, WindowUrl};
 use tauri::{CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
 
+use crate::{
+    utils::{set_window_shadow}
+  };
+  
+
 #[derive(Clone, serde::Serialize)]
 struct Payload {
     args: Vec<String>,
