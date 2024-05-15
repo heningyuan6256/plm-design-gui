@@ -1127,10 +1127,11 @@ const index = () => {
           userId: user.id,
           itemCode: "10001006",
           extra: {
-            onEvent: (path) => {
-              openFileDialog({
-                defaultPath: path
-              })
+            onEvent: async (path) => {
+              await invoke("open_designer",{path:`${path.substring(0, path.lastIndexOf('\\'))}"`})
+              // openFileDialog({
+              //   defaultPath: path
+              // })
               // invoke("reveal_file", {
               //   path: path
               // })
