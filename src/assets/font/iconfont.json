@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "40359461",
+      "name": "bg-question",
+      "font_class": "bg-question",
+      "unicode": "e758",
+      "unicode_decimal": 59224
+    },
+    {
       "icon_id": "26172642",
       "name": "提示",
       "font_class": "tips",

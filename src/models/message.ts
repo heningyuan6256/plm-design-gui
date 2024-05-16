@@ -5,13 +5,14 @@ import { homeDir, resolveResource } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
 import { sse } from "../utils/SSEService";
 import { Utils } from "../utils";
+import { orderBy } from "lodash";
 
 export const fetchMessageData = createAsyncThunk<any, any>(
   "message/fetchData",
   async (data, { rejectWithValue }) => {
     try { 
       const response: any = await API.getChatData(data);
-      const records = (response.result.records || [])
+      const records = orderBy((response.result.records || []), ['msgStatus', "createTime"], ['asc', 'desc'])
       const count = records.filter((item:any) => !item.msgStatus).length
       return {
         data: records,

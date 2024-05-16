@@ -15,6 +15,7 @@ import { homeDir } from "@tauri-apps/api/path";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { exit } from "@tauri-apps/api/process";
 import { mqttClient } from "../utils/MqttService";
+import { open } from "@tauri-apps/api/shell";
 
 const Head: FC = () => {
   const [isMaximized, setisMaximized] = useState<boolean>(false);
@@ -81,16 +82,17 @@ const Head: FC = () => {
       <div></div>
       <div></div>
       <div className='scale-75'>
-      {/* <PlmIcon
-          name="tips"
+        <PlmIcon
+          name="bg-question"
           onClick={async () => {
+            open(`https://www.onchainplm.com/document`)
             // const data = await invoke("call_dynamic");
 
             // console.log(data, 'data');
-            appWindow.minimize();
+            // appWindow.minimize();
           }}
           className="text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton text-sm"
-        ></PlmIcon> */}
+        ></PlmIcon>
         <PlmIcon
           name="thumbtack"
           onClick={async () => {
@@ -98,7 +100,7 @@ const Head: FC = () => {
             setFixed(fix)
             appWindow.setAlwaysOnTop(fix)
           }}
-          className={`${fixed ? 'shadow-2xl bg-hoverHeadButton': ''} text-sm text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton`}
+          className={`${fixed ? 'shadow-2xl bg-hoverHeadButton' : ''} text-sm text-white cursor-pointer mr-3 hover:shadow-2xl hover:bg-hoverHeadButton`}
         ></PlmIcon>
         <PlmIcon
           name="minimize"

@@ -67,7 +67,7 @@ const Message: FC = () => {
                 title: '日期',
                 dataIndex: 'createTime',
                 render: (text: string, record: any) => {
-                    return text.split(" ")[0]
+                    return text
                 }
             },
             {
@@ -89,13 +89,21 @@ const Message: FC = () => {
                             parInsId: user.id,
                             pageNo: "1",
                             pageSize: "1000"
-                          }) as any)
+                        }) as any)
 
-                          antdMsg.success("操作成功")
+                        antdMsg.success("操作成功")
                         setSelectRows([])
                     })
                 } else if (val === 'delete') {
-
+                    API.delMessageData(selectRows.map((item: any) => item.id).join(',')).then(res => {
+                        dispatch(fetchMessageData({
+                            parInsId: user.id,
+                            pageNo: "1",
+                            pageSize: "1000"
+                        }) as any)
+                        antdMsg.success("操作成功")
+                        setSelectRows([])
+                    })
                 }
             }}></PlmMessageToolBar>
             <div className='px-2 py-2'>

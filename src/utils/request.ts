@@ -145,6 +145,30 @@ class Request {
         });
     };
 
+    delete = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
+        return new Promise(async (resolve, reject) => {
+            const requestQuery = { ...data, ...this.interceptors.request.body };
+            const requestHeaders = { ...this.interceptors.request.headers };
+            this.interceptors.request.use();
+            const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
+            http
+                .fetch(serverUrl, {
+                    headers: requestHeaders,
+                    method: "DELETE",
+                    // 常规的json格式请求体发送
+                    query: { ...requestQuery, tenantId: tenantId },
+                    ...headers
+                })
+                .then((res) => {
+                    resolve(this.interceptors.response(res));
+                })
+                .catch((err) => {
+                    console.log(url, data, headers, err, 'err')
+                    reject(err);
+                });
+        });
+    };
+
     postPut = (url: string, data: Record<string, any>, headers: Record<string, any> = {}) => {
         return new Promise(async (resolve, reject) => {
             const requestQuery = { ...data, ...this.interceptors.request.body };

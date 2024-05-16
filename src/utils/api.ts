@@ -335,6 +335,13 @@ const API = {
     return NewRequest.put('/pdm/cad/msgs', {ids: ids})
   },
 
+  /**
+  * 删除聊天消息
+  */
+    delMessageData: (ids: string) => {
+      return NewRequest.delete('/pdm/cad/msgs', {ids: ids})
+    },
+
   //  /**
   // * 删除聊天消息
   // */
