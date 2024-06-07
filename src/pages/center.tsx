@@ -281,9 +281,9 @@ const center: FC = () => {
       updateTenantId = updateTenantId.concat([
         `update pdm_system_user_strategy set status = 't' where type = '5'`,
         `update pdm_system_user_strategy set status = 't' where type = '2'`,
-        `update pdm_system_user_strategy set pw_need_capital = 't' where type = '1'`,
-        `update pdm_system_user_strategy set pw_need_special = 't' where type = '1'`,
-        `update pdm_system_attribute_base set readonly = '2' where apicode = 'SecurityClass'`,
+        `update pdm_system_user_strategy set pw_need_capital = 't' where type = '0'`,
+        `update pdm_system_user_strategy set pw_need_special = 't' where type = '0'`,
+        `update pdm_system_base_attribute set readonly = '2' where apicode = 'SecurityClass'`,
       ]);
     }
 
@@ -1581,7 +1581,7 @@ const center: FC = () => {
             </div>
             <div>全新超融合云原生</div>
             <div>产品全生命周期赋能平台</div>
-            <div className="absolute bottom-0 register_foot left-5">授权工具 - 版本3.0.0</div>
+            <div className="absolute bottom-0 register_foot left-5">授权工具 - 版本3.1.0</div>
           </div>
           <div
             className="flex-1 overflow-hidden relative"

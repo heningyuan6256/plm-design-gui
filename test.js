@@ -1177,7 +1177,7 @@ const center: FC = () => {
             <div>全新超融合云原生</div>
             <div>产品全生命周期赋能平台</div>
             <div className="absolute bottom-0 register_foot left-5">
-              授权工具 - 版本3.0.0
+              授权工具 - 版本4.0.0
             </div>
           </div>
           <div
