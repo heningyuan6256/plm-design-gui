@@ -89,12 +89,10 @@ const center: FC = () => {
   }, []);
 
   useMount(() => {
-    document
-      .getElementById("textRefId")
-      ?.addEventListener("mouseleave", (e) => {
-        //@ts-ignore
-        e.target?.blur();
-      });
+    document.getElementById("textRefId")?.addEventListener("mouseleave", (e) => {
+      //@ts-ignore
+      e.target?.blur();
+    });
 
     document.getElementById("textRefId")?.addEventListener("drop", (v: any) => {
       const e = v.dataTransfer.files;
@@ -181,43 +179,29 @@ const center: FC = () => {
     });
     return ciphertext.toString();
   };
-
   const updateModules = async ({ db }: { db: any }) => {
-    const modulesStatus = Utils.transformArrayToMap(
-      flatten(modules),
-      "id",
-      "status"
-    );
+    const modulesStatus = Utils.transformArrayToMap(flatten(modules), "id", "status");
 
     // 将数据加密塞入数据库 修改模块
-    const dbModules: any = await db.select(
-      "SELECT * FROM pdm_system_module",
-      []
-    );
+    const dbModules: any = await db.select("SELECT * FROM pdm_system_module", []);
     for (let i = 0; i < dbModules.length; i++) {
-      await db.execute(
-        `UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE apicode = $2`,
-        [
-          toSecret(
-            JSON.stringify({
-              apicode: dbModules[i]?.apicode,
-              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
-              active: modulesStatus[dbModules[i]?.apicode] === "on" ? "1" : "0",
-              kubeConfig: extraData.kubeConfig,
-            })
-          ),
-          dbModules[i].apicode,
-        ]
-      );
+      await db.execute(`UPDATE "public"."pdm_system_module" SET api_context = $1 WHERE apicode = $2`, [
+        toSecret(
+          JSON.stringify({
+            apicode: dbModules[i]?.apicode,
+            time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+            active: modulesStatus[dbModules[i]?.apicode] === "on" ? "1" : "0",
+            kubeConfig: extraData.kubeConfig,
+          })
+        ),
+        dbModules[i].apicode,
+      ]);
     }
 
-    const mgnt_tenants: any = await db.select(
-      "SELECT * FROM plm_mgnt_tenants",
-      []
-    );
+    const mgnt_tenants: any = await db.select("SELECT * FROM plm_mgnt_tenants", []);
     if (mgnt_tenants[0]) {
       await db.execute(
-        `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2, end_time = $3 WHERE org_id = $4`,
+        `UPDATE "public"."plm_mgnt_tenants" SET user_limit = $1, max_simultaneous_user = $2, end_time = $3, type = $4 WHERE org_id = $5`,
         [
           toSecret(
             JSON.stringify({
@@ -237,6 +221,13 @@ const center: FC = () => {
             JSON.stringify({
               time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
               endTime: `${extraData.period} 00:00:00`,
+              kubeConfig: extraData.kubeConfig,
+            })
+          ),
+          toSecret(
+            JSON.stringify({
+              time: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+              type: `${extraData.isWar ? "civil" : ""}`,
               kubeConfig: extraData.kubeConfig,
             })
           ),
@@ -262,7 +253,7 @@ const center: FC = () => {
     let userId = extraData.workNo;
     let userEmail = extraData.email;
 
-    const updateTenantId = [
+    let updateTenantId = [
       `update pdm_user set tenant_id = '${tenantId}'`,
       `update pdm_user_attribute_base set attr_value = '${tenantId}' where attr_id = '1000101723473598409' or attr_id = '1000101723473598509'`,
       `update pdm_usergroup set tenant_id = '${tenantId}'`,
@@ -286,6 +277,15 @@ const center: FC = () => {
       `update pdm_user_attribute_base set attr_value = '${userId}' where attr_id = '1000101723473598414' and instance_id = '1535178992594558027'`,
       `update pdm_user_attribute_base set attr_value = '${userEmail}' where attr_id = '1000101723473598402' and instance_id = '1535178992594558027'`,
     ];
+    if (extraData.isWar) {
+      updateTenantId = updateTenantId.concat([
+        `update pdm_system_user_strategy set status = 't' where type = '5'`,
+        `update pdm_system_user_strategy set status = 't' where type = '2'`,
+        `update pdm_system_user_strategy set pw_need_capital = 't' where type = '1'`,
+        `update pdm_system_user_strategy set pw_need_special = 't' where type = '1'`,
+        `update pdm_system_attribute_base set readonly = '2' where apicode = 'SecurityClass'`,
+      ]);
+    }
 
     for (let i = 0; i < updateTenantId.length; i++) {
       const sql = updateTenantId[i] + ";";
@@ -296,10 +296,7 @@ const center: FC = () => {
     // }
   };
 
-  const initEs = async (
-    { account, password, address, port, name, env }: any,
-    db: any
-  ) => {
+  const initEs = async ({ account, password, address, port, name, env }: any, db: any) => {
     //初始化es
     const date = new Date();
     const year = date.getFullYear();
@@ -862,85 +859,82 @@ const center: FC = () => {
     const syncInstance = () => {
       return new Promise((resolve, reject) => {
         http
-          .fetch(
-            `http://${address}:9220/${env}_${extraData.tenantId}_${today}/_doc/1535178992594558027?refresh`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
+          .fetch(`http://${address}:9220/${env}_${extraData.tenantId}_${today}/_doc/1535178992594558027?refresh`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: http.Body.json({
+              insId: "1535178992594558027",
+              rid: "1600698053558304",
+              productId: "",
+              productName: "",
+              standardPartId: "",
+              itemCode: 10001017,
+              itemName: "用户",
+              number: `${extraData.name}(${extraData.workNo})`,
+              insDesc: `${extraData.email}`,
+              objectId: "1000101700534091777",
+              objectApicode: "user",
+              objectName: "用户",
+              insVersionOrder: "1",
+              insVersion: "Draft",
+              insVersionOrderUnbound: "1",
+              insVersionUnbound: "Draft",
+              statusName: "启用",
+              archivingStatus: "",
+              createName: "1535178992594558027",
+              createDepart: "",
+              createTime: "2022-07-18 16:36:09",
+              updateName: "",
+              updateTime: "1970-01-01 08:00:00",
+              affectedIn: "",
+              publishTime: null,
+              insBom: false,
+              checkout: false,
+              priority: false,
+              versionManager: "",
+              lifecycle: {
+                id: "",
+                apicode: "",
+                name: "",
+                showName: "",
+                color: "",
+                status: false,
+                bomRule: "",
+                sort: 0,
+                code: 0,
+                isBase: false,
+                objectShowName: "",
+                objectBomRule: "",
               },
-              body: http.Body.json({
-                insId: "1535178992594558027",
-                rid: "1600698053558304",
-                productId: "",
-                productName: "",
-                standardPartId: "",
-                itemCode: 10001017,
-                itemName: "用户",
-                number: `${extraData.name}(${extraData.workNo})`,
-                insDesc: `${extraData.email}`,
-                objectId: "1000101700534091777",
-                objectApicode: "user",
-                objectName: "用户",
-                insVersionOrder: "1",
-                insVersion: "Draft",
-                insVersionOrderUnbound: "1",
-                insVersionUnbound: "Draft",
-                statusName: "启用",
-                archivingStatus: "",
-                createName: "1535178992594558027",
-                createDepart: "",
-                createTime: "2022-07-18 16:36:09",
-                updateName: "",
-                updateTime: "1970-01-01 08:00:00",
-                affectedIn: "",
-                publishTime: null,
-                insBom: false,
-                checkout: false,
-                priority: false,
-                versionManager: "",
-                lifecycle: {
-                  id: "",
-                  apicode: "",
-                  name: "",
-                  showName: "",
-                  color: "",
-                  status: false,
-                  bomRule: "",
-                  sort: 0,
-                  code: 0,
-                  isBase: false,
-                  objectShowName: "",
-                  objectBomRule: "",
-                },
-                workflow: {
-                  changeId: "",
-                  changeNumber: "",
-                  changeItemCode: 0,
-                  changeTypeName: "",
-                  wfId: "",
-                  wfName: "",
-                  wfDefId: "",
-                  wfDefName: "",
-                  wfIsEnd: false,
-                  wfIsCancel: false,
-                  wfIsPublish: false,
-                  crtNodeId: "",
-                  crtNodeName: "",
-                  crtNodeClazz: "",
-                  crtNodeIntoTime: null,
-                  waitingApprovalObjectInstanceIds: "",
-                },
-                inProcessAttributes: [],
-                snapshotAttributes: [],
-                relations: {
-                  name: "instance",
-                  parent: null,
-                },
-              }),
-            }
-          )
+              workflow: {
+                changeId: "",
+                changeNumber: "",
+                changeItemCode: 0,
+                changeTypeName: "",
+                wfId: "",
+                wfName: "",
+                wfDefId: "",
+                wfDefName: "",
+                wfIsEnd: false,
+                wfIsCancel: false,
+                wfIsPublish: false,
+                crtNodeId: "",
+                crtNodeName: "",
+                crtNodeClazz: "",
+                crtNodeIntoTime: null,
+                waitingApprovalObjectInstanceIds: "",
+              },
+              inProcessAttributes: [],
+              snapshotAttributes: [],
+              relations: {
+                name: "instance",
+                parent: null,
+              },
+            }),
+          })
           .then((response) => {
             console.log(response);
             return response;
@@ -998,19 +992,15 @@ const center: FC = () => {
 
     const attrArray = [
       //@ts-ignore
-      (await db.select("select * from pdm_instance_attribute_whererole")).map(
-        (item: any) => {
-          item.tabCode = "10002025";
-          return item;
-        }
-      ),
+      (await db.select("select * from pdm_instance_attribute_whererole")).map((item: any) => {
+        item.tabCode = "10002025";
+        return item;
+      }),
       //@ts-ignore
-      (await db.select("select * from pdm_user_attribute_base")).map(
-        (item: any) => {
-          item.tabCode = "10002001";
-          return item;
-        }
-      ),
+      (await db.select("select * from pdm_user_attribute_base")).map((item: any) => {
+        item.tabCode = "10002001";
+        return item;
+      }),
       ,
     ];
 
@@ -1061,14 +1051,7 @@ const center: FC = () => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  const initNebula = async ({
-    account,
-    password,
-    address,
-    port,
-    name,
-    env,
-  }: any) => {
+  const initNebula = async ({ account, password, address, port, name, env }: any) => {
     let cookies = "";
 
     const fetchNebulaCookie = async () => {
@@ -1173,9 +1156,7 @@ const center: FC = () => {
 
     const spaces = spacesWrapper?.data?.tables || [];
 
-    const hasSapce = spaces.find(
-      (item: any) => item.Name === `tenant_${env}_${extraData.tenantId}`
-    );
+    const hasSapce = spaces.find((item: any) => item.Name === `tenant_${env}_${extraData.tenantId}`);
 
     if (hasSapce) {
       return;
@@ -1292,14 +1273,7 @@ const center: FC = () => {
     }
   };
 
-  const updateMinio = async ({
-    account,
-    password,
-    address,
-    port,
-    name,
-    env,
-  }: any) => {
+  const updateMinio = async ({ account, password, address, port, name, env }: any) => {
     const minioClient = new minio.Client({
       endPoint: `${address}`,
       port: 9101,
@@ -1590,15 +1564,9 @@ const center: FC = () => {
   }
 
   return (
-    <PlmLoading
-      loading={isLoadingOpen}
-      loadingChildren={<ProgressCircle aria-label="Loading…" isIndeterminate />}
-    >
+    <PlmLoading loading={isLoadingOpen} loadingChildren={<ProgressCircle aria-label="Loading…" isIndeterminate />}>
       <div className="w-full h-full flex items-center justify-center py-5 pr-5 rounded-lg relative">
-        <div
-          data-tauri-drag-region
-          className="absolute top-0 w-full h-4 z-10"
-        ></div>
+        <div data-tauri-drag-region className="absolute top-0 w-full h-4 z-10"></div>
         <div className="flex w-full overflow-hidden h-full">
           <div
             className="flex justify-center items-center register_title flex-col overflow-hidden relative"
@@ -1613,9 +1581,7 @@ const center: FC = () => {
             </div>
             <div>全新超融合云原生</div>
             <div>产品全生命周期赋能平台</div>
-            <div className="absolute bottom-0 register_foot left-5">
-              授权工具 - 版本3.0.0
-            </div>
+            <div className="absolute bottom-0 register_foot left-5">授权工具 - 版本3.0.0</div>
           </div>
           <div
             className="flex-1 overflow-hidden relative"
@@ -1626,10 +1592,7 @@ const center: FC = () => {
             }}
           >
             {!viewDetail && (
-              <div
-                className="flex absolute"
-                style={{ left: "20px", top: "5px" }}
-              >
+              <div className="flex absolute" style={{ left: "20px", top: "5px" }}>
                 {tabList.map((item) => {
                   const isCurrent = step == item.value;
                   return (
@@ -1652,15 +1615,7 @@ const center: FC = () => {
                         }}
                       >
                         <Image
-                          src={
-                            isCurrent
-                              ? item.value == "1"
-                                ? blue1
-                                : blue2
-                              : item.value == "1"
-                              ? lgBlue1
-                              : lgBlue2
-                          }
+                          src={isCurrent ? (item.value == "1" ? blue1 : blue2) : item.value == "1" ? lgBlue1 : lgBlue2}
                           width={12}
                         ></Image>
                         {/* {item.value} */}
@@ -1674,10 +1629,7 @@ const center: FC = () => {
                         {item.label}
                       </span>
                       {isCurrent ? (
-                        <div
-                          className="bg-primary w-full absolute"
-                          style={{ height: "2px", bottom: "-2px" }}
-                        ></div>
+                        <div className="bg-primary w-full absolute" style={{ height: "2px", bottom: "-2px" }}></div>
                       ) : (
                         <></>
                       )}
@@ -1687,10 +1639,7 @@ const center: FC = () => {
               </div>
             )}
 
-            <div
-              className="absolute top-0 right-0 toolbar"
-              style={{ lineHeight: "12px" }}
-            >
+            <div className="absolute top-0 right-0 toolbar" style={{ lineHeight: "12px" }}>
               <PlmIcon
                 style={{ color: "#DFE9F5", fontSize: "12px" }}
                 name="minimize"
@@ -1736,10 +1685,7 @@ const center: FC = () => {
                       >
                         <Form>
                           <div className="flex overflow-hidden">
-                            <div
-                              className="flex-1 overflow-hidden"
-                              style={{ paddingRight: "10px" }}
-                            >
+                            <div className="flex-1 overflow-hidden" style={{ paddingRight: "10px" }}>
                               <Controller
                                 control={detailControl}
                                 name="loginName"
@@ -1801,10 +1747,7 @@ const center: FC = () => {
                             </div>
                           </div>
                           <div className="flex overflow-hidden">
-                            <div
-                              className="flex-1 overflow-hidden"
-                              style={{ paddingRight: "10px" }}
-                            >
+                            <div className="flex-1 overflow-hidden" style={{ paddingRight: "10px" }}>
                               <Controller
                                 control={detailControl}
                                 name="userCount"
@@ -1889,10 +1832,7 @@ const center: FC = () => {
                 ) : (
                   <Form onSubmit={handleSubmit(onSubmit)}>
                     <div className="flex overflow-hidden">
-                      <div
-                        className="flex-1 overflow-hidden"
-                        style={{ paddingRight: "10px" }}
-                      >
+                      <div className="flex-1 overflow-hidden" style={{ paddingRight: "10px" }}>
                         <Controller
                           control={control}
                           name="address"
@@ -1903,18 +1843,12 @@ const center: FC = () => {
                           }) => (
                             <div className="overflow-hidden">
                               <FormLabel value="服务器地址:"></FormLabel>
-                              <IPut
-                                defaultValue={value}
-                                onChange={onChange}
-                              ></IPut>
+                              <IPut defaultValue={value} onChange={onChange}></IPut>
                             </div>
                           )}
                         />
                       </div>
-                      <div
-                        className="overflow-hidden w-24"
-                        style={{ marginRight: "10px" }}
-                      >
+                      <div className="overflow-hidden w-24" style={{ marginRight: "10px" }}>
                         <Controller
                           control={control}
                           name="port"
@@ -1947,11 +1881,7 @@ const center: FC = () => {
                           }) => (
                             <Fragment>
                               <FormLabel value="环境:"></FormLabel>
-                              <TextField
-                                value={value}
-                                onChange={onChange}
-                                marginTop={"8px"}
-                              />
+                              <TextField value={value} onChange={onChange} marginTop={"8px"} />
                             </Fragment>
                           )}
                         />
@@ -1959,10 +1889,7 @@ const center: FC = () => {
                     </div>
 
                     <div className="flex overflow-hidden">
-                      <div
-                        className="flex-1 overflow-hidden"
-                        style={{ paddingRight: "10px" }}
-                      >
+                      <div className="flex-1 overflow-hidden" style={{ paddingRight: "10px" }}>
                         <Controller
                           control={control}
                           name="account"
@@ -1973,20 +1900,12 @@ const center: FC = () => {
                           }) => (
                             <Fragment>
                               <FormLabel value="数据库用户:"></FormLabel>
-                              <TextField
-                                value={value}
-                                placeholder="请输入账号"
-                                onChange={onChange}
-                                marginTop={"8px"}
-                              />
+                              <TextField value={value} placeholder="请输入账号" onChange={onChange} marginTop={"8px"} />
                             </Fragment>
                           )}
                         />
                       </div>
-                      <div
-                        className="flex-1 overflow-hidden"
-                        style={{ paddingRight: "10px" }}
-                      >
+                      <div className="flex-1 overflow-hidden" style={{ paddingRight: "10px" }}>
                         <Controller
                           control={control}
                           name="password"
@@ -2056,41 +1975,27 @@ const center: FC = () => {
                       control={control}
                       name="userCount"
                       rules={{ required: "userCount is required." }}
-                      render={({
-                        field: { name, value, onChange, onBlur, ref },
-                        fieldState: { invalid, error },
-                      }) => (
+                      render={({ field: { name, value, onChange, onBlur, ref }, fieldState: { invalid, error } }) => (
                         <div>
                           <div>
                             <FormLabel value="并发用户数:"></FormLabel>
                           </div>
 
-                          <TextField
-                            isReadOnly
-                            value={maxUser}
-                            onChange={onChange}
-                            marginTop={"8px"}
-                          />
+                          <TextField isReadOnly value={maxUser} onChange={onChange} marginTop={"8px"} />
                         </div>
                       )}
                     />
                     <Fragment>
                       <FormLabel value="模块:"></FormLabel>
                       <div style={{ maxHeight: "72px", overflow: "auto" }}>
-                        <table
-                          style={{ borderCollapse: "collapse", width: "100%" }}
-                          border={2}
-                        >
+                        <table style={{ borderCollapse: "collapse", width: "100%" }} border={2}>
                           <tbody>
                             {modules.map((row: any, index: number) => {
                               return (
                                 <tr key={index}>
                                   {row.map((col: any) => {
                                     return (
-                                      <td
-                                        key={col.desc}
-                                        style={{ border: "1px solid #ecedf0" }}
-                                      >
+                                      <td key={col.desc} style={{ border: "1px solid #ecedf0" }}>
                                         {col.desc}
                                       </td>
                                     );
@@ -2212,10 +2117,7 @@ const center: FC = () => {
                     control={keyControl}
                     name="secret_key"
                     rules={{ required: "password is required." }}
-                    render={({
-                      field: { name, value, onChange, onBlur, ref },
-                      fieldState: { invalid, error },
-                    }) => (
+                    render={({ field: { name, value, onChange, onBlur, ref }, fieldState: { invalid, error } }) => (
                       <Fragment>
                         <div className="mt-2">
                           <TextArea
@@ -2264,10 +2166,7 @@ const center: FC = () => {
             style={{ width: "240px", height: "198px" }}
           >
             <div className="absolute top-0 w-full h-4 z-10"></div>
-            <div
-              className="absolute toolbar z-20 top-2 right-2"
-              style={{ lineHeight: "12px" }}
-            >
+            <div className="absolute toolbar z-20 top-2 right-2" style={{ lineHeight: "12px" }}>
               <PlmIcon
                 style={{
                   color: "#DFE9F5",
