@@ -63,7 +63,7 @@
           Section="ONCHAIN"
           Name="Config.ini"
           Key="TusUrl"
-          Value="http://[IPPART5].[IPPART6].[IPPART7].[IPPART8]:1080/plm/files" 
+          Value="http://[IPPART1].[IPPART2].[IPPART3].[IPPART4]:1080/plm/files" 
         />
 
       </Component>

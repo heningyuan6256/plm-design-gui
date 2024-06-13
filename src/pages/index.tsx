@@ -72,7 +72,7 @@ import { metadata } from "../utils/fs_extra";
 import { sse } from "../utils/SSEService";
 import { confirm } from "@tauri-apps/api/dialog";
 import { openDesign } from "../layout/pageLayout";
-import { readPermission } from "../components/PlmMosaic";
+import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 import { fetchMessageData } from "../models/message";
 
 // import * as crypto from 'crypto';
@@ -735,11 +735,13 @@ const index = () => {
           return item
         }
       }).forEach((attr: any) => {
-        if (Object.keys(attrsMap).includes(attr.name)) {
-          pluginAttrs[attrsMap[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+        const fileAttrsMaps = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
+        const materialAttrsMaps = item.model_type === 'assembly' ? asmMaterialAttrsMap : prtMaterialAttrsMap
+        if (Object.keys(fileAttrsMaps).includes(attr.name)) {
+          pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
         }
-        if (Object.keys(asmMaterialAttrsMap).includes(attr.name)) {
-          materialPluginAttrs[asmMaterialAttrsMap[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+        if (Object.keys(materialAttrsMaps).includes(attr.name)) {
+          materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
         }
       });
       pluginAttrs["fileNameWithFormat"] = fileNameWithFormat;
@@ -767,15 +769,15 @@ const index = () => {
     dispatch(setLoading(false));
   };
 
-  const judgeFileCheckout = (row: any) => {
-    if (row.file.onChain.Revision == 1) {
+  const judgeFileCheckout = (row: any, isMaterial?:boolean) => {
+    if (row[isMaterial ? 'material': 'file'].onChain.Revision == 1) {
       return false;
     } else {
-      return row.file.onChain.checkOut;
+      return row[isMaterial ? 'material': 'file'].onChain.checkOut;
     }
   };
 
-  const updateSingleData = (row: any) => {
+  const updateSingleData = (row: any, isMaterial?: boolean) => {
     API.getInstanceInfoById({
       instanceId: row.insId,
       authType: "read",
@@ -785,11 +787,11 @@ const index = () => {
     }).then((res: any) => {
       res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
         const rowKey = getRowKey(row);
-        InstanceAttrsMap[rowKey].file.onChain[item.apicode] =
+        InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain[item.apicode] =
           res.result.readInstanceVo.attributes[item.id];
-        InstanceAttrsMap[rowKey].file.onChain.checkOut =
+        InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain.checkOut =
           res.result.readInstanceVo.checkout;
-        InstanceAttrsMap[rowKey].file.onChain.Revision =
+        InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain.Revision =
           res.result.readInstanceVo.insVersionOrder;
         setLeftData([...leftData]);
       });
@@ -816,18 +818,22 @@ const index = () => {
           userId: user.id,
           tenantId: sse.tenantId || "719",
         }).then((res: any) => {
-          row.file.onChain.checkOut = res.result.readInstanceVo.checkout;
-          row.file.onChain.Revision = res.result.readInstanceVo.insVersionOrder;
-          originCheckIn(row);
+          const data = centerData.find(item => getRowKey(item) == getRowKey(row))
+          if(!data) {
+            return
+          }
+          data.file.onChain.checkOut = res.result.readInstanceVo.checkout;
+          data.file.onChain.Revision = res.result.readInstanceVo.insVersionOrder;
+          originCheckIn(data);
         });
       });
     }
   };
 
-  const checkoutData = ({ row }: { row: any }) => {
+  const checkoutData = ({ row,isMaterial }: { row: any,isMaterial?:boolean }) => {
     // 判断当前文件是否签出
-    if (judgeFileCheckout(row)) {
-      message.error("当前文件已签出");
+    if (judgeFileCheckout(row, isMaterial)) {
+      message.error("当前实例已签出");
       dispatch(setLoading(false));
     } else {
       dispatch(setLoading(true));
@@ -835,10 +841,10 @@ const index = () => {
         checkoutBy: user.id,
         insId: row.insId,
         insSize: String(row.FileSize),
-        insName: row.file.onChain.Description,
+        insName: row[isMaterial ? 'material': 'file'].onChain.Description,
       })
         .then(() => {
-          updateSingleData(row);
+          updateSingleData(row, isMaterial);
           dispatch(setLoading(false));
         })
         .catch(() => {
@@ -847,15 +853,15 @@ const index = () => {
     }
   };
 
-  const cancelCheckoutData = ({ row }: { row: any }) => {
-    if (!judgeFileCheckout(row)) {
-      message.error("当前文件还未签出");
+  const cancelCheckoutData = ({ row, isMaterial }: { row: any,isMaterial?:boolean }) => {
+    if (!judgeFileCheckout(row, isMaterial)) {
+      message.error("当前实例还未签出");
       dispatch(setLoading(false));
     } else {
       dispatch(setLoading(true));
       API.cancelCheckout({ insId: row.insId })
         .then((res) => {
-          updateSingleData(row);
+          updateSingleData(row, isMaterial);
           dispatch(setLoading(false));
         })
         .catch(() => {
@@ -1084,13 +1090,51 @@ const index = () => {
       });
   };
 
-  const checkInData = async ({ row }: { row: any }) => {
-    if (!judgeFileCheckout(row)) {
+  const checkInData = async ({ row,isMaterial }: { row: any, isMaterial?:boolean }) => {
+    if (!judgeFileCheckout(row, isMaterial)) {
       dispatch(setLoading(false));
-      message.error("当前文件还未签出");
+      message.error("当前实例还未签出");
     } else {
       dispatch(setLoading(true));
-      originCheckIn(row);
+      if(isMaterial) {
+        //批量更新文件地址
+    // const updateInstances = [
+    //   {
+    //     id: row.material.onChain.insId,
+    //     itemCode: BasicsItemCode.material,
+    //     tabCode: "10002001",
+    //     insAttrs: materialAttrs.map((attr) => {
+    //         return {
+    //           ...attr,
+    //           value: row[attr.apicode],
+    //         }
+    //     }),
+    //     tenantId: sse.tenantId || "719",
+    //   },
+    // ];
+    // console.log(updateInstances, "签出签入更新模型的属性");
+
+    // if (updateInstances.length) {
+    //   await API.batchUpdate({
+    //     instances: updateInstances,
+    //     tenantId: sse.tenantId || "719",
+    //     userId: user.id,
+    //   });
+    // }
+
+        API.checkIn({
+          insId: row.insId,
+          insUrl: "",
+          insSize: String(row.FileSize),
+          insName: row.file.onChain.Description,
+        })
+          .then(async (res) => {
+            updateSingleData(row, isMaterial);
+            dispatch(setLoading(false));
+          })
+      } else {
+        originCheckIn(row);
+      }
     }
   };
 
@@ -2550,8 +2594,9 @@ const index = () => {
       }
     } else if (name === "checkin") {
       if (selectNode) {
-        const row = { ...selectNode, ...selectNode.file.onChain };
-        checkInData({ row: row });
+        const data  = centerData.find(item => getRowKey(item) == getRowKey(selectNode))
+        // const row = { ...selectNode, ...selectNode.file.onChain };
+        checkInData({ row: data });
       } else {
         message.error("请选择目标节点");
       }
@@ -2608,60 +2653,91 @@ const index = () => {
               item.apicode != "CheckOutUser" &&
               item.apicode != "CheckOutDate"
             ) {
-              // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
-              if (!pluginValue && onChainValue) {
-                return (
-                  <div className="text_line">
-                    {Utils.renderReadonlyItem({
+             // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
+             if ((pluginValue == '') && onChainValue) {
+              return (
+                <div className="text_line">
+                  {renderIsPlmMosaic({
+                    value:onChainValue,
+                    children:Utils.renderReadonlyItem({
                       apicode: item.apicode,
                       formitem: formitem,
                       value: onChainValue,
-                    })}
-                  </div>
-                );
-              }
-              // 如果判断设计工具的值有值，onChain没有值，则显示红色
-              if (pluginValue && !onChainValue) {
-                return (
-                  <div className="text-red-500">
-                    {Utils.renderReadonlyItem({
-                      apicode: item.apicode,
-                      formitem: formitem,
-                      value: pluginValue,
-                    })}
-                  </div>
-                );
-              }
-
-              return (
-                <div>
-                  <div className="text-red-500">
-                    {Utils.renderReadonlyItem({
-                      apicode: item.apicode,
-                      formitem: formitem,
-                      value: pluginValue,
-                    })}
-                  </div>
-                  <div className="text_line">
-                    {Utils.renderReadonlyItem({
-                      apicode: item.apicode,
-                      formitem: formitem,
-                      value: onChainValue,
-                    })}
-                  </div>
-                </div>
-              );
-            } else {
-              return (
-                <div>
-                  {Utils.renderReadonlyItem({
-                    apicode: item.apicode,
-                    formitem: formitem,
-                    value: onChainValue,
+                    })
                   })}
                 </div>
               );
             }
+            // 如果判断设计工具的值有值，onChain没有值，则显示红色
+            if (pluginValue && !onChainValue) {
+              return (
+                <div className="text-red-500">
+                  {renderIsPlmMosaic({
+                    value:pluginValue,
+                    children:Utils.renderReadonlyItem({
+                      apicode: item.apicode,
+                      formitem: formitem,
+                      value: pluginValue,
+                    })
+                  })}
+                </div>
+              );
+            }
+
+            if(pluginValue && onChainValue &&  pluginValue != onChainValue) {
+              return (
+                <div>
+                  <div className="text-red-500">
+                  {renderIsPlmMosaic({
+                      value:pluginValue,
+                      children:Utils.renderReadonlyItem({
+                        apicode: item.apicode,
+                        formitem: formitem,
+                        value: pluginValue,
+                      })
+                    })}
+                  </div>
+                  <div className="text_line">
+                  {renderIsPlmMosaic({
+                      value:onChainValue,
+                      children:Utils.renderReadonlyItem({
+                        apicode: item.apicode,
+                        formitem: formitem,
+                        value: onChainValue,
+                      })
+                    })}
+                  </div>
+                </div>
+              );
+            } 
+
+            return (
+              <div>
+                {renderIsPlmMosaic({
+                    value:onChainValue,
+                    children:Utils.renderReadonlyItem({
+                      apicode: item.apicode,
+                      formitem: formitem,
+                      value: onChainValue,
+                    })
+                  })}
+              </div>
+            );
+ 
+          } else {
+            return (
+              <div>
+                {renderIsPlmMosaic({
+                    value:onChainValue,
+                    children:Utils.renderReadonlyItem({
+                      apicode: item.apicode,
+                      formitem: formitem,
+                      value: onChainValue,
+                    })
+                  })}
+              </div>
+            );
+          }
           },
           FileSize: (text: string, record: any) => {
             return Utils.converBytes(Number(record.file.plugin.FileSize));
@@ -3029,15 +3105,15 @@ const index = () => {
               onClick={async (item) => {
                 if (item.tag === "checkout") {
                   materialSelectRows.length
-                    ? checkoutData({ row: materialSelectRows[0] })
+                    ? checkoutData({ row: materialSelectRows[0], isMaterial:true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "cancelCheckout") {
                   materialSelectRows.length
-                    ? cancelCheckoutData({ row: materialSelectRows[0] })
+                    ? cancelCheckoutData({ row: materialSelectRows[0], isMaterial:true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "checkIn") {
                   materialSelectRows.length
-                    ? checkInData({ row: materialSelectRows[0] })
+                    ? checkInData({ row: materialSelectRows[0], isMaterial:true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "fillDown") {
                   if (selectedCellLatest.current?.record) {
@@ -3106,7 +3182,8 @@ const index = () => {
                   }
                   setLeftData([...leftData]);
                 } else if (item.tag === "createIntance") {
-                  dispatch(setLoading(true));
+                  // dispatch(setLoading(true));
+                  setLogVisbile(true)
                   // 增加判断，所有的必填校验
 
                   const requiredColumns = materialColumn.filter((item: any) => {
@@ -3136,67 +3213,72 @@ const index = () => {
                         ),
                       ]}`
                     );
-                    dispatch(setLoading(false));
+                    setLogVisbile(false)
                     return false;
                   }
+                  try {
+                    const successInstances = await createInstance({
+                      itemCode: BasicsItemCode.material,
+                    });
+                    const {
+                      result: { records: designTabAttrs },
+                    }: any = await API.getInstanceAttrs({
+                      itemCode: BasicsItemCode.material,
+                      tabCode: "10002028",
+                    });
+  
+                    const setVal = (row: any, col: any) => {
+                      if (col.apicode === "ID") {
+                        return row.file.onChain.insId;
+                      } else if (col.apicode === "CorrespondingVersion") {
+                        return row.file.onChain.Version || "";
+                      } else {
+                        return "";
+                      }
+                    };
+                    const dealParams = Object.keys(successInstances).map(
+                      (item) => {
+                        return {
+                          affectedInstanceIds:
+                            InstanceAttrsMap[item].file.onChain.insId,
+                          id: successInstances[item].instanceId,
+                          itemCode: BasicsItemCode.material,
+                          tabCode: 10002028,
+                          tenantId: sse.tenantId || "719",
+                          userId: user.id,
+                          versionNumber: "Draft",
+                          rowList: [
+                            {
+                              insAttrs: designTabAttrs
+                                .filter((attr: any) => {
+                                  return ["ID", "CorrespondingVersion", "From"];
+                                })
+                                .map((attr: any) => {
+                                  return {
+                                    apicode: attr.apicode,
+                                    id: attr.id,
+                                    valueType: attr.valueType,
+                                    value: setVal(InstanceAttrsMap[item], attr),
+                                  };
+                                }),
+                            },
+                          ],
+                        };
+                      }
+                    );
+                    API.bindFileAndMaterial({
+                      tenantId: sse.tenantId || "719",
+                      userId: user.id,
+                      saveVos: dealParams,
+                    }).then((res) => {
+                      setLogVisbile(false)
+                      dealCurrentBom(designData);
+                    });
+                  } catch (error) {
+                    setLogVisbile(false)
+                  }
 
-                  const successInstances = await createInstance({
-                    itemCode: BasicsItemCode.material,
-                  });
-                  const {
-                    result: { records: designTabAttrs },
-                  }: any = await API.getInstanceAttrs({
-                    itemCode: BasicsItemCode.material,
-                    tabCode: "10002028",
-                  });
-
-                  const setVal = (row: any, col: any) => {
-                    if (col.apicode === "ID") {
-                      return row.file.onChain.insId;
-                    } else if (col.apicode === "CorrespondingVersion") {
-                      return row.file.onChain.Version || "";
-                    } else {
-                      return "";
-                    }
-                  };
-                  const dealParams = Object.keys(successInstances).map(
-                    (item) => {
-                      return {
-                        affectedInstanceIds:
-                          InstanceAttrsMap[item].file.onChain.insId,
-                        id: successInstances[item].instanceId,
-                        itemCode: BasicsItemCode.material,
-                        tabCode: 10002028,
-                        tenantId: sse.tenantId || "719",
-                        userId: user.id,
-                        versionNumber: "Draft",
-                        rowList: [
-                          {
-                            insAttrs: designTabAttrs
-                              .filter((attr: any) => {
-                                return ["ID", "CorrespondingVersion", "From"];
-                              })
-                              .map((attr: any) => {
-                                return {
-                                  apicode: attr.apicode,
-                                  id: attr.id,
-                                  valueType: attr.valueType,
-                                  value: setVal(InstanceAttrsMap[item], attr),
-                                };
-                              }),
-                          },
-                        ],
-                      };
-                    }
-                  );
-                  API.bindFileAndMaterial({
-                    tenantId: sse.tenantId || "719",
-                    userId: user.id,
-                    saveVos: dealParams,
-                  }).then((res) => {
-                    dispatch(setLoading(true));
-                    dealCurrentBom(designData);
-                  });
+                 
                 } else if (item.tag === "createBom") {
                   dispatch(setLoading(true));
                   // // 批量创建Bom结构
@@ -3216,6 +3298,7 @@ const index = () => {
                   icon: cancelcheckin,
                   tag: "cancelCheckout",
                 },
+                { name: "签入", icon: checkin, tag: "checkIn" },
                 { name: "向上填充", icon: fillup, tag: "fillUp" },
                 { name: "向下填充", icon: filldown, tag: "fillDown" },
               ]}
@@ -3230,6 +3313,13 @@ const index = () => {
               extraHeight={24}
               rowSelection={{
                 columnWidth: 19,
+                fixed: true,
+                selectedRowKeys: materialSelectRows.length
+                  ? materialSelectRows.map((item:any) => item?.id)
+                  : [],
+                onChange: (selectRowKeys, selectRows) => {
+                  setMaterialSelectRows([selectRows.pop()]);
+                },
               }}
               canselectcell
               onSelectCell={({ dataIndex, record }) => {
