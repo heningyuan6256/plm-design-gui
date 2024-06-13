@@ -6,7 +6,7 @@ export enum BasicConfig {
   setting = 'setting.json',
   User = "user.txt",
   /**设计工具连接地址*/
-  MqttConnectUrl = "ws://124.71.151.153:8085/mqtt",
+  MqttConnectUrl = "ws://192.168.0.104:8085/mqtt",
   /**设计工具dll名称*/
   pubgin_topic = "sw",
   /**设计工具dll版本*/
@@ -14,9 +14,9 @@ export enum BasicConfig {
   /**onchain topic*/
   onchain_topic = "client_plugin",
   /**server url*/
-  ServerUrl = "http://124.71.151.153:8068/plm",
+  ServerUrl = "http://192.168.0.101:8068/plm",
    /**文件服务器 url*/
-  TusUrl = "http://124.71.151.153:1080/plm/files",
+  TusUrl = "http://192.168.0.101:1080/plm/files",
   /**租户Id*/
   TenantId = "719",
 }

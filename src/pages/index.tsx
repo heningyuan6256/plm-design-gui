@@ -563,9 +563,13 @@ const index = () => {
           // data[i].node_name = numberData || data[i].node_name
           data[i].file_path = `D:\\TRIBON_Temp\\${Utils.generateSnowId()}\\${data[i].node_name}.Tribon`
         }
-
+        // 解决sw镜像文件以及阵列文件的问题
+        if(!data[i].file_path){
+          data.splice(i,1)
+          i--
+          continue
+        }
         const rowKey = getRowKey(data[i]);
-
         data[i].material = { onChain: {}, plugin: {} };
         data[i].file = { onChain: {}, plugin: {} };
 
@@ -1544,7 +1548,7 @@ const index = () => {
             }])
           })
           buildStructError = true
-          return
+          break
         }
         if (rowKey != getRowKeyOverWrite(leftData[0])) {
           struct[i].attrMap[structureAttrsMap["Qty"]] = dealArray.map[rowKey];
