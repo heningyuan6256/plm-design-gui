@@ -541,6 +541,13 @@ const index = () => {
     const fileObjectMap = await getMaterialTypeMap();
     setMaterialAttrs(totalMaterialAttrs);
     setAttrs(totalAttrs);
+    const fileColumns = await getColumns(totalAttrs)
+    const materialColumns =await getColumns(totalMaterialAttrs)
+    setFileColumn(fileColumns)
+    setMaterialColumn(materialColumns)
+
+    const fileColumnsListCodeMap = Utils.transformArrayToMap(fileColumns.filter((item:any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
+    const materialColumnsListCodeMap = Utils.transformArrayToMap(materialColumns.filter((item:any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
     // cad属性映射文件属性
     const attrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToFile);
     // cad属性映射文件属性
@@ -738,10 +745,32 @@ const index = () => {
         const fileAttrsMaps = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
         const materialAttrsMaps = item.model_type === 'assembly' ? asmMaterialAttrsMap : prtMaterialAttrsMap
         if (Object.keys(fileAttrsMaps).includes(attr.name)) {
-          pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+          if(fileColumnsListCodeMap[fileAttrsMaps[attr.name]]) {
+            const options = fileColumnsListCodeMap[fileAttrsMaps[attr.name]]?.props?.options || []
+            const actualValue = Utils.getLabelInOptions({
+              value: attr.defaultVal,
+              options: options,
+              needValue: true
+            })
+            pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : actualValue;
+          } else {
+            pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+          }
         }
         if (Object.keys(materialAttrsMaps).includes(attr.name)) {
-          materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+          //如果属性是列表值，则需要把值转成id，转不成id就给空
+          if(materialColumnsListCodeMap[materialAttrsMaps[attr.name]]) {
+            const options = materialColumnsListCodeMap[materialAttrsMaps[attr.name]]?.props?.options || []
+            const actualValue = Utils.getLabelInOptions({
+              value: attr.defaultVal,
+              options: options,
+              needValue: true
+            })
+            console.log(actualValue,'actualValue')
+            materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : actualValue;
+          } else {
+            materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+          }
         }
       });
       pluginAttrs["fileNameWithFormat"] = fileNameWithFormat;
@@ -2726,6 +2755,7 @@ const index = () => {
           item.valueType != "13" &&
           item.valueType != "14" &&
           item.valueType != "3" && 
+          item.listType !== '2' &&
           item.tabCode != '10002002'
       )
       .map((item) => {
@@ -2870,52 +2900,76 @@ const index = () => {
   const [materialColumn, setMaterialColumn] = useState<any[]>([]);
   const [fileColumn, setFileColumn] = useState<any[]>([]);
 
-  // 处理物料列头
-  useAsyncEffect(async () => {
-    const codeList = materialAttrs
-      .filter((item) => item.listCode)
-      .map((item) => {
+  const getColumns = async(attrs: any) => {
+    const codeList = attrs
+      .filter((item:any) => item.listCode)
+      .map((item:any) => {
         return {
           code: item.listCode,
           where: "",
         };
       });
+    let columns:any = []
     if (codeList.length) {
-      API.getList(codeList).then((res: any) => {
+      const resData:any = await API.getList(codeList)
         const map: any = {};
-        const result = res.result || [];
+        const result = resData.result || [];
         result.forEach((item: { listItems: any; code: string }) => {
           map[item.code] = Utils.adaptListItems(item.listItems) || [];
         });
-        setMaterialColumn(generalDealAttrs(materialAttrs, map) || []);
-      });
+        columns = generalDealAttrs(attrs, map) || []
     } else {
-      setMaterialColumn(generalDealAttrs(materialAttrs, {}) || []);
+      columns = generalDealAttrs(attrs, {}) || []
     }
-  }, [materialAttrs]);
+    return columns
+  }
 
-  // 处理文件列头
-  useAsyncEffect(async () => {
-    // alternatively, load a remote URL:
-    const codeList = Attrs.filter((item) => item.listCode).map((item) => {
-      return {
-        code: item.listCode,
-        where: "",
-      };
-    });
-    if (codeList.length) {
-      API.getList(codeList).then((res: any) => {
-        const map: any = {};
-        const result = res.result || [];
-        result.forEach((item: { listItems: any; code: string }) => {
-          map[item.code] = Utils.adaptListItems(item.listItems) || [];
-        });
-        setFileColumn(generalDealAttrs(Attrs, map) || []);
-      });
-    } else {
-      setFileColumn(generalDealAttrs(Attrs, {}) || []);
-    }
-  }, [Attrs]);
+  // 处理物料列头
+  // useAsyncEffect(async () => {
+  //   const codeList = materialAttrs
+  //     .filter((item) => item.listCode)
+  //     .map((item) => {
+  //       return {
+  //         code: item.listCode,
+  //         where: "",
+  //       };
+  //     });
+  //   if (codeList.length) {
+  //     API.getList(codeList).then((res: any) => {
+  //       const map: any = {};
+  //       const result = res.result || [];
+  //       result.forEach((item: { listItems: any; code: string }) => {
+  //         map[item.code] = Utils.adaptListItems(item.listItems) || [];
+  //       });
+  //       setMaterialColumn(generalDealAttrs(materialAttrs, map) || []);
+  //     });
+  //   } else {
+  //     setMaterialColumn(generalDealAttrs(materialAttrs, {}) || []);
+  //   }
+  // }, [materialAttrs]);
+
+  // // 处理文件列头
+  // useAsyncEffect(async () => {
+  //   // alternatively, load a remote URL:
+  //   const codeList = Attrs.filter((item) => item.listCode).map((item) => {
+  //     return {
+  //       code: item.listCode,
+  //       where: "",
+  //     };
+  //   });
+  //   if (codeList.length) {
+  //     API.getList(codeList).then((res: any) => {
+  //       const map: any = {};
+  //       const result = res.result || [];
+  //       result.forEach((item: { listItems: any; code: string }) => {
+  //         map[item.code] = Utils.adaptListItems(item.listItems) || [];
+  //       });
+  //       setFileColumn(generalDealAttrs(Attrs, map) || []);
+  //     });
+  //   } else {
+  //     setFileColumn(generalDealAttrs(Attrs, {}) || []);
+  //   }
+  // }, [Attrs]);
 
   // const materialCenterData: any = useMemo(() => {
   //   return centerData.map((item) => {

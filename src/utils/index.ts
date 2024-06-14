@@ -406,8 +406,9 @@ export class Utils {
       value: string;
       children?: string;
     };
+    needValue?: boolean
   }) => {
-    const { value, options, adaptor } = params;
+    const { value, options, adaptor, needValue } = params;
     const valueType = Object.prototype.toString.call(value);
 
     const isValid = (value: any) => {
@@ -426,13 +427,29 @@ export class Utils {
         const optionValue = childOptions[index][adaptor ? adaptor.value : 'value'];
         // 找到id === option.value
         if (valueType === '[object Array]') {
-          //@ts-ignore
-          if (value.includes(optionValue)) {
-            valueLabel.push(optionLabel);
+          if(needValue) {
+            //@ts-ignore
+            if (value.includes(optionLabel)) {
+              valueLabel.push(optionValue);
+            }
+          } else {
+            //@ts-ignore
+            if (value.includes(optionValue)) {
+              valueLabel.push(optionLabel);
+            }
           }
+         
         } else {
-          if (value === optionValue) {
-            valueLabel = optionLabel;
+          if(needValue) {
+            //@ts-ignore
+            if (value.includes(optionLabel)) {
+              valueLabel = optionValue
+            }
+          } else {
+            //@ts-ignore
+            if (value.includes(optionValue)) {
+              valueLabel = optionLabel
+            }
           }
         }
 
