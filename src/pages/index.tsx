@@ -1097,30 +1097,131 @@ const index = () => {
     } else {
       dispatch(setLoading(true));
       if(isMaterial) {
-        //批量更新文件地址
-    // const updateInstances = [
-    //   {
-    //     id: row.material.onChain.insId,
-    //     itemCode: BasicsItemCode.material,
-    //     tabCode: "10002001",
-    //     insAttrs: materialAttrs.map((attr) => {
-    //         return {
-    //           ...attr,
-    //           value: row[attr.apicode],
-    //         }
-    //     }),
-    //     tenantId: sse.tenantId || "719",
-    //   },
-    // ];
-    // console.log(updateInstances, "签出签入更新模型的属性");
 
-    // if (updateInstances.length) {
-    //   await API.batchUpdate({
-    //     instances: updateInstances,
-    //     tenantId: sse.tenantId || "719",
-    //     userId: user.id,
-    //   });
-    // }
+         // 签入需要更新当前的附件，以及相对应的属性，以及结构
+    const {
+      result: { records },
+    }: any = await API.queryInstanceTab({
+      instanceId: row.material.onChain.insId,
+      itemCode: BasicsItemCode.material,
+      pageNo: "1",
+      pageSize: "500",
+      tabCode: "10002003",
+      tabCodes: "10002003",
+      tenantId: sse.tenantId || "719",
+      userId: user.id,
+      version: row.material.onChain.Version,
+      versionOrder: row.material.onChain.Revision,
+    });
+    console.log(records, "records");
+
+    if ((records || []).length) {
+      const params = {
+        id: row.material.onChain.insId,
+        itemCode: BasicsItemCode.material,
+        tabCode: "10002003",
+        deleteAffectedInstanceIds: records
+          .map((item: any) => item.insId)
+          .join(","),
+        deleteRowIds: records.map((item: any) => item.rowId),
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+        versionNumber: row.material.onChain.Version,
+      };
+      console.log(params, "删除结构参数");
+      const result = await API.insatnceTabsave(params);
+      console.log(result, "删除结构");
+    }
+    // //更新当前的第一级结构
+    const {
+      result: { records: tabAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.material,
+      tabCode: "10002003",
+    });
+
+    const rowKey = getRowKey(row);
+
+    const countMap = groupBy(
+      InstanceAttrsMap[rowKey].origin.children || [],
+      (item) => {
+        return getRowKey(item);
+      }
+    );
+
+    const setVal = (row: any, col: any) => {
+      if (col.apicode === "ID") {
+        return row.material.onChain.insId;
+      } else if (col.apicode === "Qty") {
+        return countMap[getRowKey(row)].length || "";
+      } else {
+        return "";
+      }
+    };
+
+    const flattenData = uniqBy((
+      InstanceAttrsMap[getRowKey(row)].origin.children || []
+    ), (item) => {
+      return getRowKey(item)
+    }).filter((item: any) => {
+      return getRowKey(item) != getRowKey(row);
+    });
+
+    // 需要过滤掉所有的内部零件以及
+    const dealParams = flattenData.map((item: any) => {
+      return {
+        insAttrs: tabAttrs
+          .filter((attr: any) => {
+            return ["ID", "Qty"];
+          })
+          .map((attr: any) => {
+            return {
+              apicode: attr.apicode,
+              id: attr.id,
+              valueType: attr.valueType,
+              value: setVal(item, attr),
+            };
+          }),
+      };
+    });
+    console.log(dealParams, "dealParams");
+    if (dealParams.length) {
+      await API.insatnceTabsave({
+        itemCode: BasicsItemCode.material,
+        tabCode: "10002003",
+        rowList: dealParams,
+        id: row.material.onChain.insId,
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+        versionNumber: row.material.onChain.Version,
+      });
+    }
+
+
+        //批量更新文件地址
+    const updateInstances = [
+      {
+        id: row.material.onChain.insId,
+        itemCode: BasicsItemCode.material,
+        tabCode: "10002001",
+        insAttrs: materialAttrs.map((attr) => {
+            return {
+              ...attr,
+              value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
+            }
+        }),
+        tenantId: sse.tenantId || "719",
+      },
+    ];
+    console.log(updateInstances, "签出签入更新模型的属性");
+
+    if (updateInstances.length) {
+      await API.batchUpdate({
+        instances: updateInstances,
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+      });
+    }
 
         API.checkIn({
           insId: row.insId,
@@ -2624,7 +2725,8 @@ const index = () => {
           item.valueType != "12" &&
           item.valueType != "13" &&
           item.valueType != "14" &&
-          item.valueType != "3"
+          item.valueType != "3" && 
+          item.tabCode != '10002002'
       )
       .map((item) => {
         const formitem = {
