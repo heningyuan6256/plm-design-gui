@@ -645,7 +645,7 @@ const index = () => {
                 nameInstanceMap[fileNameWithFormat].attributes[attr.id];
               onChainAttrs.insId = nameInstanceMap[fileNameWithFormat].insId;
               onChainAttrs.checkOut =
-                nameInstanceMap[fileNameWithFormat].checkout;
+                nameInstanceMap[fileNameWithFormat].checkOut;
               onChainAttrs.flag = "exist";
             }
           });
@@ -661,7 +661,7 @@ const index = () => {
         ) {
           materialOnChainAttrs.insId = materialDataMap["10002044"][0].insId;
           materialOnChainAttrs.checkOut =
-            materialDataMap["10002044"][0].checkout;
+            materialDataMap["10002044"][0].checkOut;
           materialOnChainAttrs.flag = "exist";
           totalMaterialAttrs
             .filter((attr: any) => attr.status)
@@ -819,7 +819,7 @@ const index = () => {
         InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain[item.apicode] =
           res.result.readInstanceVo.attributes[item.id];
         InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain.checkOut =
-          res.result.readInstanceVo.checkout;
+          res.result.readInstanceVo.checkOut;
         InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain.Revision =
           res.result.readInstanceVo.insVersionOrder;
         setLeftData([...leftData]);
@@ -851,7 +851,7 @@ const index = () => {
           if(!data) {
             return
           }
-          data.file.onChain.checkOut = res.result.readInstanceVo.checkout;
+          data.file.onChain.checkOut = res.result.readInstanceVo.checkOut;
           data.file.onChain.Revision = res.result.readInstanceVo.insVersionOrder;
           originCheckIn(data);
         });
@@ -2144,7 +2144,7 @@ const index = () => {
         {
           insAttrs: designTabAttrs
             .filter((attr: any) => {
-              return ["ID", "CorrespondingVersion", "From"];
+              return ["ID", "CorrespondingVersion", "From"].includes(attr.apicode);
             })
             .map((attr: any) => {
               return {
@@ -3407,7 +3407,7 @@ const index = () => {
                             {
                               insAttrs: designTabAttrs
                                 .filter((attr: any) => {
-                                  return ["ID", "CorrespondingVersion", "From"];
+                                  return ["ID", "CorrespondingVersion", "From"].includes(attr.apicode);
                                 })
                                 .map((attr: any) => {
                                   return {
