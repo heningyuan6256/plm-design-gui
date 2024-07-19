@@ -9,7 +9,7 @@ const mosaic = '~#~';
  * 判断有阅读权限
  */
 export const readPermission = (value: string) => {
-    return !['1999-09-09 09:09:09', mosaic, '1999-09-09 09:09:9'].includes(value ? value.trim() : '');
+    return !['1999-09-09 09:09:09', mosaic, '1999-09-09 09:09:9'].includes((typeof value === 'string' && value) ? value.trim() : '');
 }
 
 export const renderIsPlmMosaic = ({ value, inLine, children }: { value: string, inLine?: boolean, children: React.ReactNode | string }) => {
