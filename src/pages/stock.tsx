@@ -40,11 +40,12 @@ const stock = () => {
     manual: true,
     onSuccess(data: any) {
       setTableSelectedRows([]);
+      console.log(data.result.records,'data.result')
       setTableData(
         data.result.records.filter((item: any) => {
           return (
-            item.number.indexOf(selectVal) != -1 ||
-            item.insDesc.indexOf(selectVal) != -1
+          (item.number || '').indexOf(selectVal) != -1 ||
+            (item.insDesc || '').indexOf(selectVal) != -1
           );
         })
       );

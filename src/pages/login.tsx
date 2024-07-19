@@ -81,7 +81,7 @@ export default function login() {
       .catch((err) => {
         console.log(err, "err");
 
-        message.error(err.message);
+        message.error(err.message || '服务器连接失败');
       });
   };
 

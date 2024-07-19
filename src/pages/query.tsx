@@ -152,7 +152,10 @@ const query: FC = () => {
     // total: total
     // }
     scrollPage.total = total;
-    const records = dataSource;
+    const records = dataSource.filter((item: any) => {
+      // console.log(item.Number.indexOf(selectVal) != -1,item.Description.indexOf(selectVal) != -1,'123123');
+      return item.Number.indexOf(selectVal) != -1 || item.Description.indexOf(selectVal) != -1
+    });
     if (records) {
       if (isInit) {
         setTableData(records);
@@ -168,26 +171,25 @@ const query: FC = () => {
   const GetConditionDsl = useRequest((data) => API.getPDMConditionDsl(data), {
     manual: true,
     onSuccess(res: any) {
-      console.log(res.result, 'res.result.pageData');
+      // console.log(res.result, 'res.result.pageData');
 
-      const records = (res.result?.pageData?.records || []).map((item: any) => {
-        const transferMap = Utils.transformArrayToMap(
-          item.insAttrs,
-          "apicode",
-          "attrValue"
-        );
-        return { ...item, ...transferMap };
-      });
-      console.log(records, 'records');
+      // const records = (res.result?.pageData?.records || []).map((item: any) => {
+      //   const transferMap = Utils.transformArrayToMap(
+      //     item.insAttrs,
+      //     "apicode",
+      //     "attrValue"
+      //   );
+      //   return { ...item, ...transferMap };
+      // });
+      // console.log(records, selectVal, 'records');
 
-      setTableData(
-        records.filter((item: any) => {
-          return (
-            item.Number.indexOf(selectVal) != -1 ||
-            item.Description.indexOf(selectVal) != -1
-          );
-        })
-      );
+      // setTableData(
+      //   records.filter((item: any) => {
+      //     console.log(item.Number.indexOf(selectVal) != -1,item.Description.indexOf(selectVal) != -1,'123123');
+          
+      //     return item.Number.indexOf(selectVal) != -1
+      //   })
+      // );
     },
   });
 
@@ -567,8 +569,8 @@ const query: FC = () => {
                         userId: user.id,
                         itemCode: row.itemCode,
                         extra: {
-                          onEvent: async(path) => {
-                            await invoke("open_designer",{path:`${path.substring(0, path.lastIndexOf('\\'))}"`})
+                          onEvent: async (path) => {
+                            await invoke("open_designer", { path: `${path.substring(0, path.lastIndexOf('\\'))}"` })
                           }
                         }
                       });
