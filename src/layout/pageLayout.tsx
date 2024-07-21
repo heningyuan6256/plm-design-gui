@@ -144,7 +144,7 @@ export const openDesign = async ({
               versionOrder: ins.result.readInstanceVo.insVersionOrder,
             });
 
-            const loop = async (data: any, folder: string) => {
+            const loop = async (data: any) => {
               for (let i = 0; i < data.length; i++) {
                 const response: any = await client.get(
                   `http://${network}/api/plm${data[i].attributes[attrMap["FileUrl"]].split("/plm")[1]
@@ -154,23 +154,27 @@ export const openDesign = async ({
                     responseType: ResponseType.Binary,
                   }
                 );
-                const fileName = data[i].attributes[attrMap["Description"]];
-                await createDir(
-                  `${folder}\\${fileName}`,
-                  { recursive: true }
-                );
+                // const fileName = data[i].attributes[attrMap["Description"]];
+                // await createDir(
+                //   `${folder}\\${fileName}`,
+                //   { recursive: true }
+                // );
+                // await writeBinaryFile({
+                //   path: `${folder}\\${fileName}\\${data[i].insDesc}`,
+                //   contents: response.data,
+                // });
                 await writeBinaryFile({
-                  path: `${folder}\\${fileName}\\${data[i].insDesc}`,
+                  path:`${downloadFolder}\\${fileName}\\${data[i].insDesc}`,
                   contents: response.data,
                 });
                 if (data[i].children && data[i].children.length) {
-                  loop(data[i].children, `${folder}\\${fileName}`);
+                  loop(data[i].children);
                 }
               }
             };
 
             if(records?.length) {
-              await loop(records || [], `${downloadFolder}\\${fileName}`);
+              await loop(records || []);
             }
 
             if (extra && extra.onEvent) {

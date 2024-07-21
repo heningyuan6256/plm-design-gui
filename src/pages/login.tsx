@@ -196,7 +196,7 @@ export default function login() {
             userId: data.id,
             itemCode: itemCode,
             extra: {
-              onEvent: async (path:string) => {
+              onEvent: async (path: string) => {
                 await invoke("open_designer", {
                   path: path
                 })
@@ -262,16 +262,19 @@ export default function login() {
           <img width={144} src={OnChainLogo} alt="" />
         </div>
         <div className="flex-1 relative" style={{ padding: "55px 50px 10px" }}>
-          <OnChainForm name="login" form={form}>
-            {formItems.map((item, index) => (
-              <OnChainFormItem
-                key={"item" + index}
-                name={item.name}
-                content={item.content}
-                rules={item.rules}
-              ></OnChainFormItem>
-            ))}
-          </OnChainForm>
+          {
+            !loading ? <OnChainForm name="login" form={form}>
+              {formItems.map((item, index) => (
+                <OnChainFormItem
+                  key={"item" + index}
+                  name={item.name}
+                  content={item.content}
+                  rules={item.rules}
+                ></OnChainFormItem>
+              ))}
+            </OnChainForm> : <></>
+          }
+
           <Button
             className="login-btn w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm mt-12"
             onClick={() => loginSys()}
