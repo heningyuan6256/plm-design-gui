@@ -189,7 +189,7 @@ export default function login() {
               setLoading(true)
             },
             cancelLoading: async () => {
-              setLoading(false)
+              // setLoading(false)
             },
             network: address,
             insId: insId,
@@ -207,6 +207,7 @@ export default function login() {
                 setTimeout(() => {
                   const loginWindow = WebviewWindow.getByLabel("Login");
                   loginWindow?.close();
+                  setLoading(false)
                 }, 200)
               }
             }
@@ -275,12 +276,15 @@ export default function login() {
             </OnChainForm> : <></>
           }
 
-          <Button
-            className="login-btn w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm mt-12"
-            onClick={() => loginSys()}
-          >
-            登录
-          </Button>
+          {
+            !loading ? <Button
+              className="login-btn w-full bg-primary h-9 text-white text-xs hover:text-white rounded-sm mt-12"
+              onClick={() => loginSys()}
+            >
+              登录
+            </Button> : <></>
+          }
+
           <div
             className="absolute bottom-2 left-1/2 text-xs text-secondary whitespace-nowrap "
             style={{ transform: "translate(-50%, 0)" }}
