@@ -570,6 +570,7 @@ const index = () => {
           // data[i].node_name = numberData || data[i].node_name
           data[i].file_path = `D:\\TRIBON_Temp\\${Utils.generateSnowId()}\\${data[i].node_name}.Tribon`
         }
+        data[i].property = uniqBy(data[i].property, 'name')
         // 解决sw镜像文件以及阵列文件的问题
         if(!data[i].file_path){
           data.splice(i,1)

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+ 
   <Fragment>
     <!-- these registry entries should be installed
          to the target user's machine -->
@@ -126,6 +127,12 @@
       <Custom Action="testVBScript" Before="InstallFinalize" />
       <!-- <Custom Action="UpdateIniFile" Before="InstallFinalize"></Custom> -->
     </InstallExecuteSequence>
+      <PackageGroup Id="WindowsInstaller45">
+      <MsuPackage SourceFile="E:\dev\PLM-DesignTool-GUI\src-tauri\lib\common\KB3080149.msu"
+        DisplayName="Universal CRT" KB="KB3080149" Cache="no" Compressed="yes" Permanent="yes"
+        InstallCondition="VersionNT = v6.2 AND NOT VersionNT64"
+        DetectCondition="VersionNT = v6.2 AND NOT VersionNT64 AND UCRTBASEVER &gt;= UCRTVER" />
+        </PackageGroup>
     <!-- <IniFile Id="UpdateIniFile" Action="addTag" Directory="INSTALLFOLDER" Key="SectionName" Name="example.ini" Section="MySection" Value="[IPPART1]" />         -->
     </Fragment>
 </Wix>
