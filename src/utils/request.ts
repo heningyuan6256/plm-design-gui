@@ -5,6 +5,7 @@ import { resolveResource } from "@tauri-apps/api/path";
 import { Utils } from ".";
 import { BasicConfig } from "../constant/config";
 import { sse } from "./SSEService";
+import { message } from "antd";
 
 export const getUrl = async (str: string) => {
     const path = await resolveResource('Config.ini')
@@ -87,9 +88,14 @@ class Request {
                     // 常规的json格式请求体发送
                     body: http.Body.json(requestBody),
                 })
-                .then((res) => {
-                    // res为请求成功的回调数据
-                    resolve(this.interceptors.response(res));
+                .then((res:any) => {
+                    if(res?.data?.code == "400" || res?.data?.code == "500") {
+                        const errorMsg = res?.data?.message
+                        message.error(errorMsg)
+                        reject(errorMsg);
+                    } else {
+                        resolve(this.interceptors.response(res));
+                    }
                 })
                 .catch((err) => {
                     reject(err);
@@ -110,9 +116,14 @@ class Request {
                     // 常规的json格式请求体发送
                     body: http.Body.form(data),
                 })
-                .then((res) => {
-                    // res为请求成功的回调数据
-                    resolve(this.interceptors.response(res));
+                .then((res:any) => {
+                    if(res?.data?.code == "400" || res?.data?.code == "500") {
+                        const errorMsg = res?.data?.message
+                        message.error(errorMsg)
+                        reject(errorMsg);
+                    } else {
+                        resolve(this.interceptors.response(res));
+                    }
                 })
                 .catch((err) => {
                     console.log(err, 'errr')
@@ -135,8 +146,14 @@ class Request {
                     query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
-                .then((res) => {
-                    resolve(this.interceptors.response(res));
+                .then((res:any) => {
+                    if(res?.data?.code == "400" || res?.data?.code == "500") {
+                        const errorMsg = res?.data?.message
+                        message.error(errorMsg)
+                        reject(errorMsg);
+                    } else {
+                        resolve(this.interceptors.response(res));
+                    }
                 })
                 .catch((err) => {
                     console.log(url, data, headers, err, 'err')
@@ -159,8 +176,14 @@ class Request {
                     query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
-                .then((res) => {
-                    resolve(this.interceptors.response(res));
+                .then((res:any) => {
+                    if(res?.data?.code == "400" || res?.data?.code == "500") {
+                        const errorMsg = res?.data?.message
+                        message.error(errorMsg)
+                        reject(errorMsg);
+                    } else {
+                        resolve(this.interceptors.response(res));
+                    }
                 })
                 .catch((err) => {
                     console.log(url, data, headers, err, 'err')
@@ -184,8 +207,14 @@ class Request {
                     // query: requestQuery,
                     ...headers
                 })
-                .then((res) => {
-                    resolve(this.interceptors.response(res));
+                .then((res:any) => {
+                    if(res?.data?.code == "400" || res?.data?.code == "500") {
+                        const errorMsg = res?.data?.message
+                        message.error(errorMsg)
+                        reject(errorMsg);
+                    } else {
+                        resolve(this.interceptors.response(res));
+                    }
                 })
                 .catch((err) => {
                     reject(err);
@@ -207,10 +236,17 @@ class Request {
                     query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
-                .then((res) => {
-                    resolve(this.interceptors.response(res));
+                .then((res:any) => {
+                    if(res?.data?.code == "400" || res?.data?.code == "500") {
+                        const errorMsg = res?.data?.message
+                        message.error(errorMsg)
+                        reject(errorMsg);
+                    } else {
+                        resolve(this.interceptors.response(res));
+                    }
                 })
                 .catch((err) => {
+                    // message.error(err)
                     console.log(url, data, headers, err, 'err')
                     reject(err);
                 });

@@ -509,301 +509,308 @@ const index = () => {
 
 
   const dealCurrentBom = async (res?: any) => {
-    // Windows 文件路径
-    const windowsPathRegex = /^(?:[a-zA-Z]:\\|\\\\)(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/;
+    try {
+      // Windows 文件路径
+      const windowsPathRegex = /^(?:[a-zA-Z]:\\|\\\\)(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/;
 
-    if (!windowsPathRegex.test(res.output_data.file_path)) {
-      dispatch(setLoading(false))
-      message.warning("请选择模型")
-      return
-    }
+      if (!windowsPathRegex.test(res.output_data.file_path)) {
+        dispatch(setLoading(false))
+        message.warning("请选择模型")
+        return
+      }
 
-    // 覆盖初始值 todo
-    if (mqttClient.publishTopic === 'Tribon') {
-      const loopTribon = (data1: any) => {
-        for (let i = 0; i < data1.length; i++) {
-          const numberData = data1[i]?.property && data1[i]?.property[0] ? data1[i]?.property[0].DefaultVal : ''
-          data1[i].node_name = numberData || data1[i].node_name
-          if (data1[i].children && data1[i].children.length) {
-            loopTribon(data1[i].children);
+      // 覆盖初始值 todo
+      if (mqttClient.publishTopic === 'Tribon') {
+        const loopTribon = (data1: any) => {
+          for (let i = 0; i < data1.length; i++) {
+            const numberData = data1[i]?.property && data1[i]?.property[0] ? data1[i]?.property[0].DefaultVal : ''
+            data1[i].node_name = numberData || data1[i].node_name
+            if (data1[i].children && data1[i].children.length) {
+              loopTribon(data1[i].children);
+            }
+          }
+        };
+        loopTribon([res.output_data]);
+        const data = buildTreeArray(res.output_data.children[0].children)
+        res.output_data.children[0].children = data[0].children
+      }
+
+      // cad文件格式对应的文件类型
+      const [cadFileMap, cadIdMap] = await getCadFileMapRule();
+      const [totalAttrs] = await getAllAttr(BasicsItemCode.file);
+      const [totalMaterialAttrs] = await getAllAttr(BasicsItemCode.material);
+      const fileObjectMap = await getMaterialTypeMap();
+      setMaterialAttrs(totalMaterialAttrs);
+      setAttrs(totalAttrs);
+      const fileColumns = await getColumns(totalAttrs)
+      const materialColumns = await getColumns(totalMaterialAttrs)
+      setFileColumn(fileColumns)
+      setMaterialColumn(materialColumns)
+
+      const fileColumnsListCodeMap = Utils.transformArrayToMap(fileColumns.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
+      const materialColumnsListCodeMap = Utils.transformArrayToMap(materialColumns.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
+      // cad属性映射文件属性
+      const attrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToFile);
+      // cad属性映射文件属性
+      const asmAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToFile);
+
+
+      // cad属性映射物料属性
+      const asmMaterialAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToItem);
+
+      // cad属性映射物料属性
+      const prtMaterialAttrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToItem);
+
+      // 扁平化数组
+      const flattenData: Record<string, any>[] = [];
+      const loop = (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          // 覆盖初始值 todo
+          if (mqttClient.publishTopic === 'Tribon') {
+            // const numberData = data[i]?.property && data[i]?.property[0] ? data[i]?.property[0].DefaultVal : ''
+            // data[i].node_name = numberData || data[i].node_name
+            data[i].file_path = `D:\\TRIBON_Temp\\${Utils.generateSnowId()}\\${data[i].node_name}.Tribon`
+          }
+          data[i].property = uniqBy(data[i].property, 'name')
+          // 解决sw镜像文件以及阵列文件的问题
+          if (!data[i].file_path) {
+            data.splice(i, 1)
+            i--
+            continue
+          }
+          const rowKey = getRowKey(data[i]);
+          data[i].material = { onChain: {}, plugin: {} };
+          data[i].file = { onChain: {}, plugin: {} };
+
+          if (!InstanceAttrsMap[rowKey]) {
+            InstanceAttrsMap[rowKey] = {
+              origin: {},
+              material: { onChain: {}, plugin: {} },
+              file: { onChain: {}, plugin: {} },
+            };
+            InstanceAttrsMap[rowKey].material = data[i].material;
+            InstanceAttrsMap[rowKey].file = data[i].file;
+            InstanceAttrsMap[rowKey].origin = data[i];
+          } else {
+            data[i].material = InstanceAttrsMap[rowKey].material
+            data[i].file = InstanceAttrsMap[rowKey].file
+            // data[i] = InstanceAttrsMap[rowKey].origin
+          }
+
+          flattenData.push(data[i]);
+          if (data[i].children && data[i].children.length) {
+            loop(data[i].children);
           }
         }
       };
-      loopTribon([res.output_data]);
-      const data = buildTreeArray(res.output_data.children[0].children)
-      res.output_data.children[0].children = data[0].children
-    }
+      loop([res.output_data]);
 
-    // cad文件格式对应的文件类型
-    const [cadFileMap, cadIdMap] = await getCadFileMapRule();
-    const [totalAttrs] = await getAllAttr(BasicsItemCode.file);
-    const [totalMaterialAttrs] = await getAllAttr(BasicsItemCode.material);
-    const fileObjectMap = await getMaterialTypeMap();
-    setMaterialAttrs(totalMaterialAttrs);
-    setAttrs(totalAttrs);
-    const fileColumns = await getColumns(totalAttrs)
-    const materialColumns =await getColumns(totalMaterialAttrs)
-    setFileColumn(fileColumns)
-    setMaterialColumn(materialColumns)
+      const nameList = [
+        ...new Set(flattenData.map((item) => getFileNameWithFormat(item))),
+      ];
+      console.log(latestProduct.current, 'latestProduct.current')
+      const judgeFileResult: any = await API.judgeFileExist({
+        productId: latestProduct.current,
+        fileNameList: nameList,
+        itemCodes: [BasicsItemCode.file],
+        userId: user.id,
+      });
+      const nameInstanceMap = Utils.transformArrayToMap(
+        judgeFileResult.result || [],
+        "insDesc"
+      );
 
-    const fileColumnsListCodeMap = Utils.transformArrayToMap(fileColumns.filter((item:any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
-    const materialColumnsListCodeMap = Utils.transformArrayToMap(materialColumns.filter((item:any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
-    // cad属性映射文件属性
-    const attrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToFile);
-    // cad属性映射文件属性
-    const asmAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToFile);
+      console.log(nameInstanceMap, "nameInstanceMap");
 
+      const PromiseData: any[] = [];
+      const PromiseImgData: any[] = [];
+      console.log(InstanceAttrsMap, "InstanceAttrsMap");
+      for (const item of flattenData) {
+        const rowKey = getRowKey(item);
+        item.id = Utils.generateSnowId();
+        const fileNameWithFormat = getFileNameWithFormat(item);
+        const onChainAttrs = InstanceAttrsMap[rowKey].file.onChain;
+        const pluginAttrs = InstanceAttrsMap[rowKey].file.plugin;
 
-    // cad属性映射物料属性
-    const asmMaterialAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToItem);
+        const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
+        const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
 
-    // cad属性映射物料属性
-    const prtMaterialAttrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToItem);
+        // 为每一个赋值id属性
+        // 判断有实例在系统中
+        if (judgeFileResult.result) {
+          totalAttrs
+            .filter((attr: any) => attr.status)
+            .forEach((attr: any) => {
+              // 判断节点在当前实例中
+              if (nameInstanceMap[fileNameWithFormat]) {
+                onChainAttrs[attr.apicode] =
+                  nameInstanceMap[fileNameWithFormat].attributes[attr.id];
+                onChainAttrs.insId = nameInstanceMap[fileNameWithFormat].insId;
+                onChainAttrs.checkOut =
+                  nameInstanceMap[fileNameWithFormat].checkOut;
+                onChainAttrs.flag = "exist";
+              }
+            });
 
-    // 扁平化数组
-    const flattenData: Record<string, any>[] = [];
-    const loop = (data: any) => {
-      for (let i = 0; i < data.length; i++) {
-        // 覆盖初始值 todo
-        if (mqttClient.publishTopic === 'Tribon') {
-          // const numberData = data[i]?.property && data[i]?.property[0] ? data[i]?.property[0].DefaultVal : ''
-          // data[i].node_name = numberData || data[i].node_name
-          data[i].file_path = `D:\\TRIBON_Temp\\${Utils.generateSnowId()}\\${data[i].node_name}.Tribon`
-        }
-        data[i].property = uniqBy(data[i].property, 'name')
-        // 解决sw镜像文件以及阵列文件的问题
-        if(!data[i].file_path){
-          data.splice(i,1)
-          i--
-          continue
-        }
-        const rowKey = getRowKey(data[i]);
-        data[i].material = { onChain: {}, plugin: {} };
-        data[i].file = { onChain: {}, plugin: {} };
+          // 判断文件有对应的物料存在
+          const materialDataMap =
+            nameInstanceMap[fileNameWithFormat]?.tabCodeInsMap;
 
-        if (!InstanceAttrsMap[rowKey]) {
-          InstanceAttrsMap[rowKey] = {
-            origin: {},
-            material: { onChain: {}, plugin: {} },
-            file: { onChain: {}, plugin: {} },
-          };
-          InstanceAttrsMap[rowKey].material = data[i].material;
-          InstanceAttrsMap[rowKey].file = data[i].file;
-          InstanceAttrsMap[rowKey].origin = data[i];
+          if (
+            materialDataMap &&
+            materialDataMap["10002044"] &&
+            materialDataMap["10002044"].length
+          ) {
+            materialOnChainAttrs.insId = materialDataMap["10002044"][0].insId;
+            materialOnChainAttrs.checkOut =
+              materialDataMap["10002044"][0].checkOut;
+            materialOnChainAttrs.flag = "exist";
+            totalMaterialAttrs
+              .filter((attr: any) => attr.status)
+              .forEach((attr: any) => {
+                materialOnChainAttrs[attr.apicode] =
+                  materialDataMap["10002044"][0].attributes[attr.id] || '';
+              });
+          }
         } else {
-          data[i].material = InstanceAttrsMap[rowKey].material
-          data[i].file = InstanceAttrsMap[rowKey].file
-          // data[i] = InstanceAttrsMap[rowKey].origin
-        }
-
-        flattenData.push(data[i]);
-        if (data[i].children && data[i].children.length) {
-          loop(data[i].children);
-        }
-      }
-    };
-    loop([res.output_data]);
-
-    const nameList = [
-      ...new Set(flattenData.map((item) => getFileNameWithFormat(item))),
-    ];
-    console.log(latestProduct.current, 'latestProduct.current')
-    const judgeFileResult: any = await API.judgeFileExist({
-      productId: latestProduct.current,
-      fileNameList: nameList,
-      itemCodes: [BasicsItemCode.file],
-      userId: user.id,
-    });
-    const nameInstanceMap = Utils.transformArrayToMap(
-      judgeFileResult.result || [],
-      "insDesc"
-    );
-
-    console.log(nameInstanceMap, "nameInstanceMap");
-
-    const PromiseData: any[] = [];
-    const PromiseImgData: any[] = [];
-    console.log(InstanceAttrsMap, "InstanceAttrsMap");
-    for (const item of flattenData) {
-      const rowKey = getRowKey(item);
-      item.id = Utils.generateSnowId();
-      const fileNameWithFormat = getFileNameWithFormat(item);
-      const onChainAttrs = InstanceAttrsMap[rowKey].file.onChain;
-      const pluginAttrs = InstanceAttrsMap[rowKey].file.plugin;
-
-      const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
-      const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
-
-      // 为每一个赋值id属性
-      // 判断有实例在系统中
-      if (judgeFileResult.result) {
-        totalAttrs
-          .filter((attr: any) => attr.status)
-          .forEach((attr: any) => {
-            // 判断节点在当前实例中
-            if (nameInstanceMap[fileNameWithFormat]) {
-              onChainAttrs[attr.apicode] =
-                nameInstanceMap[fileNameWithFormat].attributes[attr.id];
-              onChainAttrs.insId = nameInstanceMap[fileNameWithFormat].insId;
-              onChainAttrs.checkOut =
-                nameInstanceMap[fileNameWithFormat].checkOut;
-              onChainAttrs.flag = "exist";
-            }
-          });
-
-        // 判断文件有对应的物料存在
-        const materialDataMap =
-          nameInstanceMap[fileNameWithFormat]?.tabCodeInsMap;
-
-        if (
-          materialDataMap &&
-          materialDataMap["10002044"] &&
-          materialDataMap["10002044"].length
-        ) {
-          materialOnChainAttrs.insId = materialDataMap["10002044"][0].insId;
-          materialOnChainAttrs.checkOut =
-            materialDataMap["10002044"][0].checkOut;
-          materialOnChainAttrs.flag = "exist";
+          // 重置产品变化后带来的更新
+          onChainAttrs.flag = "add";
+          onChainAttrs.insId = "";
+          totalAttrs
+            .filter((attr: any) => attr.status)
+            .forEach((attr: any) => {
+              // 判断节点在当前实例中
+              onChainAttrs[attr.apicode] = "";
+              onChainAttrs.checkOut = "";
+            });
+          materialOnChainAttrs.insId = "";
+          materialOnChainAttrs.checkOut = "";
+          materialOnChainAttrs.flag = "add";
           totalMaterialAttrs
             .filter((attr: any) => attr.status)
             .forEach((attr: any) => {
-              materialOnChainAttrs[attr.apicode] =
-                materialDataMap["10002044"][0].attributes[attr.id] || '';
+              materialOnChainAttrs[attr.apicode] = '';
             });
         }
-      } else {
-        // 重置产品变化后带来的更新
-        onChainAttrs.flag = "add";
-        onChainAttrs.insId = "";
-        totalAttrs
-          .filter((attr: any) => attr.status)
-          .forEach((attr: any) => {
-            // 判断节点在当前实例中
-            onChainAttrs[attr.apicode] = "";
-            onChainAttrs.checkOut = "";
-          });
-        materialOnChainAttrs.insId = "";
-        materialOnChainAttrs.checkOut = "";
-        materialOnChainAttrs.flag = "add";
-        totalMaterialAttrs
-          .filter((attr: any) => attr.status)
-          .forEach((attr: any) => {
-            materialOnChainAttrs[attr.apicode] = '';
-          });
+
+        // 树状结构是设计工具给的，每一个节点都有设计工具给的属性
+        // 处理公共额外属性
+        // try {
+
+        PromiseData.push(
+          new Promise((resolve, reject) => {
+            item.file_path && mqttClient.publishTopic !== "Tribon"
+              ? readBinaryFile(item.file_path).then((contents) => {
+                pluginAttrs["FileSize"] = contents.length;
+                resolve({});
+              })
+              : resolve({});
+          })
+        );
+        PromiseImgData.push(
+          new Promise((resolve, reject) => {
+            item.pic_path
+              ? readBinaryFile(item.pic_path).then((contents) => {
+                pluginAttrs["thumbnail"] = Utils.uint8arrayToBase64(contents);
+                resolve({});
+              })
+              : resolve({});
+          })
+        );
+
+        // PromiseImgData.push(
+        //   new Promise((resolve, reject) => {
+        //     readBinaryFile("D:\tb\X802012001HCMX01.PDF").then((contents) => {
+        //       pluginAttrs["TribonUrl"] = Utils.uint8arrayToBase64(contents);
+        //       resolve({});
+        //     })
+
+        //   })
+        // );
+        // const [contents, img_contents] = await Promise.all([readBinaryFile(item.file_path), readBinaryFile(item.pic_path)])
+        // const fileSize = contents.length
+        const fileName = fileNameWithFormat.substring(
+          0,
+          fileNameWithFormat.lastIndexOf(".")
+        );
+        const fileFormat = fileNameWithFormat.substring(
+          fileNameWithFormat.lastIndexOf(".") + 1
+        );
+        // 处理设计工具给的值
+        (item?.property || []).filter((item: any) => {
+          if (mqttClient.publishTopic === 'Tribon') {
+            return ['材质', '规格', '总长', '划线长', '重量'].includes(item.name)
+          } else {
+            return item
+          }
+        }).forEach((attr: any) => {
+          const fileAttrsMaps = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
+          const materialAttrsMaps = item.model_type === 'assembly' ? asmMaterialAttrsMap : prtMaterialAttrsMap
+          if (Object.keys(fileAttrsMaps).includes(attr.name)) {
+            if (fileColumnsListCodeMap[fileAttrsMaps[attr.name]]) {
+              const options = fileColumnsListCodeMap[fileAttrsMaps[attr.name]]?.props?.options || []
+              const actualValue = Utils.getLabelInOptions({
+                value: attr.defaultVal,
+                options: options,
+                needValue: true
+              })
+              pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : actualValue;
+            } else {
+              pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+            }
+          }
+          if (Object.keys(materialAttrsMaps).includes(attr.name)) {
+            //如果属性是列表值，则需要把值转成id，转不成id就给空
+            if (materialColumnsListCodeMap[materialAttrsMaps[attr.name]]) {
+              const options = materialColumnsListCodeMap[materialAttrsMaps[attr.name]]?.props?.options || []
+              const actualValue = Utils.getLabelInOptions({
+                value: attr.defaultVal,
+                options: options,
+                needValue: true
+              })
+              console.log(actualValue, 'actualValue')
+              materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : actualValue;
+            } else {
+              materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
+            }
+          }
+        });
+        pluginAttrs["fileNameWithFormat"] = fileNameWithFormat;
+        pluginAttrs["Description"] = fileName;
+        pluginAttrs["FileFormat"] = fileFormat;
+        // pluginAttrs['FileSize'] = fileSize
+        // console.log(cadFileMap, fileFormat, 'fileFormat')
+        onChainAttrs["Category"] = cadFileMap[fileFormat] || cadFileMap[fileFormat.toLowerCase()];
+
+        materialOnChainAttrs["Category"] = fileObjectMap[cadFileMap[fileFormat] || cadFileMap[fileFormat.toLowerCase()]];
+        // } catch (error) {
+        // }
       }
 
-      // 树状结构是设计工具给的，每一个节点都有设计工具给的属性
-      // 处理公共额外属性
-      // try {
+      await Promise.all(PromiseData);
+      await Promise.all(PromiseImgData);
 
-      PromiseData.push(
-        new Promise((resolve, reject) => {
-          item.file_path && mqttClient.publishTopic !== "Tribon"
-            ? readBinaryFile(item.file_path).then((contents) => {
-              pluginAttrs["FileSize"] = contents.length;
-              resolve({});
-            })
-            : resolve({});
-        })
-      );
-      PromiseImgData.push(
-        new Promise((resolve, reject) => {
-          item.pic_path
-            ? readBinaryFile(item.pic_path).then((contents) => {
-              pluginAttrs["thumbnail"] = Utils.uint8arrayToBase64(contents);
-              resolve({});
-            })
-            : resolve({});
-        })
-      );
+      setExpandedKeys(flattenData.map((item) => item.id));
 
-      // PromiseImgData.push(
-      //   new Promise((resolve, reject) => {
-      //     readBinaryFile("D:\tb\X802012001HCMX01.PDF").then((contents) => {
-      //       pluginAttrs["TribonUrl"] = Utils.uint8arrayToBase64(contents);
-      //       resolve({});
-      //     })
+      const copyLeftData = [res.output_data];
+      setSelectNode(res.output_data);
+      console.log(copyLeftData, 'copyLeftData');
 
-      //   })
-      // );
-      // const [contents, img_contents] = await Promise.all([readBinaryFile(item.file_path), readBinaryFile(item.pic_path)])
-      // const fileSize = contents.length
-      const fileName = fileNameWithFormat.substring(
-        0,
-        fileNameWithFormat.lastIndexOf(".")
-      );
-      const fileFormat = fileNameWithFormat.substring(
-        fileNameWithFormat.lastIndexOf(".") + 1
-      );
-      // 处理设计工具给的值
-      (item?.property || []).filter((item: any) => {
-        if (mqttClient.publishTopic === 'Tribon') {
-          return ['材质', '规格', '总长', '划线长', '重量'].includes(item.name)
-        } else {
-          return item
-        }
-      }).forEach((attr: any) => {
-        const fileAttrsMaps = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
-        const materialAttrsMaps = item.model_type === 'assembly' ? asmMaterialAttrsMap : prtMaterialAttrsMap
-        if (Object.keys(fileAttrsMaps).includes(attr.name)) {
-          if(fileColumnsListCodeMap[fileAttrsMaps[attr.name]]) {
-            const options = fileColumnsListCodeMap[fileAttrsMaps[attr.name]]?.props?.options || []
-            const actualValue = Utils.getLabelInOptions({
-              value: attr.defaultVal,
-              options: options,
-              needValue: true
-            })
-            pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : actualValue;
-          } else {
-            pluginAttrs[fileAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
-          }
-        }
-        if (Object.keys(materialAttrsMaps).includes(attr.name)) {
-          //如果属性是列表值，则需要把值转成id，转不成id就给空
-          if(materialColumnsListCodeMap[materialAttrsMaps[attr.name]]) {
-            const options = materialColumnsListCodeMap[materialAttrsMaps[attr.name]]?.props?.options || []
-            const actualValue = Utils.getLabelInOptions({
-              value: attr.defaultVal,
-              options: options,
-              needValue: true
-            })
-            console.log(actualValue,'actualValue')
-            materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : actualValue;
-          } else {
-            materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
-          }
-        }
-      });
-      pluginAttrs["fileNameWithFormat"] = fileNameWithFormat;
-      pluginAttrs["Description"] = fileName;
-      pluginAttrs["FileFormat"] = fileFormat;
-      // pluginAttrs['FileSize'] = fileSize
-      // console.log(cadFileMap, fileFormat, 'fileFormat')
-      onChainAttrs["Category"] = cadFileMap[fileFormat] || cadFileMap[fileFormat.toLowerCase()];
-
-      materialOnChainAttrs["Category"] = fileObjectMap[cadFileMap[fileFormat] || cadFileMap[fileFormat.toLowerCase()]];
-      // } catch (error) {
-      // }
+      setLeftData([...copyLeftData]);
+      dispatch(setLoading(false));
+    } catch (error) {
+      console.log(error,'errorerror');
+      
+      dispatch(setLoading(false));
     }
 
-    await Promise.all(PromiseData);
-    await Promise.all(PromiseImgData);
-
-    setExpandedKeys(flattenData.map((item) => item.id));
-
-    const copyLeftData = [res.output_data];
-    setSelectNode(res.output_data);
-    console.log(copyLeftData, 'copyLeftData');
-
-    setLeftData([...copyLeftData]);
-    dispatch(setLoading(false));
   };
 
-  const judgeFileCheckout = (row: any, isMaterial?:boolean) => {
-    if (row[isMaterial ? 'material': 'file'].onChain.Revision == 1) {
+  const judgeFileCheckout = (row: any, isMaterial?: boolean) => {
+    if (row[isMaterial ? 'material' : 'file'].onChain.Revision == 1) {
       return false;
     } else {
-      return row[isMaterial ? 'material': 'file'].onChain.checkOut;
+      return row[isMaterial ? 'material' : 'file'].onChain.checkOut;
     }
   };
 
@@ -817,11 +824,11 @@ const index = () => {
     }).then((res: any) => {
       res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
         const rowKey = getRowKey(row);
-        InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain[item.apicode] =
+        InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain[item.apicode] =
           res.result.readInstanceVo.attributes[item.id];
-        InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain.checkOut =
+        InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain.checkOut =
           res.result.readInstanceVo.checkOut;
-        InstanceAttrsMap[rowKey][isMaterial ? 'material': 'file'].onChain.Revision =
+        InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain.Revision =
           res.result.readInstanceVo.insVersionOrder;
         setLeftData([...leftData]);
       });
@@ -849,7 +856,7 @@ const index = () => {
           tenantId: sse.tenantId || "719",
         }).then((res: any) => {
           const data = centerData.find(item => getRowKey(item) == getRowKey(row))
-          if(!data) {
+          if (!data) {
             return
           }
           data.file.onChain.checkOut = res.result.readInstanceVo.checkOut;
@@ -860,7 +867,7 @@ const index = () => {
     }
   };
 
-  const checkoutData = ({ row,isMaterial }: { row: any,isMaterial?:boolean }) => {
+  const checkoutData = ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
     // 判断当前文件是否签出
     if (judgeFileCheckout(row, isMaterial)) {
       message.error("当前实例已签出");
@@ -871,7 +878,7 @@ const index = () => {
         checkoutBy: user.id,
         insId: row.insId,
         insSize: String(row.FileSize),
-        insName: row[isMaterial ? 'material': 'file'].onChain.Description,
+        insName: row[isMaterial ? 'material' : 'file'].onChain.Description,
       })
         .then(() => {
           updateSingleData(row, isMaterial);
@@ -883,7 +890,7 @@ const index = () => {
     }
   };
 
-  const cancelCheckoutData = ({ row, isMaterial }: { row: any,isMaterial?:boolean }) => {
+  const cancelCheckoutData = ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
     if (!judgeFileCheckout(row, isMaterial)) {
       message.error("当前实例还未签出");
       dispatch(setLoading(false));
@@ -1100,7 +1107,7 @@ const index = () => {
 
         const revision = row.file.onChain.Revision.replace("(", "").replace(")", "")
 
-        const params = records.filter((item:any) => readPermission(item.createName)).map((item: any) => {
+        const params = records.filter((item: any) => readPermission(item.createName)).map((item: any) => {
           return { createBy: user.id, parInsId: item.createName, msgStatus: false, msgContent: `${user.name} 已将 ${row.file.onChain.Description} 更新成最新的版次 ${revision}` }
         })
 
@@ -1120,138 +1127,138 @@ const index = () => {
       });
   };
 
-  const checkInData = async ({ row,isMaterial }: { row: any, isMaterial?:boolean }) => {
+  const checkInData = async ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
     if (!judgeFileCheckout(row, isMaterial)) {
       dispatch(setLoading(false));
       message.error("当前实例还未签出");
     } else {
       dispatch(setLoading(true));
-      if(isMaterial) {
+      if (isMaterial) {
 
-         // 签入需要更新当前的附件，以及相对应的属性，以及结构
-    const {
-      result: { records },
-    }: any = await API.queryInstanceTab({
-      instanceId: row.material.onChain.insId,
-      itemCode: BasicsItemCode.material,
-      pageNo: "1",
-      pageSize: "500",
-      tabCode: "10002003",
-      tabCodes: "10002003",
-      tenantId: sse.tenantId || "719",
-      userId: user.id,
-      version: row.material.onChain.Version,
-      versionOrder: row.material.onChain.Revision,
-    });
-    console.log(records, "records");
+        // 签入需要更新当前的附件，以及相对应的属性，以及结构
+        const {
+          result: { records },
+        }: any = await API.queryInstanceTab({
+          instanceId: row.material.onChain.insId,
+          itemCode: BasicsItemCode.material,
+          pageNo: "1",
+          pageSize: "500",
+          tabCode: "10002003",
+          tabCodes: "10002003",
+          tenantId: sse.tenantId || "719",
+          userId: user.id,
+          version: row.material.onChain.Version,
+          versionOrder: row.material.onChain.Revision,
+        });
+        console.log(records, "records");
 
-    if ((records || []).length) {
-      const params = {
-        id: row.material.onChain.insId,
-        itemCode: BasicsItemCode.material,
-        tabCode: "10002003",
-        deleteAffectedInstanceIds: records
-          .map((item: any) => item.insId)
-          .join(","),
-        deleteRowIds: records.map((item: any) => item.rowId),
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-        versionNumber: row.material.onChain.Version,
-      };
-      console.log(params, "删除结构参数");
-      const result = await API.insatnceTabsave(params);
-      console.log(result, "删除结构");
-    }
-    // //更新当前的第一级结构
-    const {
-      result: { records: tabAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.material,
-      tabCode: "10002003",
-    });
+        if ((records || []).length) {
+          const params = {
+            id: row.material.onChain.insId,
+            itemCode: BasicsItemCode.material,
+            tabCode: "10002003",
+            deleteAffectedInstanceIds: records
+              .map((item: any) => item.insId)
+              .join(","),
+            deleteRowIds: records.map((item: any) => item.rowId),
+            tenantId: sse.tenantId || "719",
+            userId: user.id,
+            versionNumber: row.material.onChain.Version,
+          };
+          console.log(params, "删除结构参数");
+          const result = await API.insatnceTabsave(params);
+          console.log(result, "删除结构");
+        }
+        // //更新当前的第一级结构
+        const {
+          result: { records: tabAttrs },
+        }: any = await API.getInstanceAttrs({
+          itemCode: BasicsItemCode.material,
+          tabCode: "10002003",
+        });
 
-    const rowKey = getRowKey(row);
+        const rowKey = getRowKey(row);
 
-    const countMap = groupBy(
-      InstanceAttrsMap[rowKey].origin.children || [],
-      (item) => {
-        return getRowKey(item);
-      }
-    );
+        const countMap = groupBy(
+          InstanceAttrsMap[rowKey].origin.children || [],
+          (item) => {
+            return getRowKey(item);
+          }
+        );
 
-    const setVal = (row: any, col: any) => {
-      if (col.apicode === "ID") {
-        return row.material.onChain.insId;
-      } else if (col.apicode === "Qty") {
-        return countMap[getRowKey(row)].length || "";
-      } else {
-        return "";
-      }
-    };
+        const setVal = (row: any, col: any) => {
+          if (col.apicode === "ID") {
+            return row.material.onChain.insId;
+          } else if (col.apicode === "Qty") {
+            return countMap[getRowKey(row)].length || "";
+          } else {
+            return "";
+          }
+        };
 
-    const flattenData = uniqBy((
-      InstanceAttrsMap[getRowKey(row)].origin.children || []
-    ), (item) => {
-      return getRowKey(item)
-    }).filter((item: any) => {
-      return getRowKey(item) != getRowKey(row);
-    });
+        const flattenData = uniqBy((
+          InstanceAttrsMap[getRowKey(row)].origin.children || []
+        ), (item) => {
+          return getRowKey(item)
+        }).filter((item: any) => {
+          return getRowKey(item) != getRowKey(row);
+        });
 
-    // 需要过滤掉所有的内部零件以及
-    const dealParams = flattenData.map((item: any) => {
-      return {
-        insAttrs: tabAttrs
-          .filter((attr: any) => {
-            return ["ID", "Qty"];
-          })
-          .map((attr: any) => {
-            return {
-              apicode: attr.apicode,
-              id: attr.id,
-              valueType: attr.valueType,
-              value: setVal(item, attr),
-            };
-          }),
-      };
-    });
-    console.log(dealParams, "dealParams");
-    if (dealParams.length) {
-      await API.insatnceTabsave({
-        itemCode: BasicsItemCode.material,
-        tabCode: "10002003",
-        rowList: dealParams,
-        id: row.material.onChain.insId,
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-        versionNumber: row.material.onChain.Version,
-      });
-    }
+        // 需要过滤掉所有的内部零件以及
+        const dealParams = flattenData.map((item: any) => {
+          return {
+            insAttrs: tabAttrs
+              .filter((attr: any) => {
+                return ["ID", "Qty"];
+              })
+              .map((attr: any) => {
+                return {
+                  apicode: attr.apicode,
+                  id: attr.id,
+                  valueType: attr.valueType,
+                  value: setVal(item, attr),
+                };
+              }),
+          };
+        });
+        console.log(dealParams, "dealParams");
+        if (dealParams.length) {
+          await API.insatnceTabsave({
+            itemCode: BasicsItemCode.material,
+            tabCode: "10002003",
+            rowList: dealParams,
+            id: row.material.onChain.insId,
+            tenantId: sse.tenantId || "719",
+            userId: user.id,
+            versionNumber: row.material.onChain.Version,
+          });
+        }
 
 
         //批量更新文件地址
-    const updateInstances = [
-      {
-        id: row.material.onChain.insId,
-        itemCode: BasicsItemCode.material,
-        tabCode: "10002001",
-        insAttrs: materialAttrs.map((attr) => {
-            return {
-              ...attr,
-              value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
-            }
-        }),
-        tenantId: sse.tenantId || "719",
-      },
-    ];
-    console.log(updateInstances, "签出签入更新模型的属性");
+        const updateInstances = [
+          {
+            id: row.material.onChain.insId,
+            itemCode: BasicsItemCode.material,
+            tabCode: "10002001",
+            insAttrs: materialAttrs.map((attr) => {
+              return {
+                ...attr,
+                value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
+              }
+            }),
+            tenantId: sse.tenantId || "719",
+          },
+        ];
+        console.log(updateInstances, "签出签入更新模型的属性");
 
-    if (updateInstances.length) {
-      await API.batchUpdate({
-        instances: updateInstances,
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-      });
-    }
+        if (updateInstances.length) {
+          await API.batchUpdate({
+            instances: updateInstances,
+            tenantId: sse.tenantId || "719",
+            userId: user.id,
+          });
+        }
 
         API.checkIn({
           insId: row.insId,
@@ -1313,7 +1320,7 @@ const index = () => {
 
   const ChildfileVersionOrderUpdate = useMemoizedFn((data: any) => {
     let { instance = {}, from } = JSON.parse(data)
-    if(from === user.name) {
+    if (from === user.name) {
       return
     }
     const childLevelData = leftData[0]?.children || []
@@ -1325,7 +1332,7 @@ const index = () => {
         pageSize: "1000"
       }) as any)
       confirm(content, { title: '文件更新', type: 'warning' }).then(async res => {
-        if(!res){
+        if (!res) {
           return
         }
         await openDesign({
@@ -2725,7 +2732,7 @@ const index = () => {
       }
     } else if (name === "checkin") {
       if (selectNode) {
-        const data  = centerData.find(item => getRowKey(item) == getRowKey(selectNode))
+        const data = centerData.find(item => getRowKey(item) == getRowKey(selectNode))
         // const row = { ...selectNode, ...selectNode.file.onChain };
         checkInData({ row: data });
       } else {
@@ -2755,7 +2762,7 @@ const index = () => {
           item.valueType != "12" &&
           item.valueType != "13" &&
           item.valueType != "14" &&
-          item.valueType != "3" && 
+          item.valueType != "3" &&
           item.listType !== '2' &&
           item.tabCode != '10002002'
       )
@@ -2786,91 +2793,91 @@ const index = () => {
               item.apicode != "CheckOutUser" &&
               item.apicode != "CheckOutDate"
             ) {
-             // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
-             if ((pluginValue == '') && onChainValue) {
-              return (
-                <div className="text_line">
-                  {renderIsPlmMosaic({
-                    value:onChainValue,
-                    children:Utils.renderReadonlyItem({
-                      apicode: item.apicode,
-                      formitem: formitem,
-                      value: onChainValue,
-                    })
-                  })}
-                </div>
-              );
-            }
-            // 如果判断设计工具的值有值，onChain没有值，则显示红色
-            if (pluginValue && !onChainValue) {
-              return (
-                <div className="text-red-500">
-                  {renderIsPlmMosaic({
-                    value:pluginValue,
-                    children:Utils.renderReadonlyItem({
-                      apicode: item.apicode,
-                      formitem: formitem,
-                      value: pluginValue,
-                    })
-                  })}
-                </div>
-              );
-            }
-
-            if(pluginValue && onChainValue &&  pluginValue != onChainValue) {
-              return (
-                <div>
-                  <div className="text-red-500">
-                  {renderIsPlmMosaic({
-                      value:pluginValue,
-                      children:Utils.renderReadonlyItem({
-                        apicode: item.apicode,
-                        formitem: formitem,
-                        value: pluginValue,
-                      })
-                    })}
-                  </div>
+              // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
+              if ((pluginValue == '') && onChainValue) {
+                return (
                   <div className="text_line">
-                  {renderIsPlmMosaic({
-                      value:onChainValue,
-                      children:Utils.renderReadonlyItem({
+                    {renderIsPlmMosaic({
+                      value: onChainValue,
+                      children: Utils.renderReadonlyItem({
                         apicode: item.apicode,
                         formitem: formitem,
                         value: onChainValue,
                       })
                     })}
                   </div>
+                );
+              }
+              // 如果判断设计工具的值有值，onChain没有值，则显示红色
+              if (pluginValue && !onChainValue) {
+                return (
+                  <div className="text-red-500">
+                    {renderIsPlmMosaic({
+                      value: pluginValue,
+                      children: Utils.renderReadonlyItem({
+                        apicode: item.apicode,
+                        formitem: formitem,
+                        value: pluginValue,
+                      })
+                    })}
+                  </div>
+                );
+              }
+
+              if (pluginValue && onChainValue && pluginValue != onChainValue) {
+                return (
+                  <div>
+                    <div className="text-red-500">
+                      {renderIsPlmMosaic({
+                        value: pluginValue,
+                        children: Utils.renderReadonlyItem({
+                          apicode: item.apicode,
+                          formitem: formitem,
+                          value: pluginValue,
+                        })
+                      })}
+                    </div>
+                    <div className="text_line">
+                      {renderIsPlmMosaic({
+                        value: onChainValue,
+                        children: Utils.renderReadonlyItem({
+                          apicode: item.apicode,
+                          formitem: formitem,
+                          value: onChainValue,
+                        })
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div>
+                  {renderIsPlmMosaic({
+                    value: onChainValue,
+                    children: Utils.renderReadonlyItem({
+                      apicode: item.apicode,
+                      formitem: formitem,
+                      value: onChainValue,
+                    })
+                  })}
                 </div>
               );
-            } 
 
-            return (
-              <div>
-                {renderIsPlmMosaic({
-                    value:onChainValue,
-                    children:Utils.renderReadonlyItem({
+            } else {
+              return (
+                <div>
+                  {renderIsPlmMosaic({
+                    value: onChainValue,
+                    children: Utils.renderReadonlyItem({
                       apicode: item.apicode,
                       formitem: formitem,
                       value: onChainValue,
                     })
                   })}
-              </div>
-            );
- 
-          } else {
-            return (
-              <div>
-                {renderIsPlmMosaic({
-                    value:onChainValue,
-                    children:Utils.renderReadonlyItem({
-                      apicode: item.apicode,
-                      formitem: formitem,
-                      value: onChainValue,
-                    })
-                  })}
-              </div>
-            );
-          }
+                </div>
+              );
+            }
           },
           FileSize: (text: string, record: any) => {
             return Utils.converBytes(Number(record.file.plugin.FileSize));
@@ -2901,24 +2908,24 @@ const index = () => {
   const [materialColumn, setMaterialColumn] = useState<any[]>([]);
   const [fileColumn, setFileColumn] = useState<any[]>([]);
 
-  const getColumns = async(attrs: any) => {
+  const getColumns = async (attrs: any) => {
     const codeList = attrs
-      .filter((item:any) => item.listCode)
-      .map((item:any) => {
+      .filter((item: any) => item.listCode)
+      .map((item: any) => {
         return {
           code: item.listCode,
           where: "",
         };
       });
-    let columns:any = []
+    let columns: any = []
     if (codeList.length) {
-      const resData:any = await API.getList(codeList)
-        const map: any = {};
-        const result = resData.result || [];
-        result.forEach((item: { listItems: any; code: string }) => {
-          map[item.code] = Utils.adaptListItems(item.listItems) || [];
-        });
-        columns = generalDealAttrs(attrs, map) || []
+      const resData: any = await API.getList(codeList)
+      const map: any = {};
+      const result = resData.result || [];
+      result.forEach((item: { listItems: any; code: string }) => {
+        map[item.code] = Utils.adaptListItems(item.listItems) || [];
+      });
+      columns = generalDealAttrs(attrs, map) || []
     } else {
       columns = generalDealAttrs(attrs, {}) || []
     }
@@ -3262,15 +3269,15 @@ const index = () => {
               onClick={async (item) => {
                 if (item.tag === "checkout") {
                   materialSelectRows.length
-                    ? checkoutData({ row: materialSelectRows[0], isMaterial:true })
+                    ? checkoutData({ row: materialSelectRows[0], isMaterial: true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "cancelCheckout") {
                   materialSelectRows.length
-                    ? cancelCheckoutData({ row: materialSelectRows[0], isMaterial:true })
+                    ? cancelCheckoutData({ row: materialSelectRows[0], isMaterial: true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "checkIn") {
                   materialSelectRows.length
-                    ? checkInData({ row: materialSelectRows[0], isMaterial:true })
+                    ? checkInData({ row: materialSelectRows[0], isMaterial: true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "fillDown") {
                   if (selectedCellLatest.current?.record) {
@@ -3383,7 +3390,7 @@ const index = () => {
                       itemCode: BasicsItemCode.material,
                       tabCode: "10002028",
                     });
-  
+
                     const setVal = (row: any, col: any) => {
                       if (col.apicode === "ID") {
                         return row.file.onChain.insId;
@@ -3435,7 +3442,7 @@ const index = () => {
                     setLogVisbile(false)
                   }
 
-                 
+
                 } else if (item.tag === "createBom") {
                   dispatch(setLoading(true));
                   // // 批量创建Bom结构
@@ -3472,7 +3479,7 @@ const index = () => {
                 columnWidth: 19,
                 fixed: true,
                 selectedRowKeys: materialSelectRows.length
-                  ? materialSelectRows.map((item:any) => item?.id)
+                  ? materialSelectRows.map((item: any) => item?.id)
                   : [],
                 onChange: (selectRowKeys, selectRows) => {
                   setMaterialSelectRows([selectRows.pop()]);
