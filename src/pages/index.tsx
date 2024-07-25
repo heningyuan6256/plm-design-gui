@@ -635,6 +635,7 @@ const index = () => {
         const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
         const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
 
+        console.log(judgeFileResult.result,'judgeFileResult.result')
         // 为每一个赋值id属性
         // 判断有实例在系统中
         if (judgeFileResult.result) {
