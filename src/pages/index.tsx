@@ -635,7 +635,7 @@ const index = () => {
         const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
         const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
 
-        console.log(judgeFileResult.result,'judgeFileResult.result')
+        console.log(judgeFileResult.result, 'judgeFileResult.result')
         // 为每一个赋值id属性
         // 判断有实例在系统中
         if (judgeFileResult.result) {
@@ -643,6 +643,7 @@ const index = () => {
             .filter((attr: any) => attr.status)
             .forEach((attr: any) => {
               // 判断节点在当前实例中
+              console.log("判断节点在当前实例中", fileNameWithFormat, nameInstanceMap[fileNameWithFormat])
               if (nameInstanceMap[fileNameWithFormat]) {
                 onChainAttrs[attr.apicode] =
                   nameInstanceMap[fileNameWithFormat].attributes[attr.id];
@@ -671,6 +672,15 @@ const index = () => {
               .forEach((attr: any) => {
                 materialOnChainAttrs[attr.apicode] =
                   materialDataMap["10002044"][0].attributes[attr.id] || '';
+              });
+          } else {
+            materialOnChainAttrs.insId = "";
+            materialOnChainAttrs.checkOut = "";
+            materialOnChainAttrs.flag = "add";
+            totalMaterialAttrs
+              .filter((attr: any) => attr.status)
+              .forEach((attr: any) => {
+                materialOnChainAttrs[attr.apicode] = '';
               });
           }
         } else {
@@ -800,8 +810,8 @@ const index = () => {
       setLeftData([...copyLeftData]);
       dispatch(setLoading(false));
     } catch (error) {
-      console.log(error,'errorerror');
-      
+      console.log(error, 'errorerror');
+
       dispatch(setLoading(false));
     }
 
@@ -1628,6 +1638,10 @@ const index = () => {
       });
 
     console.log(dealData, "创建参数");
+
+    if (!dealData.length) {
+      return
+    }
 
     const successInstances: any = await API.createInstances(dealData);
 
