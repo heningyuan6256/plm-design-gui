@@ -24,12 +24,14 @@ export const getUrl = async (str: string) => {
 
     if (str.startsWith('/opendata')) {
         return {
-            url: severUrl + str,
+            // url: 'http://192.168.0.66:19220/plm' + str,
+            url: severUrl  + str,
             tenantId: tenantId
         }
     } else {
         return {
-            url: severUrl + str,
+            url: severUrl  + str,
+            // url: 'http://192.168.0.66:18080/plm' + str,
             tenantId: tenantId
         }
     }
@@ -89,6 +91,7 @@ class Request {
                     body: http.Body.json(requestBody),
                 })
                 .then((res:any) => {
+                    console.log(res,'responseBody')
                     if(res?.data?.code == "400" || res?.data?.code == "500") {
                         const errorMsg = res?.data?.message
                         message.error(errorMsg)

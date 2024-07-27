@@ -51,6 +51,8 @@ import {
 import { getCurrent, WebviewWindow } from "@tauri-apps/api/window";
 import { dialog, invoke } from "@tauri-apps/api";
 import plusImg from "../assets/image/plus.svg";
+import settingImg from "../assets/image/setting.svg";
+
 import settingSvg from "../assets/image/setting.svg";
 import { cloneDeep, groupBy, isArray, merge, pick, pickBy, remove, sortBy, unionBy, uniqBy, uniqWith } from "lodash";
 import childnodecube from "../assets/image/childnodecube.svg";
@@ -149,6 +151,7 @@ const index = () => {
       file: { onChain: any; plugin: any };
     };
   }>({});
+  const InstanceAttrsMapLastet = useLatest(InstanceAttrsMap)
   const dispatch = useDispatch();
 
   const warpperSetLog = (func: () => void) => {
@@ -507,6 +510,22 @@ const index = () => {
     return result;
   }
 
+  // 将对象的所有键转换为小写
+function normalizeKeys(obj:Record<string,any>) {
+  const normalizedObj:Record<string,any> = {};
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      normalizedObj[key.toLowerCase()] = obj[key];
+    }
+  }
+  return normalizedObj;
+}
+
+// 访问对象时，将键转换为小写
+function getCaseInsensitive(obj:Record<string,any>, key:string) {
+  return obj[key.toLowerCase()];
+}
+
 
   const dealCurrentBom = async (res?: any) => {
     try {
@@ -534,7 +553,11 @@ const index = () => {
         const data = buildTreeArray(res.output_data.children[0].children)
         res.output_data.children[0].children = data[0].children
       }
-
+      // if(isInit) {
+        Object.keys(InstanceAttrsMap).forEach(item => {
+          delete InstanceAttrsMap[item]
+        })
+      // }
       // cad文件格式对应的文件类型
       const [cadFileMap, cadIdMap] = await getCadFileMapRule();
       const [totalAttrs] = await getAllAttr(BasicsItemCode.file);
@@ -615,10 +638,10 @@ const index = () => {
         itemCodes: [BasicsItemCode.file],
         userId: user.id,
       });
-      const nameInstanceMap = Utils.transformArrayToMap(
+      const nameInstanceMap = normalizeKeys(Utils.transformArrayToMap(
         judgeFileResult.result || [],
         "insDesc"
-      );
+      ));
 
       console.log(nameInstanceMap, "nameInstanceMap");
 
@@ -643,20 +666,19 @@ const index = () => {
             .filter((attr: any) => attr.status)
             .forEach((attr: any) => {
               // 判断节点在当前实例中
-              console.log("判断节点在当前实例中", fileNameWithFormat, nameInstanceMap[fileNameWithFormat])
-              if (nameInstanceMap[fileNameWithFormat]) {
+              if (getCaseInsensitive(nameInstanceMap, fileNameWithFormat)) {
                 onChainAttrs[attr.apicode] =
-                  nameInstanceMap[fileNameWithFormat].attributes[attr.id];
-                onChainAttrs.insId = nameInstanceMap[fileNameWithFormat].insId;
+                getCaseInsensitive(nameInstanceMap, fileNameWithFormat).attributes[attr.id];
+                onChainAttrs.insId = getCaseInsensitive(nameInstanceMap, fileNameWithFormat).insId;
                 onChainAttrs.checkOut =
-                  nameInstanceMap[fileNameWithFormat].checkOut;
+                getCaseInsensitive(nameInstanceMap, fileNameWithFormat).checkOut;
                 onChainAttrs.flag = "exist";
               }
             });
 
           // 判断文件有对应的物料存在
           const materialDataMap =
-            nameInstanceMap[fileNameWithFormat]?.tabCodeInsMap;
+          getCaseInsensitive(nameInstanceMap, fileNameWithFormat)?.tabCodeInsMap;
 
           if (
             materialDataMap &&
@@ -667,6 +689,7 @@ const index = () => {
             materialOnChainAttrs.checkOut =
               materialDataMap["10002044"][0].checkOut;
             materialOnChainAttrs.flag = "exist";
+            materialOnChainAttrs.isStandardPart =  materialDataMap["10002044"][0].standardPartId
             totalMaterialAttrs
               .filter((attr: any) => attr.status)
               .forEach((attr: any) => {
@@ -2224,6 +2247,11 @@ const index = () => {
           itemCode: BasicsItemCode.material,
         });
 
+        if(!Object.keys(nameNumberMap).length){
+          dispatch(setLoading(false))
+          return 
+        }
+
         createStructure({
           nameNumberMap,
           itemCode: BasicsItemCode.material,
@@ -3399,6 +3427,13 @@ const index = () => {
                     const successInstances = await createInstance({
                       itemCode: BasicsItemCode.material,
                     });
+
+                    console.log(successInstances,'successInstancessuccessInstances')
+
+                    if(!Object.keys(successInstances).length){
+                      dispatch(setLoading(false))
+                      return 
+                    }
                     const {
                       result: { records: designTabAttrs },
                     }: any = await API.getInstanceAttrs({
@@ -3461,7 +3496,7 @@ const index = () => {
                 } else if (item.tag === "createBom") {
                   dispatch(setLoading(true));
                   // // 批量创建Bom结构
-                  createStructure({
+                  await createStructure({
                     itemCode: BasicsItemCode.material,
                     tabCode: "10002003",
                   });
@@ -3539,6 +3574,13 @@ const index = () => {
                   fixed: true,
                   render: (text: string, record: any) => {
                     if (record.flag === "exist") {
+                      if(record.material.onChain.isStandardPart) {
+                        return (
+                          <div className="w-full flex justify-center">
+                            <img width={12} src={settingImg} alt="" />
+                          </div>
+                        );
+                      }
                       return <></>;
                     }
                     return (
@@ -3697,7 +3739,6 @@ const index = () => {
       .then((res) => { })
       .catch((err) => { });
   };
-
 
   {/* 基本信息 */ }
   const BaseAttrInfo = <div
