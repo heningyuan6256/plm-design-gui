@@ -78,6 +78,8 @@ import { openDesign } from "../layout/pageLayout";
 import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 import { fetchMessageData } from "../models/message";
 
+let ConfirmOpened = false
+
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
 
@@ -1355,18 +1357,22 @@ const index = () => {
           const currentWindow = getCurrent();
           currentWindow.unminimize()
           currentWindow.setFocus()
-          confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
-            if (!res) {
-              return
-            }
-            dispatch(setLoading(true));
-            mqttClient.publish({
-              type: CommandConfig.getCurrentBOM,
-              input_data: {
-                "info": ["proximate"]
+          if (!ConfirmOpened) {
+            ConfirmOpened = true
+            confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
+              ConfirmOpened = false
+              if (!res) {
+                return
               }
-            });
-          })
+              dispatch(setLoading(true));
+              mqttClient.publish({
+                type: CommandConfig.getCurrentBOM,
+                input_data: {
+                  "info": ["proximate"]
+                }
+              });
+            })
+          }
         },
         {
           delayMs: 1000,
