@@ -150,6 +150,7 @@ fn main() {
             utils::set_window_home_shadow,
             utils::exists,
             utils::reveal_file,
+            utils::get_icons,
             // utils::create_file,
             // utils::create_chatgpt_prompts,
             // utils::script_path,

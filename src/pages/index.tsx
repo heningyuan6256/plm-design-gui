@@ -106,6 +106,7 @@ const index = () => {
   const [rightData, setRightData] = useState<Record<string, any>[]>([]);
   const [leftData, setLeftData] = useState<Record<string, any>[]>([]);
   const [centerData, setCenterData] = useState<Record<string, any>[]>([]);
+  const [currentThumbnail, setCurrentThumbnail] = useState<string>('')
   const [materialCenterData, setMaterialCenterData] = useState<
     Record<string, any>[]
   >([]);
@@ -360,7 +361,14 @@ const index = () => {
     };
   };
 
-
+useAsyncEffect(async()=>{
+  if(selectNode && selectNode.file_path){
+    const nameThumbMap: any = await invoke("get_icons", {
+      req: [selectNode.file_path]
+    });
+    setCurrentThumbnail(`data:image/png;base64,${nameThumbMap[selectNode.file_path]}`)
+  }
+},[selectNode])
 
   useEffect(() => {
     if (selectProduct && isNot2D(mqttClient.publishTopic)) {
@@ -511,20 +519,20 @@ const index = () => {
   }
 
   // 将对象的所有键转换为小写
-function normalizeKeys(obj:Record<string,any>) {
-  const normalizedObj:Record<string,any> = {};
-  for (let key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      normalizedObj[key.toLowerCase()] = obj[key];
+  function normalizeKeys(obj: Record<string, any>) {
+    const normalizedObj: Record<string, any> = {};
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        normalizedObj[key.toLowerCase()] = obj[key];
+      }
     }
+    return normalizedObj;
   }
-  return normalizedObj;
-}
 
-// 访问对象时，将键转换为小写
-function getCaseInsensitive(obj:Record<string,any>, key:string) {
-  return obj[key.toLowerCase()];
-}
+  // 访问对象时，将键转换为小写
+  function getCaseInsensitive(obj: Record<string, any>, key: string) {
+    return obj[key.toLowerCase()];
+  }
 
 
   const dealCurrentBom = async (res?: any) => {
@@ -554,9 +562,9 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
         res.output_data.children[0].children = data[0].children
       }
       // if(isInit) {
-        Object.keys(InstanceAttrsMap).forEach(item => {
-          delete InstanceAttrsMap[item]
-        })
+      Object.keys(InstanceAttrsMap).forEach(item => {
+        delete InstanceAttrsMap[item]
+      })
       // }
       // cad文件格式对应的文件类型
       const [cadFileMap, cadIdMap] = await getCadFileMapRule();
@@ -631,7 +639,7 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
       const nameList = [
         ...new Set(flattenData.map((item) => getFileNameWithFormat(item))),
       ];
-      console.log(latestProduct.current, 'latestProduct.current')
+
       const judgeFileResult: any = await API.judgeFileExist({
         productId: latestProduct.current,
         fileNameList: nameList,
@@ -657,8 +665,6 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
 
         const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
         const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
-
-        console.log(judgeFileResult.result, 'judgeFileResult.result')
         // 为每一个赋值id属性
         // 判断有实例在系统中
         if (judgeFileResult.result) {
@@ -668,17 +674,17 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
               // 判断节点在当前实例中
               if (getCaseInsensitive(nameInstanceMap, fileNameWithFormat)) {
                 onChainAttrs[attr.apicode] =
-                getCaseInsensitive(nameInstanceMap, fileNameWithFormat).attributes[attr.id];
+                  getCaseInsensitive(nameInstanceMap, fileNameWithFormat).attributes[attr.id];
                 onChainAttrs.insId = getCaseInsensitive(nameInstanceMap, fileNameWithFormat).insId;
                 onChainAttrs.checkOut =
-                getCaseInsensitive(nameInstanceMap, fileNameWithFormat).checkOut;
+                  getCaseInsensitive(nameInstanceMap, fileNameWithFormat).checkOut;
                 onChainAttrs.flag = "exist";
               }
             });
 
           // 判断文件有对应的物料存在
           const materialDataMap =
-          getCaseInsensitive(nameInstanceMap, fileNameWithFormat)?.tabCodeInsMap;
+            getCaseInsensitive(nameInstanceMap, fileNameWithFormat)?.tabCodeInsMap;
 
           if (
             materialDataMap &&
@@ -689,7 +695,7 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
             materialOnChainAttrs.checkOut =
               materialDataMap["10002044"][0].checkOut;
             materialOnChainAttrs.flag = "exist";
-            materialOnChainAttrs.isStandardPart =  materialDataMap["10002044"][0].standardPartId
+            materialOnChainAttrs.isStandardPart = materialDataMap["10002044"][0].standardPartId
             totalMaterialAttrs
               .filter((attr: any) => attr.status)
               .forEach((attr: any) => {
@@ -741,16 +747,16 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
               : resolve({});
           })
         );
-        PromiseImgData.push(
-          new Promise((resolve, reject) => {
-            item.pic_path
-              ? readBinaryFile(item.pic_path).then((contents) => {
-                pluginAttrs["thumbnail"] = Utils.uint8arrayToBase64(contents);
-                resolve({});
-              })
-              : resolve({});
-          })
-        );
+        // PromiseImgData.push(
+        //   new Promise((resolve, reject) => {
+        //     item.pic_path
+        //       ? readBinaryFile(item.pic_path).then((contents) => {
+        //         pluginAttrs["thumbnail"] = Utils.uint8arrayToBase64(contents);
+        //         resolve({});
+        //       })
+        //       : resolve({});
+        //   })
+        // );
 
         // PromiseImgData.push(
         //   new Promise((resolve, reject) => {
@@ -1052,15 +1058,14 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
       },
     ]);
 
-    const nameThumbMap = await uploadFile([
-      {
-        name: row.pic_path.substring(row.pic_path.lastIndexOf("\\") + 1),
-        data: new Blob([await readBinaryFile(row.pic_path)]),
-        source: "Local",
-        isRemote: false,
-      },
-    ]);
+    const nameThumbMap: any = await invoke("get_icons", {
+      req: [row.file_path]
+    });
     //批量更新文件地址
+    // const thumbData = await invoke("get_icons", {
+    //   req: ["E:\\OnChain个人空间\\FN4\\滑块\\滑块.SLDPRT"]
+    // });
+
     const updateInstances = [
       {
         id: row.file.onChain.insId,
@@ -1079,10 +1084,7 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
           } else if (attr.apicode === "Thumbnail") {
             return {
               ...attr,
-              value: `/plm/files${nameThumbMap[
-                `${row.file.plugin?.Description}.bmp`
-              ].response?.uploadURL.split("/plm/files")[1]
-                }`,
+              value: `data:image/png;base64,${nameThumbMap[row.file_path]}`,
             };
           } else {
             return {
@@ -2247,9 +2249,9 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
           itemCode: BasicsItemCode.material,
         });
 
-        if(!Object.keys(nameNumberMap).length){
+        if (!Object.keys(nameNumberMap).length) {
           dispatch(setLoading(false))
-          return 
+          return
         }
 
         createStructure({
@@ -2627,10 +2629,15 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
           console.log(attchmentResult, addAttachmentParams, "FileAttachment");
         }
 
+        const filterCenterData = centerData
+          .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
+
+        const nameThumbMap: any = await invoke("get_icons", {
+          req: filterCenterData.map(row => row.file_path)
+        });
 
         //批量更新文件地址
-        const updateInstances = centerData
-          .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
+        const updateInstances = filterCenterData
           .map((item) => {
             return {
               id: nameNumberMap[getRowKey(item)]?.instanceId,
@@ -2651,10 +2658,7 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
                 } else {
                   return {
                     ...attr,
-                    value: `/plm/files${nameFileUrlMap[
-                      `${item.file.plugin?.Description}.bmp`
-                    ].response?.uploadURL.split("/plm/files")[1]
-                      }`,
+                    value: `data:image/png;base64,${nameThumbMap[item.file_path]}`,
                   };
                 }
               }),
@@ -3215,29 +3219,29 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
                     }
                   },
                 },
-                {
-                  title: (
-                    <div className="flex items-center justify-center">
-                      <PlmIcon name="listphoto"></PlmIcon>
-                    </div>
-                  ),
-                  dataIndex: "thumbnail",
-                  // sorter: true,
-                  width: 40,
-                  fixed: true,
-                  sort: true,
-                  render: (text: string, record: any) => {
-                    return (
-                      <div className="flex items-center justify-center">
-                        <Image
-                          src={record.file.plugin.thumbnail}
-                          width={32}
-                          preview={false}
-                        ></Image>
-                      </div>
-                    );
-                  },
-                },
+                // {
+                //   title: (
+                //     <div className="flex items-center justify-center">
+                //       <PlmIcon name="listphoto"></PlmIcon>
+                //     </div>
+                //   ),
+                //   dataIndex: "thumbnail",
+                //   // sorter: true,
+                //   width: 40,
+                //   fixed: true,
+                //   sort: true,
+                //   render: (text: string, record: any) => {
+                //     return (
+                //       <div className="flex items-center justify-center">
+                //         <Image
+                //           src={record.file.plugin.thumbnail}
+                //           width={32}
+                //           preview={false}
+                //         ></Image>
+                //       </div>
+                //     );
+                //   },
+                // },
                 {
                   title: "文件名称",
                   dataIndex: "node_name",
@@ -3428,11 +3432,11 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
                       itemCode: BasicsItemCode.material,
                     });
 
-                    console.log(successInstances,'successInstancessuccessInstances')
+                    console.log(successInstances, 'successInstancessuccessInstances')
 
-                    if(!Object.keys(successInstances).length){
+                    if (!Object.keys(successInstances).length) {
                       dispatch(setLoading(false))
-                      return 
+                      return
                     }
                     const {
                       result: { records: designTabAttrs },
@@ -3574,7 +3578,7 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
                   fixed: true,
                   render: (text: string, record: any) => {
                     if (record.flag === "exist") {
-                      if(record.material.onChain.isStandardPart) {
+                      if (record.material.onChain.isStandardPart) {
                         return (
                           <div className="w-full flex justify-center">
                             <img width={12} src={settingImg} alt="" />
@@ -3619,28 +3623,28 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
                     }
                   },
                 },
-                {
-                  title: (
-                    <div className="flex items-center justify-center">
-                      <PlmIcon name="listphoto"></PlmIcon>
-                    </div>
-                  ),
-                  dataIndex: "thumbnail",
-                  // sorter: true,
-                  width: 40,
-                  fixed: true,
-                  render: (text: string, record: any) => {
-                    return (
-                      <div className="flex items-center justify-center">
-                        <Image
-                          src={record.file.plugin.thumbnail}
-                          width={32}
-                          preview={false}
-                        ></Image>
-                      </div>
-                    );
-                  },
-                },
+                // {
+                //   title: (
+                //     <div className="flex items-center justify-center">
+                //       <PlmIcon name="listphoto"></PlmIcon>
+                //     </div>
+                //   ),
+                //   dataIndex: "thumbnail",
+                //   // sorter: true,
+                //   width: 40,
+                //   fixed: true,
+                //   render: (text: string, record: any) => {
+                //     return (
+                //       <div className="flex items-center justify-center">
+                //         <Image
+                //           src={record.file.plugin.thumbnail}
+                //           width={32}
+                //           preview={false}
+                //         ></Image>
+                //       </div>
+                //     );
+                //   },
+                // },
                 {
                   title: "文件名称",
                   dataIndex: "node_name",
@@ -4200,7 +4204,7 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
               style={{ height: "300px", position: "relative" }}
             >
               {
-                mqttClient.publishTopic === 'Tribon' ? BaseAttrInfo :
+                mqttClient.publishTopic === 'Tribon'|| 1 ? BaseAttrInfo :
                   //@ts-ignore
                   <SplitPane
                     split="vertical"
@@ -4231,7 +4235,7 @@ function getCaseInsensitive(obj:Record<string,any>, key:string) {
                       <img
                         id="thumbnail"
                         style={{ margin: "0 auto", height: "100%" }}
-                        src={removeImgBg(selectNode?.file.plugin.thumbnail)}
+                        src={currentThumbnail}
                         alt=""
                       />
                     </div>
