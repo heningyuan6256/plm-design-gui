@@ -40,6 +40,7 @@ import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { downloadDir, homeDir, resolveResource } from "@tauri-apps/api/path";
 import { open as openFileDialog } from "@tauri-apps/api/dialog";
+import { watch, watchImmediate } from "tauri-plugin-fs-watch-api";
 import {
   exists,
   readBinaryFile,
@@ -361,14 +362,14 @@ const index = () => {
     };
   };
 
-useAsyncEffect(async()=>{
-  if(selectNode && selectNode.file_path){
-    const nameThumbMap: any = await invoke("get_icons", {
-      req: [selectNode.file_path]
-    });
-    setCurrentThumbnail(`data:image/png;base64,${nameThumbMap[selectNode.file_path]}`)
-  }
-},[selectNode])
+  useAsyncEffect(async () => {
+    if (selectNode && selectNode.file_path) {
+      const nameThumbMap: any = await invoke("get_icons", {
+        req: [selectNode.file_path]
+      });
+      setCurrentThumbnail(`data:image/png;base64,${nameThumbMap[selectNode.file_path]}`)
+    }
+  }, [selectNode])
 
   useEffect(() => {
     if (selectProduct && isNot2D(mqttClient.publishTopic)) {
@@ -1328,7 +1329,6 @@ useAsyncEffect(async()=>{
         const nodeNames = flattenData.map((item) => {
           return getRowKey(item);
         });
-        console.log(nodeNames, 'nodeNames')
         const rowKey = getRowKey(data[i])
         if (
           !nodeNames.includes(rowKey) &&
@@ -1345,6 +1345,36 @@ useAsyncEffect(async()=>{
     loop([selectNode]);
     return flattenData;
   };
+
+  useAsyncEffect(async () => {
+    if (leftData.length) {
+      const flattenData: Record<string, any>[] = getFlattenData(selectNode);
+      await watch(
+        flattenData.map(row => row.file_path),
+        (event) => {
+          const currentWindow = getCurrent();
+          currentWindow.unminimize()
+          currentWindow.setFocus()
+          confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
+            if (!res) {
+              return
+            }
+            dispatch(setLoading(true));
+            mqttClient.publish({
+              type: CommandConfig.getCurrentBOM,
+              input_data: {
+                "info": ["proximate"]
+              }
+            });
+          })
+        },
+        {
+          delayMs: 1000,
+          recursive: true
+        },
+      );
+    }
+  }, [leftData.length])
 
   // 取出所有的属性
   useEffect(() => {
@@ -4204,7 +4234,7 @@ useAsyncEffect(async()=>{
               style={{ height: "300px", position: "relative" }}
             >
               {
-                mqttClient.publishTopic === 'Tribon'|| 1 ? BaseAttrInfo :
+                mqttClient.publishTopic === 'Tribon' ? BaseAttrInfo :
                   //@ts-ignore
                   <SplitPane
                     split="vertical"

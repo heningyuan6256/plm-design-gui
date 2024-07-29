@@ -30,6 +30,7 @@ tauri-plugin-localhost = { git = "https://github.com/tauri-apps/plugins-workspac
 window-shadows = "0.2.1"
 tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 tauri-plugin-fs-extra = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri-plugin-fs-watch = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 
 winapi = {version = "0.3.9", features = ["winuser", "shellapi", "wingdi", "winbase", "ntdef", "errhandlingapi"] }
 windows = { version = "0.57.0", features = ["Win32_System_Com", "Win32_UI_Shell"] }

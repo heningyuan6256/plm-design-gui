@@ -120,7 +120,7 @@ fn main() {
 
     tauri_plugin_deep_link::prepare("com.ONCHAIN.build");
 
-    builder
+    builder.plugin(tauri_plugin_fs_watch::init())
         // .setup(move |app| {
         //     WindowBuilder::new(app, "main".to_string(), window_url)
         //       .title("Localhost Example")
