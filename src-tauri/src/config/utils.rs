@@ -70,7 +70,6 @@ pub fn get_icon(file_path: &str) -> Result<Vec<u8>,i32> {
 
         let hdc = winapi::um::wingdi::CreateCompatibleDC(ptr::null_mut());
         if hdc.is_null() {
-            println!("CreateCompatibleDC 함수 호출에 실패했습니다.");
             return Err(0);
         }
 
