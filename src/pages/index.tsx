@@ -104,11 +104,11 @@ export const exitPlugin = async () => {
     },
   });
   // 退出登录
-  const homeDirPath = await homeDir();
-  await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
-  await removeFile(
-    `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
-  );
+  // const homeDirPath = await homeDir();
+  // await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
+  // await removeFile(
+  //   `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
+  // );
   sse.close()
   mqttClient.close()
   const mainWindow = getCurrent()
