@@ -2290,7 +2290,7 @@ const index = () => {
           return
         }
 
-        createStructure({
+        await createStructure({
           nameNumberMap,
           itemCode: BasicsItemCode.material,
           tabCode: "10002003",
