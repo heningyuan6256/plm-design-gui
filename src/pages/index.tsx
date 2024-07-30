@@ -3524,9 +3524,9 @@ const index = () => {
                       tenantId: sse.tenantId || "719",
                       userId: user.id,
                       saveVos: dealParams,
-                    }).then((res) => {
+                    }).then(async (res) => {
+                      await dealCurrentBom(designData);
                       setLogVisbile(false)
-                      dealCurrentBom(designData);
                     });
                   } catch (error) {
                     setLogVisbile(false)
