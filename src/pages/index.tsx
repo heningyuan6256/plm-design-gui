@@ -112,8 +112,10 @@ export const exitPlugin = async () => {
   sse.close()
   mqttClient.close()
   const mainWindow = getCurrent()
-  mainWindow?.close();
-  await invoke("exist", {});
+  if(mainWindow.label !== 'Login') {
+    mainWindow?.close();
+    await invoke("exist", {});
+  }
 }
 
 export interface logItemType {
