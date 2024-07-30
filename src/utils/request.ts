@@ -6,6 +6,9 @@ import { Utils } from ".";
 import { BasicConfig } from "../constant/config";
 import { sse } from "./SSEService";
 import { message } from "antd";
+import { exitPlugin } from "../pages";
+
+const noAuthMessage = '验证超时，请重新登陆！'
 
 export const getUrl = async (str: string) => {
     const path = await resolveResource('Config.ini')
@@ -25,12 +28,12 @@ export const getUrl = async (str: string) => {
     if (str.startsWith('/opendata')) {
         return {
             // url: 'http://192.168.0.66:19220/plm' + str,
-            url: severUrl  + str,
+            url: severUrl + str,
             tenantId: tenantId
         }
     } else {
         return {
-            url: severUrl  + str,
+            url: severUrl + str,
             // url: 'http://192.168.0.66:18080/plm' + str,
             tenantId: tenantId
         }
@@ -82,7 +85,7 @@ class Request {
             this.interceptors.request.use();
             const { url: serverUrl, tenantId: tenantId } = await getUrl(url)
             const requestBody = (data instanceof Array) ? data : { ...data, ...this.interceptors.request.body, tenantId: tenantId };
-            console.log(requestBody,'requestBody')
+            console.log(requestBody, 'requestBody')
             http
                 .fetch(serverUrl, {
                     headers: requestHeaders,
@@ -90,14 +93,20 @@ class Request {
                     // 常规的json格式请求体发送
                     body: http.Body.json(requestBody),
                 })
-                .then((res:any) => {
-                    console.log(res,'responseBody')
-                    if(res?.data?.code == "400" || res?.data?.code == "500") {
-                        const errorMsg = res?.data?.message
-                        message.error(errorMsg)
-                        reject(errorMsg);
+                .then((res: any) => {
+                    console.log(res, 'responseBody')
+                    if (res.status == 401) {
+                        message.error(noAuthMessage)
+                        reject(noAuthMessage);
+                        exitPlugin()
                     } else {
-                        resolve(this.interceptors.response(res));
+                        if (res?.data?.code == "400" || res?.data?.code == "500") {
+                            const errorMsg = res?.data?.message
+                            message.error(errorMsg)
+                            reject(errorMsg);
+                        } else {
+                            resolve(this.interceptors.response(res));
+                        }
                     }
                 })
                 .catch((err) => {
@@ -119,14 +128,21 @@ class Request {
                     // 常规的json格式请求体发送
                     body: http.Body.form(data),
                 })
-                .then((res:any) => {
-                    if(res?.data?.code == "400" || res?.data?.code == "500") {
-                        const errorMsg = res?.data?.message
-                        message.error(errorMsg)
-                        reject(errorMsg);
+                .then((res: any) => {
+                    if (res.status == 401) {
+                        message.error(noAuthMessage)
+                        reject(noAuthMessage);
+                        exitPlugin()
                     } else {
-                        resolve(this.interceptors.response(res));
+                        if (res?.data?.code == "400" || res?.data?.code == "500") {
+                            const errorMsg = res?.data?.message
+                            message.error(errorMsg)
+                            reject(errorMsg);
+                        } else {
+                            resolve(this.interceptors.response(res));
+                        }
                     }
+
                 })
                 .catch((err) => {
                     console.log(err, 'errr')
@@ -149,14 +165,21 @@ class Request {
                     query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
-                .then((res:any) => {
-                    if(res?.data?.code == "400" || res?.data?.code == "500") {
-                        const errorMsg = res?.data?.message
-                        message.error(errorMsg)
-                        reject(errorMsg);
+                .then((res: any) => {
+                    if (res.status == 401) {
+                        message.error(noAuthMessage)
+                        reject(noAuthMessage);
+                        exitPlugin()
                     } else {
-                        resolve(this.interceptors.response(res));
+                        if (res?.data?.code == "400" || res?.data?.code == "500") {
+                            const errorMsg = res?.data?.message
+                            message.error(errorMsg)
+                            reject(errorMsg);
+                        } else {
+                            resolve(this.interceptors.response(res));
+                        }
                     }
+
                 })
                 .catch((err) => {
                     console.log(url, data, headers, err, 'err')
@@ -179,13 +202,19 @@ class Request {
                     query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
-                .then((res:any) => {
-                    if(res?.data?.code == "400" || res?.data?.code == "500") {
-                        const errorMsg = res?.data?.message
-                        message.error(errorMsg)
-                        reject(errorMsg);
+                .then((res: any) => {
+                    if (res.status == 401) {
+                        message.error(noAuthMessage)
+                        reject(noAuthMessage);
+                        exitPlugin()
                     } else {
-                        resolve(this.interceptors.response(res));
+                        if (res?.data?.code == "400" || res?.data?.code == "500") {
+                            const errorMsg = res?.data?.message
+                            message.error(errorMsg)
+                            reject(errorMsg);
+                        } else {
+                            resolve(this.interceptors.response(res));
+                        }
                     }
                 })
                 .catch((err) => {
@@ -210,14 +239,21 @@ class Request {
                     // query: requestQuery,
                     ...headers
                 })
-                .then((res:any) => {
-                    if(res?.data?.code == "400" || res?.data?.code == "500") {
-                        const errorMsg = res?.data?.message
-                        message.error(errorMsg)
-                        reject(errorMsg);
+                .then((res: any) => {
+                    if (res.status == 401) {
+                        message.error(noAuthMessage)
+                        reject(noAuthMessage);
+                        exitPlugin()
                     } else {
-                        resolve(this.interceptors.response(res));
+                        if (res?.data?.code == "400" || res?.data?.code == "500") {
+                            const errorMsg = res?.data?.message
+                            message.error(errorMsg)
+                            reject(errorMsg);
+                        } else {
+                            resolve(this.interceptors.response(res));
+                        }
                     }
+
                 })
                 .catch((err) => {
                     reject(err);
@@ -239,13 +275,19 @@ class Request {
                     query: { ...requestQuery, tenantId: tenantId },
                     ...headers
                 })
-                .then((res:any) => {
-                    if(res?.data?.code == "400" || res?.data?.code == "500") {
-                        const errorMsg = res?.data?.message
-                        message.error(errorMsg)
-                        reject(errorMsg);
+                .then((res: any) => {
+                    if (res.status == 401) {
+                        message.error(noAuthMessage)
+                        reject(noAuthMessage);
+                        exitPlugin()
                     } else {
-                        resolve(this.interceptors.response(res));
+                        if (res?.data?.code == "400" || res?.data?.code == "500") {
+                            const errorMsg = res?.data?.message
+                            message.error(errorMsg)
+                            reject(errorMsg);
+                        } else {
+                            resolve(this.interceptors.response(res));
+                        }
                     }
                 })
                 .catch((err) => {

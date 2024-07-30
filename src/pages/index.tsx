@@ -96,6 +96,26 @@ export const formItemMap: Record<string, any> = {
   "13": "CompositeForm",
 };
 
+export const exitPlugin = async () => {
+  mqttClient.publish({
+    type: PathConfig.exit,
+    output_data: {
+      result: "1",
+    },
+  });
+  // 退出登录
+  const homeDirPath = await homeDir();
+  await removeFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/token.txt`);
+  await removeFile(
+    `${homeDirPath}${BasicConfig.APPCacheFolder}/network.txt`
+  );
+  sse.close()
+  mqttClient.close()
+  const mainWindow = getCurrent()
+  mainWindow?.close();
+  await invoke("exist", {});
+}
+
 export interface logItemType {
   log: string;
   dateTime: string;
@@ -1106,6 +1126,8 @@ const index = () => {
         instances: updateInstances,
         tenantId: sse.tenantId || "719",
         userId: user.id,
+      }).catch(() => {
+        dispatch(setLoading(false));
       });
       warpperSetLog(() => {
         setLogData([
@@ -1296,6 +1318,8 @@ const index = () => {
             instances: updateInstances,
             tenantId: sse.tenantId || "719",
             userId: user.id,
+          }).catch(() =>{
+            dispatch(setLoading(false));
           });
         }
 
@@ -2877,7 +2901,7 @@ const index = () => {
               item.apicode != "CheckOutDate"
             ) {
               // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
-              if ((pluginValue == '') && onChainValue) {
+              if ((pluginValue == '') && onChainValue && readPermission(onChainValue)) {
                 return (
                   <div className="text_line">
                     {renderIsPlmMosaic({
@@ -2907,7 +2931,7 @@ const index = () => {
                 );
               }
 
-              if (pluginValue && onChainValue && pluginValue != onChainValue) {
+              if (pluginValue && onChainValue && readPermission(onChainValue) && pluginValue != onChainValue) {
                 return (
                   <div>
                     <div className="text-red-500">

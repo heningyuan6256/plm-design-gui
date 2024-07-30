@@ -255,6 +255,10 @@ class MqttService {
   unRegisterCallBack(socketType: string) {
     this.callBackMapping[socketType] = null;
   }
+
+  close() {
+    this.mqtt.end()
+  }
 }
 
 const mqttClient = MqttService.Instance;
