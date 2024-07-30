@@ -454,7 +454,7 @@ export default function AttrMap() {
                 </div>
               })
             }
-            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+            {/* <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
               <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
               <div style={{ width: '150px' }}>上传工程图另存文件格式:</div>
               <Select suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" onChange={(e) => {
@@ -467,7 +467,7 @@ export default function AttrMap() {
               <Select onChange={(e) => {
                 setFileAddress({ ...fileAddress, partSaveas: e })
               }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partSaveas} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'stp', value: 'stp' }, { label: 'stl', value: 'stl' }]} size={'small'}></Select>
-            </div>
+            </div> */}
           </div>
         </div>
 

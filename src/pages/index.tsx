@@ -1318,7 +1318,7 @@ const index = () => {
             instances: updateInstances,
             tenantId: sse.tenantId || "719",
             userId: user.id,
-          }).catch(() =>{
+          }).catch(() => {
             dispatch(setLoading(false));
           });
         }
@@ -3464,6 +3464,10 @@ const index = () => {
                   console.log(requiredColumns, "requiredColumns");
 
                   let requiredMsgList: Record<string, any>[] = [];
+                  if (!(materialCenterData || []).filter(item => item.flag).length) {
+                    message.warning("没有需要创建的物料")
+                    return
+                  }
                   materialCenterData.forEach((item) => {
                     requiredColumns.forEach((childItem: any) => {
                       if (!item[childItem.dataIndex]) {
