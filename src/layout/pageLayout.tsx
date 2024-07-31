@@ -20,7 +20,7 @@ import API from "../utils/api";
 import { Utils } from "../utils";
 import { getClient, ResponseType } from "@tauri-apps/api/http";
 import { homeDir } from "@tauri-apps/api/path";
-import { createDir, readTextFile, writeBinaryFile, writeTextFile } from "@tauri-apps/api/fs";
+import { createDir, exists, readTextFile, writeBinaryFile, writeTextFile } from "@tauri-apps/api/fs";
 import { BasicsItemCode, ItemCode } from "../constant/itemCode";
 import { Command, open } from "@tauri-apps/api/shell";
 import { message } from "antd";
@@ -103,11 +103,12 @@ export const openDesign = async ({
 
       try {
         const homeDirPath = await homeDir();
-        const defaultSettingStr = await readTextFile(
+        const existSetting =  await exists(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`)
+        const defaultSettingStr = existSetting ? await readTextFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`
-        );
+        ) : '';
 
-        const defaultSetting = JSON.parse(defaultSettingStr)
+        const defaultSetting = defaultSettingStr ? JSON.parse(defaultSettingStr) : {}
 
          let downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
 

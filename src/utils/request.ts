@@ -7,6 +7,7 @@ import { BasicConfig } from "../constant/config";
 import { sse } from "./SSEService";
 import { message } from "antd";
 import { exitPlugin } from "../pages";
+import { getCurrent } from "@tauri-apps/api/window";
 
 const noAuthMessage = '验证超时，请重新登陆！'
 
@@ -96,9 +97,12 @@ class Request {
                 .then((res: any) => {
                     console.log(res, 'responseBody')
                     if (res.status == 401) {
-                        message.error(noAuthMessage)
-                        reject(noAuthMessage);
-                        exitPlugin()
+                        const win = getCurrent();
+                        if (win.label != 'Login') {
+                            message.error(noAuthMessage)
+                            reject(noAuthMessage);
+                            exitPlugin()
+                        }
                     } else {
                         if (res?.data?.code == "400" || res?.data?.code == "500") {
                             const errorMsg = res?.data?.message
@@ -130,9 +134,12 @@ class Request {
                 })
                 .then((res: any) => {
                     if (res.status == 401) {
-                        message.error(noAuthMessage)
-                        reject(noAuthMessage);
-                        exitPlugin()
+                        const win = getCurrent();
+                        if (win.label != 'Login') {
+                            message.error(noAuthMessage)
+                            reject(noAuthMessage);
+                            exitPlugin()
+                        }
                     } else {
                         if (res?.data?.code == "400" || res?.data?.code == "500") {
                             const errorMsg = res?.data?.message
@@ -167,9 +174,12 @@ class Request {
                 })
                 .then((res: any) => {
                     if (res.status == 401) {
-                        message.error(noAuthMessage)
-                        reject(noAuthMessage);
-                        exitPlugin()
+                        const win = getCurrent();
+                        if (win.label != 'Login') {
+                            message.error(noAuthMessage)
+                            reject(noAuthMessage);
+                            exitPlugin()
+                        }
                     } else {
                         if (res?.data?.code == "400" || res?.data?.code == "500") {
                             const errorMsg = res?.data?.message
@@ -204,9 +214,12 @@ class Request {
                 })
                 .then((res: any) => {
                     if (res.status == 401) {
-                        message.error(noAuthMessage)
-                        reject(noAuthMessage);
-                        exitPlugin()
+                        const win = getCurrent();
+                        if (win.label != 'Login') {
+                            message.error(noAuthMessage)
+                            reject(noAuthMessage);
+                            exitPlugin()
+                        }
                     } else {
                         if (res?.data?.code == "400" || res?.data?.code == "500") {
                             const errorMsg = res?.data?.message
@@ -241,9 +254,12 @@ class Request {
                 })
                 .then((res: any) => {
                     if (res.status == 401) {
-                        message.error(noAuthMessage)
-                        reject(noAuthMessage);
-                        exitPlugin()
+                        const win = getCurrent();
+                        if (win.label != 'Login') {
+                            message.error(noAuthMessage)
+                            reject(noAuthMessage);
+                            exitPlugin()
+                        }
                     } else {
                         if (res?.data?.code == "400" || res?.data?.code == "500") {
                             const errorMsg = res?.data?.message
@@ -277,9 +293,12 @@ class Request {
                 })
                 .then((res: any) => {
                     if (res.status == 401) {
-                        message.error(noAuthMessage)
-                        reject(noAuthMessage);
-                        exitPlugin()
+                        const win = getCurrent();
+                        if (win.label != 'Login') {
+                            message.error(noAuthMessage)
+                            reject(noAuthMessage);
+                            exitPlugin()
+                        }
                     } else {
                         if (res?.data?.code == "400" || res?.data?.code == "500") {
                             const errorMsg = res?.data?.message

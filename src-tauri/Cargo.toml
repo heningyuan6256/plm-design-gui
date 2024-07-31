@@ -31,12 +31,23 @@ window-shadows = "0.2.1"
 tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 tauri-plugin-fs-extra = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 tauri-plugin-fs-watch = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-
-winapi = {version = "0.3.9", features = ["winuser", "shellapi", "wingdi", "winbase", "ntdef", "errhandlingapi"] }
-windows = { version = "0.57.0", features = ["Win32_System_Com", "Win32_UI_Shell"] }
 image = "0.23"
 widestring = "1.1.0"
 base64 = "0.22.1"
+moka = { version = "0.12", features = ["sync"] }
+
+
+[target.'cfg(windows)'.dependencies.windows]
+version = "0.52"
+features = [
+    "Win32_UI_Shell",
+    "Win32_Storage_FileSystem",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+    "Win32_Foundation",
+    "Win32_UI_Controls",
+    "Win32_UI_WindowsAndMessaging"
+]
 
 [features]
 # by default Tauri runs in production mode
