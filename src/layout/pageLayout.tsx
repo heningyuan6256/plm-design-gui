@@ -28,6 +28,7 @@ import { setLoading } from "../models/loading";
 import { useAsyncEffect, useMemoizedFn, useMount } from "ahooks";
 import { invoke } from "@tauri-apps/api";
 import { fetchMessageData } from "../models/message";
+import { readPermission } from "../components/PlmMosaic";
 interface LayoutProps {
   children?: React.ReactNode;
 }
@@ -103,18 +104,23 @@ export const openDesign = async ({
 
       try {
         const homeDirPath = await homeDir();
-        const existSetting =  await exists(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`)
+        const existSetting = await exists(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`)
         const defaultSettingStr = existSetting ? await readTextFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`
         ) : '';
 
         const defaultSetting = defaultSettingStr ? JSON.parse(defaultSettingStr) : {}
 
-         let downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
+        let downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
 
-         downloadFolder = `${downloadFolder}\\${instance.productName}`
+        downloadFolder = `${downloadFolder}\\${instance.productName}`
 
-         await createDir(
+        if (!readPermission(instance.productName)) {
+          message.error("无当前实例的产品查看权限")
+          return
+        }
+
+        await createDir(
           `${downloadFolder}`,
           { recursive: true }
         );
@@ -165,7 +171,7 @@ export const openDesign = async ({
                 //   contents: response.data,
                 // });
                 await writeBinaryFile({
-                  path:`${downloadFolder}\\${fileName}\\${data[i].insDesc}`,
+                  path: `${downloadFolder}\\${fileName}\\${data[i].insDesc}`,
                   contents: response.data,
                 });
                 if (data[i].children && data[i].children.length) {
@@ -174,7 +180,7 @@ export const openDesign = async ({
               }
             };
 
-            if(records?.length) {
+            if (records?.length) {
               await loop(records || []);
             }
 
@@ -186,6 +192,11 @@ export const openDesign = async ({
                 instance.insDesc}"`)
               cancelLoading();
             } else {
+              await invoke("open_designer", {
+                path: `"${downloadFolder +
+                  "\\" +
+                  fileName}"`
+              })
               await invoke("open_designer", {
                 path: `"${downloadFolder +
                   "\\" +
@@ -232,8 +243,8 @@ const PageLayout: React.FC<LayoutProps> = (data) => {
     });
   });
 
-  useAsyncEffect(async() => {
-    if(user.id){
+  useAsyncEffect(async () => {
+    if (user.id) {
       dispatch(fetchMessageData({
         parInsId: user.id,
         pageNo: "1",

@@ -200,6 +200,8 @@ export default function login() {
                 await invoke("open_designer", {
                   path: path
                 })
+                await invoke("open_designer", { path: `${path.substring(0, path.lastIndexOf('\\'))}"` })
+
                 await invoke("open_home", {
                   width: window.innerWidth,
                   height: window.innerHeight,
