@@ -112,7 +112,7 @@ export const exitPlugin = async () => {
   sse.close()
   mqttClient.close()
   const mainWindow = getCurrent()
-  if(mainWindow.label !== 'Login') {
+  if (mainWindow.label !== 'Login') {
     mainWindow?.close();
     await invoke("exist", {});
   }
@@ -1091,7 +1091,7 @@ const index = () => {
     //   req: ["E:\\OnChain个人空间\\FN4\\滑块\\滑块.SLDPRT"]
     // });
 
-    console.log(row,'rowrow')
+    console.log(row, 'rowrow')
     const updateInstances = [
       {
         id: row.file.onChain.insId,
@@ -2289,491 +2289,486 @@ const index = () => {
 
   const handleClick = async (name: string) => {
     if (name === "upload") {
-      if (!isNot2D(mqttClient.publishTopic)) {
-        upload2D()
-        return
-      }
-      warpperSetLog(() => {
-        setLogData([
-          ...lastestLogData.current,
-          {
-            log: "模型上传开始。。。",
-            dateTime: getCurrentTime(),
-            id: Utils.generateSnowId(),
-          },
-        ]);
-      });
-      // tribon重新写接口，首先需要创建文件，再然后需要创建物料
-      if (mqttClient.publishTopic === 'Tribon') {
-        setLogVisbile(true);
-        dispatch(setLoading(true));
-        // 创建实例
-        const nameNumberMap: any = await createInstance({
-          itemCode: BasicsItemCode.material,
-        });
-
-        if (!Object.keys(nameNumberMap).length) {
-          dispatch(setLoading(false))
+      const productName = Utils.getLabelInOptions({
+        value: selectProduct,
+        options: productOptions,
+      })
+      confirm(`请确认是否上传至${productName}?`, { title: '提示', type: 'warning' }).then(res => {
+        if (!res) {
           return
-        }
-
-        await createStructure({
-          nameNumberMap,
-          itemCode: BasicsItemCode.material,
-          tabCode: "10002003",
-        });
-        dispatch(setLoading(false))
-
-        // const pdfData = [...rightData[0].children, ...rightData[1].children, ...rightData[2].children, ...rightData[3].children]
-        // const FileArray = []
-        // for (let i = 0; i < pdfData.length; i++) {
-        //   FileArray.push(
-        //     new Promise(async (resolve, reject) => {
-        //       const arrayBufferData = await readBinaryFile(pdfData[i].path);
-        //       resolve({
-        //         name: pdfData[i].name,
-        //         data: new Blob([arrayBufferData]),
-        //         source: "Local",
-        //         isRemote: false,
-        //         type: pdfData[i].type,
-        //       });
-        //     })
-        //   );
-        // }
-
-
-        // Promise.all(FileArray).then(async (res) => {
-        //   console.log(res, 'FileArray')
-
-        //   const nameFileUrlMap = await uploadFile(res)
-
-        //   console.log(nameFileUrlMap, 'nameFileUrlMap')
-        //   // 根据所选的产品去查询第一个型谱的id
-        //   const spectrumReturnV: any = await API.getProductSpectrumList(
-        //     selectProduct
-        //   );
-
-        //   const fileTypeMap: any = {
-        //     '扁钢手工下料图': '1725740831471722497',
-        //     '扁钢数控下料图': '1725740752593641474',
-        //     '曲型加工图': '1725740960031334402',
-        //     '型材下料图': '1725741029036023809',
-        //     '组立装配图': '1725741077094359042'
-        //   }
-        //   const Category = '1459426710323851265'
-
-        //   const spectrum = spectrumReturnV.result[0].id;
-
-        //   const setVal = (row: any, col: any) => {
-        //     if (col.apicode === "ProductModel") {
-        //       return spectrum;
-        //     } else if (col.apicode === "Product") {
-        //       return selectProduct;
-        //     }
-        //     else if (col.apicode === "FileUrl") {
-        //       return `/plm/files${(nameFileUrlMap[
-        //         row.name
-        //       ]).response.uploadURL.split("/plm/files")[1]
-        //         }?name=${row.name}&size=10020&extension=pdf`;
-        //     }
-        //     else if (col.apicode === "Thumbnail") {
-        //       return "";
-        //     } else if (col.apicode === "FileFormat") {
-        //       return 'pdf';
-        //     } else if (col.apicode === "FileSize") {
-        //       return '10020';
-        //     } else if (col.apicode === "Category") {
-        //       return fileTypeMap[row.type] || Category;
-        //     } else if (col.apicode === "Description") {
-        //       return row.name.split('.')[0];
-        //     } else {
-        //       return "";
-        //     }
-        //   };
-
-        //   const dealData = res
-        //     .map((item: any, index) => {
-        //       return {
-        //         fileIndex: index,
-        //         itemCode: '10001006',
-        //         objectId: fileTypeMap[item.type] || Category,
-        //         workspaceId: selectProduct,
-        //         node_name: item.name,
-        //         file_path: item.path,
-        //         tenantId: sse.tenantId || "719",
-        //         verifyCode: "200",
-        //         user: user.id,
-        //         insAttrs: (Attrs)
-        //           .filter((item) => item.status)
-        //           .map((v) => {
-        //             return {
-        //               ...v,
-        //               value: setVal(item, v),
-        //             };
-        //           }),
-        //       };
-        //     });
-
-
-
-        //   console.log(dealData, "创建参数");
-        //   const successInstances: any = await API.createInstances(dealData);
-        //   console.log(successInstances, "创建返回");
-
-        //   const createLogArray: logItemType[] = [];
-        //   successInstances.result.forEach((item: any) => {
-        //     if (item && item.name) {
-        //       createLogArray.push({
-        //         log: `${item.name} 创建成功， 编号:${item.number}`,
-        //         dateTime: getCurrentTime(),
-        //         id: Utils.generateSnowId(),
-        //       });
-        //     }
-        //   });
-        //   dispatch(setLoading(false))
-        //   setMaterialCenterData(materialCenterData)
-
-        //   warpperSetLog(() => {
-        //     setLogData([...lastestLogData.current, ...createLogArray]);
-        //   });
-
-        // })
-        return
-      }
-
-      setLogVisbile(true);
-      dispatch(setLoading(true));
-
-      // 创建实例
-      const nameNumberMap: any = await createInstance({
-        itemCode: BasicsItemCode.file,
-      });
-
-      // const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
-
-      // 过滤当前已经存在的实例
-      const unExistInstances = centerData.filter(
-        (item) => item.file.onChain.flag != "exist"
-      );
-
-      // 修改文件编号
-      const pluginUpdateNumber = unExistInstances.map((item, index) => {
-        return {
-          product_name: item.node_name,
-          extra: "属性设置",
-          product_attrs: [
-            {
-              attr_name: "编号",
-              attr_type: "string",
-              attr_value: nameNumberMap[getRowKey(item)]?.number,
-            },
-          ],
-        };
-      });
-
-      const FileArray = [];
-
-      for (let item of centerData) {
-        if (item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number) {
-          if (item.file_path && (mqttClient.publishTopic != 'Tribon')) {
-            FileArray.push(
-              new Promise(async (resolve, reject) => {
-                const arrayBufferData = await readBinaryFile(item.file_path);
-                resolve({
-                  name: getFileNameWithFormat(item),
-                  data: new Blob([arrayBufferData]),
-                  source: "Local",
-                  isRemote: false,
-                });
-              })
-            );
+        } else {
+          if (!isNot2D(mqttClient.publishTopic)) {
+            upload2D()
+            return
           }
-          if (item.pic_path) {
-            FileArray.push(
-              new Promise(async (resolve, reject) => {
-                const arrayBufferData = await readBinaryFile(item.pic_path);
-                resolve({
-                  name: `${item.pic_path.substring(
-                    item.pic_path.lastIndexOf("\\") + 1
-                  )}`,
-                  data: new Blob([arrayBufferData]),
-                  source: "Local",
-                  isRemote: false,
-                });
-              })
-            );
-          }
-
-
-          // if(item.file_path && mqttClient.publishTopic === 'catia') {
-          //   const stp_path = `${item.file_path.substring(0,item.file_path.lastIndexOf('.'))}.stp`
-
-          //   const existStp = await exists(stp_path);
-          //   if (existStp) {
-          //     item.stp_path = stp_path
-          //     FileArray.push(
-          //       new Promise(async (resolve, reject) => {
-          //         const arrayBufferData = await readBinaryFile(stp_path);
-          //         resolve({
-          //           name: `${stp_path.substring(
-          //             stp_path.lastIndexOf("\\") + 1
-          //           )}`,
-          //           data: new Blob([arrayBufferData]),
-          //           source: "Local",
-          //           isRemote: false,
-          //         });
-          //       })
-          //     );
-          //   }
-          // }
-
-
-          if (item.step_path) {
-            FileArray.push(
-              new Promise(async (resolve, reject) => {
-                const arrayBufferData = await readBinaryFile(item.step_path);
-                resolve({
-                  name: `${item.step_path.substring(
-                    item.step_path.lastIndexOf("\\") + 1
-                  )}`,
-                  data: new Blob([arrayBufferData]),
-                  source: "Local",
-                  isRemote: false,
-                  dataType: "step",
-                });
-              })
-            );
-          }
-          if (item.drw_path) {
-            FileArray.push(
-              new Promise(async (resolve, reject) => {
-                const arrayBufferData = await readBinaryFile(item.drw_path);
-                resolve({
-                  name: `${item.drw_path.substring(
-                    item.drw_path.lastIndexOf("\\") + 1
-                  )}`,
-                  data: new Blob([arrayBufferData]),
-                  source: "Local",
-                  isRemote: false,
-                  dataType: "drw",
-                });
-              })
-            );
-          }
-        }
-      }
-
-      const fileItems = await Promise.all([...FileArray]);
-
-      mqttClient.publish({
-        type: CommandConfig.setProductAttVal,
-        attr_set: pluginUpdateNumber,
-      });
-      console.log(nameNumberMap, "nameNumberMapnameNumberMap");
-      // // 批量创建文件结构
-      createStructure({
-        nameNumberMap,
-        itemCode: BasicsItemCode.file,
-        tabCode: "10002016",
-      });
-      const nameFileUrlMap = await uploadFile(fileItems);
-      // const nameThumbMap = await uploadFile(FileThumbArray)
-      if (mqttClient.publishTopic != 'Tribon') {
-        // 批量上传附件
-        const {
-          result: { records: tabAttrs },
-        }: any = await API.getInstanceAttrs({
-          itemCode: BasicsItemCode.file,
-          tabCode: "10002008",
-        });
-
-        console.log(nameFileUrlMap, "nameFileUrlMap");
-
-        const setAttachmentValue = (
-          item: any,
-          apicode: string,
-          type: "drw" | "step" | 'stp'
-        ) => {
-          const nameWidthFormat = `${item[`${type}_path`].substring(
-            item[`${type}_path`].lastIndexOf("\\") + 1
-          )}`;
-          if (apicode === "ID") {
-            return nameWidthFormat;
-          } else if (apicode === "FileId") {
-            return nameFileUrlMap[nameWidthFormat].id;
-          } else if (apicode === "OnlineEditingStatus") {
-            return "1";
-          } else if (apicode === "OldFileUrl") {
-            return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
-              "/plm/files"
-            )[1]
-              }`;
-          } else if (apicode === "FileName") {
-            return nameWidthFormat;
-          } else if (apicode === "FileSize") {
-            return `${nameFileUrlMap[nameWidthFormat].size}`;
-          } else if (apicode === "FileFormat") {
-            return `${nameFileUrlMap[nameWidthFormat].extension}`;
-          } else if (apicode === "FileUrl") {
-            return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
-              "/plm/files"
-            )[1]
-              }`;
-          } else {
-            return "";
-          }
-        };
-        const addAttachmentParams: any = [];
-
-        centerData
-          .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
-          .forEach((item) => {
-            if (item.step_path) {
-              addAttachmentParams.push({
-                instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-                itemCode: BasicsItemCode.file,
-                tabCode: "10002008",
-                versionNumber: "Draft",
-                versionOrder: "1",
-                insAttrs: tabAttrs.map((attr: any) => {
-                  return {
-                    apicode: attr.apicode,
-                    id: attr.id,
-                    title: attr.name,
-                    valueType: attr.valueType,
-                    value: setAttachmentValue(item, attr.apicode, "step"),
-                  };
-                }),
-              });
-            }
-            //  else if (item.stp_path) {
-            //   addAttachmentParams.push({
-            //     instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-            //     itemCode: BasicsItemCode.file,
-            //     tabCode: "10002008",
-            //     versionNumber: "Draft",
-            //     versionOrder: "1",
-            //     insAttrs: tabAttrs.map((attr: any) => {
-            //       return {
-            //         apicode: attr.apicode,
-            //         id: attr.id,
-            //         title: attr.name,
-            //         valueType: attr.valueType,
-            //         value: setAttachmentValue(item, attr.apicode, "stp"),
-            //       };
-            //     }),
-            //   });
-            // } 
-            else if (item.drw_path) {
-              addAttachmentParams.push({
-                instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-                itemCode: BasicsItemCode.file,
-                tabCode: "10002008",
-                versionNumber: "Draft",
-                versionOrder: "1",
-                insAttrs: tabAttrs.map((attr: any) => {
-                  return {
-                    apicode: attr.apicode,
-                    id: attr.id,
-                    title: attr.name,
-                    valueType: attr.valueType,
-                    value: setAttachmentValue(item, attr.apicode, "drw"),
-                  };
-                }),
-              });
-            }
-          });
-
-        if (addAttachmentParams.length) {
-          const attchmentResult = await API.addInstanceAttributeAttachment({
-            tenantId: sse.tenantId || "719",
-            instanceAttrVos: addAttachmentParams,
-          });
-          console.log(attchmentResult, addAttachmentParams, "FileAttachment");
-        }
-
-        const filterCenterData = centerData
-          .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
-
-        const nameThumbMap: any = await invoke("get_icons", {
-          req: filterCenterData.map(row => row.file_path)
-        });
-
-        //批量更新文件地址
-        const updateInstances = filterCenterData
-          .map((item) => {
-            return {
-              id: nameNumberMap[getRowKey(item)]?.instanceId,
-              itemCode: BasicsItemCode.file,
-              tabCode: "10002001",
-              insAttrs: Attrs.filter((attr) =>
-                (mqttClient.publishTopic !== 'Tribon' ? ["FileUrl", "Thumbnail"] : ['FileUrl']).includes(attr.apicode)
-              ).map((attr) => {
-                if (attr.apicode === "FileUrl") {
-                  return {
-                    ...attr,
-                    value: mqttClient.publishTopic !== 'Tribon' ? `/plm/files${nameFileUrlMap[
-                      getFileNameWithFormat(item)
-                    ].response.uploadURL.split("/plm/files")[1]
-                      }?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize
-                      }&extension=${item.file.plugin?.FileFormat}` : `/plm/files/ba8ad0cb2f63dbd396ab35de7e6738cb+528d612f-580e-44d5-9510-c11630179a5c?name=${item.file.plugin?.fileNameWithFormat}&size=10247&extension=pdf`,
-                  };
-                } else {
-                  return {
-                    ...attr,
-                    value: `data:image/png;base64,${nameThumbMap[item.file_path]}`,
-                  };
-                }
-              }),
-              tenantId: sse.tenantId || "719",
-            };
-          });
-        if (updateInstances.length) {
-          await API.batchUpdate({
-            instances: updateInstances,
-            tenantId: sse.tenantId || "719",
-            userId: user.id,
-          });
           warpperSetLog(() => {
             setLogData([
               ...lastestLogData.current,
               {
-                log: "批量更新模型地址成功！",
+                log: "模型上传开始。。。",
                 dateTime: getCurrentTime(),
                 id: Utils.generateSnowId(),
               },
             ]);
           });
+          // tribon重新写接口，首先需要创建文件，再然后需要创建物料
+          if (mqttClient.publishTopic === 'Tribon') {
+            setLogVisbile(true);
+            dispatch(setLoading(true));
+            // 创建实例
+            const nameNumberMap: any = await createInstance({
+              itemCode: BasicsItemCode.material,
+            });
+
+            if (!Object.keys(nameNumberMap).length) {
+              dispatch(setLoading(false))
+              return
+            }
+
+            await createStructure({
+              nameNumberMap,
+              itemCode: BasicsItemCode.material,
+              tabCode: "10002003",
+            });
+            dispatch(setLoading(false))
+
+            // const pdfData = [...rightData[0].children, ...rightData[1].children, ...rightData[2].children, ...rightData[3].children]
+            // const FileArray = []
+            // for (let i = 0; i < pdfData.length; i++) {
+            //   FileArray.push(
+            //     new Promise(async (resolve, reject) => {
+            //       const arrayBufferData = await readBinaryFile(pdfData[i].path);
+            //       resolve({
+            //         name: pdfData[i].name,
+            //         data: new Blob([arrayBufferData]),
+            //         source: "Local",
+            //         isRemote: false,
+            //         type: pdfData[i].type,
+            //       });
+            //     })
+            //   );
+            // }
+
+
+            // Promise.all(FileArray).then(async (res) => {
+            //   console.log(res, 'FileArray')
+
+            //   const nameFileUrlMap = await uploadFile(res)
+
+            //   console.log(nameFileUrlMap, 'nameFileUrlMap')
+            //   // 根据所选的产品去查询第一个型谱的id
+            //   const spectrumReturnV: any = await API.getProductSpectrumList(
+            //     selectProduct
+            //   );
+
+            //   const fileTypeMap: any = {
+            //     '扁钢手工下料图': '1725740831471722497',
+            //     '扁钢数控下料图': '1725740752593641474',
+            //     '曲型加工图': '1725740960031334402',
+            //     '型材下料图': '1725741029036023809',
+            //     '组立装配图': '1725741077094359042'
+            //   }
+            //   const Category = '1459426710323851265'
+
+            //   const spectrum = spectrumReturnV.result[0].id;
+
+            //   const setVal = (row: any, col: any) => {
+            //     if (col.apicode === "ProductModel") {
+            //       return spectrum;
+            //     } else if (col.apicode === "Product") {
+            //       return selectProduct;
+            //     }
+            //     else if (col.apicode === "FileUrl") {
+            //       return `/plm/files${(nameFileUrlMap[
+            //         row.name
+            //       ]).response.uploadURL.split("/plm/files")[1]
+            //         }?name=${row.name}&size=10020&extension=pdf`;
+            //     }
+            //     else if (col.apicode === "Thumbnail") {
+            //       return "";
+            //     } else if (col.apicode === "FileFormat") {
+            //       return 'pdf';
+            //     } else if (col.apicode === "FileSize") {
+            //       return '10020';
+            //     } else if (col.apicode === "Category") {
+            //       return fileTypeMap[row.type] || Category;
+            //     } else if (col.apicode === "Description") {
+            //       return row.name.split('.')[0];
+            //     } else {
+            //       return "";
+            //     }
+            //   };
+
+            //   const dealData = res
+            //     .map((item: any, index) => {
+            //       return {
+            //         fileIndex: index,
+            //         itemCode: '10001006',
+            //         objectId: fileTypeMap[item.type] || Category,
+            //         workspaceId: selectProduct,
+            //         node_name: item.name,
+            //         file_path: item.path,
+            //         tenantId: sse.tenantId || "719",
+            //         verifyCode: "200",
+            //         user: user.id,
+            //         insAttrs: (Attrs)
+            //           .filter((item) => item.status)
+            //           .map((v) => {
+            //             return {
+            //               ...v,
+            //               value: setVal(item, v),
+            //             };
+            //           }),
+            //       };
+            //     });
+
+
+
+            //   console.log(dealData, "创建参数");
+            //   const successInstances: any = await API.createInstances(dealData);
+            //   console.log(successInstances, "创建返回");
+
+            //   const createLogArray: logItemType[] = [];
+            //   successInstances.result.forEach((item: any) => {
+            //     if (item && item.name) {
+            //       createLogArray.push({
+            //         log: `${item.name} 创建成功， 编号:${item.number}`,
+            //         dateTime: getCurrentTime(),
+            //         id: Utils.generateSnowId(),
+            //       });
+            //     }
+            //   });
+            //   dispatch(setLoading(false))
+            //   setMaterialCenterData(materialCenterData)
+
+            //   warpperSetLog(() => {
+            //     setLogData([...lastestLogData.current, ...createLogArray]);
+            //   });
+
+            // })
+            return
+          }
+
+          setLogVisbile(true);
+          dispatch(setLoading(true));
+
+          // 创建实例
+          const nameNumberMap: any = await createInstance({
+            itemCode: BasicsItemCode.file,
+          });
+
+          // const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
+
+          // 过滤当前已经存在的实例
+          const unExistInstances = centerData.filter(
+            (item) => item.file.onChain.flag != "exist"
+          );
+
+          // 修改文件编号
+          const pluginUpdateNumber = unExistInstances.map((item, index) => {
+            return {
+              product_name: item.node_name,
+              extra: "属性设置",
+              product_attrs: [
+                {
+                  attr_name: "编号",
+                  attr_type: "string",
+                  attr_value: nameNumberMap[getRowKey(item)]?.number,
+                },
+              ],
+            };
+          });
+
+          const FileArray = [];
+
+          for (let item of centerData) {
+            if (item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number) {
+              if (item.file_path && (mqttClient.publishTopic != 'Tribon')) {
+                FileArray.push(
+                  new Promise(async (resolve, reject) => {
+                    const arrayBufferData = await readBinaryFile(item.file_path);
+                    resolve({
+                      name: getFileNameWithFormat(item),
+                      data: new Blob([arrayBufferData]),
+                      source: "Local",
+                      isRemote: false,
+                    });
+                  })
+                );
+              }
+              if (item.pic_path) {
+                FileArray.push(
+                  new Promise(async (resolve, reject) => {
+                    const arrayBufferData = await readBinaryFile(item.pic_path);
+                    resolve({
+                      name: `${item.pic_path.substring(
+                        item.pic_path.lastIndexOf("\\") + 1
+                      )}`,
+                      data: new Blob([arrayBufferData]),
+                      source: "Local",
+                      isRemote: false,
+                    });
+                  })
+                );
+              }
+
+
+              // if(item.file_path && mqttClient.publishTopic === 'catia') {
+              //   const stp_path = `${item.file_path.substring(0,item.file_path.lastIndexOf('.'))}.stp`
+
+              //   const existStp = await exists(stp_path);
+              //   if (existStp) {
+              //     item.stp_path = stp_path
+              //     FileArray.push(
+              //       new Promise(async (resolve, reject) => {
+              //         const arrayBufferData = await readBinaryFile(stp_path);
+              //         resolve({
+              //           name: `${stp_path.substring(
+              //             stp_path.lastIndexOf("\\") + 1
+              //           )}`,
+              //           data: new Blob([arrayBufferData]),
+              //           source: "Local",
+              //           isRemote: false,
+              //         });
+              //       })
+              //     );
+              //   }
+              // }
+
+
+              if (item.step_path) {
+                FileArray.push(
+                  new Promise(async (resolve, reject) => {
+                    const arrayBufferData = await readBinaryFile(item.step_path);
+                    resolve({
+                      name: `${item.step_path.substring(
+                        item.step_path.lastIndexOf("\\") + 1
+                      )}`,
+                      data: new Blob([arrayBufferData]),
+                      source: "Local",
+                      isRemote: false,
+                      dataType: "step",
+                    });
+                  })
+                );
+              }
+              if (item.drw_path) {
+                FileArray.push(
+                  new Promise(async (resolve, reject) => {
+                    const arrayBufferData = await readBinaryFile(item.drw_path);
+                    resolve({
+                      name: `${item.drw_path.substring(
+                        item.drw_path.lastIndexOf("\\") + 1
+                      )}`,
+                      data: new Blob([arrayBufferData]),
+                      source: "Local",
+                      isRemote: false,
+                      dataType: "drw",
+                    });
+                  })
+                );
+              }
+            }
+          }
+
+          const fileItems = await Promise.all([...FileArray]);
+
+          mqttClient.publish({
+            type: CommandConfig.setProductAttVal,
+            attr_set: pluginUpdateNumber,
+          });
+          console.log(nameNumberMap, "nameNumberMapnameNumberMap");
+          // // 批量创建文件结构
+          createStructure({
+            nameNumberMap,
+            itemCode: BasicsItemCode.file,
+            tabCode: "10002016",
+          });
+          const nameFileUrlMap = await uploadFile(fileItems);
+          // const nameThumbMap = await uploadFile(FileThumbArray)
+          if (mqttClient.publishTopic != 'Tribon') {
+            // 批量上传附件
+            const {
+              result: { records: tabAttrs },
+            }: any = await API.getInstanceAttrs({
+              itemCode: BasicsItemCode.file,
+              tabCode: "10002008",
+            });
+
+            console.log(nameFileUrlMap, "nameFileUrlMap");
+
+            const setAttachmentValue = (
+              item: any,
+              apicode: string,
+              type: "drw" | "step" | 'stp'
+            ) => {
+              const nameWidthFormat = `${item[`${type}_path`].substring(
+                item[`${type}_path`].lastIndexOf("\\") + 1
+              )}`;
+              if (apicode === "ID") {
+                return nameWidthFormat;
+              } else if (apicode === "FileId") {
+                return nameFileUrlMap[nameWidthFormat].id;
+              } else if (apicode === "OnlineEditingStatus") {
+                return "1";
+              } else if (apicode === "OldFileUrl") {
+                return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
+                  "/plm/files"
+                )[1]
+                  }`;
+              } else if (apicode === "FileName") {
+                return nameWidthFormat;
+              } else if (apicode === "FileSize") {
+                return `${nameFileUrlMap[nameWidthFormat].size}`;
+              } else if (apicode === "FileFormat") {
+                return `${nameFileUrlMap[nameWidthFormat].extension}`;
+              } else if (apicode === "FileUrl") {
+                return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
+                  "/plm/files"
+                )[1]
+                  }`;
+              } else {
+                return "";
+              }
+            };
+            const addAttachmentParams: any = [];
+
+            centerData
+              .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
+              .forEach((item) => {
+                if (item.step_path) {
+                  addAttachmentParams.push({
+                    instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+                    itemCode: BasicsItemCode.file,
+                    tabCode: "10002008",
+                    versionNumber: "Draft",
+                    versionOrder: "1",
+                    insAttrs: tabAttrs.map((attr: any) => {
+                      return {
+                        apicode: attr.apicode,
+                        id: attr.id,
+                        title: attr.name,
+                        valueType: attr.valueType,
+                        value: setAttachmentValue(item, attr.apicode, "step"),
+                      };
+                    }),
+                  });
+                }
+                //  else if (item.stp_path) {
+                //   addAttachmentParams.push({
+                //     instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+                //     itemCode: BasicsItemCode.file,
+                //     tabCode: "10002008",
+                //     versionNumber: "Draft",
+                //     versionOrder: "1",
+                //     insAttrs: tabAttrs.map((attr: any) => {
+                //       return {
+                //         apicode: attr.apicode,
+                //         id: attr.id,
+                //         title: attr.name,
+                //         valueType: attr.valueType,
+                //         value: setAttachmentValue(item, attr.apicode, "stp"),
+                //       };
+                //     }),
+                //   });
+                // } 
+                else if (item.drw_path) {
+                  addAttachmentParams.push({
+                    instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+                    itemCode: BasicsItemCode.file,
+                    tabCode: "10002008",
+                    versionNumber: "Draft",
+                    versionOrder: "1",
+                    insAttrs: tabAttrs.map((attr: any) => {
+                      return {
+                        apicode: attr.apicode,
+                        id: attr.id,
+                        title: attr.name,
+                        valueType: attr.valueType,
+                        value: setAttachmentValue(item, attr.apicode, "drw"),
+                      };
+                    }),
+                  });
+                }
+              });
+
+            if (addAttachmentParams.length) {
+              const attchmentResult = await API.addInstanceAttributeAttachment({
+                tenantId: sse.tenantId || "719",
+                instanceAttrVos: addAttachmentParams,
+              });
+              console.log(attchmentResult, addAttachmentParams, "FileAttachment");
+            }
+
+            const filterCenterData = centerData
+              .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
+
+            const nameThumbMap: any = await invoke("get_icons", {
+              req: filterCenterData.map(row => row.file_path)
+            });
+
+            //批量更新文件地址
+            const updateInstances = filterCenterData
+              .map((item) => {
+                return {
+                  id: nameNumberMap[getRowKey(item)]?.instanceId,
+                  itemCode: BasicsItemCode.file,
+                  tabCode: "10002001",
+                  insAttrs: Attrs.filter((attr) =>
+                    (mqttClient.publishTopic !== 'Tribon' ? ["FileUrl", "Thumbnail"] : ['FileUrl']).includes(attr.apicode)
+                  ).map((attr) => {
+                    if (attr.apicode === "FileUrl") {
+                      return {
+                        ...attr,
+                        value: mqttClient.publishTopic !== 'Tribon' ? `/plm/files${nameFileUrlMap[
+                          getFileNameWithFormat(item)
+                        ].response.uploadURL.split("/plm/files")[1]
+                          }?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize
+                          }&extension=${item.file.plugin?.FileFormat}` : `/plm/files/ba8ad0cb2f63dbd396ab35de7e6738cb+528d612f-580e-44d5-9510-c11630179a5c?name=${item.file.plugin?.fileNameWithFormat}&size=10247&extension=pdf`,
+                      };
+                    } else {
+                      return {
+                        ...attr,
+                        value: `data:image/png;base64,${nameThumbMap[item.file_path]}`,
+                      };
+                    }
+                  }),
+                  tenantId: sse.tenantId || "719",
+                };
+              });
+            if (updateInstances.length) {
+              await API.batchUpdate({
+                instances: updateInstances,
+                tenantId: sse.tenantId || "719",
+                userId: user.id,
+              });
+              warpperSetLog(() => {
+                setLogData([
+                  ...lastestLogData.current,
+                  {
+                    log: "批量更新模型地址成功！",
+                    dateTime: getCurrentTime(),
+                    id: Utils.generateSnowId(),
+                  },
+                ]);
+              });
+            }
+
+            warpperSetLog(() => {
+              setLogData([
+                ...lastestLogData.current,
+                {
+                  log: "上传成功！",
+                  dateTime: getCurrentTime(),
+                  id: Utils.generateSnowId(),
+                },
+              ]);
+            });
+          }
+          await dealCurrentBom(designData);
         }
+      })
 
-        warpperSetLog(() => {
-          setLogData([
-            ...lastestLogData.current,
-            {
-              log: "上传成功！",
-              dateTime: getCurrentTime(),
-              id: Utils.generateSnowId(),
-            },
-          ]);
-        });
-      }
-
-
-
-      // 批量增加附件
-
-
-      // warpperSetLog(() => {
-      //   setLogData([
-      //     ...lastestLogData.current,
-      //     {
-      //       log: "模型上传成功！",
-      //       dateTime: getCurrentTime(),
-      //       id: Utils.generateSnowId(),
-      //     },
-      //   ]);
-      // });
-      await dealCurrentBom(designData);
     } else if (name === "log") {
       setLogVisbile(true);
     } else if (name === "refresh") {
