@@ -175,6 +175,10 @@ export default function login() {
         NewRequest.initAddress(address, token);
         const homeDirPath = await homeDir();
         await writeFile(
+          `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.TokenCache}`,
+          token
+        );
+        await writeFile(
           `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`,
           address
         );

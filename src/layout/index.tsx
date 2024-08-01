@@ -48,53 +48,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     command.stdout.on("data", async (line: string) => {
       const dynamicTopic = line.split(/\s+/)[3];
       if (dynamicTopic) {
-        // console.log(CryptoJS,'CryptoJS.SHA256')
-        // let decData = CryptoJS.enc.Base64.parse('jhEtAVEMxHPA1RgQmQiK1gAAAAAAAAA=').toString(CryptoJS.enc.Utf8)
-        // var bytes = CryptoJS.AES.decrypt(decData, '0123456789abcdef0123456789abcdef').toString(CryptoJS.enc.Utf8);
-        // console.log(JSON.parse(bytes),'bytes');
-
-        // var originalText = bytes.toString(CryptoJS.enc.Utf8)
-        // console.log(originalText,'originalText')
         mqttClient?.connect(BasicConfig.MqttConnectUrl, dynamicTopic);
-
-        // const ffmpeg = Command.sidecar(
-        //   "binaries/OnChain_DesignFusion",
-        //   ["-t", "solidworks", "-m", "create-cube", "-o", '""'],
-        //   { encoding: "GBK" }
-        // );
-        // ffmpeg.on("error", (...args) => {
-        //   console.log(args, "error-args");
-        // });
-        // ffmpeg.on("close", (...args) => {
-        //   console.log(args, "close-args");
-        // });
-
-        // ffmpeg.stdout.addListener("data", (data) => console.log("CMD_OUT: " + data))
-        // ffmpeg.stderr.addListener("data", (data) => console.log("CMD_ERR: " + data))
-
-        // ffmpeg.execute()
-        // const aa = await ffmpeg.execute();
-
         const homeDirPath = await homeDir();
-        // const ActiveWindow = WebviewWindow.getByLabel("Active");
-        // ActiveWindow?.hide()
-
-        // let activeText = ''
-        // try {
-        //   activeText = await readTextFile(
-        //     `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.Active}`
-        //   );
-        // } catch (error) { }
-        // if (window.location.pathname === '/active') {
-        //   if (!WebviewWindow.getByLabel('Login')?.isVisible()) {
-        //     await invoke("open_login", {});
-        //     ActiveWindow?.close()
-        //   }
-        // }
-
-
         await invoke("init");
-
         let networkAddress = "";
         try {
           networkAddress = await readTextFile(

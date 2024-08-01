@@ -1050,7 +1050,7 @@ const index = () => {
       return {
         insAttrs: tabAttrs
           .filter((attr: any) => {
-            return ["ID", "Qty"];
+            return ["ID", "Qty"].includes(attr.apicode);
           })
           .map((attr: any) => {
             return {
@@ -1091,6 +1091,7 @@ const index = () => {
     //   req: ["E:\\OnChain个人空间\\FN4\\滑块\\滑块.SLDPRT"]
     // });
 
+    console.log(row,'rowrow')
     const updateInstances = [
       {
         id: row.file.onChain.insId,
@@ -1272,7 +1273,7 @@ const index = () => {
           return {
             insAttrs: tabAttrs
               .filter((attr: any) => {
-                return ["ID", "Qty"];
+                return ["ID", "Qty"].includes(attr.apicode);
               })
               .map((attr: any) => {
                 return {
