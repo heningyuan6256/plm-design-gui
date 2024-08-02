@@ -621,6 +621,9 @@ const index = () => {
       const flattenData: Record<string, any>[] = [];
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
+          if (data[i].children && data[i].children.every((v: any) => !v.file_path)) {
+            data[i].children = undefined
+          }
           // 覆盖初始值 todo
           if (mqttClient.publishTopic === 'Tribon') {
             // const numberData = data[i]?.property && data[i]?.property[0] ? data[i]?.property[0].DefaultVal : ''
@@ -900,10 +903,10 @@ const index = () => {
     });
   };
 
-  const upadteData = async({ row }: { row: any }) => {
+  const upadteData = async ({ row }: { row: any }) => {
     // 首先判断当前有没有签出权限
-    const hasCheckoutAuth = await getInstanceAuth(BasicsItemCode.file, row.insId, ['public_checkOut','public_CheckIn'])
-    
+    const hasCheckoutAuth = await getInstanceAuth(BasicsItemCode.file, row.insId, ['public_checkOut', 'public_CheckIn'])
+
     if (!hasCheckoutAuth.get('public_checkOut')) {
       message.error("对当前实例没有签出权限")
       dispatch(setLoading(false));
@@ -952,15 +955,15 @@ const index = () => {
 
   const getInstanceAuth = async (itemCode: string, insId: string, types: authType[]) => {
     const { result: result = [] }: any = await API.checkAuth(insId, itemCode, user.id)
-    console.log(result,'result');
-    
+    console.log(result, 'result');
+
     let authMap = new Map<authType, boolean>()
     result.forEach((btn: any) => {
       if (btn.enabled && types.includes(btn.code)) {
         authMap.set(btn.code, true)
       }
     })
-    console.log(authMap,'authMap');
+    console.log(authMap, 'authMap');
     return authMap
   }
 
