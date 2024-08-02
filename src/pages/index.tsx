@@ -386,12 +386,29 @@ const index = () => {
     };
   };
 
+  function blobToBase64(blob: Blob) {
+    return new Promise((resolve, reject) => {
+      const reader: any = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result.split(',')[1]); // 去掉前面的 "data:..." 部分，只保留base64内容
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   useAsyncEffect(async () => {
     if (selectNode && selectNode.file_path) {
-      const nameThumbMap: any = await invoke("get_icons", {
-        req: [selectNode.file_path]
-      });
-      setCurrentThumbnail(`data:image/png;base64,${nameThumbMap[selectNode.file_path]}`)
+      if (selectNode.pic_path) {
+        const blob = new Blob([await readBinaryFile(selectNode.pic_path)])
+        const pic_base64 = await blobToBase64(blob)
+        setCurrentThumbnail(`data:image/png;base64,${pic_base64}`)
+      } else {
+        const nameThumbMap: any = await invoke("get_icons", {
+          req: [selectNode.file_path]
+        });
+        setCurrentThumbnail(`data:image/png;base64,${nameThumbMap[selectNode.file_path]}`)
+      }
     }
   }, [selectNode])
 
@@ -1133,15 +1150,19 @@ const index = () => {
       },
     ]);
 
-    const nameThumbMap: any = await invoke("get_icons", {
-      req: [row.file_path]
-    });
-    //批量更新文件地址
-    // const thumbData = await invoke("get_icons", {
-    //   req: ["E:\\OnChain个人空间\\FN4\\滑块\\滑块.SLDPRT"]
-    // });
+    let pic_base64: any = ''
 
-    console.log(row, 'rowrow')
+    if (row.pic_path) {
+      const blob = new Blob([await readBinaryFile(row.pic_path)])
+      pic_base64 = await blobToBase64(blob)
+    } else {
+      const nameThumbMap: any = await invoke("get_icons", {
+        req: [row.file_path]
+      });
+      pic_base64 = nameThumbMap[row.file_path]
+    }
+
+
     const updateInstances = [
       {
         id: row.file.onChain.insId,
@@ -1160,7 +1181,7 @@ const index = () => {
           } else if (attr.apicode === "Thumbnail") {
             return {
               ...attr,
-              value: `data:image/png;base64,${nameThumbMap[row.file_path]}`,
+              value: `data:image/png;base64,${pic_base64}`,
             };
           } else {
             return {
@@ -2761,9 +2782,28 @@ const index = () => {
             const filterCenterData = centerData
               .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
 
-            const nameThumbMap: any = await invoke("get_icons", {
+            let nameThumbMap: any = await invoke("get_icons", {
               req: filterCenterData.map(row => row.file_path)
             });
+
+            const batchTansformPicPath = async ({ rows }: { rows: any[] }) => {
+              let bmpMap:any = {}
+              const btArray = rows.map(v => new Promise(async (resolve, reject) => {
+                const blob = new Blob([await readBinaryFile(v.pic_path)])
+                const pic_base64 = await blobToBase64(blob)
+                bmpMap[v.file_path] = pic_base64
+                resolve(pic_base64)
+              }))
+
+              await Promise.all(btArray)
+
+              return bmpMap
+            }
+
+            const localImageMap =  await batchTansformPicPath({rows: filterCenterData.filter(row => row.pic_path)})
+            
+            Object.assign(nameThumbMap, localImageMap)
+
 
             //批量更新文件地址
             const updateInstances = filterCenterData

@@ -19,7 +19,7 @@ use windows::Win32::UI::Controls::IImageList;
 use windows::Win32::UI::Shell::{
     SHGetFileInfoW, SHGetImageList, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON, SHIL_JUMBO,SHGFI_SMALLICON,SHIL_SYSSMALL 
 };
-use windows::Win32::UI::WindowsAndMessaging::{GetIconInfo, HICON, ICONINFO};
+use windows::Win32::UI::WindowsAndMessaging::{GetIconInfo, HICON, ICONINFO, DestroyIcon};
 
 use windows::Win32::{
     Foundation::HWND,
@@ -63,8 +63,13 @@ pub fn load_winicon(path: &Path) -> Result<Vec<u8>, i32> {
     let path_c = U16CString::from_os_str(path).unwrap();
 
     unsafe {
-        let image = icon_to_image(get_icon(&path_c));
+        let hicon = get_icon(&path_c);
+
+        let image = icon_to_image(hicon);
+
         let (width, height) = image.dimensions();
+
+        DestroyIcon(hicon);
 
         let mut png_data: Vec<u8> = Vec::new();
         // 이미지 파일로 저장
