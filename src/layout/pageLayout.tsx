@@ -175,7 +175,7 @@ export const openDesign = async ({
                   contents: response.data,
                 });
                 if (data[i].children && data[i].children.length) {
-                  loop(data[i].children);
+                  await loop(data[i].children);
                 }
               }
             };
