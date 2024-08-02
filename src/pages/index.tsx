@@ -900,7 +900,22 @@ const index = () => {
     });
   };
 
-  const upadteData = ({ row }: { row: any }) => {
+  const upadteData = async({ row }: { row: any }) => {
+    // 首先判断当前有没有签出权限
+    const hasCheckoutAuth = await getInstanceAuth(BasicsItemCode.file, row.insId, ['public_checkOut','public_CheckIn'])
+    
+    if (!hasCheckoutAuth.get('public_checkOut')) {
+      message.error("对当前实例没有签出权限")
+      dispatch(setLoading(false));
+      return
+    }
+
+    if (!hasCheckoutAuth.get('public_CheckIn')) {
+      message.error("对当前实例没有签入权限")
+      dispatch(setLoading(false));
+      return
+    }
+
     // 判断当前文件是否签出
     if (judgeFileCheckout(row)) {
       message.error("当前文件已签出");
@@ -932,7 +947,32 @@ const index = () => {
     }
   };
 
-  const checkoutData = ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
+  // 获取实例是否具备，签出，签入的权限
+  type authType = 'public_cancelCheckOut' | 'public_CheckIn' | 'public_checkOut'
+
+  const getInstanceAuth = async (itemCode: string, insId: string, types: authType[]) => {
+    const { result: result = [] }: any = await API.checkAuth(insId, itemCode, user.id)
+    console.log(result,'result');
+    
+    let authMap = new Map<authType, boolean>()
+    result.forEach((btn: any) => {
+      if (btn.enabled && types.includes(btn.code)) {
+        authMap.set(btn.code, true)
+      }
+    })
+    console.log(authMap,'authMap');
+    return authMap
+  }
+
+  const checkoutData = async ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
+    // 首先判断当前有没有签出权限
+    const hasCheckoutAuth = await getInstanceAuth(isMaterial ? BasicsItemCode.material : BasicsItemCode.file, row.insId, ['public_checkOut'])
+    if (!hasCheckoutAuth.get('public_checkOut')) {
+      message.error("对当前实例没有签出权限")
+      dispatch(setLoading(false));
+      return
+    }
+
     // 判断当前文件是否签出
     if (judgeFileCheckout(row, isMaterial)) {
       message.error("当前实例已签出");
@@ -955,7 +995,14 @@ const index = () => {
     }
   };
 
-  const cancelCheckoutData = ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
+  const cancelCheckoutData = async ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
+    // 首先判断当前有没有签出权限
+    const hasCheckoutAuth = await getInstanceAuth(isMaterial ? BasicsItemCode.material : BasicsItemCode.file, row.insId, ['public_cancelCheckOut'])
+    if (!hasCheckoutAuth.get('public_cancelCheckOut')) {
+      message.error("对当前实例没有取消签出权限")
+      dispatch(setLoading(false));
+      return
+    }
     if (!judgeFileCheckout(row, isMaterial)) {
       message.error("当前实例还未签出");
       dispatch(setLoading(false));
@@ -1192,6 +1239,14 @@ const index = () => {
   };
 
   const checkInData = async ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
+    // 首先判断当前有没有签出权限
+    const hasCheckoutAuth = await getInstanceAuth(isMaterial ? BasicsItemCode.material : BasicsItemCode.file, row.insId, ['public_CheckIn'])
+    if (!hasCheckoutAuth.get('public_CheckIn')) {
+      message.error("对当前实例没有签入权限")
+      dispatch(setLoading(false));
+      return
+    }
+
     if (!judgeFileCheckout(row, isMaterial)) {
       dispatch(setLoading(false));
       message.error("当前实例还未签出");
@@ -2293,7 +2348,7 @@ const index = () => {
         value: selectProduct,
         options: productOptions,
       })
-      confirm(`请确认是否上传至${productName}?`, { title: '提示', type: 'warning' }).then(res => {
+      confirm(`请确认是否上传至${productName}?`, { title: '提示', type: 'warning' }).then(async res => {
         if (!res) {
           return
         } else {

@@ -1,5 +1,6 @@
 //  api.js
 import Request, { getUrl } from "./request.js";
+import { sse } from "./SSEService.js";
 
 const NewRequest = new Request({});
 
@@ -331,16 +332,23 @@ const API = {
   /**
   * 已读聊天消息
   */
-   readMessageData: (ids: string) => {
-    return NewRequest.put('/pdm/cad/msgs', {ids: ids})
+  readMessageData: (ids: string) => {
+    return NewRequest.put('/pdm/cad/msgs', { ids: ids })
   },
 
   /**
   * 删除聊天消息
   */
-    delMessageData: (ids: string) => {
-      return NewRequest.delete('/pdm/cad/msgs', {ids: ids})
-    },
+  delMessageData: (ids: string) => {
+    return NewRequest.delete('/pdm/cad/msgs', { ids: ids })
+  },
+
+  /**
+  * 
+  */
+  checkAuth: (insId: string, itemCode: string, userId: string) => {
+    return NewRequest.get('/opendata/instance/btns', { instanceId: insId, module: "instance", tabCode: '10002002', itemCode: itemCode, tenantId: sse.tenantId, userId: userId })
+  },
 
   //  /**
   // * 删除聊天消息
