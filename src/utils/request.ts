@@ -253,6 +253,7 @@ class Request {
                     ...headers
                 })
                 .then((res: any) => {
+                    console.log("修改成功之后的返回")
                     if (res.status == 401) {
                         const win = getCurrent();
                         if (win.label != 'Login') {

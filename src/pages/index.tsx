@@ -1006,6 +1006,8 @@ const index = () => {
         insName: row[isMaterial ? 'material' : 'file'].onChain.Description,
       })
         .then(() => {
+          setFileSelectRows([])
+          setMaterialSelectRows([])
           updateSingleData(row, isMaterial);
           dispatch(setLoading(false));
         })
@@ -1030,6 +1032,8 @@ const index = () => {
       dispatch(setLoading(true));
       API.cancelCheckout({ insId: row.insId })
         .then((res) => {
+          setFileSelectRows([])
+          setMaterialSelectRows([])
           updateSingleData(row, isMaterial);
           dispatch(setLoading(false));
         })
@@ -1222,6 +1226,8 @@ const index = () => {
       insName: row.file.onChain.Description,
     })
       .then(async (res) => {
+        setFileSelectRows([])
+        setMaterialSelectRows([])
         updateSingleData(row);
         dispatch(setLoading(false));
 
@@ -1412,6 +1418,8 @@ const index = () => {
           insName: row.file.onChain.Description,
         })
           .then(async (res) => {
+            setFileSelectRows([])
+            setMaterialSelectRows([])
             updateSingleData(row, isMaterial);
             dispatch(setLoading(false));
           })
@@ -2787,7 +2795,7 @@ const index = () => {
             });
 
             const batchTansformPicPath = async ({ rows }: { rows: any[] }) => {
-              let bmpMap:any = {}
+              let bmpMap: any = {}
               const btArray = rows.map(v => new Promise(async (resolve, reject) => {
                 const blob = new Blob([await readBinaryFile(v.pic_path)])
                 const pic_base64 = await blobToBase64(blob)
@@ -2800,8 +2808,8 @@ const index = () => {
               return bmpMap
             }
 
-            const localImageMap =  await batchTansformPicPath({rows: filterCenterData.filter(row => row.pic_path)})
-            
+            const localImageMap = await batchTansformPicPath({ rows: filterCenterData.filter(row => row.pic_path) })
+
             Object.assign(nameThumbMap, localImageMap)
 
 
