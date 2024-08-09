@@ -24,7 +24,7 @@ import { useMqttRegister } from "../hooks/useMqttRegister";
 import { BasicConfig, CommandConfig, PathConfig } from "../constant/config";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { mqttClient } from "../utils/MqttService";
-import { Tabs, TabsProps, message, Image, Button, Input } from "antd";
+import { Tabs, TabsProps, message, Button, Input } from "antd";
 import PlmTabToolBar from "../components/PlmTabToolBar";
 import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import filldown from "../assets/image/filldown.svg";
@@ -309,7 +309,13 @@ const index = () => {
   };
   // 获取文件全名
   const getFileNameWithFormat = (item: any) => {
-    return item.file_path.substring(item.file_path.lastIndexOf("\\") + 1);
+    let fileNameWithFormat = item.file_path.substring(item.file_path.lastIndexOf("\\") + 1);
+    if (mqttClient.publishTopic === 'creo' && (fileNameWithFormat.split('.').length - 1) >= 2) {
+      let lastDotIndex = fileNameWithFormat.lastIndexOf(".");
+      let secondLastSymbol = fileNameWithFormat.substring(0, lastDotIndex);
+      fileNameWithFormat = secondLastSymbol
+    }
+    return fileNameWithFormat
   };
 
   // 获取唯一的key，目前是根据文件在文件夹中的文件名称来的
@@ -389,8 +395,27 @@ const index = () => {
   function blobToBase64(blob: Blob) {
     return new Promise((resolve, reject) => {
       const reader: any = new FileReader();
+      const img = new Image();
       reader.onloadend = () => {
-        resolve(reader.result.split(',')[1]); // 去掉前面的 "data:..." 部分，只保留base64内容
+        img.src = reader.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let { width, height } = img;
+          canvas.width = width * (window.devicePixelRatio || 1);
+          canvas.height = height * (window.devicePixelRatio || 1);;
+
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // quality 为 0.7，意味着图片会被压缩到70%的质量
+            const base64String = canvas.toDataURL('image/png', 0.7).split(',')[1];
+            resolve(base64String);
+          } else {
+            reject(new Error('Canvas context not available'));
+          }
+        }
+
+        // resolve(reader.result.split(',')[1]); // 去掉前面的 "data:..." 部分，只保留base64内容
       };
       reader.onerror = reject;
       reader.readAsDataURL(blob);
@@ -603,36 +628,25 @@ const index = () => {
         const data = buildTreeArray(res.output_data.children[0].children)
         res.output_data.children[0].children = data[0].children
       }
-      // if(isInit) {
+
       Object.keys(InstanceAttrsMap).forEach(item => {
         delete InstanceAttrsMap[item]
       })
-      // }
-      // cad文件格式对应的文件类型
-      const [cadFileMap, cadIdMap] = await getCadFileMapRule();
-      const [totalAttrs] = await getAllAttr(BasicsItemCode.file);
-      const [totalMaterialAttrs] = await getAllAttr(BasicsItemCode.material);
-      const fileObjectMap = await getMaterialTypeMap();
+
+      const [[cadFileMap, cadIdMap], [totalAttrs], [totalMaterialAttrs], fileObjectMap] = await Promise.all([getCadFileMapRule(), getAllAttr(BasicsItemCode.file), getAllAttr(BasicsItemCode.material), getMaterialTypeMap()])
+
+
+      const [attrsMap, asmAttrsMap, asmMaterialAttrsMap, prtMaterialAttrsMap, fileColumns, materialColumns] = await Promise.all([getCadAttrMapRule("prt", cadIdMap, settingType.cadToFile), getCadAttrMapRule("asm", cadIdMap, settingType.cadToFile), getCadAttrMapRule("asm", cadIdMap, settingType.cadToItem), getCadAttrMapRule("prt", cadIdMap, settingType.cadToItem), getColumns(totalAttrs), getColumns(totalMaterialAttrs)])
+
+
       setMaterialAttrs(totalMaterialAttrs);
       setAttrs(totalAttrs);
-      const fileColumns = await getColumns(totalAttrs)
-      const materialColumns = await getColumns(totalMaterialAttrs)
       setFileColumn(fileColumns)
       setMaterialColumn(materialColumns)
 
+
       const fileColumnsListCodeMap = Utils.transformArrayToMap(fileColumns.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
       const materialColumnsListCodeMap = Utils.transformArrayToMap(materialColumns.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
-      // cad属性映射文件属性
-      const attrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToFile);
-      // cad属性映射文件属性
-      const asmAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToFile);
-
-
-      // cad属性映射物料属性
-      const asmMaterialAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.cadToItem);
-
-      // cad属性映射物料属性
-      const prtMaterialAttrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.cadToItem);
 
       // 扁平化数组
       const flattenData: Record<string, any>[] = [];
@@ -872,8 +886,7 @@ const index = () => {
         // }
       }
 
-      await Promise.all(PromiseData);
-      await Promise.all(PromiseImgData);
+      await Promise.all([...PromiseData, ...PromiseImgData]);
 
       setExpandedKeys(flattenData.map((item) => item.id));
 
@@ -922,16 +935,10 @@ const index = () => {
 
   const upadteData = async ({ row }: { row: any }) => {
     // 首先判断当前有没有签出权限
-    const hasCheckoutAuth = await getInstanceAuth(BasicsItemCode.file, row.insId, ['public_checkOut', 'public_CheckIn'])
+    const hasCheckoutAuth = await getInstanceAuth(BasicsItemCode.file, row.insId, ['public_checkOut'])
 
     if (!hasCheckoutAuth.get('public_checkOut')) {
       message.error("对当前实例没有签出权限")
-      dispatch(setLoading(false));
-      return
-    }
-
-    if (!hasCheckoutAuth.get('public_CheckIn')) {
-      message.error("对当前实例没有签入权限")
       dispatch(setLoading(false));
       return
     }
@@ -1044,6 +1051,8 @@ const index = () => {
   };
 
   const originCheckIn = async (row: any) => {
+
+    await updateCadAttr([row])
     // 签入需要更新当前的附件，以及相对应的属性，以及结构
     const {
       result: { records },
@@ -2374,6 +2383,36 @@ const index = () => {
     });
   }
 
+  const updateCadAttr = async (updateData: any) => {
+    const [cadFileMap, cadIdMap] = await getCadFileMapRule();
+
+    // cad属性映射文件属性
+    const attrsMap = await getCadAttrMapRule("prt", cadIdMap, settingType.PlmToCad);
+    // cad属性映射文件属性
+    const asmAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.PlmToCad);
+
+
+    // 修改文件编号
+    const pluginUpdateNumber = updateData.map((item: any) => {
+      const cadAttrsMap = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
+      return {
+        product_name: item.node_name,
+        extra: "属性设置",
+        product_attrs: Object.keys(cadAttrsMap).map(attrname => {
+          return {
+            attr_name: attrname,
+            attr_type: "string",
+            attr_value: item[cadAttrsMap[attrname]],
+          }
+        })
+      };
+    });
+    mqttClient.publish({
+      type: CommandConfig.setProductAttVal,
+      attr_set: pluginUpdateNumber,
+    });
+  }
+
   const handleClick = async (name: string) => {
     if (name === "upload") {
       const productName = Utils.getLabelInOptions({
@@ -2544,28 +2583,6 @@ const index = () => {
             itemCode: BasicsItemCode.file,
           });
 
-          // const nameNumberMap = Utils.transformArrayToMap(successInstances.result, 'name')
-
-          // 过滤当前已经存在的实例
-          const unExistInstances = centerData.filter(
-            (item) => item.file.onChain.flag != "exist"
-          );
-
-          // 修改文件编号
-          const pluginUpdateNumber = unExistInstances.map((item, index) => {
-            return {
-              product_name: item.node_name,
-              extra: "属性设置",
-              product_attrs: [
-                {
-                  attr_name: "编号",
-                  attr_type: "string",
-                  attr_value: nameNumberMap[getRowKey(item)]?.number,
-                },
-              ],
-            };
-          });
-
           const FileArray = [];
 
           for (let item of centerData) {
@@ -2583,21 +2600,21 @@ const index = () => {
                   })
                 );
               }
-              if (item.pic_path) {
-                FileArray.push(
-                  new Promise(async (resolve, reject) => {
-                    const arrayBufferData = await readBinaryFile(item.pic_path);
-                    resolve({
-                      name: `${item.pic_path.substring(
-                        item.pic_path.lastIndexOf("\\") + 1
-                      )}`,
-                      data: new Blob([arrayBufferData]),
-                      source: "Local",
-                      isRemote: false,
-                    });
-                  })
-                );
-              }
+              // if (item.pic_path) {
+              //   FileArray.push(
+              //     new Promise(async (resolve, reject) => {
+              //       const arrayBufferData = await readBinaryFile(item.pic_path);
+              //       resolve({
+              //         name: `${item.pic_path.substring(
+              //           item.pic_path.lastIndexOf("\\") + 1
+              //         )}`,
+              //         data: new Blob([arrayBufferData]),
+              //         source: "Local",
+              //         isRemote: false,
+              //       });
+              //     })
+              //   );
+              // }
 
 
               // if(item.file_path && mqttClient.publishTopic === 'catia') {
@@ -2659,11 +2676,6 @@ const index = () => {
           }
 
           const fileItems = await Promise.all([...FileArray]);
-
-          mqttClient.publish({
-            type: CommandConfig.setProductAttVal,
-            attr_set: pluginUpdateNumber,
-          });
           console.log(nameNumberMap, "nameNumberMapnameNumberMap");
           // // 批量创建文件结构
           createStructure({
@@ -2790,6 +2802,7 @@ const index = () => {
             const filterCenterData = centerData
               .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
 
+            await updateCadAttr(filterCenterData)
             let nameThumbMap: any = await invoke("get_icons", {
               req: filterCenterData.map(row => row.file_path)
             });
@@ -2842,6 +2855,8 @@ const index = () => {
                   tenantId: sse.tenantId || "719",
                 };
               });
+            console.log(updateInstances, 'updateInstances');
+
             if (updateInstances.length) {
               await API.batchUpdate({
                 instances: updateInstances,
@@ -3209,15 +3224,15 @@ const index = () => {
             <PlmTabToolBar
               onClick={(item) => {
                 if (item.tag === "checkout") {
-                  fileSelectRows.length &&
-                    checkoutData({ row: fileSelectRows[0] });
+                  fileSelectRows.length ?
+                    checkoutData({ row: fileSelectRows[0] }) : message.error("请选择操作对象");
                 } else if (item.tag === "cancelCheckout") {
-                  fileSelectRows.length &&
-                    cancelCheckoutData({ row: fileSelectRows[0] });
+                  fileSelectRows.length ?
+                    cancelCheckoutData({ row: fileSelectRows[0] }) : message.error("请选择操作对象");
                 } else if (item.tag === "checkIn") {
                   console.log(fileSelectRows, "fileSelectRows");
-                  fileSelectRows.length &&
-                    checkInData({ row: fileSelectRows[0] });
+                  fileSelectRows.length ?
+                    checkInData({ row: fileSelectRows[0] }) : message.error("请选择操作对象");
                 } else if (item.tag === "fillDown") {
                   if (selectedCellLatest.current?.record) {
                     let findSelect = false;
