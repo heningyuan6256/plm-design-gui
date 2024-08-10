@@ -30,6 +30,7 @@ import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import filldown from "../assets/image/filldown.svg";
 import fillup from "../assets/image/fillup.svg";
 import checkout from "../assets/image/checkin.svg";
+import topupdate from "../assets/image/topupdate.svg";
 import checkin from "../assets/image/checkout.svg";
 import { useAsyncEffect, useLatest, useMemoizedFn } from "ahooks";
 import API from "../utils/api";
@@ -647,9 +648,11 @@ const index = () => {
 
       const fileColumnsListCodeMap = Utils.transformArrayToMap(fileColumns.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
       const materialColumnsListCodeMap = Utils.transformArrayToMap(materialColumns.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
-
+      // 序列号number，用来控制签出签入更新的顺序
+      let serielNumber = 0
       // 扁平化数组
       const flattenData: Record<string, any>[] = [];
+
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
           if (data[i].children && data[i].children.every((v: any) => !v.file_path)) {
@@ -662,6 +665,8 @@ const index = () => {
             data[i].file_path = `D:\\TRIBON_Temp\\${Utils.generateSnowId()}\\${data[i].node_name}.Tribon`
           }
           data[i].property = uniqBy(data[i].property, 'name')
+          serielNumber = serielNumber + 1
+          data[i].serielNumber = serielNumber
           // 解决sw镜像文件以及阵列文件的问题
           if (!data[i].file_path) {
             data.splice(i, 1)
@@ -693,6 +698,7 @@ const index = () => {
           }
         }
       };
+
       loop([res.output_data]);
 
       const nameList = [
@@ -905,6 +911,8 @@ const index = () => {
   };
 
   const judgeFileCheckout = (row: any, isMaterial?: boolean) => {
+    console.log(row[isMaterial ? 'material' : 'file'].onChain,'23');
+    
     if (row[isMaterial ? 'material' : 'file'].onChain.Revision == 1) {
       return false;
     } else {
@@ -912,65 +920,118 @@ const index = () => {
     }
   };
 
-  const updateSingleData = (row: any, isMaterial?: boolean) => {
-    API.getInstanceInfoById({
+  const updateSingleData = async (row: any, isMaterial?: boolean) => {
+
+    const res: any = await API.getInstanceInfoById({
       instanceId: row.insId,
       authType: "read",
       tabCode: "10002001",
       userId: user.id,
       tenantId: sse.tenantId || "719",
-    }).then((res: any) => {
-      res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
-        const rowKey = getRowKey(row);
-        InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain[item.apicode] =
-          res.result.readInstanceVo.attributes[item.id];
-        InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain.checkOut =
-          res.result.readInstanceVo.checkOut;
-        InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain.Revision =
-          res.result.readInstanceVo.insVersionOrder;
-        setLeftData([...leftData]);
-      });
+    })
+
+    res.result.pdmAttributeCustomizedVoList.forEach((item: any) => {
+      const rowKey = getRowKey(row);
+      InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain[item.apicode] =
+        res.result.readInstanceVo.attributes[item.id];
+      InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain.checkOut =
+        res.result.readInstanceVo.checkOut;
+      InstanceAttrsMap[rowKey][isMaterial ? 'material' : 'file'].onChain.Revision =
+        res.result.readInstanceVo.insVersionOrder;
+      setLeftData([...leftData]);
     });
   };
 
-  const upadteData = async ({ row }: { row: any }) => {
+  const batchUpdateData = async ({ selectRows, isMaterial }: { selectRows: any, isMaterial?: boolean }) => {
+    if (!selectRows.length) {
+      message.error('请勾选要更新对象')
+      return
+    }
+    setLogVisbile(true)
+    warpperSetLog(() => {
+      setLogData([
+        ...lastestLogData.current,
+        {
+          log: "批量更新开始。。。",
+          dateTime: getCurrentTime(),
+          id: Utils.generateSnowId(),
+        },
+      ]);
+    });
+    selectRows.sort((a: any, b: any) => b.serielNumber - a.serielNumber)
+    for (let i = 0; i < selectRows.length; i++) {
+      await updateData({ row: selectRows[i], isMaterial })
+    }
+    setLogVisbile(false)
+    warpperSetLog(() => {
+      setLogData([
+        ...lastestLogData.current,
+        {
+          log: "批量更新完成",
+          dateTime: getCurrentTime(),
+          id: Utils.generateSnowId(),
+        },
+      ]);
+    });
+  }
+
+
+
+  const updateData = async ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
     // 首先判断当前有没有签出权限
-    const hasCheckoutAuth = await getInstanceAuth(BasicsItemCode.file, row.insId, ['public_checkOut'])
+    const hasCheckoutAuth = await getInstanceAuth(isMaterial ? BasicsItemCode.material : BasicsItemCode.file, row.insId, ['public_checkOut'])
 
     if (!hasCheckoutAuth.get('public_checkOut')) {
+      warpperSetLog(() => {
+        setLogData([
+          ...lastestLogData.current,
+          {
+            log: `对${row[isMaterial ? 'material' : 'file'].onChain.Description}没有签出权限`,
+            dateTime: getCurrentTime(),
+            id: Utils.generateSnowId(),
+          },
+        ]);
+      });
       message.error("对当前实例没有签出权限")
       dispatch(setLoading(false));
       return
     }
-
     // 判断当前文件是否签出
-    if (judgeFileCheckout(row)) {
-      message.error("当前文件已签出");
+    if (judgeFileCheckout(row, isMaterial)) {
+      if (isMaterial) {
+        await originCheckInMaterial(row)
+      } else {
+        await originCheckIn(row);
+      }
+
       dispatch(setLoading(false));
     } else {
       dispatch(setLoading(true));
-      API.checkout({
+      await API.checkout({
         checkoutBy: user.id,
         insId: row.insId,
         insSize: String(row.FileSize),
-        insName: row.file.onChain.Description,
-      }).then(() => {
-        API.getInstanceInfoById({
-          instanceId: row.insId,
-          authType: "read",
-          tabCode: "10002001",
-          userId: user.id,
-          tenantId: sse.tenantId || "719",
-        }).then((res: any) => {
-          const data = centerData.find(item => getRowKey(item) == getRowKey(row))
-          if (!data) {
-            return
-          }
-          data.file.onChain.checkOut = res.result.readInstanceVo.checkOut;
-          data.file.onChain.Revision = res.result.readInstanceVo.insVersionOrder;
-          originCheckIn(data);
-        });
-      });
+        insName: row[isMaterial ? 'material' : 'file'].onChain.Description,
+      })
+      const res: any = await API.getInstanceInfoById({
+        instanceId: row.insId,
+        authType: "read",
+        tabCode: "10002001",
+        userId: user.id,
+        tenantId: sse.tenantId || "719",
+      })
+      const data = (isMaterial ? materialCenterData: centerData).find(item => getRowKey(item) == getRowKey(row))
+      if (!data) {
+        return
+      }
+      data[isMaterial ? 'material' : 'file'].onChain.checkOut = res.result.readInstanceVo.checkOut;
+      data[isMaterial ? 'material' : 'file'].onChain.Revision = res.result.readInstanceVo.insVersionOrder;
+
+      if (isMaterial) {
+        await originCheckInMaterial(data)
+      } else {
+        await originCheckIn(data);
+      }
     }
   };
 
@@ -1012,10 +1073,10 @@ const index = () => {
         insSize: String(row.FileSize),
         insName: row[isMaterial ? 'material' : 'file'].onChain.Description,
       })
-        .then(() => {
+        .then(async() => {
           setFileSelectRows([])
           setMaterialSelectRows([])
-          updateSingleData(row, isMaterial);
+          await updateSingleData(row, isMaterial);
           dispatch(setLoading(false));
         })
         .catch(() => {
@@ -1038,10 +1099,10 @@ const index = () => {
     } else {
       dispatch(setLoading(true));
       API.cancelCheckout({ insId: row.insId })
-        .then((res) => {
+        .then(async(res) => {
           setFileSelectRows([])
           setMaterialSelectRows([])
-          updateSingleData(row, isMaterial);
+          await updateSingleData(row, isMaterial);
           dispatch(setLoading(false));
         })
         .catch(() => {
@@ -1228,54 +1289,194 @@ const index = () => {
       });
     }
 
-    API.checkIn({
+    await API.checkIn({
       insId: row.insId,
       insUrl: "",
       insSize: String(row.FileSize),
       insName: row.file.onChain.Description,
     })
-      .then(async (res) => {
-        setFileSelectRows([])
-        setMaterialSelectRows([])
-        updateSingleData(row);
-        dispatch(setLoading(false));
-
-        const {
-          result: { records },
-        }: any = await API.queryInstanceTab({
-          instanceId: row.file.onChain.insId,
-          itemCode: BasicsItemCode.file,
-          pageNo: "1",
-          pageSize: "500",
-          tabCode: "10002009",
-          tabCodes: "10002009",
-          tenantId: sse.tenantId || "719",
-          userId: user.id,
-          // version: row.Version,
-          // versionOrder: row.file.onChain.Revision,
-        });
-
-        const revision = row.file.onChain.Revision.replace("(", "").replace(")", "")
-
-        const params = records.filter((item: any) => readPermission(item.createName)).map((item: any) => {
-          return { createBy: user.id, parInsId: item.createName, msgStatus: false, msgContent: `${user.name} 已将 ${row.file.onChain.Description} 更新成最新的版次 ${revision}` }
-        })
-
-        API.postMessageData(params)
-
-        API.sendMessage("ChildfileVersionOrderUpdate", "*", user.id, JSON.stringify({
-          instance: {
-            insId: row.insId,
-            insDesc: row.file.onChain.Description,
-            insVersionOrderUnbound: revision
-          },
-          from: user.name
-        }))
-      })
       .catch(() => {
         dispatch(setLoading(false));
       });
+    setFileSelectRows([])
+    setMaterialSelectRows([])
+    await updateSingleData(row);
+    dispatch(setLoading(false));
+
+    const {
+      result: { records: recordsCopy },
+    }: any = await API.queryInstanceTab({
+      instanceId: row.file.onChain.insId,
+      itemCode: BasicsItemCode.file,
+      pageNo: "1",
+      pageSize: "500",
+      tabCode: "10002009",
+      tabCodes: "10002009",
+      tenantId: sse.tenantId || "719",
+      userId: user.id,
+      // version: row.Version,
+      // versionOrder: row.file.onChain.Revision,
+    });
+
+    const revision = row.file.onChain.Revision.replace("(", "").replace(")", "")
+
+    const params = recordsCopy.filter((item: any) => readPermission(item.createName)).map((item: any) => {
+      return { createBy: user.id, parInsId: item.createName, msgStatus: false, msgContent: `${user.name} 已将 ${row.file.onChain.Description} 更新成最新的版次 ${revision}` }
+    })
+
+    API.postMessageData(params)
+
+    API.sendMessage("ChildfileVersionOrderUpdate", "*", user.id, JSON.stringify({
+      instance: {
+        insId: row.insId,
+        insDesc: row.file.onChain.Description,
+        insVersionOrderUnbound: revision
+      },
+      from: user.name
+    }))
+
   };
+
+  const originCheckInMaterial = async (row: any) => {
+
+    // 签入需要更新当前的附件，以及相对应的属性，以及结构
+    const {
+      result: { records },
+    }: any = await API.queryInstanceTab({
+      instanceId: row.material.onChain.insId,
+      itemCode: BasicsItemCode.material,
+      pageNo: "1",
+      pageSize: "500",
+      tabCode: "10002003",
+      tabCodes: "10002003",
+      tenantId: sse.tenantId || "719",
+      userId: user.id,
+      version: row.material.onChain.Version,
+      versionOrder: row.material.onChain.Revision,
+    });
+    console.log(records, "records");
+
+    if ((records || []).length) {
+      const params = {
+        id: row.material.onChain.insId,
+        itemCode: BasicsItemCode.material,
+        tabCode: "10002003",
+        deleteAffectedInstanceIds: records
+          .map((item: any) => item.insId)
+          .join(","),
+        deleteRowIds: records.map((item: any) => item.rowId),
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+        versionNumber: row.material.onChain.Version,
+      };
+      console.log(params, "删除结构参数");
+      const result = await API.insatnceTabsave(params);
+      console.log(result, "删除结构");
+    }
+    // //更新当前的第一级结构
+    const {
+      result: { records: tabAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.material,
+      tabCode: "10002003",
+    });
+
+    const rowKey = getRowKey(row);
+
+    const countMap = groupBy(
+      InstanceAttrsMap[rowKey].origin.children || [],
+      (item) => {
+        return getRowKey(item);
+      }
+    );
+
+    const setVal = (row: any, col: any) => {
+      if (col.apicode === "ID") {
+        return row.material.onChain.insId;
+      } else if (col.apicode === "Qty") {
+        return countMap[getRowKey(row)].length || "";
+      } else {
+        return "";
+      }
+    };
+
+    const flattenData = uniqBy((
+      InstanceAttrsMap[getRowKey(row)].origin.children || []
+    ), (item) => {
+      return getRowKey(item)
+    }).filter((item: any) => {
+      return getRowKey(item) != getRowKey(row);
+    });
+
+    // 需要过滤掉所有的内部零件以及
+    const dealParams = flattenData.map((item: any) => {
+      return {
+        insAttrs: tabAttrs
+          .filter((attr: any) => {
+            return ["ID", "Qty"].includes(attr.apicode);
+          })
+          .map((attr: any) => {
+            return {
+              apicode: attr.apicode,
+              id: attr.id,
+              valueType: attr.valueType,
+              value: setVal(item, attr),
+            };
+          }),
+      };
+    });
+    console.log(dealParams, "dealParams");
+    if (dealParams.length) {
+      await API.insatnceTabsave({
+        itemCode: BasicsItemCode.material,
+        tabCode: "10002003",
+        rowList: dealParams,
+        id: row.material.onChain.insId,
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+        versionNumber: row.material.onChain.Version,
+      });
+    }
+
+
+    //批量更新文件地址
+    const updateInstances = [
+      {
+        id: row.material.onChain.insId,
+        itemCode: BasicsItemCode.material,
+        tabCode: "10002001",
+        insAttrs: materialAttrs.map((attr) => {
+          return {
+            ...attr,
+            value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
+          }
+        }),
+        tenantId: sse.tenantId || "719",
+      },
+    ];
+    console.log(updateInstances, "签出签入更新模型的属性");
+
+    if (updateInstances.length) {
+      await API.batchUpdate({
+        instances: updateInstances,
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+      }).catch(() => {
+        dispatch(setLoading(false));
+      });
+    }
+
+    await API.checkIn({
+      insId: row.insId,
+      insUrl: "",
+      insSize: String(row.FileSize),
+      insName: row.file.onChain.Description,
+    })
+    setFileSelectRows([])
+    setMaterialSelectRows([])
+    await updateSingleData(row, true);
+    dispatch(setLoading(false));
+  }
 
   const checkInData = async ({ row, isMaterial }: { row: any, isMaterial?: boolean }) => {
     // 首先判断当前有没有签出权限
@@ -1290,151 +1491,12 @@ const index = () => {
       dispatch(setLoading(false));
       message.error("当前实例还未签出");
     } else {
-      dispatch(setLoading(true));
       if (isMaterial) {
-
-        // 签入需要更新当前的附件，以及相对应的属性，以及结构
-        const {
-          result: { records },
-        }: any = await API.queryInstanceTab({
-          instanceId: row.material.onChain.insId,
-          itemCode: BasicsItemCode.material,
-          pageNo: "1",
-          pageSize: "500",
-          tabCode: "10002003",
-          tabCodes: "10002003",
-          tenantId: sse.tenantId || "719",
-          userId: user.id,
-          version: row.material.onChain.Version,
-          versionOrder: row.material.onChain.Revision,
-        });
-        console.log(records, "records");
-
-        if ((records || []).length) {
-          const params = {
-            id: row.material.onChain.insId,
-            itemCode: BasicsItemCode.material,
-            tabCode: "10002003",
-            deleteAffectedInstanceIds: records
-              .map((item: any) => item.insId)
-              .join(","),
-            deleteRowIds: records.map((item: any) => item.rowId),
-            tenantId: sse.tenantId || "719",
-            userId: user.id,
-            versionNumber: row.material.onChain.Version,
-          };
-          console.log(params, "删除结构参数");
-          const result = await API.insatnceTabsave(params);
-          console.log(result, "删除结构");
-        }
-        // //更新当前的第一级结构
-        const {
-          result: { records: tabAttrs },
-        }: any = await API.getInstanceAttrs({
-          itemCode: BasicsItemCode.material,
-          tabCode: "10002003",
-        });
-
-        const rowKey = getRowKey(row);
-
-        const countMap = groupBy(
-          InstanceAttrsMap[rowKey].origin.children || [],
-          (item) => {
-            return getRowKey(item);
-          }
-        );
-
-        const setVal = (row: any, col: any) => {
-          if (col.apicode === "ID") {
-            return row.material.onChain.insId;
-          } else if (col.apicode === "Qty") {
-            return countMap[getRowKey(row)].length || "";
-          } else {
-            return "";
-          }
-        };
-
-        const flattenData = uniqBy((
-          InstanceAttrsMap[getRowKey(row)].origin.children || []
-        ), (item) => {
-          return getRowKey(item)
-        }).filter((item: any) => {
-          return getRowKey(item) != getRowKey(row);
-        });
-
-        // 需要过滤掉所有的内部零件以及
-        const dealParams = flattenData.map((item: any) => {
-          return {
-            insAttrs: tabAttrs
-              .filter((attr: any) => {
-                return ["ID", "Qty"].includes(attr.apicode);
-              })
-              .map((attr: any) => {
-                return {
-                  apicode: attr.apicode,
-                  id: attr.id,
-                  valueType: attr.valueType,
-                  value: setVal(item, attr),
-                };
-              }),
-          };
-        });
-        console.log(dealParams, "dealParams");
-        if (dealParams.length) {
-          await API.insatnceTabsave({
-            itemCode: BasicsItemCode.material,
-            tabCode: "10002003",
-            rowList: dealParams,
-            id: row.material.onChain.insId,
-            tenantId: sse.tenantId || "719",
-            userId: user.id,
-            versionNumber: row.material.onChain.Version,
-          });
-        }
-
-
-        //批量更新文件地址
-        const updateInstances = [
-          {
-            id: row.material.onChain.insId,
-            itemCode: BasicsItemCode.material,
-            tabCode: "10002001",
-            insAttrs: materialAttrs.map((attr) => {
-              return {
-                ...attr,
-                value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
-              }
-            }),
-            tenantId: sse.tenantId || "719",
-          },
-        ];
-        console.log(updateInstances, "签出签入更新模型的属性");
-
-        if (updateInstances.length) {
-          await API.batchUpdate({
-            instances: updateInstances,
-            tenantId: sse.tenantId || "719",
-            userId: user.id,
-          }).catch(() => {
-            dispatch(setLoading(false));
-          });
-        }
-
-        API.checkIn({
-          insId: row.insId,
-          insUrl: "",
-          insSize: String(row.FileSize),
-          insName: row.file.onChain.Description,
-        })
-          .then(async (res) => {
-            setFileSelectRows([])
-            setMaterialSelectRows([])
-            updateSingleData(row, isMaterial);
-            dispatch(setLoading(false));
-          })
+        originCheckInMaterial(row)
       } else {
         originCheckIn(row);
       }
+      dispatch(setLoading(true));
     }
   };
 
@@ -2940,7 +3002,7 @@ const index = () => {
           message.warning('当前文件还未上传')
           return
         }
-        upadteData({ row: row });
+        updateData({ row: row });
       }
     } else if (name === "checkout") {
       if (selectNode) {
@@ -3223,14 +3285,27 @@ const index = () => {
           <div className="ml-1">
             <PlmTabToolBar
               onClick={(item) => {
-                if (item.tag === "checkout") {
+                if (item.tag === 'update') {
+                  batchUpdateData({ selectRows: fileSelectRows })
+                } else if (item.tag === "checkout") {
+                  if (fileSelectRows.length != 1) {
+                    message.warning("请勾选单个对象！")
+                    return
+                  }
                   fileSelectRows.length ?
                     checkoutData({ row: fileSelectRows[0] }) : message.error("请选择操作对象");
                 } else if (item.tag === "cancelCheckout") {
+                  if (fileSelectRows.length != 1) {
+                    message.warning("请勾选单个对象！")
+                    return
+                  }
                   fileSelectRows.length ?
                     cancelCheckoutData({ row: fileSelectRows[0] }) : message.error("请选择操作对象");
                 } else if (item.tag === "checkIn") {
-                  console.log(fileSelectRows, "fileSelectRows");
+                  if (fileSelectRows.length != 1) {
+                    message.warning("请勾选单个对象！")
+                    return
+                  }
                   fileSelectRows.length ?
                     checkInData({ row: fileSelectRows[0] }) : message.error("请选择操作对象");
                 } else if (item.tag === "fillDown") {
@@ -3292,6 +3367,7 @@ const index = () => {
                 }
               }}
               list={[
+                { name: "更新", icon: topupdate, tag: "update" },
                 { name: "签出", icon: checkout, tag: "checkout" },
                 {
                   name: "取消签出",
@@ -3318,7 +3394,7 @@ const index = () => {
                   ? fileSelectRows.map((item) => item?.id)
                   : [],
                 onChange: (selectRowKeys, selectRows) => {
-                  setFileSelectRows([selectRows.pop()]);
+                  setFileSelectRows(selectRows);
                 },
               }}
               canselectcell
@@ -3493,15 +3569,29 @@ const index = () => {
           <div className="ml-1">
             <PlmTabToolBar
               onClick={async (item) => {
-                if (item.tag === "checkout") {
+                if (item.tag === 'update') {
+                  batchUpdateData({ selectRows: materialSelectRows, isMaterial: true })
+                } else if (item.tag === "checkout") {
+                  if (materialSelectRows.length != 1) {
+                    message.warning("请勾选单个对象！")
+                    return
+                  }
                   materialSelectRows.length
                     ? checkoutData({ row: materialSelectRows[0], isMaterial: true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "cancelCheckout") {
+                  if (materialSelectRows.length != 1) {
+                    message.warning("请勾选单个对象！")
+                    return
+                  }
                   materialSelectRows.length
                     ? cancelCheckoutData({ row: materialSelectRows[0], isMaterial: true })
                     : message.error("请选择目标节点");
                 } else if (item.tag === "checkIn") {
+                  if (materialSelectRows.length != 1) {
+                    message.warning("请勾选单个对象！")
+                    return
+                  }
                   materialSelectRows.length
                     ? checkInData({ row: materialSelectRows[0], isMaterial: true })
                     : message.error("请选择目标节点");
@@ -3693,6 +3783,7 @@ const index = () => {
               list={[
                 { name: "创建编码", icon: encodedSvg, tag: "createIntance" },
                 { name: "创建EBOM", icon: EBOM, tag: "createBom" },
+                { name: "更新", icon: topupdate, tag: "update" },
                 { name: "签出", icon: checkout, tag: "checkout" },
                 {
                   name: "取消签出",
@@ -3719,7 +3810,7 @@ const index = () => {
                   ? materialSelectRows.map((item: any) => item?.id)
                   : [],
                 onChange: (selectRowKeys, selectRows) => {
-                  setMaterialSelectRows([selectRows.pop()]);
+                  setMaterialSelectRows(selectRows);
                 },
               }}
               canselectcell
@@ -4224,6 +4315,7 @@ const index = () => {
         title={"上传日志"}
         width={582}
         open={logVisible}
+        centered
         onCancel={() => {
           if (loading) {
             message.error({
