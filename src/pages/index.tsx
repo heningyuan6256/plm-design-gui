@@ -3286,7 +3286,11 @@ const index = () => {
             <PlmTabToolBar
               onClick={(item) => {
                 if (item.tag === 'update') {
-                  batchUpdateData({ selectRows: fileSelectRows })
+                  if(fileSelectRows.find(item => item.flag === 'add')) {
+                    message.warning("选择的行中有还未上传的对象")
+                  } else {
+                    batchUpdateData({ selectRows: fileSelectRows })
+                  }
                 } else if (item.tag === "checkout") {
                   if (fileSelectRows.length != 1) {
                     message.warning("请勾选单个对象！")
@@ -3570,7 +3574,11 @@ const index = () => {
             <PlmTabToolBar
               onClick={async (item) => {
                 if (item.tag === 'update') {
-                  batchUpdateData({ selectRows: materialSelectRows, isMaterial: true })
+                  if(materialSelectRows.find((item:any) => item.flag === 'add')) {
+                    message.warning("选择的行中有还未上传的对象")
+                  } else {
+                    batchUpdateData({ selectRows: materialSelectRows, isMaterial: true })
+                  }
                 } else if (item.tag === "checkout") {
                   if (materialSelectRows.length != 1) {
                     message.warning("请勾选单个对象！")
