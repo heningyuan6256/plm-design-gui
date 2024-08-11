@@ -79,8 +79,6 @@ import { openDesign } from "../layout/pageLayout";
 import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 import { fetchMessageData } from "../models/message";
 
-let ConfirmOpened = false
-
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
 
@@ -127,6 +125,10 @@ export interface logItemType {
 
 const index = () => {
   const updatingAttr = useRef<boolean>(false)
+  const ConfirmOpened = useRef<boolean>(false)
+
+  const [watchCancelFn , setWatchCancelFn] = useState<any>()
+
   // AES密码解密
   const { value: user } = useSelector((state: any) => state.user);
   const { value: loading } = useSelector((state: any) => state.loading);
@@ -605,7 +607,9 @@ const index = () => {
 
 
   const dealCurrentBom = async (res?: any) => {
+    watchCancelFn && watchCancelFn()
     updatingAttr.current = false
+    ConfirmOpened.current = false
     try {
       // Windows 文件路径
       const windowsPathRegex = /^(?:[a-zA-Z]:\\|\\\\)(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/;
@@ -901,8 +905,40 @@ const index = () => {
       const copyLeftData = [res.output_data];
       setSelectNode(res.output_data);
       console.log(copyLeftData, 'copyLeftData');
+      
 
       setLeftData([...copyLeftData]);
+
+     const cancelFn = await watch(
+        flattenData.map(row => row.file_path),
+        () => {
+          console.log(123)
+          const currentWindow = getCurrent();
+          currentWindow.unminimize()
+          currentWindow.setFocus()
+          if (!ConfirmOpened.current) {
+            ConfirmOpened.current = true
+            confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
+              ConfirmOpened.current = false
+              if (!res) {
+                return
+              }
+              dispatch(setLoading(true));
+              mqttClient.publish({
+                type: CommandConfig.getCurrentBOM,
+                input_data: {
+                  "info": ["proximate"]
+                }
+              });
+            })
+          }
+        },
+        {
+          delayMs: 1000,
+          recursive: true
+        },
+      );
+      setWatchCancelFn(()=>cancelFn)
       dispatch(setLoading(false));
     } catch (error) {
       console.log(error, 'errorerror');
@@ -964,6 +1000,13 @@ const index = () => {
     for (let i = 0; i < selectRows.length; i++) {
       await updateData({ row: selectRows[i], isMaterial })
     }
+    dispatch(setLoading(true));
+    mqttClient.publish({
+      type: CommandConfig.getCurrentBOM,
+      input_data: {
+        "info": ["proximate"]
+      }
+    });
     setLogVisbile(false)
     warpperSetLog(() => {
       setLogData([
@@ -1302,8 +1345,6 @@ const index = () => {
       });
     setFileSelectRows([])
     setMaterialSelectRows([])
-    await updateSingleData(row);
-    dispatch(setLoading(false));
 
     const {
       result: { records: recordsCopy },
@@ -1326,7 +1367,7 @@ const index = () => {
       return { createBy: user.id, parInsId: item.createName, msgStatus: false, msgContent: `${user.name} 已将 ${row.file.onChain.Description} 更新成最新的版次 ${revision}` }
     })
 
-    API.postMessageData(params)
+    await API.postMessageData(params)
 
     API.sendMessage("ChildfileVersionOrderUpdate", "*", user.id, JSON.stringify({
       instance: {
@@ -1496,7 +1537,14 @@ const index = () => {
       if (isMaterial) {
         originCheckInMaterial(row)
       } else {
-        originCheckIn(row);
+       await originCheckIn(row);
+       dispatch(setLoading(true));
+       mqttClient.publish({
+         type: CommandConfig.getCurrentBOM,
+         input_data: {
+           "info": ["proximate"]
+         }
+       });
       }
       dispatch(setLoading(true));
     }
@@ -1535,39 +1583,12 @@ const index = () => {
     return flattenData;
   };
 
-  useAsyncEffect(async () => {
-    if (leftData.length) {
-      const flattenData: Record<string, any>[] = getFlattenData(selectNode);
-      await watch(
-        flattenData.map(row => row.file_path),
-        (event) => {
-          const currentWindow = getCurrent();
-          currentWindow.unminimize()
-          currentWindow.setFocus()
-          if (!ConfirmOpened) {
-            ConfirmOpened = true
-            confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
-              ConfirmOpened = false
-              if (!res) {
-                return
-              }
-              dispatch(setLoading(true));
-              mqttClient.publish({
-                type: CommandConfig.getCurrentBOM,
-                input_data: {
-                  "info": ["proximate"]
-                }
-              });
-            })
-          }
-        },
-        {
-          delayMs: 1000,
-          recursive: true
-        },
-      );
-    }
-  }, [leftData.length])
+  // useAsyncEffect(async () => {
+  //   if (selectNode && ConfirmOpenedLatest.current) {
+  //     const flattenData: Record<string, any>[] = getFlattenData(selectNode);
+      
+  //   }
+  // }, [selectNode, ConfirmOpenedLatest.current])
 
   // 取出所有的属性
   useEffect(() => {
@@ -1713,6 +1734,7 @@ const index = () => {
   // 监听设置属性
   useMqttRegister(CommandConfig.setProductAttVal, async (res) => {
     updatingAttr.current = true
+    ConfirmOpened.current = false
     warpperSetLog(() => {
       setLogData([
         ...lastestLogData.current,
@@ -2450,6 +2472,7 @@ const index = () => {
   }
 
   const updateCadAttr = async (updateData: any) => {
+    watchCancelFn && watchCancelFn()
     const [cadFileMap, cadIdMap] = await getCadFileMapRule();
 
     // cad属性映射文件属性
@@ -2473,6 +2496,7 @@ const index = () => {
         })
       };
     });
+    ConfirmOpened.current = true
     mqttClient.publish({
       type: CommandConfig.setProductAttVal,
       attr_set: pluginUpdateNumber,
@@ -2960,7 +2984,13 @@ const index = () => {
               ]);
             });
           }
-          await dealCurrentBom(designData);
+          dispatch(setLoading(true));
+          mqttClient.publish({
+            type: CommandConfig.getCurrentBOM,
+            input_data: {
+              "info": ["proximate"]
+            }
+          });
         }
       })
 
