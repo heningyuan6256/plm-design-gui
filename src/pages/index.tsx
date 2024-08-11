@@ -126,6 +126,7 @@ export interface logItemType {
 }
 
 const index = () => {
+  const updatingAttr = useRef<boolean>(false)
   // AES密码解密
   const { value: user } = useSelector((state: any) => state.user);
   const { value: loading } = useSelector((state: any) => state.loading);
@@ -604,6 +605,7 @@ const index = () => {
 
 
   const dealCurrentBom = async (res?: any) => {
+    updatingAttr.current = false
     try {
       // Windows 文件路径
       const windowsPathRegex = /^(?:[a-zA-Z]:\\|\\\\)(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/;
@@ -911,8 +913,8 @@ const index = () => {
   };
 
   const judgeFileCheckout = (row: any, isMaterial?: boolean) => {
-    console.log(row[isMaterial ? 'material' : 'file'].onChain,'23');
-    
+    console.log(row[isMaterial ? 'material' : 'file'].onChain, '23');
+
     if (row[isMaterial ? 'material' : 'file'].onChain.Revision == 1) {
       return false;
     } else {
@@ -1020,7 +1022,7 @@ const index = () => {
         userId: user.id,
         tenantId: sse.tenantId || "719",
       })
-      const data = (isMaterial ? materialCenterData: centerData).find(item => getRowKey(item) == getRowKey(row))
+      const data = (isMaterial ? materialCenterData : centerData).find(item => getRowKey(item) == getRowKey(row))
       if (!data) {
         return
       }
@@ -1073,7 +1075,7 @@ const index = () => {
         insSize: String(row.FileSize),
         insName: row[isMaterial ? 'material' : 'file'].onChain.Description,
       })
-        .then(async() => {
+        .then(async () => {
           setFileSelectRows([])
           setMaterialSelectRows([])
           await updateSingleData(row, isMaterial);
@@ -1099,7 +1101,7 @@ const index = () => {
     } else {
       dispatch(setLoading(true));
       API.cancelCheckout({ insId: row.insId })
-        .then(async(res) => {
+        .then(async (res) => {
           setFileSelectRows([])
           setMaterialSelectRows([])
           await updateSingleData(row, isMaterial);
@@ -1121,7 +1123,7 @@ const index = () => {
       instanceId: row.file.onChain.insId,
       itemCode: BasicsItemCode.file,
       pageNo: "1",
-      pageSize: "500",
+      pageSize: "1000",
       tabCode: "10002016",
       tabCodes: "10002016",
       tenantId: sse.tenantId || "719",
@@ -1700,6 +1702,7 @@ const index = () => {
     }
   }, [selectProduct])
 
+
   // 监听属性映射
   useMqttRegister(CommandConfig.getCurrentBOM, async (res) => {
     dispatch(setBom({ init: false }));
@@ -1709,6 +1712,7 @@ const index = () => {
 
   // 监听设置属性
   useMqttRegister(CommandConfig.setProductAttVal, async (res) => {
+    updatingAttr.current = true
     warpperSetLog(() => {
       setLogData([
         ...lastestLogData.current,
@@ -2473,6 +2477,14 @@ const index = () => {
       type: CommandConfig.setProductAttVal,
       attr_set: pluginUpdateNumber,
     });
+
+    while (!updatingAttr.current) {
+      console.log("重复监听属性修改", updatingAttr.current);
+      await new Promise(resolve => setTimeout(resolve, 300)); // 等待300ms 再检查
+    }
+    updatingAttr.current = false
+    // 在收到消息后继续执行后续代码
+    console.log('收到 setProductAttVal 消息，继续执行后续代码');
   }
 
   const handleClick = async (name: string) => {
@@ -2647,8 +2659,20 @@ const index = () => {
 
           const FileArray = [];
 
-          for (let item of centerData) {
-            if (item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number) {
+          const filterCenterData = centerData
+            .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
+
+          console.log(nameNumberMap, "nameNumberMapnameNumberMap");
+          // // 批量创建文件结构
+          createStructure({
+            nameNumberMap,
+            itemCode: BasicsItemCode.file,
+            tabCode: "10002016",
+          });
+          // const nameThumbMap = await uploadFile(FileThumbArray)
+          if (mqttClient.publishTopic != 'Tribon') {
+            await updateCadAttr(filterCenterData)
+            for (let item of filterCenterData) {
               if (item.file_path && (mqttClient.publishTopic != 'Tribon')) {
                 FileArray.push(
                   new Promise(async (resolve, reject) => {
@@ -2735,19 +2759,8 @@ const index = () => {
                 );
               }
             }
-          }
+            const fileItems = await Promise.all([...FileArray]);
 
-          const fileItems = await Promise.all([...FileArray]);
-          console.log(nameNumberMap, "nameNumberMapnameNumberMap");
-          // // 批量创建文件结构
-          createStructure({
-            nameNumberMap,
-            itemCode: BasicsItemCode.file,
-            tabCode: "10002016",
-          });
-          const nameFileUrlMap = await uploadFile(fileItems);
-          // const nameThumbMap = await uploadFile(FileThumbArray)
-          if (mqttClient.publishTopic != 'Tribon') {
             // 批量上传附件
             const {
               result: { records: tabAttrs },
@@ -2756,7 +2769,6 @@ const index = () => {
               tabCode: "10002008",
             });
 
-            console.log(nameFileUrlMap, "nameFileUrlMap");
 
             const setAttachmentValue = (
               item: any,
@@ -2794,77 +2806,7 @@ const index = () => {
             };
             const addAttachmentParams: any = [];
 
-            centerData
-              .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
-              .forEach((item) => {
-                if (item.step_path) {
-                  addAttachmentParams.push({
-                    instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-                    itemCode: BasicsItemCode.file,
-                    tabCode: "10002008",
-                    versionNumber: "Draft",
-                    versionOrder: "1",
-                    insAttrs: tabAttrs.map((attr: any) => {
-                      return {
-                        apicode: attr.apicode,
-                        id: attr.id,
-                        title: attr.name,
-                        valueType: attr.valueType,
-                        value: setAttachmentValue(item, attr.apicode, "step"),
-                      };
-                    }),
-                  });
-                }
-                //  else if (item.stp_path) {
-                //   addAttachmentParams.push({
-                //     instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-                //     itemCode: BasicsItemCode.file,
-                //     tabCode: "10002008",
-                //     versionNumber: "Draft",
-                //     versionOrder: "1",
-                //     insAttrs: tabAttrs.map((attr: any) => {
-                //       return {
-                //         apicode: attr.apicode,
-                //         id: attr.id,
-                //         title: attr.name,
-                //         valueType: attr.valueType,
-                //         value: setAttachmentValue(item, attr.apicode, "stp"),
-                //       };
-                //     }),
-                //   });
-                // } 
-                else if (item.drw_path) {
-                  addAttachmentParams.push({
-                    instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-                    itemCode: BasicsItemCode.file,
-                    tabCode: "10002008",
-                    versionNumber: "Draft",
-                    versionOrder: "1",
-                    insAttrs: tabAttrs.map((attr: any) => {
-                      return {
-                        apicode: attr.apicode,
-                        id: attr.id,
-                        title: attr.name,
-                        valueType: attr.valueType,
-                        value: setAttachmentValue(item, attr.apicode, "drw"),
-                      };
-                    }),
-                  });
-                }
-              });
 
-            if (addAttachmentParams.length) {
-              const attchmentResult = await API.addInstanceAttributeAttachment({
-                tenantId: sse.tenantId || "719",
-                instanceAttrVos: addAttachmentParams,
-              });
-              console.log(attchmentResult, addAttachmentParams, "FileAttachment");
-            }
-
-            const filterCenterData = centerData
-              .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
-
-            await updateCadAttr(filterCenterData)
             let nameThumbMap: any = await invoke("get_icons", {
               req: filterCenterData.map(row => row.file_path)
             });
@@ -2886,6 +2828,76 @@ const index = () => {
             const localImageMap = await batchTansformPicPath({ rows: filterCenterData.filter(row => row.pic_path) })
 
             Object.assign(nameThumbMap, localImageMap)
+
+
+            filterCenterData.forEach((item) => {
+              if (item.step_path) {
+                addAttachmentParams.push({
+                  instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+                  itemCode: BasicsItemCode.file,
+                  tabCode: "10002008",
+                  versionNumber: "Draft",
+                  versionOrder: "1",
+                  insAttrs: tabAttrs.map((attr: any) => {
+                    return {
+                      apicode: attr.apicode,
+                      id: attr.id,
+                      title: attr.name,
+                      valueType: attr.valueType,
+                      value: setAttachmentValue(item, attr.apicode, "step"),
+                    };
+                  }),
+                });
+              }
+              //  else if (item.stp_path) {
+              //   addAttachmentParams.push({
+              //     instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+              //     itemCode: BasicsItemCode.file,
+              //     tabCode: "10002008",
+              //     versionNumber: "Draft",
+              //     versionOrder: "1",
+              //     insAttrs: tabAttrs.map((attr: any) => {
+              //       return {
+              //         apicode: attr.apicode,
+              //         id: attr.id,
+              //         title: attr.name,
+              //         valueType: attr.valueType,
+              //         value: setAttachmentValue(item, attr.apicode, "stp"),
+              //       };
+              //     }),
+              //   });
+              // } 
+              else if (item.drw_path) {
+                addAttachmentParams.push({
+                  instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
+                  itemCode: BasicsItemCode.file,
+                  tabCode: "10002008",
+                  versionNumber: "Draft",
+                  versionOrder: "1",
+                  insAttrs: tabAttrs.map((attr: any) => {
+                    return {
+                      apicode: attr.apicode,
+                      id: attr.id,
+                      title: attr.name,
+                      valueType: attr.valueType,
+                      value: setAttachmentValue(item, attr.apicode, "drw"),
+                    };
+                  }),
+                });
+              }
+            });
+
+
+            if (addAttachmentParams.length) {
+              const attchmentResult = await API.addInstanceAttributeAttachment({
+                tenantId: sse.tenantId || "719",
+                instanceAttrVos: addAttachmentParams,
+              });
+              console.log(attchmentResult, addAttachmentParams, "FileAttachment");
+            }
+
+            const nameFileUrlMap = await uploadFile(fileItems);
+            console.log(nameFileUrlMap, "nameFileUrlMap");
 
 
             //批量更新文件地址
@@ -3286,7 +3298,7 @@ const index = () => {
             <PlmTabToolBar
               onClick={(item) => {
                 if (item.tag === 'update') {
-                  if(fileSelectRows.find(item => item.flag === 'add')) {
+                  if (fileSelectRows.find(item => item.flag === 'add')) {
                     message.warning("选择的行中有还未上传的对象")
                   } else {
                     batchUpdateData({ selectRows: fileSelectRows })
@@ -3574,7 +3586,7 @@ const index = () => {
             <PlmTabToolBar
               onClick={async (item) => {
                 if (item.tag === 'update') {
-                  if(materialSelectRows.find((item:any) => item.flag === 'add')) {
+                  if (materialSelectRows.find((item: any) => item.flag === 'add')) {
                     message.warning("选择的行中有还未上传的对象")
                   } else {
                     batchUpdateData({ selectRows: materialSelectRows, isMaterial: true })
