@@ -3253,10 +3253,10 @@ const index = () => {
           editable: true,
           width: 150,
           formitem: formitem,
-          search: {
-            type: formItemMap[item.valueType],
-            props: Utils.generateFormItemProps(item, listCodeMap),
-          },
+          // search: {
+          //   type: formItemMap[item.valueType],
+          //   props: Utils.generateFormItemProps(item, listCodeMap),
+          // },
           render: specificRender(),
           attr: item,
         };
@@ -3511,7 +3511,7 @@ const index = () => {
                   dataIndex: "flag",
                   width: 40,
                   fixed: true,
-                  sort: true,
+                  // sort: true,
                   render: (text: string, record: any) => {
                     if (record.flag === "exist") {
                       return <></>;
@@ -3533,7 +3533,7 @@ const index = () => {
                   // sorter: true,
                   fixed: true,
                   width: 40,
-                  sort: true,
+                  // sort: true,
                   render: (text: string, record: any) => {
                     if (
                       record.file.onChain.checkOut &&
@@ -3578,11 +3578,11 @@ const index = () => {
                 {
                   title: "文件名称",
                   dataIndex: "node_name",
-                  search: {
-                    type: "Input",
-                  },
+                  // search: {
+                  //   type: "Input",
+                  // },
                   fixed: true,
-                  sorter: true,
+                  // sorter: true,
                   width: 100,
                   render: (text: string, record: any) => {
                     return (
@@ -3595,11 +3595,11 @@ const index = () => {
                 {
                   title: "编号",
                   dataIndex: "Number",
-                  search: {
-                    type: "Input",
-                  },
+                  // search: {
+                  //   type: "Input",
+                  // },
                   width: 100,
-                  sorter: true,
+                  // sorter: true,
                   render: (text: string, record: any) => {
                     return (
                       <a
@@ -3619,7 +3619,7 @@ const index = () => {
                 {
                   title: "版次",
                   dataIndex: "revision",
-                  sorter: true,
+                  // sorter: true,
                   width: 100,
                   render: (text: string, record: any) => {
                     if (record.flag == "exist") {
@@ -3933,7 +3933,6 @@ const index = () => {
                   ),
                   dataIndex: "flag",
                   width: 40,
-                  sort: true,
                   fixed: true,
                   render: (text: string, record: any) => {
                     if (record.flag === "exist") {
@@ -3963,7 +3962,6 @@ const index = () => {
                   // sorter: true,
                   width: 40,
                   fixed: true,
-                  sort: true,
                   render: (text: string, record: any) => {
                     if (
                       record.material.onChain.checkOut &&
@@ -4008,11 +4006,11 @@ const index = () => {
                   title: "文件名称",
                   dataIndex: "node_name",
                   fixed: true,
-                  search: {
-                    type: "Input",
-                  },
+                  // search: {
+                  //   type: "Input",
+                  // },
                   width: 100,
-                  sorter: true,
+                  // sorter: true,
                   render: (text: string, record: any) => {
                     return (
                       <div className="w-full overflow-hidden text-ellipsis">
@@ -4025,11 +4023,11 @@ const index = () => {
                   title: "编号",
                   dataIndex: "Number",
                   fixed: true,
-                  search: {
-                    type: "Input",
-                  },
+                  // search: {
+                  //   type: "Input",
+                  // },
                   width: 100,
-                  sorter: true,
+                  // sorter: true,
                   render: (text: string, record: any) => {
                     return (
                       <a
@@ -4049,7 +4047,7 @@ const index = () => {
                 {
                   title: "版次",
                   dataIndex: "revision",
-                  sorter: true,
+                  // sorter: true,
                   width: 100,
                   render: (text: string, record: any) => {
                     if (record.flag == "exist") {
