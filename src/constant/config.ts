@@ -14,7 +14,7 @@ export enum BasicConfig {
   /**onchain topic*/
   onchain_topic = "client_plugin",
   /**server url*/
-  ServerUrl = "http://192.168.0.101:8068/plm",
+  ServerUrl = "http://192.168.0.101:8088/plm-test",
    /**文件服务器 url*/
   TusUrl = "http://192.168.0.101:1080/plm/files",
   /**租户Id*/

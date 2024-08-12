@@ -127,7 +127,7 @@ const index = () => {
   const updatingAttr = useRef<boolean>(false)
   const ConfirmOpened = useRef<boolean>(false)
 
-  const [watchCancelFn , setWatchCancelFn] = useState<any>()
+  const [watchCancelFn, setWatchCancelFn] = useState<any>()
 
   // AES密码解密
   const { value: user } = useSelector((state: any) => state.user);
@@ -739,19 +739,20 @@ const index = () => {
         // 为每一个赋值id属性
         // 判断有实例在系统中
         if (judgeFileResult.result) {
-          totalAttrs
-            .filter((attr: any) => attr.status)
-            .forEach((attr: any) => {
-              // 判断节点在当前实例中
-              if (getCaseInsensitive(nameInstanceMap, fileNameWithFormat)) {
-                onChainAttrs[attr.apicode] =
-                  getCaseInsensitive(nameInstanceMap, fileNameWithFormat).attributes[attr.id];
-                onChainAttrs.insId = getCaseInsensitive(nameInstanceMap, fileNameWithFormat).insId;
-                onChainAttrs.checkOut =
-                  getCaseInsensitive(nameInstanceMap, fileNameWithFormat).checkOut;
+          const rowData = getCaseInsensitive(nameInstanceMap, fileNameWithFormat)
+          if (rowData) {
+            onChainAttrs.rowId = rowData.rowId
+            totalAttrs
+              .filter((attr: any) => attr.status)
+              .forEach((attr: any) => {
+                // 判断节点在当前实例中
+                onChainAttrs[attr.apicode] = rowData.attributes[attr.id];
+                onChainAttrs.insId = rowData.insId;
+                onChainAttrs.checkOut = rowData.checkOut;
                 onChainAttrs.flag = "exist";
-              }
-            });
+              });
+          }
+
 
           // 判断文件有对应的物料存在
           const materialDataMap =
@@ -763,6 +764,7 @@ const index = () => {
             materialDataMap["10002044"].length
           ) {
             materialOnChainAttrs.insId = materialDataMap["10002044"][0].insId;
+            materialOnChainAttrs.rowId = materialDataMap["10002044"][0].rowId;
             materialOnChainAttrs.checkOut =
               materialDataMap["10002044"][0].checkOut;
             materialOnChainAttrs.flag = "exist";
@@ -905,11 +907,11 @@ const index = () => {
       const copyLeftData = [res.output_data];
       setSelectNode(res.output_data);
       console.log(copyLeftData, 'copyLeftData');
-      
+
 
       setLeftData([...copyLeftData]);
 
-     const cancelFn = await watch(
+      const cancelFn = await watch(
         flattenData.map(row => row.file_path),
         () => {
           console.log(123)
@@ -938,7 +940,7 @@ const index = () => {
           recursive: true
         },
       );
-      setWatchCancelFn(()=>cancelFn)
+      setWatchCancelFn(() => cancelFn)
       dispatch(setLoading(false));
     } catch (error) {
       console.log(error, 'errorerror');
@@ -1377,6 +1379,7 @@ const index = () => {
       },
       from: user.name
     }))
+    dispatch(setLoading(false));
 
   };
 
@@ -1488,6 +1491,7 @@ const index = () => {
         id: row.material.onChain.insId,
         itemCode: BasicsItemCode.material,
         tabCode: "10002001",
+        // rowId:  row.material.onChain.rowId,
         insAttrs: materialAttrs.map((attr) => {
           return {
             ...attr,
@@ -1515,6 +1519,16 @@ const index = () => {
       insSize: String(row.FileSize),
       insName: row.file.onChain.Description,
     })
+    warpperSetLog(() => {
+      setLogData([
+        ...lastestLogData.current,
+        {
+          dateTime: getCurrentTime(),
+          log: `更新${row.file.onChain.Description}成功!`,
+          id: Utils.generateSnowId(),
+        },
+      ]);
+    });
     setFileSelectRows([])
     setMaterialSelectRows([])
     await updateSingleData(row, true);
@@ -1537,14 +1551,14 @@ const index = () => {
       if (isMaterial) {
         originCheckInMaterial(row)
       } else {
-       await originCheckIn(row);
-       dispatch(setLoading(true));
-       mqttClient.publish({
-         type: CommandConfig.getCurrentBOM,
-         input_data: {
-           "info": ["proximate"]
-         }
-       });
+        await originCheckIn(row);
+        dispatch(setLoading(true));
+        mqttClient.publish({
+          type: CommandConfig.getCurrentBOM,
+          input_data: {
+            "info": ["proximate"]
+          }
+        });
       }
       dispatch(setLoading(true));
     }
@@ -1586,7 +1600,7 @@ const index = () => {
   // useAsyncEffect(async () => {
   //   if (selectNode && ConfirmOpenedLatest.current) {
   //     const flattenData: Record<string, any>[] = getFlattenData(selectNode);
-      
+
   //   }
   // }, [selectNode, ConfirmOpenedLatest.current])
 
@@ -2480,6 +2494,8 @@ const index = () => {
     // cad属性映射文件属性
     const asmAttrsMap = await getCadAttrMapRule("asm", cadIdMap, settingType.PlmToCad);
 
+    const fileColumnsListCodeMap = Utils.transformArrayToMap(fileColumn.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
+
 
     // 修改文件编号
     const pluginUpdateNumber = updateData.map((item: any) => {
@@ -2488,10 +2504,18 @@ const index = () => {
         product_name: item.node_name,
         extra: "属性设置",
         product_attrs: Object.keys(cadAttrsMap).map(attrname => {
+          let actualValue = item[cadAttrsMap[attrname]]
+          if (fileColumnsListCodeMap[cadAttrsMap[attrname]]) {
+            const options = fileColumnsListCodeMap[cadAttrsMap[attrname]]?.props?.options || []
+            actualValue = Utils.getLabelInOptions({
+              value:  item[cadAttrsMap[attrname]],
+              options: options,
+            })
+          }
           return {
             attr_name: attrname,
             attr_type: "string",
-            attr_value: item[cadAttrsMap[attrname]],
+            attr_value: actualValue,
           }
         })
       };
@@ -3044,7 +3068,11 @@ const index = () => {
           message.warning('当前文件还未上传')
           return
         }
-        updateData({ row: row });
+        try {
+          updateData({ row: row });
+        } catch (error) {
+          dispatch(setLoading(false));
+        }
       }
     } else if (name === "checkout") {
       if (selectNode) {
@@ -3331,7 +3359,11 @@ const index = () => {
                   if (fileSelectRows.find(item => item.flag === 'add')) {
                     message.warning("选择的行中有还未上传的对象")
                   } else {
-                    batchUpdateData({ selectRows: fileSelectRows })
+                    try {
+                      batchUpdateData({ selectRows: fileSelectRows })
+                    } catch (error) {
+                      dispatch(setLoading(false))
+                    }
                   }
                 } else if (item.tag === "checkout") {
                   if (fileSelectRows.length != 1) {
