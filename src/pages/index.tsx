@@ -3601,6 +3601,9 @@ const index = () => {
                   width: 100,
                   // sorter: true,
                   render: (text: string, record: any) => {
+                    if(record.flag === 'add') {
+                      return <>{text}</>
+                    }
                     return (
                       <a
                         onClick={async () => {
@@ -4029,6 +4032,9 @@ const index = () => {
                   width: 100,
                   // sorter: true,
                   render: (text: string, record: any) => {
+                    if(record.flag === 'add') {
+                      return <>{text}</>
+                    }
                     return (
                       <a
                         onClick={async () => {
