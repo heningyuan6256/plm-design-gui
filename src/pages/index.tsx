@@ -30,7 +30,7 @@ import cancelcheckin from "../assets/image/cancelcheckin.svg";
 import filldown from "../assets/image/filldown.svg";
 import fillup from "../assets/image/fillup.svg";
 import checkout from "../assets/image/checkin.svg";
-import topupdate from "../assets/image/topupdate.svg";
+import topupdate from "../assets/image/front-renew.svg";
 import checkin from "../assets/image/checkout.svg";
 import { useAsyncEffect, useLatest, useMemoizedFn } from "ahooks";
 import API from "../utils/api";
@@ -2508,7 +2508,7 @@ const index = () => {
           if (fileColumnsListCodeMap[cadAttrsMap[attrname]]) {
             const options = fileColumnsListCodeMap[cadAttrsMap[attrname]]?.props?.options || []
             actualValue = Utils.getLabelInOptions({
-              value:  item[cadAttrsMap[attrname]],
+              value: item[cadAttrsMap[attrname]],
               options: options,
             })
           }
@@ -3743,7 +3743,7 @@ const index = () => {
                     }
                   }
                   setLeftData([...leftData]);
-                } else if (item.tag === "createIntance") {
+                } else if (item.tag === "createBom") {
                   // dispatch(setLoading(true));
                   setLogVisbile(true)
                   // 增加判断，所有的必填校验
@@ -3844,26 +3844,29 @@ const index = () => {
                       userId: user.id,
                       saveVos: dealParams,
                     }).then(async (res) => {
+                      // // 批量创建Bom结构
+                      await createStructure({
+                        itemCode: BasicsItemCode.material,
+                        tabCode: "10002003",
+                      });
                       await dealCurrentBom(designData);
                       setLogVisbile(false)
+                      dispatch(setLoading(false))
                     });
                   } catch (error) {
                     setLogVisbile(false)
                   }
 
 
-                } else if (item.tag === "createBom") {
-                  dispatch(setLoading(true));
-                  // // 批量创建Bom结构
-                  await createStructure({
-                    itemCode: BasicsItemCode.material,
-                    tabCode: "10002003",
-                  });
-                  dealCurrentBom(designData);
                 }
+                //  else if (item.tag === "createBom") {
+                //   dispatch(setLoading(true));
+
+                //   dealCurrentBom(designData);
+                // }
               }}
               list={[
-                { name: "创建编码", icon: encodedSvg, tag: "createIntance" },
+                // { name: "创建编码", icon: encodedSvg, tag: "createIntance" },
                 { name: "创建EBOM", icon: EBOM, tag: "createBom" },
                 { name: "更新", icon: topupdate, tag: "update" },
                 { name: "签出", icon: checkout, tag: "checkout" },
