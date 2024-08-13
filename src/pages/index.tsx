@@ -987,6 +987,7 @@ const index = () => {
       message.error('请勾选要更新对象')
       return
     }
+    
     setLogVisbile(true)
     warpperSetLog(() => {
       setLogData([
@@ -1289,6 +1290,8 @@ const index = () => {
         id: row.file.onChain.insId,
         itemCode: BasicsItemCode.file,
         tabCode: "10002001",
+        versionNumber: row.file.onChain.Version,
+        versionOrder: row.file.onChain.Revision,
         insAttrs: Attrs.map((attr) => {
           if (attr.apicode === "FileUrl") {
             return {
@@ -1491,7 +1494,9 @@ const index = () => {
         id: row.material.onChain.insId,
         itemCode: BasicsItemCode.material,
         tabCode: "10002001",
-        // rowId:  row.material.onChain.rowId,
+        rowId:  row.material.onChain.rowId,
+        versionNumber: row.material.onChain.Version,
+        versionOrder: row.material.onChain.Revision,
         insAttrs: materialAttrs.map((attr) => {
           return {
             ...attr,
@@ -3356,7 +3361,7 @@ const index = () => {
             <PlmTabToolBar
               onClick={(item) => {
                 if (item.tag === 'update') {
-                  if (fileSelectRows.find(item => item.flag === 'add')) {
+                  if (fileSelectRows.find(item => item.flag !== 'exist')) {
                     message.warning("选择的行中有还未上传的对象")
                   } else {
                     try {
@@ -3601,7 +3606,7 @@ const index = () => {
                   width: 100,
                   // sorter: true,
                   render: (text: string, record: any) => {
-                    if(record.flag === 'add') {
+                    if(record.flag !== 'exist') {
                       return <>{text}</>
                     }
                     return (
@@ -3651,7 +3656,7 @@ const index = () => {
             <PlmTabToolBar
               onClick={async (item) => {
                 if (item.tag === 'update') {
-                  if (materialSelectRows.find((item: any) => item.flag === 'add')) {
+                  if (materialSelectRows.find((item: any) => item.flag !== 'exist')) {
                     message.warning("选择的行中有还未上传的对象")
                   } else {
                     batchUpdateData({ selectRows: materialSelectRows, isMaterial: true })
