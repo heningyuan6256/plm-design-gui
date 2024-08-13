@@ -152,6 +152,7 @@ const index = () => {
   const [fileSelectRows, setFileSelectRows] = useState<any[]>([]);
   const [materialSelectRows, setMaterialSelectRows] = useState<any>([]);
   const [logVisible, setLogVisbile] = useState(false);
+  const logVisibleLatest = useLatest(logVisible);
   const [logData, setLogData] = useState<logItemType[]>([]);
   const { value: network } = useSelector((state: any) => state.network);
   const logWrapperRef = useRef<any>(null);
@@ -338,7 +339,9 @@ const index = () => {
 
   // 判断是否是标准件
   const judgeStandard = (row: any) => {
-    return row.file_path.indexOf("solidworks data\\browser") != -1;
+    console.log(row.file_path.indexOf("solidworks data (2)\\browser") != -1 || row.file_path.indexOf("solidworks data\\browser") != -1 || row.file_path.indexOf("SOLIDWORKS Data (2)\\browser") != -1 || row.file_path.indexOf("SOLIDWORKS Data\\browser") != -1,'123123');
+    
+    return (row.file_path.indexOf("solidworks data (2)\\browser") != -1) || (row.file_path.indexOf("solidworks data\\browser") != -1) || (row.file_path.indexOf("SOLIDWORKS Data (2)\\browser") != -1) || (row.file_path.indexOf("SOLIDWORKS Data\\browser") != -1);
   };
 
   const uniqueArrayByAttr = (arr: any) => {
@@ -918,7 +921,7 @@ const index = () => {
           const currentWindow = getCurrent();
           currentWindow.unminimize()
           currentWindow.setFocus()
-          if (!ConfirmOpened.current) {
+          if (!ConfirmOpened.current && !logVisibleLatest.current) {
             ConfirmOpened.current = true
             confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
               ConfirmOpened.current = false
@@ -940,7 +943,9 @@ const index = () => {
           recursive: true
         },
       );
-      setWatchCancelFn(() => cancelFn)
+      console.log(cancelFn,'cancelFn');
+      
+      setWatchCancelFn(cancelFn)
       dispatch(setLoading(false));
     } catch (error) {
       console.log(error, 'errorerror');
@@ -987,7 +992,7 @@ const index = () => {
       message.error('请勾选要更新对象')
       return
     }
-    
+
     setLogVisbile(true)
     warpperSetLog(() => {
       setLogData([
@@ -1494,7 +1499,7 @@ const index = () => {
         id: row.material.onChain.insId,
         itemCode: BasicsItemCode.material,
         tabCode: "10002001",
-        rowId:  row.material.onChain.rowId,
+        rowId: row.material.onChain.rowId,
         versionNumber: row.material.onChain.Version,
         versionOrder: row.material.onChain.Revision,
         insAttrs: materialAttrs.map((attr) => {
@@ -1518,12 +1523,8 @@ const index = () => {
       });
     }
 
-    await API.checkIn({
-      insId: row.insId,
-      insUrl: "",
-      insSize: String(row.FileSize),
-      insName: row.file.onChain.Description,
-    })
+    console.log(123123)
+
     warpperSetLog(() => {
       setLogData([
         ...lastestLogData.current,
@@ -1534,6 +1535,13 @@ const index = () => {
         },
       ]);
     });
+    await API.checkIn({
+      insId: row.insId,
+      insUrl: "",
+      insSize: String(row.FileSize),
+      insName: row.file.onChain.Description,
+    })
+    
     setFileSelectRows([])
     setMaterialSelectRows([])
     await updateSingleData(row, true);
@@ -2064,7 +2072,7 @@ const index = () => {
     console.log(buildStructError, structureData, "创建结构参数");
     if (!buildStructError) {
       console.log("进入创建结构")
-      API.batchCreateStructure({
+      await API.batchCreateStructure({
         tenantId: sse.tenantId || "719",
         userId: user.id,
         itemCode: itemCode,
@@ -2490,8 +2498,8 @@ const index = () => {
     });
   }
 
-  const updateCadAttr = async (updateData: any) => {
-    watchCancelFn && watchCancelFn()
+  const updateCadAttr = async (updateData: any, nameNumberMap?: any) => {
+    watchCancelFn && watchCancelFn()()
     const [cadFileMap, cadIdMap] = await getCadFileMapRule();
 
     // cad属性映射文件属性
@@ -2503,8 +2511,10 @@ const index = () => {
 
 
     // 修改文件编号
-    const pluginUpdateNumber = updateData.map((item: any) => {
+    const pluginUpdateNumber = updateData.filter((item:any) => !judgeStandard(item)).map((item: any) => {
       const cadAttrsMap = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
+      console.log(cadAttrsMap, 'cadAttrsMap', nameNumberMap);
+
       return {
         product_name: item.node_name,
         extra: "属性设置",
@@ -2516,6 +2526,9 @@ const index = () => {
               value: item[cadAttrsMap[attrname]],
               options: options,
             })
+          }
+          if ((cadAttrsMap[attrname] === 'Number') && nameNumberMap) {
+            actualValue = nameNumberMap[getRowKey(item)]?.number || ''
           }
           return {
             attr_name: attrname,
@@ -2724,7 +2737,7 @@ const index = () => {
           });
           // const nameThumbMap = await uploadFile(FileThumbArray)
           if (mqttClient.publishTopic != 'Tribon') {
-            await updateCadAttr(filterCenterData)
+            await updateCadAttr(filterCenterData, nameNumberMap)
             for (let item of filterCenterData) {
               if (item.file_path && (mqttClient.publishTopic != 'Tribon')) {
                 FileArray.push(
@@ -3604,9 +3617,14 @@ const index = () => {
                   //   type: "Input",
                   // },
                   width: 100,
+                  editable: true,
+                  formitem: {
+                    type: 'Input',
+                    props: {}
+                  },
                   // sorter: true,
                   render: (text: string, record: any) => {
-                    if(record.flag !== 'exist') {
+                    if (record.flag !== 'exist') {
                       return <>{text}</>
                     }
                     return (
@@ -3763,8 +3781,13 @@ const index = () => {
                   console.log(requiredColumns, "requiredColumns");
 
                   let requiredMsgList: Record<string, any>[] = [];
-                  if (!(materialCenterData || []).filter(item => item.flag).length) {
-                    message.warning("没有需要创建的物料")
+                  if (!(materialCenterData || []).find(item => item.flag !== 'exist')) {
+                    // message.warning("没有需要创建的物料")
+                    await dealCurrentBom(designData);
+                    await createStructure({
+                      itemCode: BasicsItemCode.material,
+                      tabCode: "10002003",
+                    });
                     return
                   }
                   materialCenterData.forEach((item) => {
@@ -3853,11 +3876,11 @@ const index = () => {
                       saveVos: dealParams,
                     }).then(async (res) => {
                       // // 批量创建Bom结构
+                      await dealCurrentBom(designData);
                       await createStructure({
                         itemCode: BasicsItemCode.material,
                         tabCode: "10002003",
                       });
-                      await dealCurrentBom(designData);
                       setLogVisbile(false)
                       dispatch(setLoading(false))
                     });
@@ -4035,9 +4058,14 @@ const index = () => {
                   //   type: "Input",
                   // },
                   width: 100,
+                  editable: true,
+                  formitem: {
+                    type: 'Input',
+                    props: {}
+                  },
                   // sorter: true,
                   render: (text: string, record: any) => {
-                    if(record.flag === 'add') {
+                    if (record.flag === 'add') {
                       return <>{text}</>
                     }
                     return (
