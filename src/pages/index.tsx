@@ -936,7 +936,7 @@ const index = () => {
           }
         },
         {
-          delayMs: 1000,
+          delayMs: 3000,
           recursive: true
         },
       );
