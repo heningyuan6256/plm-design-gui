@@ -115,8 +115,15 @@ export const openDesign = async ({
 
         downloadFolder = `${downloadFolder}\\${instance.productName}`
 
+        if (!readPermission(instance.number)) {
+          message.error("无当前实例查看权限")
+          cancelLoading && cancelLoading()
+          return
+        }
+
         if (!readPermission(instance.productName)) {
           message.error("无当前实例的产品查看权限")
+          cancelLoading && cancelLoading()
           return
         }
 

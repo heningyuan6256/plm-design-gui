@@ -82,6 +82,7 @@ const Message: FC = () => {
             <PlmMessageToolBar onClick={(val) => {
                 if (selectRows.length == 0) {
                     antdMsg.warning("请选择消息行数据")
+                    return
                 }
                 if (val === 'read') {
                     API.readMessageData(selectRows.map((item: any) => item.id).join(',')).then(res => {

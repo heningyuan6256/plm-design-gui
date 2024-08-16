@@ -339,9 +339,7 @@ const index = () => {
 
   // 判断是否是标准件
   const judgeStandard = (row: any) => {
-    console.log(row.file_path.indexOf("solidworks data (2)\\browser") != -1 || row.file_path.indexOf("solidworks data\\browser") != -1 || row.file_path.indexOf("SOLIDWORKS Data (2)\\browser") != -1 || row.file_path.indexOf("SOLIDWORKS Data\\browser") != -1,'123123');
-    
-    return (row.file_path.indexOf("solidworks data (2)\\browser") != -1) || (row.file_path.indexOf("solidworks data\\browser") != -1) || (row.file_path.indexOf("SOLIDWORKS Data (2)\\browser") != -1) || (row.file_path.indexOf("SOLIDWORKS Data\\browser") != -1);
+    return (row.file_path.indexOf("SOLIDWORKS\\Data\\browser") != -1) || (row.file_path.indexOf("SOLIDWORKS\\DATA\\browser") != -1) || (row.file_path.indexOf("solidworks data (2)\\browser") != -1) || (row.file_path.indexOf("solidworks data\\browser") != -1) || (row.file_path.indexOf("SOLIDWORKS Data (2)\\browser") != -1) || (row.file_path.indexOf("SOLIDWORKS Data\\browser") != -1);
   };
 
   const uniqueArrayByAttr = (arr: any) => {
@@ -676,6 +674,7 @@ const index = () => {
           data[i].property = uniqBy(data[i].property, 'name')
           serielNumber = serielNumber + 1
           data[i].serielNumber = serielNumber
+          data[i].id = Utils.generateSnowId();
           // 解决sw镜像文件以及阵列文件的问题
           if (!data[i].file_path) {
             data.splice(i, 1)
@@ -710,29 +709,65 @@ const index = () => {
 
       loop([res.output_data]);
 
-      const nameList = [
-        ...new Set(flattenData.map((item) => getFileNameWithFormat(item))),
-      ];
+      const findKeyByValue = (obj: Record<string, any>, value: string) => {
+        for (const key in obj) {
+          if (obj[key] == value) {
+            return key
+          }
+        }
+      }
+
+      const filterCenterData = uniqBy(flattenData, (item) => getFileNameWithFormat(item))
+
+      const uniqueFileList = filterCenterData.map(item => {
+        const fileAttrsMaps = (item.model_type === 'assembly' ? asmAttrsMap : attrsMap) || {}
+        let Spec = ''
+        // 优先查询是否有对应的规格型号映射关系
+        if (Object.values(fileAttrsMaps).includes("Note")) {
+          const SpecAttr = item.property.find((v: any) => v.name == findKeyByValue(fileAttrsMaps, "Note"))
+          Spec = SpecAttr?.defaultVal || ''
+        }
+
+        const fileNameWithFormat = getFileNameWithFormat(item)
+        const fileName = fileNameWithFormat.substring(
+          0,
+          fileNameWithFormat.lastIndexOf(".")
+        );
+        const fileFormat = fileNameWithFormat.substring(
+          fileNameWithFormat.lastIndexOf(".") + 1
+        );
+        return {
+          id: item.id,
+          nameApicode: 'Description',
+          nameValue: fileName,
+          formatApicode: 'FileFormat',
+          formatValue: fileFormat,
+          specApicode: 'Note',
+          specValue: Spec
+        }
+      })
+
+      console.log(uniqueFileList, 'uniqueFileList');
+
 
       const judgeFileResult: any = await API.judgeFileExist({
         productId: latestProduct.current,
-        fileNameList: nameList,
+        fileCheckList: uniqueFileList,
         itemCodes: [BasicsItemCode.file],
         userId: user.id,
       });
-      const nameInstanceMap = normalizeKeys(Utils.transformArrayToMap(
+      const nameInstanceMap = Utils.transformArrayToMap(
         judgeFileResult.result || [],
-        "insDesc"
-      ));
+        "seqId"
+      );
 
       console.log(nameInstanceMap, "nameInstanceMap");
 
       const PromiseData: any[] = [];
       const PromiseImgData: any[] = [];
       console.log(InstanceAttrsMap, "InstanceAttrsMap");
-      for (const item of flattenData) {
+      for (const item of filterCenterData) {
         const rowKey = getRowKey(item);
-        item.id = Utils.generateSnowId();
         const fileNameWithFormat = getFileNameWithFormat(item);
         const onChainAttrs = InstanceAttrsMap[rowKey].file.onChain;
         const pluginAttrs = InstanceAttrsMap[rowKey].file.plugin;
@@ -742,7 +777,7 @@ const index = () => {
         // 为每一个赋值id属性
         // 判断有实例在系统中
         if (judgeFileResult.result) {
-          const rowData = getCaseInsensitive(nameInstanceMap, fileNameWithFormat)
+          const rowData = nameInstanceMap[item.id]
           if (rowData) {
             onChainAttrs.rowId = rowData.rowId
             totalAttrs
@@ -758,25 +793,25 @@ const index = () => {
 
 
           // 判断文件有对应的物料存在
-          const materialDataMap =
-            getCaseInsensitive(nameInstanceMap, fileNameWithFormat)?.tabCodeInsMap;
+          const materialDataMap = nameInstanceMap[item.id]?.tabCodeInsMap;
 
           if (
             materialDataMap &&
-            materialDataMap["10002044"] &&
-            materialDataMap["10002044"].length
+            materialDataMap["10002049"] &&
+            materialDataMap["10002049"].length
           ) {
-            materialOnChainAttrs.insId = materialDataMap["10002044"][0].insId;
-            materialOnChainAttrs.rowId = materialDataMap["10002044"][0].rowId;
+
+            materialOnChainAttrs.insId = materialDataMap["10002049"][0].insId;
+            materialOnChainAttrs.rowId = materialDataMap["10002049"][0].rowId;
             materialOnChainAttrs.checkOut =
-              materialDataMap["10002044"][0].checkOut;
+              materialDataMap["10002049"][0].checkOut;
             materialOnChainAttrs.flag = "exist";
-            materialOnChainAttrs.isStandardPart = materialDataMap["10002044"][0].standardPartId
+            materialOnChainAttrs.isStandardPart = materialDataMap["10002049"][0].standardPartId
             totalMaterialAttrs
               .filter((attr: any) => attr.status)
               .forEach((attr: any) => {
                 materialOnChainAttrs[attr.apicode] =
-                  materialDataMap["10002044"][0].attributes[attr.id] || '';
+                  materialDataMap["10002049"][0].attributes[attr.id] || '';
               });
           } else {
             materialOnChainAttrs.insId = "";
@@ -884,7 +919,6 @@ const index = () => {
                 options: options,
                 needValue: true
               })
-              console.log(actualValue, 'actualValue')
               materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : actualValue;
             } else {
               materialPluginAttrs[materialAttrsMaps[attr.name]] = mqttClient.publishTopic === 'Tribon' ? attr.DefaultVal : attr.defaultVal;
@@ -902,6 +936,9 @@ const index = () => {
         // } catch (error) {
         // }
       }
+
+      console.log(flattenData, 'flattenDataflattenData');
+
 
       await Promise.all([...PromiseData, ...PromiseImgData]);
 
@@ -943,8 +980,6 @@ const index = () => {
           recursive: true
         },
       );
-      console.log(cancelFn,'cancelFn');
-      
       setWatchCancelFn(cancelFn)
       dispatch(setLoading(false));
     } catch (error) {
@@ -1026,6 +1061,7 @@ const index = () => {
         },
       ]);
     });
+    setLogData([])
   }
 
 
@@ -1079,6 +1115,7 @@ const index = () => {
       }
       data[isMaterial ? 'material' : 'file'].onChain.checkOut = res.result.readInstanceVo.checkOut;
       data[isMaterial ? 'material' : 'file'].onChain.Revision = res.result.readInstanceVo.insVersionOrder;
+      data[isMaterial ? 'material' : 'file'].onChain.rowId = res.result.readInstanceVo.rowId;
 
       if (isMaterial) {
         await originCheckInMaterial(data)
@@ -1127,9 +1164,9 @@ const index = () => {
         insName: row[isMaterial ? 'material' : 'file'].onChain.Description,
       })
         .then(async () => {
+          await updateSingleData(row, isMaterial);
           setFileSelectRows([])
           setMaterialSelectRows([])
-          await updateSingleData(row, isMaterial);
           dispatch(setLoading(false));
         })
         .catch(() => {
@@ -1290,46 +1327,38 @@ const index = () => {
     }
 
 
-    const updateInstances = [
-      {
-        id: row.file.onChain.insId,
-        itemCode: BasicsItemCode.file,
-        tabCode: "10002001",
-        versionNumber: row.file.onChain.Version,
-        versionOrder: row.file.onChain.Revision,
-        insAttrs: Attrs.map((attr) => {
-          if (attr.apicode === "FileUrl") {
-            return {
-              ...attr,
-              value: `/plm/files${nameFileUrlMap[
-                getFileNameWithFormat(row)
-              ].response.uploadURL.split("/plm/files")[1]
-                }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize
-                }&extension=${row.file.plugin?.FileFormat}`,
-            };
-          } else if (attr.apicode === "Thumbnail") {
-            return {
-              ...attr,
-              value: `data:image/png;base64,${pic_base64}`,
-            };
-          } else {
-            return {
-              ...attr,
-              value: row[attr.apicode],
-            };
-          }
-        }),
-        tenantId: sse.tenantId || "719",
-      },
-    ];
-    console.log(updateInstances, "签出签入更新模型的属性");
+    const updateInstance = {
+      id: row.file.onChain.insId,
+      itemCode: BasicsItemCode.file,
+      tabCode: "10002001",
+      rowId: row.file.onChain.rowId,
+      insAttrs: Attrs.map((attr) => {
+        if (attr.apicode === "FileUrl") {
+          return {
+            ...attr,
+            value: `/plm/files${nameFileUrlMap[
+              getFileNameWithFormat(row)
+            ].response.uploadURL.split("/plm/files")[1]
+              }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize
+              }&extension=${row.file.plugin?.FileFormat}`,
+          };
+        } else if (attr.apicode === "Thumbnail") {
+          return {
+            ...attr,
+            value: `data:image/png;base64,${pic_base64}`,
+          };
+        } else {
+          return {
+            ...attr,
+            value: row[attr.apicode],
+          };
+        }
+      }),
+      tenantId: sse.tenantId || "719",
+    }
 
-    if (updateInstances.length) {
-      await API.batchUpdate({
-        instances: updateInstances,
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-      }).catch(() => {
+    if (updateInstance.id) {
+      await API.singleUpdate(updateInstance).catch(() => {
         dispatch(setLoading(false));
       });
       warpperSetLog(() => {
@@ -1494,36 +1523,28 @@ const index = () => {
 
 
     //批量更新文件地址
-    const updateInstances = [
-      {
-        id: row.material.onChain.insId,
-        itemCode: BasicsItemCode.material,
-        tabCode: "10002001",
-        rowId: row.material.onChain.rowId,
-        versionNumber: row.material.onChain.Version,
-        versionOrder: row.material.onChain.Revision,
-        insAttrs: materialAttrs.map((attr) => {
-          return {
-            ...attr,
-            value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
-          }
-        }),
-        tenantId: sse.tenantId || "719",
-      },
-    ];
-    console.log(updateInstances, "签出签入更新模型的属性");
+    const updateInstance = {
+      id: row.material.onChain.insId,
+      itemCode: BasicsItemCode.material,
+      tabCode: "10002001",
+      rowId: row.material.onChain.rowId,
+      // versionNumber: row.material.onChain.Version,
+      // versionOrder: row.material.onChain.Revision,
+      insAttrs: materialAttrs.map((attr) => {
+        return {
+          ...attr,
+          value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
+        }
+      }),
+      tenantId: sse.tenantId || "719",
+    }
+    console.log(updateInstance, "签出签入更新模型的属性");
 
-    if (updateInstances.length) {
-      await API.batchUpdate({
-        instances: updateInstances,
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-      }).catch(() => {
+    if (updateInstance.id) {
+      await API.singleUpdate(updateInstance).catch(() => {
         dispatch(setLoading(false));
       });
     }
-
-    console.log(123123)
 
     warpperSetLog(() => {
       setLogData([
@@ -1537,11 +1558,8 @@ const index = () => {
     });
     await API.checkIn({
       insId: row.insId,
-      insUrl: "",
-      insSize: String(row.FileSize),
-      insName: row.file.onChain.Description,
     })
-    
+
     setFileSelectRows([])
     setMaterialSelectRows([])
     await updateSingleData(row, true);
@@ -1562,18 +1580,17 @@ const index = () => {
       message.error("当前实例还未签出");
     } else {
       if (isMaterial) {
-        originCheckInMaterial(row)
+        await originCheckInMaterial(row)
       } else {
         await originCheckIn(row);
-        dispatch(setLoading(true));
-        mqttClient.publish({
-          type: CommandConfig.getCurrentBOM,
-          input_data: {
-            "info": ["proximate"]
-          }
-        });
       }
       dispatch(setLoading(true));
+      mqttClient.publish({
+        type: CommandConfig.getCurrentBOM,
+        input_data: {
+          "info": ["proximate"]
+        }
+      });
     }
   };
 
@@ -2511,7 +2528,7 @@ const index = () => {
 
 
     // 修改文件编号
-    const pluginUpdateNumber = updateData.filter((item:any) => !judgeStandard(item)).map((item: any) => {
+    const pluginUpdateNumber = updateData.filter((item: any) => !judgeStandard(item)).map((item: any) => {
       const cadAttrsMap = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
       console.log(cadAttrsMap, 'cadAttrsMap', nameNumberMap);
 
@@ -2973,6 +2990,7 @@ const index = () => {
                   id: nameNumberMap[getRowKey(item)]?.instanceId,
                   itemCode: BasicsItemCode.file,
                   tabCode: "10002001",
+                  // rowId: nameNumberMap[getRowKey(item)]?.rowId,
                   insAttrs: Attrs.filter((attr) =>
                     (mqttClient.publishTopic !== 'Tribon' ? ["FileUrl", "Thumbnail"] : ['FileUrl']).includes(attr.apicode)
                   ).map((attr) => {
@@ -3087,7 +3105,18 @@ const index = () => {
           return
         }
         try {
-          updateData({ row: row });
+          await updateData({ row: row });
+          if(selectNode.material.onChain.insId) {
+            const materialRow = { ...selectNode, ...selectNode.material.onChain };
+            await updateData({ row: materialRow, isMaterial:true });
+          }
+          dispatch(setLoading(true));
+          mqttClient.publish({
+            type: CommandConfig.getCurrentBOM,
+            input_data: {
+              "info": ["proximate"]
+            }
+          });
         } catch (error) {
           dispatch(setLoading(false));
         }
@@ -3110,6 +3139,7 @@ const index = () => {
       if (selectNode) {
         const data = centerData.find(item => getRowKey(item) == getRowKey(selectNode))
         // const row = { ...selectNode, ...selectNode.file.onChain };
+        dispatch(setLoading(true));
         checkInData({ row: data });
       } else {
         message.error("请选择目标节点");
@@ -3811,6 +3841,7 @@ const index = () => {
                       ]}`
                     );
                     setLogVisbile(false)
+                    setLogData([])
                     return false;
                   }
                   try {
@@ -3882,10 +3913,12 @@ const index = () => {
                         tabCode: "10002003",
                       });
                       setLogVisbile(false)
+                      setLogData([])
                       dispatch(setLoading(false))
                     });
                   } catch (error) {
                     setLogVisbile(false)
+                    setLogData([])
                   }
 
 
@@ -4445,6 +4478,7 @@ const index = () => {
             });
           } else {
             setLogVisbile(false);
+            setLogData([])
           }
         }}
       >
@@ -4891,6 +4925,7 @@ const index = () => {
                 });
               } else {
                 setLogVisbile(false);
+                setLogData([])
               }
             }}
           >

@@ -9,6 +9,7 @@ import { FC, useEffect, useMemo, useState } from "react";
 import API from "../utils/api";
 import { Input, message } from "antd";
 import { useSelector } from "react-redux";
+import { open } from "@tauri-apps/api/shell";
 import { useKeyPress, useReactive, useRequest } from "ahooks";
 import PlmLifeCycle from "../components/PlmLifeCycle";
 import { OnChainTableColumnProps } from "onchain-ui/dist/esm/OnChainTable";
@@ -156,6 +157,7 @@ const query: FC = () => {
       // console.log(item.Number.indexOf(selectVal) != -1,item.Description.indexOf(selectVal) != -1,'123123');
       return item.Number.indexOf(selectVal) != -1 || item.Description.indexOf(selectVal) != -1
     });
+    
     if (records) {
       if (isInit) {
         setTableData(records);
@@ -186,7 +188,7 @@ const query: FC = () => {
       // setTableData(
       //   records.filter((item: any) => {
       //     console.log(item.Number.indexOf(selectVal) != -1,item.Description.indexOf(selectVal) != -1,'123123');
-          
+
       //     return item.Number.indexOf(selectVal) != -1
       //   })
       // );
@@ -223,7 +225,11 @@ const query: FC = () => {
         // sorter: true,
         ellipsis: true,
         render: (data: string, record: Record<string, any>) => {
-          return <a>{data}</a>;
+          return <a onClick={() => {
+            open(
+              `http://${network}/front/instance/${record.insId}/BasicAttrs`
+            );
+          }}>{data}</a>;
         },
       },
       {
@@ -320,6 +326,17 @@ const query: FC = () => {
         // sorter: true,
         dataIndex: "createTime",
         apicode: "CreateTime",
+      },
+      {
+        title: "所属产品",
+        dataIndex: "Product",
+        // render: (text: string) => {
+        //   return renderIsPlmMosaic({ value: text, children: <div>{text}</div> });
+        // },
+        // search: {
+        //   type: "Input",
+        // },
+        // sorter: true,
       },
     ];
 

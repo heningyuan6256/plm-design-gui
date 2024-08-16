@@ -225,8 +225,8 @@ const API = {
   /**
  * 根据产品和文件名判断文件是否存在
  */
-  judgeFileExist: ({ productId, fileNameList, userId, itemCodes }: { productId: string, fileNameList: string[], userId: string, itemCodes: string[] }) => {
-    return NewRequest.post('/opendata/cad/exist/files', { tenantId: '719', productId: productId, fileNameList: fileNameList, userId: userId, itemCodes: itemCodes });
+  judgeFileExist: ({ productId, fileCheckList, userId, itemCodes }: { productId: string, fileCheckList: any[], userId: string, itemCodes: string[] }) => {
+    return NewRequest.post('/opendata/cad/exist/files', { tenantId: '719', productId: productId, fileCheckList: fileCheckList, userId: userId, itemCodes: itemCodes });
   },
   /**
   * 取消签出
@@ -243,8 +243,8 @@ const API = {
   /**
 * 签入
 */
-  checkIn: ({ insId, insSize, insName, insUrl }: { insId: string, insSize: string, insName: string, insUrl: string }) => {
-    return NewRequest.put('/pdm/affected/checkin', { tenantId: '719', insId: insId, insSize: insSize, insName: insName, insUrl: insUrl });
+  checkIn: ({ insId, insSize, insName, insUrl }: { insId: string, insSize?: string, insName?: string, insUrl?: string }) => {
+    return NewRequest.put('/pdm/affected/checkin', insSize ? { tenantId: '719', insId: insId, insSize: insSize, insName: insName, insUrl: insUrl } : { tenantId: '719', insId: insId, });
   },
 
   /**
@@ -252,6 +252,13 @@ const API = {
 */
   batchUpdate: (data: any) => {
     return NewRequest.postPut('/pdm/instances', data);
+  },
+
+  /**
+* 单个修改
+*/
+  singleUpdate: (data: any) => {
+    return NewRequest.postPut('/pdm/instance', data);
   },
   /**
   * 批量创建实例结构

@@ -35,7 +35,7 @@ export const getUrl = async (str: string) => {
     } else {
         return {
             url: severUrl + str,
-            // url: 'http://192.168.0.66:18080/plm' + str,
+            // url: 'http://192.168.0.66:18080/plm-test' + str,
             tenantId: tenantId
         }
     }
