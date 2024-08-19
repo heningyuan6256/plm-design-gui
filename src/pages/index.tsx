@@ -97,9 +97,10 @@ export const formItemMap: Record<string, any> = {
 
 export const exitPlugin = async () => {
   mqttClient.publish({
-    type: PathConfig.exit,
+    type: CommandConfig.onchain_path,
+    input_data: PathConfig.login,
     output_data: {
-      result: "1",
+      result: "exit",
     },
   });
   // 退出登录
@@ -110,11 +111,9 @@ export const exitPlugin = async () => {
   // );
   sse.close()
   mqttClient.close()
-  const mainWindow = getCurrent()
-  if (mainWindow.label !== 'Login') {
-    mainWindow?.close();
-    await invoke("exist", {});
-  }
+  const mainWindow = WebviewWindow.getByLabel("Home");
+  mainWindow?.close();
+  await invoke("exist", {});
 }
 
 export interface logItemType {
@@ -3106,9 +3105,9 @@ const index = () => {
         }
         try {
           await updateData({ row: row });
-          if(selectNode.material.onChain.insId) {
+          if (selectNode.material.onChain.insId) {
             const materialRow = { ...selectNode, ...selectNode.material.onChain };
-            await updateData({ row: materialRow, isMaterial:true });
+            await updateData({ row: materialRow, isMaterial: true });
           }
           dispatch(setLoading(true));
           mqttClient.publish({

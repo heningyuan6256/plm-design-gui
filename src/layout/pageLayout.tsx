@@ -64,7 +64,9 @@ export const openDesign = async ({
       tabCodes: "10002028",
       tenantId: sse.tenantId || "719",
       userId: userId,
-    });
+    }).catch(() => {
+      cancelLoading();
+    });;
     insId = records ? records[0]?.insId : '';
   }
   if (!insId) {
@@ -130,7 +132,9 @@ export const openDesign = async ({
         await createDir(
           `${downloadFolder}`,
           { recursive: true }
-        );
+        ).catch(() => {
+          cancelLoading();
+        });;
 
         API.downloadFile(fileUrl.split("/plm")[1])
           .then((res) => { })
@@ -138,11 +142,15 @@ export const openDesign = async ({
             await createDir(
               `${downloadFolder}\\${fileName}`,
               { recursive: true }
-            );
+            ).catch(() => {
+              cancelLoading();
+            });;
             await writeBinaryFile({
               path: `${downloadFolder}\\${fileName}\\${instance.insDesc}`,
               contents: res,
-            });
+            }).catch(() => {
+              cancelLoading();
+            });;
 
             const {
               result: { records },
@@ -156,7 +164,9 @@ export const openDesign = async ({
               tenantId:  sse.tenantId || "719",
               userId: userId,
               versionOrder: ins.result.readInstanceVo.insVersionOrder,
-            });
+            }).catch(() => {
+              cancelLoading();
+            });;
 
             const loop = async (data: any) => {
               for (let i = 0; i < data.length; i++) {
