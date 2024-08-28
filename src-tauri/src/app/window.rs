@@ -93,6 +93,8 @@ pub async fn exist(handle: tauri::AppHandle) {
         .inner_size(648.0, 347.0)
         .resizable(false)
         .title("登陆")
+        .always_on_top(true)
+        .focus()
         .decorations(false)
         .center()
         .build()
