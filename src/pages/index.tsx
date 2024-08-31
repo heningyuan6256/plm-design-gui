@@ -41,7 +41,7 @@ import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { downloadDir, homeDir, resolveResource } from "@tauri-apps/api/path";
 import { open as openFileDialog } from "@tauri-apps/api/dialog";
-import { watch, watchImmediate } from "tauri-plugin-fs-watch-api";
+// import { watch, watchImmediate } from "tauri-plugin-fs-watch-api";
 import {
   exists,
   readBinaryFile,
@@ -447,7 +447,8 @@ const index = () => {
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
         input_data: {
-          "info": ["proximate"]
+          "info": ["proximate"],
+          'transformer': ['pdf', 'step', 'image']
         }
       });
     }
@@ -950,36 +951,37 @@ const index = () => {
 
       setLeftData([...copyLeftData]);
 
-      const cancelFn = await watch(
-        flattenData.map(row => row.file_path),
-        () => {
-          console.log(123)
-          const currentWindow = getCurrent();
-          currentWindow.unminimize()
-          currentWindow.setFocus()
-          if (!ConfirmOpened.current && !logVisibleLatest.current) {
-            ConfirmOpened.current = true
-            confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
-              ConfirmOpened.current = false
-              if (!res) {
-                return
-              }
-              dispatch(setLoading(true));
-              mqttClient.publish({
-                type: CommandConfig.getCurrentBOM,
-                input_data: {
-                  "info": ["proximate"]
-                }
-              });
-            })
-          }
-        },
-        {
-          delayMs: 3000,
-          recursive: true
-        },
-      );
-      setWatchCancelFn(cancelFn)
+      // const cancelFn = await watch(
+      //   flattenData.map(row => row.file_path),
+      //   () => {
+      //     console.log(123)
+      //     const currentWindow = getCurrent();
+      //     currentWindow.unminimize()
+      //     currentWindow.setFocus()
+      //     if (!ConfirmOpened.current && !logVisibleLatest.current) {
+      //       ConfirmOpened.current = true
+      //       confirm("监测到本地文件发生变化，是否同步相关设计文件", { title: '提示', type: 'warning' }).then((res) => {
+      //         ConfirmOpened.current = false
+      //         if (!res) {
+      //           return
+      //         }
+      //         dispatch(setLoading(true));
+      //         mqttClient.publish({
+      //           type: CommandConfig.getCurrentBOM,
+      //           input_data: {
+      //             "info": ["proximate"],
+      //             'transformer': ['pdf', 'step', 'image']
+      //           }
+      //         });
+      //       })
+      //     }
+      //   },
+      //   {
+      //     delayMs: 3000,
+      //     recursive: true
+      //   },
+      // );
+      // setWatchCancelFn(cancelFn)
       dispatch(setLoading(false));
     } catch (error) {
       console.log(error, 'errorerror');
@@ -1046,7 +1048,8 @@ const index = () => {
     mqttClient.publish({
       type: CommandConfig.getCurrentBOM,
       input_data: {
-        "info": ["proximate"]
+        "info": ["proximate"],
+        'transformer': ['pdf', 'step', 'image']
       }
     });
     setLogVisbile(false)
@@ -1371,6 +1374,7 @@ const index = () => {
         ]);
       });
     }
+    await updoadAttachMent({ filterCenterData: [row] })
 
     await API.checkIn({
       insId: row.insId,
@@ -1587,7 +1591,8 @@ const index = () => {
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
         input_data: {
-          "info": ["proximate"]
+          "info": ["proximate"],
+          'transformer': ['pdf', 'step', 'image']
         }
       });
     }
@@ -2525,9 +2530,18 @@ const index = () => {
 
     const fileColumnsListCodeMap = Utils.transformArrayToMap(fileColumn.filter((item: any) => item?.formitem?.type === 'Select'), 'dataIndex', 'formitem')
 
+    //判断需要修改的文件
+    const needUpdateFileList = updateData.filter((item: any) => {
+      const cadAttrsMap = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
+      return Object.keys(cadAttrsMap).length && !judgeStandard(item)
+    })
+
+    if (!needUpdateFileList.length) {
+      return
+    }
 
     // 修改文件编号
-    const pluginUpdateNumber = updateData.filter((item: any) => !judgeStandard(item)).map((item: any) => {
+    const pluginUpdateNumber = needUpdateFileList.map((item: any) => {
       const cadAttrsMap = item.model_type === 'assembly' ? asmAttrsMap : attrsMap
       console.log(cadAttrsMap, 'cadAttrsMap', nameNumberMap);
 
@@ -2567,6 +2581,141 @@ const index = () => {
     updatingAttr.current = false
     // 在收到消息后继续执行后续代码
     console.log('收到 setProductAttVal 消息，继续执行后续代码');
+  }
+
+  const judgeAttachExistPromise = (item: any, format: string) => {
+    return new Promise(async (resolve) => {
+      // pdf step dwg drw
+      const data_path = `${item.file_path.substring(0, item.file_path.lastIndexOf('.'))}.${format}`
+      const existFile = await exists(data_path)
+      if (existFile) {
+        item[`${format}_path`] = data_path
+        resolve(data_path)
+      } else {
+        const data_path = `${item.file_path.substring(0, item.file_path.lastIndexOf('.'))}.${format.toUpperCase()}`
+        const existUpperCaseFile = await exists(data_path)
+        if (existUpperCaseFile) {
+          item[`${format}_path`] = data_path
+          resolve(data_path)
+        } else {
+          item[`${format}_path`] = ""
+          resolve("")
+        }
+      }
+    })
+  }
+
+  const updoadAttachMent = async ({ filterCenterData, nameNumberMap }: { filterCenterData: Record<string, any>[], nameNumberMap?: Record<string, any> }) => {
+    const {
+      result: { records: tabAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: BasicsItemCode.file,
+      tabCode: "10002008",
+    });
+
+    const FileArray: Promise<any>[] = []
+
+    const needUploadFormat = ['pdf', 'drw', 'dwg', 'slddrw', 'stp','step']
+
+    // 遍历所有的对象，判断下面是否有对应的文件，然后放入对象中
+    const executePromiseArr: any = []
+    filterCenterData.forEach((item: any) => {
+      needUploadFormat.forEach(v => executePromiseArr.push(judgeAttachExistPromise(item, v)))
+    })
+    await Promise.all(executePromiseArr)
+
+    for (let item of filterCenterData) {
+      needUploadFormat.forEach((v) => {
+        if (item[`${v}_path`]) {
+          FileArray.push(
+            new Promise(async (resolve, reject) => {
+              const arrayBufferData = await readBinaryFile(item[`${v}_path`]);
+              resolve({
+                name: `${item[`${v}_path`].substring(
+                  item[`${v}_path`].lastIndexOf("\\") + 1
+                )}`,
+                data: new Blob([arrayBufferData]),
+                source: "Local",
+                isRemote: false,
+                dataType: v,
+              });
+            })
+          );
+        }
+      })
+    }
+    const fileItems = await Promise.all([...FileArray]);
+    const nameFileUrlMap = await uploadFile(fileItems);
+
+    const setAttachmentValue = (
+      item: any,
+      apicode: string,
+      type: any
+    ) => {
+      const nameWidthFormat = `${item[`${type}_path`].substring(
+        item[`${type}_path`].lastIndexOf("\\") + 1
+      )}`;
+      if (apicode === "ID") {
+        return nameWidthFormat;
+      } else if (apicode === "FileId") {
+        return nameFileUrlMap[nameWidthFormat].id;
+      } else if (apicode === "OnlineEditingStatus") {
+        return "1";
+      } else if (apicode === "OldFileUrl") {
+        return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
+          "/plm/files"
+        )[1]
+          }`;
+      } else if (apicode === "FileName") {
+        return nameWidthFormat;
+      } else if (apicode === "FileSize") {
+        return `${nameFileUrlMap[nameWidthFormat].size}`;
+      } else if (apicode === "FileFormat") {
+        return `${nameFileUrlMap[nameWidthFormat].extension}`;
+      } else if (apicode === "FileUrl") {
+        return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
+          "/plm/files"
+        )[1]
+          }`;
+      } else {
+        return "";
+      }
+    };
+    const addAttachmentParams: any = [];
+
+    filterCenterData.forEach((item: any) => {
+      needUploadFormat.forEach(v => {
+        if (item[`${v}_path`]) {
+          addAttachmentParams.push({
+            instanceId: nameNumberMap ? nameNumberMap[getRowKey(item)]?.instanceId : item.insId,
+            itemCode: BasicsItemCode.file,
+            tabCode: "10002008",
+            versionNumber: "Draft",
+            versionOrder: "1",
+            insAttrs: tabAttrs.map((attr: any) => {
+              return {
+                apicode: attr.apicode,
+                id: attr.id,
+                title: attr.name,
+                valueType: attr.valueType,
+                value: setAttachmentValue(item, attr.apicode, v),
+              };
+            }),
+          });
+        }
+      })
+    });
+
+
+    if (addAttachmentParams.length) {
+      console.log(addAttachmentParams,'addAttachmentParams');
+      
+      const attchmentResult = await API.addInstanceAttributeAttachment({
+        tenantId: sse.tenantId || "719",
+        instanceAttrVos: addAttachmentParams,
+      });
+      console.log(attchmentResult, addAttachmentParams, "FileAttachment");
+    }
   }
 
   const handleClick = async (name: string) => {
@@ -2768,45 +2917,6 @@ const index = () => {
                   })
                 );
               }
-              // if (item.pic_path) {
-              //   FileArray.push(
-              //     new Promise(async (resolve, reject) => {
-              //       const arrayBufferData = await readBinaryFile(item.pic_path);
-              //       resolve({
-              //         name: `${item.pic_path.substring(
-              //           item.pic_path.lastIndexOf("\\") + 1
-              //         )}`,
-              //         data: new Blob([arrayBufferData]),
-              //         source: "Local",
-              //         isRemote: false,
-              //       });
-              //     })
-              //   );
-              // }
-
-
-              // if(item.file_path && mqttClient.publishTopic === 'catia') {
-              //   const stp_path = `${item.file_path.substring(0,item.file_path.lastIndexOf('.'))}.stp`
-
-              //   const existStp = await exists(stp_path);
-              //   if (existStp) {
-              //     item.stp_path = stp_path
-              //     FileArray.push(
-              //       new Promise(async (resolve, reject) => {
-              //         const arrayBufferData = await readBinaryFile(stp_path);
-              //         resolve({
-              //           name: `${stp_path.substring(
-              //             stp_path.lastIndexOf("\\") + 1
-              //           )}`,
-              //           data: new Blob([arrayBufferData]),
-              //           source: "Local",
-              //           isRemote: false,
-              //         });
-              //       })
-              //     );
-              //   }
-              // }
-
 
               if (item.step_path) {
                 FileArray.push(
@@ -2843,50 +2953,11 @@ const index = () => {
             }
             const fileItems = await Promise.all([...FileArray]);
 
+
+            const nameFileUrlMap = await uploadFile(fileItems);
+
             // 批量上传附件
-            const {
-              result: { records: tabAttrs },
-            }: any = await API.getInstanceAttrs({
-              itemCode: BasicsItemCode.file,
-              tabCode: "10002008",
-            });
-
-
-            const setAttachmentValue = (
-              item: any,
-              apicode: string,
-              type: "drw" | "step" | 'stp'
-            ) => {
-              const nameWidthFormat = `${item[`${type}_path`].substring(
-                item[`${type}_path`].lastIndexOf("\\") + 1
-              )}`;
-              if (apicode === "ID") {
-                return nameWidthFormat;
-              } else if (apicode === "FileId") {
-                return nameFileUrlMap[nameWidthFormat].id;
-              } else if (apicode === "OnlineEditingStatus") {
-                return "1";
-              } else if (apicode === "OldFileUrl") {
-                return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
-                  "/plm/files"
-                )[1]
-                  }`;
-              } else if (apicode === "FileName") {
-                return nameWidthFormat;
-              } else if (apicode === "FileSize") {
-                return `${nameFileUrlMap[nameWidthFormat].size}`;
-              } else if (apicode === "FileFormat") {
-                return `${nameFileUrlMap[nameWidthFormat].extension}`;
-              } else if (apicode === "FileUrl") {
-                return `/plm/files${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
-                  "/plm/files"
-                )[1]
-                  }`;
-              } else {
-                return "";
-              }
-            };
-            const addAttachmentParams: any = [];
+            await updoadAttachMent({ filterCenterData, nameNumberMap })
 
 
             let nameThumbMap: any = await invoke("get_icons", {
@@ -2910,76 +2981,6 @@ const index = () => {
             const localImageMap = await batchTansformPicPath({ rows: filterCenterData.filter(row => row.pic_path) })
 
             Object.assign(nameThumbMap, localImageMap)
-
-
-            filterCenterData.forEach((item) => {
-              if (item.step_path) {
-                addAttachmentParams.push({
-                  instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-                  itemCode: BasicsItemCode.file,
-                  tabCode: "10002008",
-                  versionNumber: "Draft",
-                  versionOrder: "1",
-                  insAttrs: tabAttrs.map((attr: any) => {
-                    return {
-                      apicode: attr.apicode,
-                      id: attr.id,
-                      title: attr.name,
-                      valueType: attr.valueType,
-                      value: setAttachmentValue(item, attr.apicode, "step"),
-                    };
-                  }),
-                });
-              }
-              //  else if (item.stp_path) {
-              //   addAttachmentParams.push({
-              //     instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-              //     itemCode: BasicsItemCode.file,
-              //     tabCode: "10002008",
-              //     versionNumber: "Draft",
-              //     versionOrder: "1",
-              //     insAttrs: tabAttrs.map((attr: any) => {
-              //       return {
-              //         apicode: attr.apicode,
-              //         id: attr.id,
-              //         title: attr.name,
-              //         valueType: attr.valueType,
-              //         value: setAttachmentValue(item, attr.apicode, "stp"),
-              //       };
-              //     }),
-              //   });
-              // } 
-              else if (item.drw_path) {
-                addAttachmentParams.push({
-                  instanceId: nameNumberMap[getRowKey(item)]?.instanceId,
-                  itemCode: BasicsItemCode.file,
-                  tabCode: "10002008",
-                  versionNumber: "Draft",
-                  versionOrder: "1",
-                  insAttrs: tabAttrs.map((attr: any) => {
-                    return {
-                      apicode: attr.apicode,
-                      id: attr.id,
-                      title: attr.name,
-                      valueType: attr.valueType,
-                      value: setAttachmentValue(item, attr.apicode, "drw"),
-                    };
-                  }),
-                });
-              }
-            });
-
-
-            if (addAttachmentParams.length) {
-              const attchmentResult = await API.addInstanceAttributeAttachment({
-                tenantId: sse.tenantId || "719",
-                instanceAttrVos: addAttachmentParams,
-              });
-              console.log(attchmentResult, addAttachmentParams, "FileAttachment");
-            }
-
-            const nameFileUrlMap = await uploadFile(fileItems);
-            console.log(nameFileUrlMap, "nameFileUrlMap");
 
 
             //批量更新文件地址
@@ -3047,7 +3048,8 @@ const index = () => {
           mqttClient.publish({
             type: CommandConfig.getCurrentBOM,
             input_data: {
-              "info": ["proximate"]
+              "info": ["proximate"],
+              'transformer': ['pdf', 'step', 'image']
             }
           });
         }
@@ -3060,7 +3062,8 @@ const index = () => {
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
         input_data: {
-          "info": ["proximate"]
+          "info": ["proximate"],
+          'transformer': ['pdf', 'step', 'image']
         }
       });
     } else if (name === "allocatenumber") {
@@ -3113,7 +3116,8 @@ const index = () => {
           mqttClient.publish({
             type: CommandConfig.getCurrentBOM,
             input_data: {
-              "info": ["proximate"]
+              "info": ["proximate"],
+              'transformer': ['pdf', 'step', 'image']
             }
           });
         } catch (error) {
