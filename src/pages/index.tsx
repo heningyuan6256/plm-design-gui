@@ -125,6 +125,7 @@ export interface logItemType {
 const index = () => {
   const updatingAttr = useRef<boolean>(false)
   const ConfirmOpened = useRef<boolean>(false)
+  const generateExtraFile = useRef<boolean>(false)
 
   const [watchCancelFn, setWatchCancelFn] = useState<any>()
 
@@ -448,7 +449,7 @@ const index = () => {
         type: CommandConfig.getCurrentBOM,
         input_data: {
           "info": ["proximate"],
-          'transformer': ['pdf', 'step', 'image']
+          'transformer': ['image']
         }
       });
     }
@@ -608,6 +609,21 @@ const index = () => {
 
 
   const dealCurrentBom = async (res?: any) => {
+    // 判断有额外的生成文件
+    if ((res.input_data.transformer || []).length > 1) {
+      generateExtraFile.current = true
+      warpperSetLog(() => {
+        setLogData([
+          ...lastestLogData.current,
+          {
+            dateTime: getCurrentTime(),
+            log: "生成附件成功!",
+            id: Utils.generateSnowId(),
+          },
+        ]);
+      });
+      return
+    }
     watchCancelFn && watchCancelFn()
     updatingAttr.current = false
     ConfirmOpened.current = false
@@ -1049,7 +1065,7 @@ const index = () => {
       type: CommandConfig.getCurrentBOM,
       input_data: {
         "info": ["proximate"],
-        'transformer': ['pdf', 'step', 'image']
+        'transformer': ['image']
       }
     });
     setLogVisbile(false)
@@ -1333,8 +1349,8 @@ const index = () => {
       id: row.file.onChain.insId,
       itemCode: BasicsItemCode.file,
       tabCode: "10002001",
-      rowId: row.file.onChain.rowId,
-      insAttrs: Attrs.map((attr) => {
+      // rowId: row.file.onChain.rowId,
+      insAttrs: Attrs.filter((item) => item.status).map((attr) => {
         if (attr.apicode === "FileUrl") {
           return {
             ...attr,
@@ -1359,6 +1375,9 @@ const index = () => {
       tenantId: sse.tenantId || "719",
     }
 
+    console.log(updateInstance,'updateInstanceupdateInstance');
+    
+
     if (updateInstance.id) {
       await API.singleUpdate(updateInstance).catch(() => {
         dispatch(setLoading(false));
@@ -1375,6 +1394,7 @@ const index = () => {
       });
     }
     await updoadAttachMent({ filterCenterData: [row] })
+    
 
     await API.checkIn({
       insId: row.insId,
@@ -1530,10 +1550,10 @@ const index = () => {
       id: row.material.onChain.insId,
       itemCode: BasicsItemCode.material,
       tabCode: "10002001",
-      rowId: row.material.onChain.rowId,
+      // rowId: row.material.onChain.rowId,
       // versionNumber: row.material.onChain.Version,
       // versionOrder: row.material.onChain.Revision,
-      insAttrs: materialAttrs.map((attr) => {
+      insAttrs: materialAttrs.filter((item) => item.status).map((attr) => {
         return {
           ...attr,
           value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
@@ -1592,7 +1612,7 @@ const index = () => {
         type: CommandConfig.getCurrentBOM,
         input_data: {
           "info": ["proximate"],
-          'transformer': ['pdf', 'step', 'image']
+          'transformer': ['image']
         }
       });
     }
@@ -2606,6 +2626,27 @@ const index = () => {
   }
 
   const updoadAttachMent = async ({ filterCenterData, nameNumberMap }: { filterCenterData: Record<string, any>[], nameNumberMap?: Record<string, any> }) => {
+    
+    const defaultSetting = await getDefaultSetting()
+    const partSaveas = defaultSetting?.partSaveas || []
+    if(partSaveas.length) {
+      // 先判断是否有需要生成的文件
+      mqttClient.publish({
+        type: CommandConfig.getCurrentBOM,
+        input_data: {
+          "info": ["proximate"],
+          'transformer': partSaveas
+        }
+      });
+
+      while (!generateExtraFile.current) {
+        console.log("重复监听属性修改", generateExtraFile.current);
+        await new Promise(resolve => setTimeout(resolve, 300)); // 等待1000ms 再检查
+      }
+
+      generateExtraFile.current = false
+    }
+
     const {
       result: { records: tabAttrs },
     }: any = await API.getInstanceAttrs({
@@ -2615,17 +2656,17 @@ const index = () => {
 
     const FileArray: Promise<any>[] = []
 
-    const needUploadFormat = ['pdf', 'drw', 'dwg', 'slddrw', 'stp','step']
+    const needUploadFormat = defaultSetting?.partUploads || []
 
     // 遍历所有的对象，判断下面是否有对应的文件，然后放入对象中
     const executePromiseArr: any = []
     filterCenterData.forEach((item: any) => {
-      needUploadFormat.forEach(v => executePromiseArr.push(judgeAttachExistPromise(item, v)))
+      needUploadFormat.forEach((v:any) => executePromiseArr.push(judgeAttachExistPromise(item, v)))
     })
     await Promise.all(executePromiseArr)
 
     for (let item of filterCenterData) {
-      needUploadFormat.forEach((v) => {
+      needUploadFormat.forEach((v:any) => {
         if (item[`${v}_path`]) {
           FileArray.push(
             new Promise(async (resolve, reject) => {
@@ -2684,7 +2725,7 @@ const index = () => {
     const addAttachmentParams: any = [];
 
     filterCenterData.forEach((item: any) => {
-      needUploadFormat.forEach(v => {
+      needUploadFormat.forEach((v:any) => {
         if (item[`${v}_path`]) {
           addAttachmentParams.push({
             instanceId: nameNumberMap ? nameNumberMap[getRowKey(item)]?.instanceId : item.insId,
@@ -2708,8 +2749,8 @@ const index = () => {
 
 
     if (addAttachmentParams.length) {
-      console.log(addAttachmentParams,'addAttachmentParams');
-      
+      console.log(addAttachmentParams, 'addAttachmentParams');
+
       const attchmentResult = await API.addInstanceAttributeAttachment({
         tenantId: sse.tenantId || "719",
         instanceAttrVos: addAttachmentParams,
@@ -2717,6 +2758,18 @@ const index = () => {
       console.log(attchmentResult, addAttachmentParams, "FileAttachment");
     }
   }
+
+  const getDefaultSetting = async() => {
+    const homeDirPath = await homeDir();
+    const existSetting = await exists(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`)
+    const defaultSettingStr = existSetting ? await readTextFile(
+      `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`
+    ) : '';
+
+    const defaultSetting = defaultSettingStr ? JSON.parse(defaultSettingStr) : {}
+    return defaultSetting
+  }
+
 
   const handleClick = async (name: string) => {
     if (name === "upload") {
@@ -3049,7 +3102,7 @@ const index = () => {
             type: CommandConfig.getCurrentBOM,
             input_data: {
               "info": ["proximate"],
-              'transformer': ['pdf', 'step', 'image']
+              'transformer': ['image']
             }
           });
         }
@@ -3063,7 +3116,7 @@ const index = () => {
         type: CommandConfig.getCurrentBOM,
         input_data: {
           "info": ["proximate"],
-          'transformer': ['pdf', 'step', 'image']
+          'transformer': ['image']
         }
       });
     } else if (name === "allocatenumber") {
@@ -3117,7 +3170,7 @@ const index = () => {
             type: CommandConfig.getCurrentBOM,
             input_data: {
               "info": ["proximate"],
-              'transformer': ['pdf', 'step', 'image']
+              'transformer': ['image']
             }
           });
         } catch (error) {

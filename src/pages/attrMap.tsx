@@ -17,7 +17,7 @@ import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { cloneDeep } from "lodash";
 import { mqttClient } from "../utils/MqttService";
-import { useAsyncEffect, useUpdateEffect } from "ahooks";
+import { useAsyncEffect, useLatest, useUpdateEffect } from "ahooks";
 import { homeDir } from "@tauri-apps/api/path";
 import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/api/fs";
 
@@ -45,9 +45,13 @@ export default function AttrMap() {
     sldasm: '',
     catpart: '',
     catproduct: '',
-    partSaveas: '',
+    partSaveas: [],
+    partUploads: [],
     drwSaveas: ''
   })
+
+  const latestFileAddress = useLatest(fileAddress)
+
   const dispatch = useDispatch();
 
   const dealAttrMap = async (res?: any) => {
@@ -154,39 +158,40 @@ export default function AttrMap() {
 
   useAsyncEffect(async () => {
     // if (topActiveKey === 'attr') {
-      dispatch(setLoading(true));
-      let text = ''
-      try {
-        const homeDirPath = await homeDir();
-        text = await readTextFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`, {
-        })
-      } catch (e) {
+    dispatch(setLoading(true));
+    let text = ''
+    try {
+      const homeDirPath = await homeDir();
+      text = await readTextFile(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`, {
+      })
+    } catch (e) {
 
-      }
-      console.log(text,'text');
-      
-      if (text) {
-        const fileAddressScope = JSON.parse(text)
-        setFileAddress(fileAddressScope)
-        dispatch(setLoading(false));
-        // if (fileAddressScope[activeKey]) {
-        //   mqttClient.publish({
-        //     type: CommandConfig.getProductTypeAtt,
-        //     input_data: {
-        //       template_path:
-        //         fileAddressScope[activeKey].substring(0, fileAddressScope[activeKey].lastIndexOf('\\')),
-        //     },
-        //   });
-        // } else {
-        //   message.error('请选择相对应的模板文件')
-        //   dispatch(setLoading(false));
-        //   clearData()
-        // }
-      } else {
-        // message.error('请选择相对应的模板文件')
-        dispatch(setLoading(false));
-        clearData()
-      }
+    }
+
+    if (text) {
+      const fileAddressScope = JSON.parse(text)
+      fileAddressScope.partSaveas = fileAddressScope.partSaveas || []
+      fileAddressScope.partUploads = fileAddressScope.partUploads || []
+      setFileAddress(fileAddressScope)
+      dispatch(setLoading(false));
+      // if (fileAddressScope[activeKey]) {
+      //   mqttClient.publish({
+      //     type: CommandConfig.getProductTypeAtt,
+      //     input_data: {
+      //       template_path:
+      //         fileAddressScope[activeKey].substring(0, fileAddressScope[activeKey].lastIndexOf('\\')),
+      //     },
+      //   });
+      // } else {
+      //   message.error('请选择相对应的模板文件')
+      //   dispatch(setLoading(false));
+      //   clearData()
+      // }
+    } else {
+      // message.error('请选择相对应的模板文件')
+      dispatch(setLoading(false));
+      clearData()
+    }
     // }
   }, [activeKey, childActiveKey, topActiveKey]);
 
@@ -353,90 +358,91 @@ export default function AttrMap() {
                 button: '更改',
                 icon: 'file1',
                 text: '默认文件下载地址:',
-                address: fileAddress.default,
+                address: latestFileAddress.current.default,
                 function: async () => {
                   const selected = await open({
                     multiple: false,
                     directory: true,
-                    title: '选择默认文件下载地址'
+                    defaultPath: fileAddress.default,
+                    title: '选择默认文件下载地址',
                   });
                   setFileAddress({ ...fileAddress, default: selected })
                 }
               },
-              // {
-              //   button: '选择',
-              //   text: 'SLDPRT模板文件:',
-              //   icon: 'document',
-              //   address: fileAddress.sldprt,
-              //   function: async () => {
-              //     const selected = await open({
-              //       multiple: false,
-              //       directory: false,
-              //       title: '选择SLDPRT模板文件',
-              //       filters: [{
-              //         name: 'prtdot',
-              //         extensions: ['prtdot']
-              //       }]
-              //     });
-              //     console.log(selected, 'selected');
+                // {
+                //   button: '选择',
+                //   text: 'SLDPRT模板文件:',
+                //   icon: 'document',
+                //   address: fileAddress.sldprt,
+                //   function: async () => {
+                //     const selected = await open({
+                //       multiple: false,
+                //       directory: false,
+                //       title: '选择SLDPRT模板文件',
+                //       filters: [{
+                //         name: 'prtdot',
+                //         extensions: ['prtdot']
+                //       }]
+                //     });
+                //     console.log(selected, 'selected');
 
-              //     setFileAddress({ ...fileAddress, sldprt: selected })
-              //   }
-              // },
-              // {
-              //   button: '选择',
-              //   text: 'SLDASM模板文件:',
-              //   icon: 'document',
-              //   address: fileAddress.sldasm,
-              //   function: async () => {
-              //     const selected = await open({
-              //       multiple: false,
-              //       directory: false,
-              //       title: '选择SLDASM模板文件',
-              //       filters: [{
-              //         name: 'asmdot',
-              //         extensions: ['asmdot']
-              //       }]
-              //     });
-              //     setFileAddress({ ...fileAddress, sldasm: selected })
-              //   }
-              // },
-              // {
-              //   button: '选择',
-              //   text: 'CATPart模板文件:',
-              //   icon: 'document',
-              //   address: fileAddress.catpart,
-              //   function: async () => {
-              //     const selected = await open({
-              //       multiple: false,
-              //       directory: false,
-              //       title: '选择CATPart模板文件',
-              //       filters: [{
-              //         name: 'CATPart',
-              //         extensions: ['CATPart']
-              //       }]
-              //     });
-              //     setFileAddress({ ...fileAddress, catpart: selected })
-              //   }
-              // }, {
-              //   button: '选择',
-              //   text: 'CATProduct模板文件:',
-              //   icon: 'document',
-              //   address: fileAddress.catproduct,
-              //   function: async () => {
-              //     const selected = await open({
-              //       multiple: false,
-              //       directory: false,
-              //       title: '选择CATProduct模板文件',
-              //       filters: [{
-              //         name: 'CATProduct',
-              //         extensions: ['CATProduct']
-              //       }]
-              //     });
-              //     setFileAddress({ ...fileAddress, catproduct: selected })
-              //   }
-              // }
-            ].map((item, index) => {
+                //     setFileAddress({ ...fileAddress, sldprt: selected })
+                //   }
+                // },
+                // {
+                //   button: '选择',
+                //   text: 'SLDASM模板文件:',
+                //   icon: 'document',
+                //   address: fileAddress.sldasm,
+                //   function: async () => {
+                //     const selected = await open({
+                //       multiple: false,
+                //       directory: false,
+                //       title: '选择SLDASM模板文件',
+                //       filters: [{
+                //         name: 'asmdot',
+                //         extensions: ['asmdot']
+                //       }]
+                //     });
+                //     setFileAddress({ ...fileAddress, sldasm: selected })
+                //   }
+                // },
+                // {
+                //   button: '选择',
+                //   text: 'CATPart模板文件:',
+                //   icon: 'document',
+                //   address: fileAddress.catpart,
+                //   function: async () => {
+                //     const selected = await open({
+                //       multiple: false,
+                //       directory: false,
+                //       title: '选择CATPart模板文件',
+                //       filters: [{
+                //         name: 'CATPart',
+                //         extensions: ['CATPart']
+                //       }]
+                //     });
+                //     setFileAddress({ ...fileAddress, catpart: selected })
+                //   }
+                // }, {
+                //   button: '选择',
+                //   text: 'CATProduct模板文件:',
+                //   icon: 'document',
+                //   address: fileAddress.catproduct,
+                //   function: async () => {
+                //     const selected = await open({
+                //       multiple: false,
+                //       directory: false,
+                //       title: '选择CATProduct模板文件',
+                //       filters: [{
+                //         name: 'CATProduct',
+                //         extensions: ['CATProduct']
+                //       }]
+                //     });
+                //     setFileAddress({ ...fileAddress, catproduct: selected })
+                //   }
+                // }
+              ].map((item, index) => {
                 return <div key={index} style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
                   <div className="flex items-center justify-between" style={{ width: '600px' }}>
                     <div className="flex items-center">
@@ -460,14 +466,21 @@ export default function AttrMap() {
               <Select suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" onChange={(e) => {
                 setFileAddress({ ...fileAddress, drwSaveas: e })
               }} value={fileAddress.drwSaveas} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'pdf', value: 'pdf' }]} size={'small'}></Select>
+            </div> */}
+            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+              <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
+              <div style={{ width: '150px' }}>上传零件图附带文件格式:</div>
+              <Select mode="multiple" onChange={(e) => {
+                setFileAddress({ ...fileAddress, partUploads: e })
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partUploads} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'PDF', value: 'pdf' }, { label: 'STEP', value: 'step' }, { label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }, { label: 'STL', value: 'stl' }]} size={'small'}></Select>
             </div>
             <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
               <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
               <div style={{ width: '150px' }}>上传零件图另存文件格式:</div>
-              <Select onChange={(e) => {
+              <Select mode="multiple" onChange={(e) => {
                 setFileAddress({ ...fileAddress, partSaveas: e })
-              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partSaveas} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'stp', value: 'stp' }, { label: 'stl', value: 'stl' }]} size={'small'}></Select>
-            </div> */}
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partSaveas} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'STEP', value: 'step' }, { label: 'PDF', value: 'pdf' }]} size={'small'}></Select>
+            </div>
           </div>
         </div>
 
