@@ -2635,7 +2635,7 @@ const index = () => {
         type: CommandConfig.getCurrentBOM,
         input_data: {
           "info": ["proximate"],
-          'transformer': partSaveas
+          'transformer': [...partSaveas, 'image']
         }
       });
 
