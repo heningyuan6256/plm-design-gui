@@ -76,7 +76,7 @@ import { metadata } from "../utils/fs_extra";
 import { sse } from "../utils/SSEService";
 import { confirm } from "@tauri-apps/api/dialog";
 import { openDesign } from "../layout/pageLayout";
-import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
+import PlmMosaic, { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 import { fetchMessageData } from "../models/message";
 
 // import * as crypto from 'crypto';
@@ -1375,8 +1375,8 @@ const index = () => {
       tenantId: sse.tenantId || "719",
     }
 
-    console.log(updateInstance,'updateInstanceupdateInstance');
-    
+    console.log(updateInstance, 'updateInstanceupdateInstance');
+
 
     if (updateInstance.id) {
       await API.singleUpdate(updateInstance).catch(() => {
@@ -1394,7 +1394,7 @@ const index = () => {
       });
     }
     await updoadAttachMent({ filterCenterData: [row] })
-    
+
 
     await API.checkIn({
       insId: row.insId,
@@ -1917,7 +1917,7 @@ const index = () => {
         } else if (col.apicode === "Category") {
           return mqttClient.publishTopic === 'Tribon' && !row.guige ? '1480780705587916801' : row.material.onChain.Category;
         } else if (col.apicode === "Number") {
-          return "";
+          return row.material.plugin.Number || '';
         } else if (col.apicode === "Description" && mqttClient.publishTopic === 'Tribon') {
           return row.caihzi ? `${row.caihzi}${row.guige}` : row.node_name;
         } else {
@@ -2580,6 +2580,9 @@ const index = () => {
           if ((cadAttrsMap[attrname] === 'Number') && nameNumberMap) {
             actualValue = nameNumberMap[getRowKey(item)]?.number || ''
           }
+          if ((cadAttrsMap[attrname] === 'Version')) {
+            actualValue = typeof actualValue === 'string' ? actualValue.split(' ')[0] :actualValue
+          }
           return {
             attr_name: attrname,
             attr_type: "string",
@@ -2626,10 +2629,10 @@ const index = () => {
   }
 
   const updoadAttachMent = async ({ filterCenterData, nameNumberMap }: { filterCenterData: Record<string, any>[], nameNumberMap?: Record<string, any> }) => {
-    
+
     const defaultSetting = await getDefaultSetting()
     const partSaveas = defaultSetting?.partSaveas || []
-    if(partSaveas.length) {
+    if (partSaveas.length) {
       // 先判断是否有需要生成的文件
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
@@ -2661,12 +2664,12 @@ const index = () => {
     // 遍历所有的对象，判断下面是否有对应的文件，然后放入对象中
     const executePromiseArr: any = []
     filterCenterData.forEach((item: any) => {
-      needUploadFormat.forEach((v:any) => executePromiseArr.push(judgeAttachExistPromise(item, v)))
+      needUploadFormat.forEach((v: any) => executePromiseArr.push(judgeAttachExistPromise(item, v)))
     })
     await Promise.all(executePromiseArr)
 
     for (let item of filterCenterData) {
-      needUploadFormat.forEach((v:any) => {
+      needUploadFormat.forEach((v: any) => {
         if (item[`${v}_path`]) {
           FileArray.push(
             new Promise(async (resolve, reject) => {
@@ -2725,7 +2728,7 @@ const index = () => {
     const addAttachmentParams: any = [];
 
     filterCenterData.forEach((item: any) => {
-      needUploadFormat.forEach((v:any) => {
+      needUploadFormat.forEach((v: any) => {
         if (item[`${v}_path`]) {
           addAttachmentParams.push({
             instanceId: nameNumberMap ? nameNumberMap[getRowKey(item)]?.instanceId : item.insId,
@@ -2759,7 +2762,7 @@ const index = () => {
     }
   }
 
-  const getDefaultSetting = async() => {
+  const getDefaultSetting = async () => {
     const homeDirPath = await homeDir();
     const existSetting = await exists(`${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.setting}`)
     const defaultSettingStr = existSetting ? await readTextFile(
@@ -3210,6 +3213,8 @@ const index = () => {
           (item.readonly == "0" ||
             item.readonly == "1" ||
             item.apicode === "FileSize" ||
+            item.apicode === "Number" && item.itemCode == 10001001 ||
+            item.apicode === "Revision" && item.itemCode == 10001001 ||
             item.apicode === "Category" ||
             item.apicode === "FileFormat" ||
             item.apicode === "CheckOutUser" ||
@@ -3238,6 +3243,7 @@ const index = () => {
               item.apicode === "FileSize" ||
               item.apicode === "FileFormat" ||
               item.apicode === "CheckOutUser" ||
+              item.apicode === "Number" && item.itemCode == 10001001 ||
               item.apicode === "CheckOutDate",
           },
         };
@@ -3258,7 +3264,13 @@ const index = () => {
               // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
               if ((pluginValue == '') && onChainValue && readPermission(onChainValue)) {
                 return (
-                  <div className="text_line">
+                  <div className="text_line" onClick={async () => {
+                    if(item.apicode === 'Number' && item.itemCode == 10001001) {
+                      await open(
+                        `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                      );
+                    }
+                  }}>
                     {renderIsPlmMosaic({
                       value: onChainValue,
                       children: Utils.renderReadonlyItem({
@@ -3299,7 +3311,13 @@ const index = () => {
                         })
                       })}
                     </div>
-                    <div className="text_line">
+                    <div className="text_line" onClick={async () => {
+                    if(item.apicode === 'Number' && item.itemCode == 10001001) {
+                      await open(
+                        `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                      );
+                    }
+                  }}>
                       {renderIsPlmMosaic({
                         value: onChainValue,
                         children: Utils.renderReadonlyItem({
@@ -3314,7 +3332,13 @@ const index = () => {
               }
 
               return (
-                <div>
+                <div onClick={async () => {
+                  if(item.apicode === 'Number' && item.itemCode == 10001001) {
+                    await open(
+                      `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                    );
+                  }
+                }}>
                   {renderIsPlmMosaic({
                     value: onChainValue,
                     children: Utils.renderReadonlyItem({
@@ -3328,7 +3352,13 @@ const index = () => {
 
             } else {
               return (
-                <div>
+                <div onClick={async () => {
+                  if(item.apicode === 'Number' && item.itemCode == 10001001) {
+                    await open(
+                      `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                    );
+                  }
+                }}>
                   {renderIsPlmMosaic({
                     value: onChainValue,
                     children: Utils.renderReadonlyItem({
@@ -3734,6 +3764,9 @@ const index = () => {
                   // sorter: true,
                   width: 100,
                   render: (text: string, record: any) => {
+                    if (typeof record.Revision === 'string' && !readPermission(record.Revision)) {
+                      return <PlmMosaic></PlmMosaic>
+                    }
                     if (record.flag == "exist") {
                       return record.Revision;
                     } else {
@@ -4139,52 +4172,55 @@ const index = () => {
                     );
                   },
                 },
-                {
-                  title: "编号",
-                  dataIndex: "Number",
-                  fixed: true,
-                  // search: {
-                  //   type: "Input",
-                  // },
-                  width: 100,
-                  editable: true,
-                  formitem: {
-                    type: 'Input',
-                    props: {}
-                  },
-                  // sorter: true,
-                  render: (text: string, record: any) => {
-                    if (record.flag === 'add') {
-                      return <>{text}</>
-                    }
-                    return (
-                      <a
-                        onClick={async () => {
-                          if (record.flag === "exist") {
-                            await open(
-                              `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
-                            );
-                          }
-                        }}
-                      >
-                        {text}
-                      </a>
-                    );
-                  },
-                },
-                {
-                  title: "版次",
-                  dataIndex: "revision",
-                  // sorter: true,
-                  width: 100,
-                  render: (text: string, record: any) => {
-                    if (record.flag == "exist") {
-                      return record.Revision;
-                    } else {
-                      return <span>1</span>;
-                    }
-                  },
-                },
+                // {
+                //   title: "编号",
+                //   dataIndex: "Number",
+                //   fixed: true,
+                //   // search: {
+                //   //   type: "Input",
+                //   // },
+                //   width: 100,
+                //   editable: true,
+                //   formitem: {
+                //     type: 'Input',
+                //     props: {}
+                //   },
+                //   // sorter: true,
+                //   render: (text: string, record: any) => {
+                //     if (record.flag === 'add') {
+                //       return <>{text}</>
+                //     }
+                //     return (
+                //       <a
+                //         onClick={async () => {
+                //           if (record.flag === "exist") {
+                //             await open(
+                //               `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                //             );
+                //           }
+                //         }}
+                //       >
+                //         {record.material.onChain.Number}
+                //       </a>
+                //     );
+                //   },
+                // },
+                // {
+                //   title: "版次",
+                //   dataIndex: "revision",
+                //   // sorter: true,
+                //   width: 100,
+                //   render: (text: string, record: any) => {
+                //     if(typeof record.Revision === 'string' && !readPermission(record.Revision)){
+                //       return <PlmMosaic></PlmMosaic>
+                //     }
+                //     if (record.flag == "exist") {
+                //       return record.Revision;
+                //     } else {
+                //       return <span>1</span>;
+                //     }
+                //   },
+                // },
                 ...materialColumn,
               ]}
               selectedCell={selectedCell}

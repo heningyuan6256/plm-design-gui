@@ -174,7 +174,7 @@ export const openDesign = async ({
               tabCodes: "10002008",
               tenantId: sse.tenantId || "719",
               userId: userId,
-              versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound) - 1 : insVersionOrderUnbound,
+              versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound.replace('(','').replace(')','')) - 1 : insVersionOrderUnbound,
             }).catch(() => {
               cancelLoading();
             });
@@ -245,7 +245,7 @@ export const openDesign = async ({
                   tabCodes: "10002008",
                   tenantId: sse.tenantId || "719",
                   userId: userId,
-                  versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound) - 1 : insVersionOrderUnbound,
+                  versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound.replace('(','').replace(')','')) - 1 : insVersionOrderUnbound,
                 }).catch(() => {
                   cancelLoading();
                 });
