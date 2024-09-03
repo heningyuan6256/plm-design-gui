@@ -88,7 +88,7 @@ export const openDesign = async ({
     instanceId: insId,
     authType: "read",
     tabCode: "10002001",
-    tenantId:  sse.tenantId || "719",
+    tenantId: sse.tenantId || "719",
     userId: userId,
     versionOrder: orders[orders.length - 1],
     version: versions[versions.length - 1],
@@ -116,6 +116,15 @@ export const openDesign = async ({
         let downloadFolder = defaultSetting?.default || `${homeDirPath}${BasicConfig.APPCacheFolder}`
 
         downloadFolder = `${downloadFolder}\\${instance.productName}`
+
+        const {
+          result: { records: tabAttrs },
+        }: any = await API.getInstanceAttrs({
+          itemCode: BasicsItemCode.file,
+          tabCode: "10002008",
+        });
+
+        const tabAttrsApicodeMap = Utils.transformArrayToMap(tabAttrs,'apicode','id')
 
         if (!readPermission(instance.number)) {
           message.error("无当前实例查看权限")
@@ -150,7 +159,51 @@ export const openDesign = async ({
               contents: res,
             }).catch(() => {
               cancelLoading();
-            });;
+            });
+
+            const insVersionOrderUnbound = ins.result.readInstanceVo.insVersionOrderUnbound
+
+            const {
+              result: { records: attachmentRecords },
+            }: any = await API.queryInstanceTab({
+              instanceId: insId,
+              itemCode: BasicsItemCode.file,
+              pageNo: "1",
+              pageSize: "1000",
+              tabCode: "10002008",
+              tabCodes: "10002008",
+              tenantId: sse.tenantId || "719",
+              userId: userId,
+              versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound) - 1 : insVersionOrderUnbound,
+            }).catch(() => {
+              cancelLoading();
+            });
+
+            const excutePromise: any = []
+
+            attachmentRecords.forEach((v: any) => {
+              console.log(v,v.attributes,'v.attributes')
+              excutePromise.push(new Promise(async (resolve) => {
+                const response: any = await client.get(
+                  `http://${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
+                  {
+                    // the expected response type
+                    responseType: ResponseType.Binary,
+                  }
+                ).catch(() => {
+                  cancelLoading();
+                });
+                await writeBinaryFile({
+                  path: `${downloadFolder}\\${fileName}\\${v.attributes[tabAttrsApicodeMap['FileName']]}`,
+                  contents: response.data,
+                }).catch(() => {
+                  cancelLoading();
+                });;
+                resolve({})
+              }))
+            })
+
+            await Promise.all(excutePromise)
 
             const {
               result: { records },
@@ -161,12 +214,12 @@ export const openDesign = async ({
               pageSize: "1000",
               tabCode: "10002016",
               tabCodes: "10002016",
-              tenantId:  sse.tenantId || "719",
+              tenantId: sse.tenantId || "719",
               userId: userId,
               versionOrder: ins.result.readInstanceVo.insVersionOrder,
             }).catch(() => {
               cancelLoading();
-            });;
+            });
 
             const loop = async (data: any) => {
               for (let i = 0; i < data.length; i++) {
@@ -178,6 +231,52 @@ export const openDesign = async ({
                     responseType: ResponseType.Binary,
                   }
                 );
+
+                const insVersionOrderUnbound = data[i].insVersionOrderUnbound
+
+                const {
+                  result: { records: attachmentRecords = [] },
+                }: any = await API.queryInstanceTab({
+                  instanceId: insId,
+                  itemCode: BasicsItemCode.file,
+                  pageNo: "1",
+                  pageSize: "1000",
+                  tabCode: "10002008",
+                  tabCodes: "10002008",
+                  tenantId: sse.tenantId || "719",
+                  userId: userId,
+                  versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound) - 1 : insVersionOrderUnbound,
+                }).catch(() => {
+                  cancelLoading();
+                });
+
+                const excutePromise: any = []
+
+                attachmentRecords.forEach((v: any) => {
+                  excutePromise.push(new Promise(async (resolve) => {
+                    console.log(v,v.attributes,'vvvv')
+                    const response: any = await client.get(
+                      `http://${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
+                      {
+                        // the expected response type
+                        responseType: ResponseType.Binary,
+                      }
+                    ).catch(() => {
+                      cancelLoading();
+                    });
+                    await writeBinaryFile({
+                      path: `${downloadFolder}\\${fileName}\\${v.attributes[tabAttrsApicodeMap['FileName']]}`,
+                      contents: response.data,
+                    }).catch(() => {
+                      cancelLoading();
+                    });;
+                    resolve({})
+                  }))
+                })
+
+                await Promise.all(excutePromise)
+
+
                 // const fileName = data[i].attributes[attrMap["Description"]];
                 // await createDir(
                 //   `${folder}\\${fileName}`,
