@@ -3894,7 +3894,7 @@ const index = () => {
                   // 增加判断，所有的必填校验
 
                   const requiredColumns = materialColumn.filter((item: any) => {
-                    return item.attr?.required && item.attr?.dataFrom == "0";
+                    return item.attr?.required && item.attr?.dataFrom == "0" && item.attr?.apicode != 'Number';
                   });
 
                   console.log(requiredColumns, "requiredColumns");
