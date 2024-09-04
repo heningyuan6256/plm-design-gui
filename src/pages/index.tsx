@@ -2638,6 +2638,7 @@ const index = () => {
         type: CommandConfig.getCurrentBOM,
         input_data: {
           "info": ["proximate"],
+          "transferNode": filterCenterData.map(item => item.node_name),
           'transformer': [...partSaveas, 'image']
         }
       });
