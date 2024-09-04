@@ -1350,7 +1350,7 @@ const index = () => {
       itemCode: BasicsItemCode.file,
       tabCode: "10002001",
       // rowId: row.file.onChain.rowId,
-      insAttrs: Attrs.filter((item) => item.status).map((attr) => {
+      insAttrs: Attrs.filter((item) => item.status && ((item.readonly != '3' && item.readonly != '4') || item.apicode === 'FileFormat')).map((attr) => {
         if (attr.apicode === "FileUrl") {
           return {
             ...attr,
@@ -1553,7 +1553,7 @@ const index = () => {
       // rowId: row.material.onChain.rowId,
       // versionNumber: row.material.onChain.Version,
       // versionOrder: row.material.onChain.Revision,
-      insAttrs: materialAttrs.filter((item) => item.status).map((attr) => {
+      insAttrs: materialAttrs.filter((item) => item.status && item.readonly != '3' && item.readonly != '4').map((attr) => {
         return {
           ...attr,
           value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
@@ -2581,7 +2581,7 @@ const index = () => {
             actualValue = nameNumberMap[getRowKey(item)]?.number || ''
           }
           if ((cadAttrsMap[attrname] === 'Version')) {
-            actualValue = typeof actualValue === 'string' ? actualValue.split(' ')[0] :actualValue
+            actualValue = typeof actualValue === 'string' ? actualValue.split(' ')[0] : actualValue
           }
           return {
             attr_name: attrname,
@@ -3266,7 +3266,7 @@ const index = () => {
               if ((pluginValue == '') && onChainValue && readPermission(onChainValue)) {
                 return (
                   <div className="text_line" onClick={async () => {
-                    if(item.apicode === 'Number' && item.itemCode == 10001001) {
+                    if (item.apicode === 'Number' && item.itemCode == 10001001) {
                       await open(
                         `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
                       );
@@ -3313,12 +3313,12 @@ const index = () => {
                       })}
                     </div>
                     <div className="text_line" onClick={async () => {
-                    if(item.apicode === 'Number' && item.itemCode == 10001001) {
-                      await open(
-                        `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
-                      );
-                    }
-                  }}>
+                      if (item.apicode === 'Number' && item.itemCode == 10001001) {
+                        await open(
+                          `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                        );
+                      }
+                    }}>
                       {renderIsPlmMosaic({
                         value: onChainValue,
                         children: Utils.renderReadonlyItem({
@@ -3334,7 +3334,7 @@ const index = () => {
 
               return (
                 <div onClick={async () => {
-                  if(item.apicode === 'Number' && item.itemCode == 10001001) {
+                  if (item.apicode === 'Number' && item.itemCode == 10001001) {
                     await open(
                       `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
                     );
@@ -3354,7 +3354,7 @@ const index = () => {
             } else {
               return (
                 <div onClick={async () => {
-                  if(item.apicode === 'Number' && item.itemCode == 10001001) {
+                  if (item.apicode === 'Number' && item.itemCode == 10001001) {
                     await open(
                       `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
                     );
