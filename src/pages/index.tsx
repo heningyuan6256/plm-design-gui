@@ -2609,7 +2609,7 @@ const index = () => {
   const judgeAttachExistPromise = (item: any, format: string) => {
     return new Promise(async (resolve) => {
       // pdf step dwg drw
-      const data_path = `${item.file_path.substring(0, item.file_path.lastIndexOf('.'))}.${format}`
+      const data_path = item[`${format}_path`] || `${item.file_path.substring(0, item.file_path.lastIndexOf('.'))}.${format}`
       const existFile = await exists(data_path)
       if (existFile) {
         item[`${format}_path`] = data_path
