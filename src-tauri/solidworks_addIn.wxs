@@ -116,15 +116,25 @@
 
 
     <CustomAction 
-        Id="testVBScript" 
+        Id="SolidWorks_ADDIN" 
         Execute="deferred" 
         Return="ignore"             
         Impersonate="no" 
         ExeCommand="&quot;[SystemFolder]cmd.exe&quot; /c &quot;[INSTALLDIR]/lib/SolidWorks_ADDIN/addInDll.bat&quot;"
         Directory="INSTALLDIR">
     </CustomAction>
+
+     <CustomAction 
+        Id="NX_ADDIN" 
+        Execute="deferred" 
+        Return="ignore"             
+        Impersonate="no" 
+        ExeCommand="&quot;[SystemFolder]cmd.exe&quot; /c &quot;[INSTALLDIR]/lib/NX_ADDIN/OnChainNXInter.bat&quot;"
+        Directory="INSTALLDIR">
+    </CustomAction>
     <InstallExecuteSequence>
-      <Custom Action="testVBScript" Before="InstallFinalize" />
+      <Custom Action="SolidWorks_ADDIN" Before="InstallFinalize" />
+      <Custom Action="NX_ADDIN" Before="InstallFinalize" />
       <!-- <Custom Action="UpdateIniFile" Before="InstallFinalize"></Custom> -->
     </InstallExecuteSequence>
       <PackageGroup Id="WindowsInstaller45">

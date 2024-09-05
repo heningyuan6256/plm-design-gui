@@ -1,0 +1,15 @@
+!*=======================================================================
+!
+!        Copyright (c) 2024 OnChain PLM System
+!
+!=========================================================================
+TITLE  OnChain PLM
+VERSION 170
+
+BUTTON ON_CHAIN_LOGIN_BUTTON
+BUTTON ON_CHAIN_OPTION_BUTTON
+BUTTON ON_CHAIN_SEARCHING_BUTTON
+BUTTON ON_CHAIN_STANDARD_DRAWING_BUTTON
+BUTTON ON_CHAIN_UPLOAD_BUTTON
+BUTTON ON_CHAIN_QUIT_BUTTON
+BUTTON ON_CHAIN_ABOUT_BUTTON

@@ -1,0 +1,52 @@
+!=======================================================================
+!
+!        Copyright (c) 2024 OnChain PLM System
+!
+!=========================================================================
+VERSION 120
+
+EDIT UG_GATEWAY_MAIN_MENUBAR
+
+TOP_MENU
+CASCADE_BUTTON ON_CHAIN_PLM_MENU
+LABEL OnChain PLM
+END_OF_TOP_MENU
+
+MENU ON_CHAIN_PLM_MENU
+
+BUTTON ON_CHAIN_LOGIN_BUTTON
+LABEL 登录
+BITMAP OnChain_login
+ACTIONS onChainPlm
+
+BUTTON ON_CHAIN_OPTION_BUTTON
+LABEL 首选项
+BITMAP OnChain_setting
+ACTIONS onChainPlm
+
+BUTTON ON_CHAIN_SEARCHING_BUTTON
+LABEL 查找图纸
+BITMAP OnChain_search
+ACTIONS onChainPlm
+
+BUTTON ON_CHAIN_STANDARD_DRAWING_BUTTON
+LABEL 标准件
+BITMAP OnChain_option
+ACTIONS onChainPlm
+
+BUTTON  ON_CHAIN_UPLOAD_BUTTON
+LABEL 上传
+BITMAP OnChain_upload
+ACTIONS onChainPlm
+
+BUTTON  ON_CHAIN_QUIT_BUTTON
+LABEL 退出
+BITMAP OnChain_quit
+ACTIONS onChainPlm
+
+BUTTON  ON_CHAIN_ABOUT_BUTTON
+LABEL 关于
+BITMAP OnChain_about
+ACTIONS onChainPlm
+
+END_OF_MENU

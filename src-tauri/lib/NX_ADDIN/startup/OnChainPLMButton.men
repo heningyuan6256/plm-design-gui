@@ -1,0 +1,22 @@
+!*=======================================================================
+!
+!        Copyright (c) 2024 On Chain PLM System
+!
+!=========================================================================
+
+!=========================================================================
+VERSION 120
+
+EDIT UG_GATEWAY_MAIN_MENUBAR
+
+MENU UG_APPLICATION
+
+    APPLICATION_BUTTON ON_CHAIN_PLM_APP
+
+    LABEL OnChainPLM
+
+    LIBRARIES OnChainPLM
+
+    MENU_FILES OnChainPLM.men 
+
+END_OF_MENU 
