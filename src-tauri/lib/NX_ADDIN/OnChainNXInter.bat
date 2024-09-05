@@ -11,19 +11,9 @@ if "%ugiiBaseDir%"=="" (
 :: Step 2: 拼接 custom_dirs.dat 文件路径
 set "datFilePath=%ugiiBaseDir%\UGII\menus\custom_dirs.dat"
 
-:: Step 3: 获取注册表项中的地址
-for /f "tokens=3*" %%A in ('reg query "HKEY_CURRENT_USER\SOFTWARE\ONCHAIN\OnChain-DesignFusion" /v "InstallDir" 2^>nul') do (
-    set "regValue=%%A %%B"
-)
-
-if "%regValue%"=="" (
-    echo ERROR: Failed to retrieve the registry value.
-    exit /b 1
-)
-
 :: 拼接 DLL 文件路径
-set "dllFolderPath=%regValue%lib\NX_ADDIN"
-set "dllPath=%regValue%lib\NX_ADDIN\application\OnChainPLM.dll"
+set "dllFolderPath=%CD%\lib\NX_ADDIN"
+set "dllPath=%CD%\lib\NX_ADDIN\application\OnChainPLM.dll"
 
 :: Step 4: 创建一个临时文件路径
 set "tempFile=%TEMP%\custom_dirs_temp.dat"
