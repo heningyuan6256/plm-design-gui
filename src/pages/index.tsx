@@ -1345,6 +1345,8 @@ const index = () => {
     }
 
 
+    const stepPathMap = await updoadAttachMent({ filterCenterData: [row] })
+
     const updateInstance = {
       id: row.file.onChain.insId,
       itemCode: BasicsItemCode.file,
@@ -1358,7 +1360,7 @@ const index = () => {
               getFileNameWithFormat(row)
             ].response.uploadURL.split("/plm/files")[1]
               }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize
-              }&extension=${row.file.plugin?.FileFormat}`,
+              }&extension=${row.file.plugin?.FileFormat}${(['nx', 'zw'].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(row)]) ? `&modalUrl=${stepPathMap[getRowKey(row)]}` : ''}`,
           };
         } else if (attr.apicode === "Thumbnail") {
           return {
@@ -1393,7 +1395,6 @@ const index = () => {
         ]);
       });
     }
-    await updoadAttachMent({ filterCenterData: [row] })
 
 
     await API.checkIn({
@@ -2632,14 +2633,42 @@ const index = () => {
 
     const defaultSetting = await getDefaultSetting()
     const partSaveas = defaultSetting?.partSaveas || []
+    let transferNode = filterCenterData.map(item => item.node_name)
+    let transformer = [...partSaveas, 'image']
+    // nx
+    if (mqttClient.publishTopic === 'nx') {
+      // 1. 如果当前没有配置需要转换成step
+      if (!transformer.includes("step")) {
+        transformer = [...partSaveas, 'image', 'step']
+        // 只需要转装配体
+        transferNode = transferNode.filter(item => item.children)
+      }
+    }
+
+    // 中望
+    if (mqttClient.publishTopic === 'zw') {
+      // 1. 如果当前没有配置需要转换成step
+      if (!transformer.includes("step")) {
+        transformer = [...partSaveas, 'image', 'step']
+      }
+    }
+
+    // 新迪天工
+    if (mqttClient.publishTopic === 'tg') {
+      // 1. 如果当前没有配置需要转换成step
+      if (!transformer.includes("step")) {
+        transformer = [...partSaveas, 'image', 'step']
+      }
+    }
+
     if (partSaveas.length) {
       // 先判断是否有需要生成的文件
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
         input_data: {
           "info": ["proximate"],
-          "transferNode": filterCenterData.map(item => item.node_name),
-          'transformer': [...partSaveas, 'image']
+          "transferNode": transferNode,
+          'transformer': transformer
         }
       });
 
@@ -2752,6 +2781,11 @@ const index = () => {
     });
 
 
+    const stepPathMap: Record<string, any> = {}
+    filterCenterData.forEach((v) => {
+      stepPathMap[getRowKey(v)] = v.step_path
+    })
+
     if (addAttachmentParams.length) {
       console.log(addAttachmentParams, 'addAttachmentParams');
 
@@ -2761,6 +2795,8 @@ const index = () => {
       });
       console.log(attchmentResult, addAttachmentParams, "FileAttachment");
     }
+
+    return stepPathMap
   }
 
   const getDefaultSetting = async () => {
@@ -3014,7 +3050,7 @@ const index = () => {
             const nameFileUrlMap = await uploadFile(fileItems);
 
             // 批量上传附件
-            await updoadAttachMent({ filterCenterData, nameNumberMap })
+            const stepPathMap = await updoadAttachMent({ filterCenterData, nameNumberMap })
 
 
             let nameThumbMap: any = await invoke("get_icons", {
@@ -3040,7 +3076,7 @@ const index = () => {
             Object.assign(nameThumbMap, localImageMap)
 
 
-            //批量更新文件地址
+            //批量更新文件地址 如果shiprt每次更新文件地址的时候需要上传prt的地址到后面
             const updateInstances = filterCenterData
               .map((item) => {
                 return {
@@ -3058,7 +3094,7 @@ const index = () => {
                           getFileNameWithFormat(item)
                         ].response.uploadURL.split("/plm/files")[1]
                           }?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize
-                          }&extension=${item.file.plugin?.FileFormat}` : `/plm/files/ba8ad0cb2f63dbd396ab35de7e6738cb+528d612f-580e-44d5-9510-c11630179a5c?name=${item.file.plugin?.fileNameWithFormat}&size=10247&extension=pdf`,
+                          }&extension=${item.file.plugin?.FileFormat}${(['nx', 'zw'].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(item)]) ? `&modalUrl=${stepPathMap[getRowKey(item)]}` : ''}` : `/plm/files/ba8ad0cb2f63dbd396ab35de7e6738cb+528d612f-580e-44d5-9510-c11630179a5c?name=${item.file.plugin?.fileNameWithFormat}&size=10247&extension=pdf`,
                       };
                     } else {
                       return {
