@@ -12,6 +12,7 @@ import {
 import PlmIcon from "../components/PlmIcon";
 import PlmToolBar from "../components/PlmToolBar";
 import materialSvg from "../assets/image/childnode.svg";
+import { open as openDialog } from "@tauri-apps/api/dialog";
 import pcbSvg from "../assets/image/pcb.svg";
 import docSvg from "../assets/image/doc.svg";
 import cubeSvg from "../assets/image/rootdirectory.svg";
@@ -121,6 +122,9 @@ export interface logItemType {
   dateTime: string;
   id: string;
 }
+
+const drwFileArr = ['drw', 'DRW', 'slddrw', 'SLDDRW', 'dwg', 'DWG', 'prt', 'PRT']
+
 
 const index = () => {
   const updatingAttr = useRef<boolean>(false)
@@ -2610,13 +2614,14 @@ const index = () => {
   const judgeAttachExistPromise = (item: any, format: string) => {
     return new Promise(async (resolve) => {
       // pdf step dwg drw
-      const data_path = item[`${format}_path`] || `${item.file_path.substring(0, item.file_path.lastIndexOf('.'))}.${format}`
+      const filePathWithOutFormat = format === 'pdf' ? item.drw_path.substring(0, item.drw_path.lastIndexOf('.')) : item.file_path.substring(0, item.file_path.lastIndexOf('.'))
+      const data_path = item[`${format}_path`] || `${filePathWithOutFormat}.${format}`
       const existFile = await exists(data_path)
       if (existFile) {
         item[`${format}_path`] = data_path
         resolve(data_path)
       } else {
-        const data_path = `${item.file_path.substring(0, item.file_path.lastIndexOf('.'))}.${format.toUpperCase()}`
+        const data_path = `${filePathWithOutFormat}.${format.toUpperCase()}`
         const existUpperCaseFile = await exists(data_path)
         if (existUpperCaseFile) {
           item[`${format}_path`] = data_path
@@ -2629,10 +2634,36 @@ const index = () => {
     })
   }
 
+  // 获取工程图的地址
+  const getDrwFileAddr = async ({ filterCenterData }: { filterCenterData: Record<string, any>[] }) => {
+    const defaultSetting = await getDefaultSetting()
+    const drwFormat = defaultSetting?.drwFormat || []
+    // 判断假如要工程图
+    if (drwFormat) {
+      const selected = await openDialog({
+        multiple: false,
+        directory: true,
+        filters: [{ extensions: drwFileArr, name: '' }],
+        defaultPath: typeof  leftData[0].file_path ==='string' ?  leftData[0].file_path.substring(0, leftData[0].file_path.lastIndexOf("\\")): '',
+        title: '请选择要上传的工程图目录',
+      });
+      if (selected && typeof selected === 'string') {
+        const entryList = await readDir(selected, { recursive: true })
+        const entryListMap = Utils.transformArrayToMap(entryList, 'name', 'path')
+        filterCenterData.forEach(item => {
+          const fileNameWithFormat = getRowKey(item)
+          const fileNameWithOutFormat = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
+          item[`${drwFormat}_path`] = entryListMap[`${fileNameWithOutFormat}.${drwFormat}`] || entryListMap[`${fileNameWithOutFormat}.${drwFormat.toUpperCase()}`]
+        })
+      }
+    }
+  }
+
   const updoadAttachMent = async ({ filterCenterData, nameNumberMap }: { filterCenterData: Record<string, any>[], nameNumberMap?: Record<string, any> }) => {
 
     const defaultSetting = await getDefaultSetting()
     const partSaveas = defaultSetting?.partSaveas || []
+    const drwFormat = defaultSetting?.drwFormat || ''
     let transferNode = filterCenterData.map(item => item.node_name)
     let transformer = [...partSaveas, 'image']
     // nx
@@ -2668,12 +2699,13 @@ const index = () => {
         input_data: {
           "info": ["proximate"],
           "transferNode": transferNode,
-          'transformer': transformer
+          'transformer': transformer,
+          "drwFileList": drwFormat && transformer.includes('pdf') ? filterCenterData.filter(item => item[`${drwFormat}_path`]).map(item => item[`${drwFormat}_path`]) : []
         }
       });
 
       while (!generateExtraFile.current) {
-        console.log("重复监听属性修改", generateExtraFile.current);
+        console.log("重复监听", generateExtraFile.current);
         await new Promise(resolve => setTimeout(resolve, 300)); // 等待1000ms 再检查
       }
 
@@ -2703,23 +2735,29 @@ const index = () => {
         if (item[`${v}_path`]) {
           FileArray.push(
             new Promise(async (resolve, reject) => {
-              const arrayBufferData = await readBinaryFile(item[`${v}_path`]);
-              resolve({
-                name: `${item[`${v}_path`].substring(
-                  item[`${v}_path`].lastIndexOf("\\") + 1
-                )}`,
-                data: new Blob([arrayBufferData]),
-                source: "Local",
-                isRemote: false,
-                dataType: v,
-              });
+              const existFile = await exists(item[`${v}_path`])
+              if (existFile) {
+                const arrayBufferData = await readBinaryFile(item[`${v}_path`]);
+                resolve({
+                  name: `${item[`${v}_path`].substring(
+                    item[`${v}_path`].lastIndexOf("\\") + 1
+                  )}`,
+                  data: new Blob([arrayBufferData]),
+                  source: "Local",
+                  isRemote: false,
+                  dataType: v,
+                });
+              } else {
+                resolve("");
+              }
             })
           );
         }
       })
     }
     const fileItems = await Promise.all([...FileArray]);
-    const nameFileUrlMap = await uploadFile(fileItems);
+    const nameFileUrlMap = await uploadFile(fileItems.filter(v => v));
+    console.log(fileItems, 'fileItems')
 
     const setAttachmentValue = (
       item: any,
@@ -2783,7 +2821,7 @@ const index = () => {
 
     const stepPathMap: Record<string, any> = {}
     filterCenterData.forEach((v) => {
-      stepPathMap[getRowKey(v)] = v.step_path
+      stepPathMap[getRowKey(v)] = v.step_path ? v.step_path.split("/plm/files")[1] : ''
     })
 
     if (addAttachmentParams.length) {
@@ -2985,6 +3023,7 @@ const index = () => {
 
           const filterCenterData = centerData
             .filter((item) => item.file.onChain.flag != "exist" && nameNumberMap[getRowKey(item)]?.number)
+          await getDrwFileAddr({ filterCenterData })
 
           console.log(nameNumberMap, "nameNumberMapnameNumberMap");
           // // 批量创建文件结构
@@ -3011,38 +3050,38 @@ const index = () => {
                 );
               }
 
-              if (item.step_path) {
-                FileArray.push(
-                  new Promise(async (resolve, reject) => {
-                    const arrayBufferData = await readBinaryFile(item.step_path);
-                    resolve({
-                      name: `${item.step_path.substring(
-                        item.step_path.lastIndexOf("\\") + 1
-                      )}`,
-                      data: new Blob([arrayBufferData]),
-                      source: "Local",
-                      isRemote: false,
-                      dataType: "step",
-                    });
-                  })
-                );
-              }
-              if (item.drw_path) {
-                FileArray.push(
-                  new Promise(async (resolve, reject) => {
-                    const arrayBufferData = await readBinaryFile(item.drw_path);
-                    resolve({
-                      name: `${item.drw_path.substring(
-                        item.drw_path.lastIndexOf("\\") + 1
-                      )}`,
-                      data: new Blob([arrayBufferData]),
-                      source: "Local",
-                      isRemote: false,
-                      dataType: "drw",
-                    });
-                  })
-                );
-              }
+              // if (item.step_path) {
+              //   FileArray.push(
+              //     new Promise(async (resolve, reject) => {
+              //       const arrayBufferData = await readBinaryFile(item.step_path);
+              //       resolve({
+              //         name: `${item.step_path.substring(
+              //           item.step_path.lastIndexOf("\\") + 1
+              //         )}`,
+              //         data: new Blob([arrayBufferData]),
+              //         source: "Local",
+              //         isRemote: false,
+              //         dataType: "step",
+              //       });
+              //     })
+              //   );
+              // }
+              // if (item.drw_path) {
+              //   FileArray.push(
+              //     new Promise(async (resolve, reject) => {
+              //       const arrayBufferData = await readBinaryFile(item.drw_path);
+              //       resolve({
+              //         name: `${item.drw_path.substring(
+              //           item.drw_path.lastIndexOf("\\") + 1
+              //         )}`,
+              //         data: new Blob([arrayBufferData]),
+              //         source: "Local",
+              //         isRemote: false,
+              //         dataType: "drw",
+              //       });
+              //     })
+              //   );
+              // }
             }
             const fileItems = await Promise.all([...FileArray]);
 
@@ -3200,6 +3239,7 @@ const index = () => {
           return
         }
         try {
+          await getDrwFileAddr({ filterCenterData: [row] })
           await updateData({ row: row });
           if (selectNode.material.onChain.insId) {
             const materialRow = { ...selectNode, ...selectNode.material.onChain };
@@ -3236,6 +3276,7 @@ const index = () => {
         const data = centerData.find(item => getRowKey(item) == getRowKey(selectNode))
         // const row = { ...selectNode, ...selectNode.file.onChain };
         dispatch(setLoading(true));
+        await getDrwFileAddr({ filterCenterData: [data!] })
         checkInData({ row: data });
       } else {
         message.error("请选择目标节点");
@@ -3525,12 +3566,13 @@ const index = () => {
         <Fragment>
           <div className="ml-1">
             <PlmTabToolBar
-              onClick={(item) => {
+              onClick={async (item) => {
                 if (item.tag === 'update') {
                   if (fileSelectRows.find(item => item.flag !== 'exist')) {
                     message.warning("选择的行中有还未上传的对象")
                   } else {
                     try {
+                      await getDrwFileAddr({ filterCenterData: fileSelectRows })
                       batchUpdateData({ selectRows: fileSelectRows })
                     } catch (error) {
                       dispatch(setLoading(false))
@@ -3555,8 +3597,12 @@ const index = () => {
                     message.warning("请勾选单个对象！")
                     return
                   }
-                  fileSelectRows.length ?
-                    checkInData({ row: fileSelectRows[0] }) : message.error("请选择操作对象");
+                  if (fileSelectRows.length) {
+                    await getDrwFileAddr({ filterCenterData: [fileSelectRows[0]] })
+                    checkInData({ row: fileSelectRows[0] })
+                  } else {
+                    message.error("请选择操作对象");
+                  }
                 } else if (item.tag === "fillDown") {
                   if (selectedCellLatest.current?.record) {
                     let findSelect = false;

@@ -47,7 +47,9 @@ export default function AttrMap() {
     catproduct: '',
     partSaveas: [],
     partUploads: [],
-    drwSaveas: ''
+    drwSaveas: '',
+    drwFormat: '',
+    // isNxDrwSync: '0'
   })
 
   const latestFileAddress = useLatest(fileAddress)
@@ -172,6 +174,7 @@ export default function AttrMap() {
       const fileAddressScope = JSON.parse(text)
       fileAddressScope.partSaveas = fileAddressScope.partSaveas || []
       fileAddressScope.partUploads = fileAddressScope.partUploads || []
+      // fileAddressScope.isNxDrwSync = fileAddressScope.isNxDrwSync || '0'
       setFileAddress(fileAddressScope)
       dispatch(setLoading(false));
       // if (fileAddressScope[activeKey]) {
@@ -472,7 +475,7 @@ export default function AttrMap() {
               <div style={{ width: '150px' }}>上传零件图附带文件格式:</div>
               <Select mode="multiple" onChange={(e) => {
                 setFileAddress({ ...fileAddress, partUploads: e })
-              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partUploads} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'PDF', value: 'pdf' }, { label: 'STEP', value: 'step' }, { label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }, { label: 'STL', value: 'stl' }]} size={'small'}></Select>
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partUploads} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'PDF', value: 'pdf' }, { label: 'STEP', value: 'step' }, { label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }]} size={'small'}></Select>
             </div>
             <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
               <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
@@ -481,6 +484,22 @@ export default function AttrMap() {
                 setFileAddress({ ...fileAddress, partSaveas: e })
               }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.partSaveas} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'STEP', value: 'step' }, { label: 'PDF', value: 'pdf' }]} size={'small'}></Select>
             </div>
+
+            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+              <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
+              <div style={{ width: '150px' }}>指定工程图格式:</div>
+              <Select onChange={(e) => {
+                setFileAddress({ ...fileAddress, drwFormat: e })
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.drwFormat} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }]} size={'small'}></Select>
+            </div>
+{/* 
+            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
+              <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
+              <div style={{ width: '150px' }}>NX零件图是否包含工程图:</div>
+              <Select onChange={(e) => {
+                setFileAddress({ ...fileAddress, isNxDrwSync: e })
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.isNxDrwSync} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: '是', value: '1' }, { label: '否', value: '0' }]} size={'small'}></Select>
+            </div> */}
           </div>
         </div>
 
