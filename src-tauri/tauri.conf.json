@@ -55,6 +55,11 @@
             "name": "reg",
             "cmd": "reg",
             "args": true
+          },
+          {
+            "name": "binaries/swextension",
+            "sidecar": true,
+            "args": true
           }
         ]
       },
@@ -70,7 +75,7 @@
       "deb": {
         "depends": []
       },
-      "externalBin": [],
+      "externalBin": ["binaries/swextension"],
       "icon": ["icons/onchain.png", "icons/favicon.ico"],
       "identifier": "com.ONCHAIN.build",
       "longDescription": "",
@@ -81,7 +86,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["Config.ini", "./lib"],
+      "resources": ["Config.ini", "./lib", "./binaries","./SolidWorks.Interop.sldworks.dll"],
       "shortDescription": "",
       "targets": "all",
       "windows": {

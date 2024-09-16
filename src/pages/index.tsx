@@ -65,7 +65,7 @@ import Tus from "@uppy/tus";
 import Uppy from "@uppy/core";
 import PlmModal from "../components/PlmModal";
 import { useSelector } from "react-redux";
-import { open } from "@tauri-apps/api/shell";
+import { Command, open } from "@tauri-apps/api/shell";
 import SplitPane from "react-split-pane";
 import { setBom } from "../models/bom";
 import { useLocation } from "react-router-dom";
@@ -2611,10 +2611,10 @@ const index = () => {
     console.log('收到 setProductAttVal 消息，继续执行后续代码');
   }
 
-  const judgeAttachExistPromise = (item: any, format: string) => {
+  const judgeAttachExistPromise = (item: any, format: string, drwFormat:string) => {
     return new Promise(async (resolve) => {
       // pdf step dwg drw
-      const filePathWithOutFormat = format === 'pdf' ? item.drw_path.substring(0, item.drw_path.lastIndexOf('.')) : item.file_path.substring(0, item.file_path.lastIndexOf('.'))
+    const filePathWithOutFormat = format === 'pdf' ? item[`${drwFormat}_path`]?.substring(0, item[`${drwFormat}_path`].lastIndexOf('.')) : item.file_path.substring(0, item.file_path.lastIndexOf('.'))
       const data_path = item[`${format}_path`] || `${filePathWithOutFormat}.${format}`
       const existFile = await exists(data_path)
       if (existFile) {
@@ -2644,7 +2644,7 @@ const index = () => {
         multiple: false,
         directory: true,
         filters: [{ extensions: drwFileArr, name: '' }],
-        defaultPath: typeof  leftData[0].file_path ==='string' ?  leftData[0].file_path.substring(0, leftData[0].file_path.lastIndexOf("\\")): '',
+        defaultPath: typeof leftData[0].file_path === 'string' ? leftData[0].file_path.substring(0, leftData[0].file_path.lastIndexOf("\\")) : '',
         title: '请选择要上传的工程图目录',
       });
       if (selected && typeof selected === 'string') {
@@ -2693,6 +2693,21 @@ const index = () => {
     }
 
     if (partSaveas.length) {
+      const drwFileList = drwFormat && transformer.includes('pdf') ? filterCenterData.filter(item => item[`${drwFormat}_path`]).map(item => item[`${drwFormat}_path`]) : []
+      console.log(drwFileList, 'drwFileList');
+
+      if (drwFileList.length && mqttClient.publishTopic === 'sw') {
+        const command = Command.sidecar(
+          "binaries/swextension",
+          drwFileList,
+          { encoding: "GBK" }
+        );
+        command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
+        command.stderr.on('data', line => console.log(`command stderr: "${line}"`));
+
+        await command.execute()
+      }
+
       // 先判断是否有需要生成的文件
       mqttClient.publish({
         type: CommandConfig.getCurrentBOM,
@@ -2726,7 +2741,7 @@ const index = () => {
     // 遍历所有的对象，判断下面是否有对应的文件，然后放入对象中
     const executePromiseArr: any = []
     filterCenterData.forEach((item: any) => {
-      needUploadFormat.forEach((v: any) => executePromiseArr.push(judgeAttachExistPromise(item, v)))
+      needUploadFormat.forEach((v: any) => executePromiseArr.push(judgeAttachExistPromise(item, v, drwFormat)))
     })
     await Promise.all(executePromiseArr)
 
