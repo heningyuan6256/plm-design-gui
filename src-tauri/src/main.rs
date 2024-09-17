@@ -11,7 +11,9 @@ use tauri::Manager;
 use std::collections::HashMap;
 use url::Url;
 use serde_urlencoded;
+mod server;
 
+use std::thread;
 // use tauri::api::process::{Command, CommandEvent};
 // // extern crate libloading;
 
@@ -209,6 +211,14 @@ fn main() {
                 // 但是经过尝试，我只能在应用已经打开的时候获取到传递的参数，大概率是因为第一次发送的时候，前端的监听事件还没有开启，插件的作者正在添加新的API:get_last_url实现
             })
             .unwrap();
+
+            let handleServer = app.handle();
+            let boxed_handle = Box::new(handleServer);
+
+            thread::spawn(move || {
+                server::init(*boxed_handle).unwrap();
+            });
+
             #[cfg(not(target_os = "macos"))]
             if let Some(url) = std::env::args().nth(2) {
                 // app.emit_all("test", url).unwrap();
