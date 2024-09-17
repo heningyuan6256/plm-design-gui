@@ -2699,7 +2699,7 @@ const index = () => {
       if (drwFileList.length && mqttClient.publishTopic === 'sw') {
         const command = Command.sidecar(
           "binaries/swextension",
-          drwFileList,
+          ['-pdf',...drwFileList],
           { encoding: "GBK" }
         );
         command.stdout.on('data', line => console.log(`command stdout: "${line}"`));

@@ -22,7 +22,8 @@ pub async fn init(app: AppHandle) -> std::io::Result<()> {
         App::new()
             .app_data(tauri_app.clone())
             .wrap(middleware::Logger::default())
-            .service(handlers::solidworks::handle)
+            .service(handlers::solidworks::handle_pdf)
+            .service(handlers::solidworks::handle_ostep)
     })
     .bind((local_ip, 14875))?
     .run()
