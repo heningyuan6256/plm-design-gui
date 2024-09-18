@@ -5,6 +5,16 @@ pub fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+pub async fn close_splashscreen(window: tauri::Window) {
+  // Close splashscreen
+  if let Some(splashscreen) = window.get_window("splashscreen") {
+    splashscreen.close().unwrap();
+  }
+  // Show main window
+  window.get_window("Login").unwrap().show().unwrap();
+}
+
 // 登陆到主页
 #[command]
 pub async fn open_login(handle: tauri::AppHandle) {

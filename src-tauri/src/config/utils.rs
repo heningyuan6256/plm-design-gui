@@ -182,6 +182,11 @@ pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
     set_shadow(&window, true).expect("Unsupported platform!");
 }
 
+pub fn set_splash_shadow<R: Runtime>(app: &tauri::App<R>) {
+    let window = app.get_window("splashscreen").unwrap();
+    set_shadow(&window, true).expect("Unsupported platform!");
+}
+
 #[command]
 pub fn chat_root() -> PathBuf {
     tauri::api::path::home_dir().unwrap().join(".onChain")

@@ -116,7 +116,16 @@
         "label": "Login",
         "decorations": false,
         "center": true,
-        "visible": true
+        "visible":false
+      },
+      {
+        "width": 300,
+        "height": 150,
+        "decorations": false,
+        "center": true,
+        "url": "splashscreen.html",
+        "label": "splashscreen",
+        "visible":true
       }
     ],
     "systemTray": {

@@ -7,6 +7,8 @@ mod app;
 mod config;
 use app::{menu, solidworks, window};
 use config::utils;
+use std::time::Duration;
+use std::time;
 use tauri::Manager;
 use std::collections::HashMap;
 use url::Url;
@@ -122,7 +124,7 @@ fn main() {
 
     tauri_plugin_deep_link::prepare("com.ONCHAIN.build");
 
-    builder.plugin(tauri_plugin_fs_watch::init())
+    builder.plugin(tauri_plugin_fs_watch::init()).plugin(tauri_plugin_drag::init())
         // .setup(move |app| {
         //     WindowBuilder::new(app, "main".to_string(), window_url)
         //       .title("Localhost Example")
@@ -136,6 +138,7 @@ fn main() {
             window::open_login,
             window::exist,
             window::drag_window,
+            window::close_splashscreen,
             window::open_info,
             window::open_attr_map,
             window::open_home,
@@ -165,8 +168,26 @@ fn main() {
             solidworks::call_dynamic // utils::get_data
         ])
         .setup(|app| {
-            let handle = app.handle();
             utils::set_window_shadow(app);
+            utils::set_splash_shadow(app);
+            let splashscreen_window = app.get_window("splashscreen").unwrap();
+            let main_window = app.get_window("Login").unwrap();
+            tauri::async_runtime::spawn(async move {
+                // initialize your app here instead of sleeping :)
+                println!("Initializing...");
+                //logger::console("Initializing...");
+                //RB.init(SqliteDriver{},"sqlite:vcluster.db").unwrap();
+                //util::init().await;
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                println!("Done initializing.");
+                //logger::console("Done initializing.");
+    
+                // After it's done, close the splashscreen and display the main window
+                thread::sleep(time::Duration::from_millis(1000));
+                splashscreen_window.close().unwrap();
+                main_window.show().unwrap();
+              });
+            let handle = app.handle();
             tauri_plugin_deep_link::register("onchain", move |request| {
                 // dbg!(&request);
                 // if let Ok(url) = Url::parse(&request) {

@@ -7,6 +7,7 @@ import PlmIcon from "../components/PlmIcon";
 import { OnChainSelect, OnChainTable } from "onchain-ui";
 import { FC, useEffect, useMemo, useState } from "react";
 import API from "../utils/api";
+import { startDrag } from "@crabnebula/tauri-plugin-drag";
 import { Input, message } from "antd";
 import { useSelector } from "react-redux";
 import { open } from "@tauri-apps/api/shell";
@@ -225,11 +226,12 @@ const query: FC = () => {
         // sorter: true,
         ellipsis: true,
         render: (data: string, record: Record<string, any>) => {
-          return <a onClick={() => {
+          return <div draggable onDragStart={() => {
+            // startDrag({ item: ['E:\\swmodel\\BZCP0119-M03超速空气罐\\模型\\支架.SLDPRT'], icon: '/logo2.svg' })
             open(
               `http://${network}/front/instance/${record.insId}/BasicAttrs`
             );
-          }}>{data}</a>;
+          }}>{data}</div>;
         },
       },
       {

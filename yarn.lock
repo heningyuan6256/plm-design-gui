@@ -543,6 +543,13 @@
     style-mod "^4.1.0"
     w3c-keyname "^2.2.4"
 
+"@crabnebula/tauri-plugin-drag@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.npmmirror.com/@crabnebula/tauri-plugin-drag/-/tauri-plugin-drag-0.3.1.tgz#b176461910e8e2fad5220fca0aae79f0ff553b72"
+  integrity sha512-GCJhlhzM/cEI5PSxE64pbysg8ghcnRDxXPNtGjCl2AiVFVuMwSrfCOc2BZbd/ALtuctxVjaSfrpScmcz5V4gmA==
+  dependencies:
+    "@tauri-apps/api" "^1.5.4"
+
 "@ctrl/tinycolor@^3.4.0", "@ctrl/tinycolor@^3.6.0":
   version "3.6.1"
   resolved "https://registry.yarnpkg.com/@ctrl/tinycolor/-/tinycolor-3.6.1.tgz#b6c75a56a1947cc916ea058772d666a2c8932f31"
@@ -1111,6 +1118,11 @@
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@tauri-apps/api/-/api-1.4.0.tgz#b4013ca3d17b853f7df29fe14079ebb4d52dbffa"
   integrity sha512-Jd6HPoTM1PZSFIzq7FB8VmMu3qSSyo/3lSwLpoapW+lQ41CL5Dow2KryLg+gyazA/58DRWI9vu/XpEeHK4uMdw==
+
+"@tauri-apps/api@^1.5.4":
+  version "1.6.0"
+  resolved "https://registry.npmmirror.com/@tauri-apps/api/-/api-1.6.0.tgz#745b7e4e26782c3b2ad9510d558fa5bb2cf29186"
+  integrity sha512-rqI++FWClU5I2UBp4HXFvl+sBWkdigBkxnpJDQUWttNyG7IZP4FwQGhTNL5EOw0vI8i6eSAJ5frLqO7n7jbJdg==
 
 "@tauri-apps/cli-darwin-arm64@1.4.0":
   version "1.4.0"
