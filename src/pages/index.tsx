@@ -2637,7 +2637,7 @@ const index = () => {
   // 获取工程图的地址
   const getDrwFileAddr = async ({ filterCenterData }: { filterCenterData: Record<string, any>[] }) => {
     const defaultSetting = await getDefaultSetting()
-    const drwFormat = defaultSetting?.drwFormat || []
+    const drwFormat = defaultSetting?.drwFormat || ''
     // 判断假如要工程图
     if (drwFormat) {
       const selected = await openDialog({
@@ -2647,9 +2647,16 @@ const index = () => {
         defaultPath: typeof leftData[0].file_path === 'string' ? leftData[0].file_path.substring(0, leftData[0].file_path.lastIndexOf("\\")) : '',
         title: '请选择要上传的工程图目录',
       });
+      console.log(selected,'selectedselected');
+      
       if (selected && typeof selected === 'string') {
-        const entryList = await readDir(selected, { recursive: true })
+        console.log('dir')
+        const entryList = await readDir(selected, { recursive: false })
+        console.log(entryList,'entryList');
+        
         const entryListMap = Utils.transformArrayToMap(entryList, 'name', 'path')
+        console.log(entryListMap,'entryListMap');
+        
         filterCenterData.forEach(item => {
           const fileNameWithFormat = getRowKey(item)
           const fileNameWithOutFormat = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
@@ -3588,6 +3595,7 @@ const index = () => {
                   } else {
                     try {
                       await getDrwFileAddr({ filterCenterData: fileSelectRows })
+                      console.log(fileSelectRows,'fileSelectRowsfileSelectRows')
                       batchUpdateData({ selectRows: fileSelectRows })
                     } catch (error) {
                       dispatch(setLoading(false))

@@ -490,7 +490,7 @@ export default function AttrMap() {
               <div style={{ width: '150px' }}>指定工程图格式:</div>
               <Select onChange={(e) => {
                 setFileAddress({ ...fileAddress, drwFormat: e })
-              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.drwFormat} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }]} size={'small'}></Select>
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.drwFormat} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }, { label: 'PRT', value: 'prt' }]} size={'small'}></Select>
             </div>
 {/* 
             <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
