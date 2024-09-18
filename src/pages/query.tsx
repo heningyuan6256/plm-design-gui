@@ -226,11 +226,13 @@ const query: FC = () => {
         // sorter: true,
         ellipsis: true,
         render: (data: string, record: Record<string, any>) => {
-          return <div draggable onDragStart={() => {
-            // startDrag({ item: ['E:\\swmodel\\BZCP0119-M03超速空气罐\\模型\\支架.SLDPRT'], icon: '/logo2.svg' })
+          return <div draggable
+           onClick={() => {
             open(
               `http://${network}/front/instance/${record.insId}/BasicAttrs`
             );
+          }} onDragStart={() => {
+            startDrag({ item: ['E:\\swmodel\\BZCP0119-M03超速空气罐\\模型\\支架.SLDPRT'], icon: '/logo2.svg' })
           }}>{data}</div>;
         },
       },
