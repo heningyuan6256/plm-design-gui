@@ -324,10 +324,22 @@ const API = {
     return NewRequest.post("/pdm/replace/save", data);
   },
   /**
+   * 实例红线页签的保存接口
+   */ 
+  insatnceProcessTabsave: (data: any) => {
+    return NewRequest.post("/pdm/inprocess/save", data);
+  },
+  /**
    * 实施页签查询
    */
   queryInstanceTab: (data: any) => {
     return NewRequest.post("/opendata/instance/tab", data);
+  },
+  /**
+   * 实施页签红线查询
+   */
+  queryInProcessInstanceTab: (data: any) => {
+    return NewRequest.post("/opendata/instance/inprocess/tab", data);
   },
   queryInsVersionOrder: (ids: string) => {
     return NewRequest.get("/pdm/ins/versions", { tenantId: "719", ids: ids });

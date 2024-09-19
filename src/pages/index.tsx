@@ -773,7 +773,7 @@ const index = () => {
             onChainAttrs.insId = rowData.insId;
             onChainAttrs.flag = "exist";
             onChainAttrs.inChange = !!rowData?.affectedIn;
-            onChainAttrs.insBom = rowData.insBom
+            onChainAttrs.insBom = rowData.insBom;
             onChainAttrs.itemCode = BasicsItemCode.file;
             totalAttrs
               .filter((attr: any) => attr.status)
@@ -819,7 +819,7 @@ const index = () => {
           onChainAttrs.insId = "";
           onChainAttrs.checkOut = "";
           onChainAttrs.inChange = false;
-          onChainAttrs.insBom = false
+          onChainAttrs.insBom = false;
           onChainAttrs.itemCode = BasicsItemCode.file;
           totalAttrs
             .filter((attr: any) => attr.status)
@@ -829,7 +829,7 @@ const index = () => {
             });
           materialOnChainAttrs.insId = "";
           materialOnChainAttrs.checkOut = "";
-          materialOnChainAttrs.insBom = false
+          materialOnChainAttrs.insBom = false;
           materialOnChainAttrs.flag = "add";
           materialOnChainAttrs.itemCode = BasicsItemCode.material;
           materialOnChainAttrs.inChange = false;
@@ -1082,38 +1082,36 @@ const index = () => {
       dispatch(setLoading(false));
       return;
     }
+    const changeInstance = await getChangeIns(row);
     // 判断当前文件是否签出
     if (judgeFileCheckout(row, isMaterial)) {
       if (isMaterial) {
-        await originCheckInMaterial(row);
+        await originCheckInMaterial(row, changeInstance);
       } else {
-        await originCheckIn(row);
+        await originCheckIn(row, changeInstance);
       }
-
       dispatch(setLoading(false));
     } else {
       dispatch(setLoading(true));
-
-      const changeInstance = await getChangeIns(row);
       await API.checkout({
         checkoutBy: user.id,
         insId: row.insId,
         insSize: String(row.FileSize),
         insName: row[isMaterial ? "material" : "file"].onChain.Description,
-        changeInsId: changeInstance.insId
+        changeInsId: changeInstance.insId,
       });
       const data = (isMaterial ? materialCenterData : centerData).find((item) => getRowKey(item) == getRowKey(row));
       if (!data) {
         return;
       }
-      const originOnChainData = data[isMaterial ? "material" : "file"].onChain
+      const originOnChainData = data[isMaterial ? "material" : "file"].onChain;
       originOnChainData.checkOut = true;
       originOnChainData.Revision = Utils.computedNextRevision(originOnChainData.Revision);
       originOnChainData.rowId = row.rowId;
       if (isMaterial) {
-        await originCheckInMaterial(data);
+        await originCheckInMaterial(data, changeInstance);
       } else {
-        await originCheckIn(data);
+        await originCheckIn(data, changeInstance);
       }
     }
   };
@@ -1155,25 +1153,59 @@ const index = () => {
   };
 
   /**查询实例指定页签的数据 */
-  const getInsTabData = async ({ row, tabCode }: { row: any; tabCode: string }) => {
+  const getInsTabData = async ({
+    row,
+    tabCode,
+    changeInstance = {},
+  }: {
+    row: any;
+    tabCode: string;
+    changeInstance: any;
+  }) => {
     let recordsData: any = [];
     const onChainMap = row[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain;
     try {
-      const {
-        result: { records },
-      }: any = await API.queryInstanceTab({
-        instanceId: onChainMap.insId,
-        itemCode: row.itemCode,
-        pageNo: "1",
-        pageSize: "10000",
-        tabCode: tabCode,
-        tabCodes: tabCode,
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-        version: row.Version,
-        versionOrder: onChainMap.Revision,
-      });
-      recordsData = records;
+      if (row.inChange) {
+        const {
+          result: { records = [] },
+        }: any = await API.queryInProcessInstanceTab({
+          pageNo: "1",
+          pageSize: "10000",
+          tabCode: tabCode,
+          tabCodes: tabCode,
+          tenantId: sse.tenantId || "719",
+          userId: user.id,
+          version: onChainMap.Version,
+          versionOrder: onChainMap.Revision,
+          id: changeInstance?.insId,
+          affectedInstanceIds: onChainMap.insId,
+          itemCode: changeInstance?.itemCode,
+          instanceId: changeInstance.id,
+        });
+        recordsData = records.map((v: any) => {
+          if (v.inProcess) {
+            return { ...v, ...v.inProcess };
+          } else {
+            return v;
+          }
+        });
+      } else {
+        const {
+          result: { records = [] },
+        }: any = await API.queryInstanceTab({
+          instanceId: onChainMap.insId,
+          itemCode: row.itemCode,
+          pageNo: "1",
+          pageSize: "10000",
+          tabCode: tabCode,
+          tabCodes: tabCode,
+          tenantId: sse.tenantId || "719",
+          userId: user.id,
+          version: onChainMap.Version,
+          versionOrder: onChainMap.Revision,
+        });
+        recordsData = records;
+      }
     } catch (error) {
       throw error;
     }
@@ -1185,10 +1217,12 @@ const index = () => {
     row,
     tabCode,
     OnChainRecords = [],
+    changeInstance = {},
   }: {
     row: any;
     tabCode: string;
     OnChainRecords: Record<string, any>[];
+    changeInstance: Record<string, any>;
   }) => {
     if (!row.insBom) {
       return;
@@ -1280,7 +1314,19 @@ const index = () => {
       console.log(deleteRows, "删除");
       console.warn(addRows, "更新");
       console.warn(updateRows, "删除");
-      await API.insatnceTabsave(params);
+
+      if (changeInstance?.insId) {
+        Object.assign(params, {
+          id: changeInstance?.insId,
+          affectedInstanceIds: onChainMap.insId,
+          tabCode: tabCode,
+          itemCode: changeInstance?.itemCode,
+          instanceId: changeInstance?.insId,
+        });
+        await API.insatnceProcessTabsave(params);
+      } else {
+        await API.insatnceTabsave(params);
+      }
     }
   };
 
@@ -1359,11 +1405,11 @@ const index = () => {
     }
   };
 
-  const originCheckIn = async (row: any) => {
+  const originCheckIn = async (row: any, changeInstance: any = {}) => {
     await updateCadAttr([row]);
     // 签入需要更新当前的附件，以及相对应的属性，以及结构
-    const records = await getInsTabData({ row, tabCode: "10002016" });
-    await updateTabData({ row, tabCode: "10002016", OnChainRecords: records });
+    const records = await getInsTabData({ row, tabCode: "10002016", changeInstance });
+    await updateTabData({ row, tabCode: "10002016", OnChainRecords: records, changeInstance });
 
     const nameFileUrlMap = await uploadFile([
       {
@@ -1441,20 +1487,19 @@ const index = () => {
         ]);
       });
     }
-    const changeInstance = await getChangeIns(row);
     await API.checkIn({
       insId: row.insId,
       insUrl: "",
       insSize: String(row.FileSize),
       insName: row.file.onChain.Description,
-      changeInsId: changeInstance.insId
+      changeInsId: changeInstance.insId,
     }).catch(() => {
       dispatch(setLoading(false));
     });
     setFileSelectRows([]);
     setMaterialSelectRows([]);
 
-    const recordsCopy = await getInsTabData({ row, tabCode: "10002009" });
+    const recordsCopy = await getInsTabData({ row, tabCode: "10002009",changeInstance });
 
     const revision = row.file.onChain.Revision.replace("(", "").replace(")", "");
 
@@ -1487,10 +1532,10 @@ const index = () => {
     dispatch(setLoading(false));
   };
 
-  const originCheckInMaterial = async (row: any) => {
+  const originCheckInMaterial = async (row: any, changeInstance: any = {}) => {
     // 签入需要更新当前的附件，以及相对应的属性，以及结构
-    const records = await getInsTabData({ row, tabCode: "10002003" });
-    await updateTabData({ row, tabCode: "10002003", OnChainRecords: records });
+    const records = await getInsTabData({ row, tabCode: "10002003",changeInstance });
+    await updateTabData({ row, tabCode: "10002003", OnChainRecords: records, changeInstance });
 
     //批量更新文件地址
     const updateInstance = {
@@ -1527,10 +1572,9 @@ const index = () => {
         },
       ]);
     });
-    const changeInstance = await getChangeIns(row);
     await API.checkIn({
       insId: row.insId,
-      changeInsId: changeInstance.insId
+      changeInsId: changeInstance.insId,
     });
     await updateSingleData(row, true);
     setFileSelectRows([]);
@@ -1555,10 +1599,11 @@ const index = () => {
       dispatch(setLoading(false));
       message.error("当前实例还未签出");
     } else {
+      const changeInstance = await getChangeIns(row);
       if (isMaterial) {
-        await originCheckInMaterial(row);
+        await originCheckInMaterial(row, changeInstance);
       } else {
-        await originCheckIn(row);
+        await originCheckIn(row, changeInstance);
       }
       dispatch(setLoading(true));
       mqttClient.publish({
@@ -2778,8 +2823,6 @@ const index = () => {
     });
 
     if (addAttachmentParams.length) {
-      console.log(addAttachmentParams, "addAttachmentParams");
-
       const attchmentResult = await API.addInstanceAttributeAttachment({
         tenantId: sse.tenantId || "719",
         instanceAttrVos: addAttachmentParams,
@@ -3462,62 +3505,6 @@ const index = () => {
     return columns;
   };
 
-  // 处理物料列头
-  // useAsyncEffect(async () => {
-  //   const codeList = materialAttrs
-  //     .filter((item) => item.listCode)
-  //     .map((item) => {
-  //       return {
-  //         code: item.listCode,
-  //         where: "",
-  //       };
-  //     });
-  //   if (codeList.length) {
-  //     API.getList(codeList).then((res: any) => {
-  //       const map: any = {};
-  //       const result = res.result || [];
-  //       result.forEach((item: { listItems: any; code: string }) => {
-  //         map[item.code] = Utils.adaptListItems(item.listItems) || [];
-  //       });
-  //       setMaterialColumn(generalDealAttrs(materialAttrs, map) || []);
-  //     });
-  //   } else {
-  //     setMaterialColumn(generalDealAttrs(materialAttrs, {}) || []);
-  //   }
-  // }, [materialAttrs]);
-
-  // // 处理文件列头
-  // useAsyncEffect(async () => {
-  //   // alternatively, load a remote URL:
-  //   const codeList = Attrs.filter((item) => item.listCode).map((item) => {
-  //     return {
-  //       code: item.listCode,
-  //       where: "",
-  //     };
-  //   });
-  //   if (codeList.length) {
-  //     API.getList(codeList).then((res: any) => {
-  //       const map: any = {};
-  //       const result = res.result || [];
-  //       result.forEach((item: { listItems: any; code: string }) => {
-  //         map[item.code] = Utils.adaptListItems(item.listItems) || [];
-  //       });
-  //       setFileColumn(generalDealAttrs(Attrs, map) || []);
-  //     });
-  //   } else {
-  //     setFileColumn(generalDealAttrs(Attrs, {}) || []);
-  //   }
-  // }, [Attrs]);
-
-  // const materialCenterData: any = useMemo(() => {
-  //   return centerData.map((item) => {
-  //     return {
-  //       ...item,
-  //       ...item.material.onChain
-  //     };
-  //   });
-  // }, [centerData]);
-
   const items: TabsProps["items"] = [
     {
       key: "file",
@@ -3702,29 +3689,6 @@ const index = () => {
                     }
                   },
                 },
-                // {
-                //   title: (
-                //     <div className="flex items-center justify-center">
-                //       <PlmIcon name="listphoto"></PlmIcon>
-                //     </div>
-                //   ),
-                //   dataIndex: "thumbnail",
-                //   // sorter: true,
-                //   width: 40,
-                //   fixed: true,
-                //   sort: true,
-                //   render: (text: string, record: any) => {
-                //     return (
-                //       <div className="flex items-center justify-center">
-                //         <Image
-                //           src={record.file.plugin.thumbnail}
-                //           width={32}
-                //           preview={false}
-                //         ></Image>
-                //       </div>
-                //     );
-                //   },
-                // },
                 {
                   title: "文件名称",
                   dataIndex: "node_name",
@@ -4109,28 +4073,6 @@ const index = () => {
                     }
                   },
                 },
-                // {
-                //   title: (
-                //     <div className="flex items-center justify-center">
-                //       <PlmIcon name="listphoto"></PlmIcon>
-                //     </div>
-                //   ),
-                //   dataIndex: "thumbnail",
-                //   // sorter: true,
-                //   width: 40,
-                //   fixed: true,
-                //   render: (text: string, record: any) => {
-                //     return (
-                //       <div className="flex items-center justify-center">
-                //         <Image
-                //           src={record.file.plugin.thumbnail}
-                //           width={32}
-                //           preview={false}
-                //         ></Image>
-                //       </div>
-                //     );
-                //   },
-                // },
                 {
                   title: "文件名称",
                   dataIndex: "node_name",
@@ -4144,55 +4086,6 @@ const index = () => {
                     return <div className="w-full overflow-hidden text-ellipsis">{record.file.plugin.Description}</div>;
                   },
                 },
-                // {
-                //   title: "编号",
-                //   dataIndex: "Number",
-                //   fixed: true,
-                //   // search: {
-                //   //   type: "Input",
-                //   // },
-                //   width: 100,
-                //   editable: true,
-                //   formitem: {
-                //     type: 'Input',
-                //     props: {}
-                //   },
-                //   // sorter: true,
-                //   render: (text: string, record: any) => {
-                //     if (record.flag === 'add') {
-                //       return <>{text}</>
-                //     }
-                //     return (
-                //       <a
-                //         onClick={async () => {
-                //           if (record.flag === "exist") {
-                //             await open(
-                //               `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
-                //             );
-                //           }
-                //         }}
-                //       >
-                //         {record.material.onChain.Number}
-                //       </a>
-                //     );
-                //   },
-                // },
-                // {
-                //   title: "版次",
-                //   dataIndex: "revision",
-                //   // sorter: true,
-                //   width: 100,
-                //   render: (text: string, record: any) => {
-                //     if(typeof record.Revision === 'string' && !readPermission(record.Revision)){
-                //       return <PlmMosaic></PlmMosaic>
-                //     }
-                //     if (record.flag == "exist") {
-                //       return record.Revision;
-                //     } else {
-                //       return <span>1</span>;
-                //     }
-                //   },
-                // },
                 ...materialColumn,
               ]}
               selectedCell={selectedCell}
