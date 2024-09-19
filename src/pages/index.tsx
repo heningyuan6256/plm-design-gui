@@ -1434,6 +1434,7 @@ const index = () => {
 
     const stepPathMap = await updoadAttachMent({ filterCenterData: [row] });
 
+    const updateRowList:any = [];
     const updateInstance = {
       id: row.file.onChain.insId,
       itemCode: BasicsItemCode.file,
@@ -1442,40 +1443,63 @@ const index = () => {
       insAttrs: Attrs.filter(
         (item) => item.status && ((item.readonly != "3" && item.readonly != "4") || item.apicode === "FileFormat")
       ).map((attr) => {
+        const generateAttr = {
+          id: attr.id,
+          valueType: attr.valueType,
+          title: attr.name,
+          controlled: attr.controlled,
+          apicode: attr.apicode,
+        };
         if (attr.apicode === "FileUrl") {
+          const value = `/plm/files${
+            nameFileUrlMap[getFileNameWithFormat(row)].response.uploadURL.split("/plm/files")[1]
+          }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${
+            row.file.plugin?.FileFormat
+          }${
+            ["nx", "zw"].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(row)]
+              ? `&modalUrl=${stepPathMap[getRowKey(row)]}`
+              : ""
+          }`;
+          updateRowList.push({ ...generateAttr, value: value });
           return {
             ...attr,
-            value: `/plm/files${
-              nameFileUrlMap[getFileNameWithFormat(row)].response.uploadURL.split("/plm/files")[1]
-            }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${
-              row.file.plugin?.FileFormat
-            }${
-              ["nx", "zw"].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(row)]
-                ? `&modalUrl=${stepPathMap[getRowKey(row)]}`
-                : ""
-            }`,
+            value: value,
           };
         } else if (attr.apicode === "Thumbnail") {
+          const value = `data:image/png;base64,${pic_base64}`
+          updateRowList.push({ ...generateAttr, value: value });
           return {
             ...attr,
-            value: `data:image/png;base64,${pic_base64}`,
+            value: value
           };
         } else {
+          const value = row[attr.apicode]
+          updateRowList.push({ ...generateAttr, value: value });
           return {
             ...attr,
-            value: row[attr.apicode],
+            value: value
           };
         }
       }),
       tenantId: sse.tenantId || "719",
     };
 
-    console.log(updateInstance, "updateInstanceupdateInstance");
+    console.log(updateInstance,updateRowList, "updateInstance");
 
     if (updateInstance.id) {
-      await API.singleUpdate(updateInstance).catch(() => {
-        dispatch(setLoading(false));
-      });
+      if (changeInstance.insId) {
+        await API.insatnceProcessTabsave({
+          id: changeInstance?.insId,
+          tabCode: '10002001',
+          updateRowList: updateRowList,
+          // rowId: props.instance.rowId,
+          affectedInstanceIds: row.file.onChain.insId,
+        });
+      } else {
+        await API.singleUpdate(updateInstance).catch(() => {
+          dispatch(setLoading(false));
+        });
+      }
       warpperSetLog(() => {
         setLogData([
           ...lastestLogData.current,
@@ -1499,7 +1523,7 @@ const index = () => {
     setFileSelectRows([]);
     setMaterialSelectRows([]);
 
-    const recordsCopy = await getInsTabData({ row, tabCode: "10002009",changeInstance });
+    const recordsCopy = await getInsTabData({ row, tabCode: "10002009", changeInstance });
 
     const revision = row.file.onChain.Revision.replace("(", "").replace(")", "");
 
@@ -1534,33 +1558,51 @@ const index = () => {
 
   const originCheckInMaterial = async (row: any, changeInstance: any = {}) => {
     // 签入需要更新当前的附件，以及相对应的属性，以及结构
-    const records = await getInsTabData({ row, tabCode: "10002003",changeInstance });
+    const records = await getInsTabData({ row, tabCode: "10002003", changeInstance });
     await updateTabData({ row, tabCode: "10002003", OnChainRecords: records, changeInstance });
 
+    const updateRowList:any = [];
     //批量更新文件地址
     const updateInstance = {
       id: row.material.onChain.insId,
       itemCode: BasicsItemCode.material,
       tabCode: "10002001",
-      // rowId: row.material.onChain.rowId,
-      // versionNumber: row.material.onChain.Version,
-      // versionOrder: row.material.onChain.Revision,
       insAttrs: materialAttrs
         .filter((item) => item.status && item.readonly != "3" && item.readonly != "4")
         .map((attr) => {
+          const value = row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode]
+          updateRowList.push({
+            id: attr.id,
+            valueType: attr.valueType,
+            title: attr.name,
+            controlled: attr.controlled,
+            apicode: attr.apicode,
+            value
+          })
           return {
             ...attr,
-            value: row.material.plugin[attr.apicode] || row.material.onChain[attr.apicode],
+            value: value,
           };
         }),
       tenantId: sse.tenantId || "719",
     };
-    console.log(updateInstance, "签出签入更新模型的属性");
 
     if (updateInstance.id) {
-      await API.singleUpdate(updateInstance).catch(() => {
-        dispatch(setLoading(false));
-      });
+      if(changeInstance.insId) {
+        await API.insatnceProcessTabsave({
+          id: changeInstance?.insId,
+          tabCode: '10002001',
+          updateRowList: updateRowList,
+          // rowId: props.instance.rowId,
+          affectedInstanceIds: row.material.onChain.insId,
+        }).catch(() => {
+          dispatch(setLoading(false));
+        });
+      } else {
+        await API.singleUpdate(updateInstance).catch(() => {
+          dispatch(setLoading(false));
+        });
+      }
     }
     warpperSetLog(() => {
       setLogData([
