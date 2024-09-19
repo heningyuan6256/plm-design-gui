@@ -2659,6 +2659,8 @@ const index = () => {
   const getDrwFileAddr = async ({ filterCenterData }: { filterCenterData: Record<string, any>[] }) => {
     const defaultSetting = await getDefaultSetting();
     const drwFormat = defaultSetting?.drwFormat || "";
+    const prefixDrwName = defaultSetting?.prefixDrwName || "";
+    const suffixDrwName = defaultSetting?.suffixDrwName || "";
     // 判断假如要工程图
     if (drwFormat) {
       const selected = await openDialog({
@@ -2685,8 +2687,8 @@ const index = () => {
           const fileNameWithFormat = getRowKey(item);
           const fileNameWithOutFormat = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf("."));
           item[`${drwFormat}_path`] =
-            entryListMap[`${fileNameWithOutFormat}.${drwFormat}`] ||
-            entryListMap[`${fileNameWithOutFormat}.${drwFormat.toUpperCase()}`];
+            entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat}`] ||
+            entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat.toUpperCase()}`];
         });
       }
     }
