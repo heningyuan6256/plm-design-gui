@@ -26,7 +26,7 @@ const API = {
    * 根据token获取用户信息
    * */
   getUserInfo: (params: Record<string, any>) => {
-    return NewRequest.get("/pdm/user/token", params)
+    return NewRequest.get("/pdm/user/token", params);
   },
 
   /**
@@ -60,14 +60,12 @@ const API = {
     return NewRequest.post("/opendata/findItemLibraryIns", data);
   },
 
-
   /**
- * 根据实例Id获取实例详情
- * */
+   * 根据实例Id获取实例详情
+   * */
   getInstanceInfoById: (data: Record<string, any>) => {
     return NewRequest.get("/opendata/instance", data).catch((e) => {
-      console.log(e,);
-
+      console.log(e);
     });
   },
 
@@ -89,8 +87,8 @@ const API = {
   },
 
   /**
-    * PDM搜索dsl
-    * */
+   * PDM搜索dsl
+   * */
   getPDMConditionDsl: (data: any) => {
     return NewRequest.post("/pdm/search/getSearchData", {
       ...data,
@@ -119,8 +117,8 @@ const API = {
   },
 
   /**
- * 获取Cad属性
- */
+   * 获取Cad属性
+   */
 
   getCadAttrs: (data: any) => {
     return NewRequest.get("/pdm/cad/attrs", {
@@ -130,28 +128,26 @@ const API = {
   },
 
   /**
-* 获取Cad属性
-*/
+   * 获取Cad属性
+   */
   getCadFormats: () => {
     return NewRequest.get("/pdm/config/formats", {
       tenantId: "719",
-      pageNo: '1',
-      pageSize: '500',
-      column: 'format'
+      pageNo: "1",
+      pageSize: "500",
+      column: "format",
     });
   },
 
   /**
-* 获取所有的格式
-*/
+   * 获取所有的格式
+   */
   getCadFormat: (data: any) => {
     return NewRequest.get("/pdm/cad/attrs", {
       tenantId: "719",
       ...data,
     });
   },
-
-
 
   /**
    * 塞入映射表
@@ -166,13 +162,7 @@ const API = {
   /**
    * 获取实例属性
    */
-  getInstanceAttrs: ({
-    itemCode,
-    tabCode,
-  }: {
-    itemCode: string;
-    tabCode: string;
-  }) => {
+  getInstanceAttrs: ({ itemCode, tabCode }: { itemCode: string; tabCode: string }) => {
     return NewRequest.get("/pdm/attributes", {
       tenantId: "719",
       pageNo: "1",
@@ -187,174 +177,226 @@ const API = {
   /**
    * 分配编码
    */
-  allcateCode: (data: {
-    numberOfItemCode: string;
-    fileTypeCountMap: Record<string, any>;
-  }) => {
+  allcateCode: (data: { numberOfItemCode: string; fileTypeCountMap: Record<string, any> }) => {
     return NewRequest.post("/pdm/cad/pre/numbers", data);
   },
 
   /**
- * 获取cad类型对应的文件
- */
+   * 获取cad类型对应的文件
+   */
   getAllCadFileTypeMap: () => {
-    return NewRequest.get("/pdm/cad/formats", { pageNo: '1', pageSize: '500' });
+    return NewRequest.get("/pdm/cad/formats", { pageNo: "1", pageSize: "500" });
   },
 
   /**
-* 下载文件
-*/
-  downloadFile: (url: string,) => {
+   * 下载文件
+   */
+  downloadFile: (url: string) => {
     return NewRequest.get(url, {}, { responseType: 3 });
   },
 
   /**
-  * 根据产品查询型谱
-  */
+   * 根据产品查询型谱
+   */
   getProductSpectrumList: (rootNodeId: string) => {
-    return NewRequest.get('/pdm/productSpectrumList/getList', { tenantId: '719', rootNodeId: rootNodeId });
+    return NewRequest.get("/pdm/productSpectrumList/getList", { tenantId: "719", rootNodeId: rootNodeId });
   },
 
   /**
-  * 批量创建实例
-  */
+   * 批量创建实例
+   */
   createInstances: (instances: any) => {
-    return NewRequest.post('/pdm/instances', { tenantId: '719', instances: instances });
+    return NewRequest.post("/pdm/instances", { tenantId: "719", instances: instances });
   },
 
   /**
- * 根据产品和文件名判断文件是否存在
- */
-  judgeFileExist: ({ productId, fileCheckList, userId, itemCodes }: { productId: string, fileCheckList: any[], userId: string, itemCodes: string[] }) => {
-    return NewRequest.post('/opendata/cad/exist/files', { tenantId: '719', productId: productId, fileCheckList: fileCheckList, userId: userId, itemCodes: itemCodes });
+   * 根据产品和文件名判断文件是否存在
+   */
+  judgeFileExist: ({
+    productId,
+    fileCheckList,
+    userId,
+    itemCodes,
+  }: {
+    productId: string;
+    fileCheckList: any[];
+    userId: string;
+    itemCodes: string[];
+  }) => {
+    return NewRequest.post("/opendata/cad/exist/files", {
+      tenantId: "719",
+      productId: productId,
+      fileCheckList: fileCheckList,
+      userId: userId,
+      itemCodes: itemCodes,
+    });
   },
   /**
-  * 取消签出
-  */
-  cancelCheckout: ({ insId }: { insId: string }) => {
-    return NewRequest.put('/pdm/affected/cancel/checkout', { tenantId: '719', insId: insId });
+   * 取消签出
+   */
+  cancelCheckout: ({ insId, changeInsId }: { insId: string; changeInsId?: string }) => {
+    return NewRequest.put("/pdm/affected/cancel/checkout", { tenantId: "719", insId, changeInsId });
   },
   /**
-  * 签出
-  */
-  checkout: ({ insId, insSize, insName, checkoutBy }: { insId: string, insSize: string, insName: string, checkoutBy: string }) => {
-    return NewRequest.put('/pdm/affected/checkout', { tenantId: '719', insId: insId, insSize: insSize, insName: insName, checkoutBy: checkoutBy });
+   * 签出
+   */
+  checkout: ({
+    insId,
+    insSize,
+    insName,
+    checkoutBy,
+    changeInsId,
+  }: {
+    changeInsId?: string;
+    insId: string;
+    insSize: string;
+    insName: string;
+    checkoutBy: string;
+  }) => {
+    return NewRequest.put("/pdm/affected/checkout", {
+      tenantId: "719",
+      insId: insId,
+      insSize: insSize,
+      insName: insName,
+      checkoutBy: checkoutBy,
+      changeInsId,
+    });
   },
   /**
-* 签入
-*/
-  checkIn: ({ insId, insSize, insName, insUrl }: { insId: string, insSize?: string, insName?: string, insUrl?: string }) => {
-    return NewRequest.put('/pdm/affected/checkin', insSize ? { tenantId: '719', insId: insId, insSize: insSize, insName: insName, insUrl: insUrl } : { tenantId: '719', insId: insId, });
+   * 签入
+   */
+  checkIn: ({
+    insId,
+    insSize,
+    insName,
+    insUrl,
+  }: {
+    insId: string;
+    insSize?: string;
+    insName?: string;
+    insUrl?: string;
+  }) => {
+    return NewRequest.put(
+      "/pdm/affected/checkin",
+      insSize
+        ? { tenantId: "719", insId: insId, insSize: insSize, insName: insName, insUrl: insUrl }
+        : { tenantId: "719", insId: insId }
+    );
   },
 
   /**
-* 批量修改
-*/
+   * 批量修改
+   */
   batchUpdate: (data: any) => {
-    return NewRequest.postPut('/pdm/instances', data);
+    return NewRequest.postPut("/pdm/instances", data);
   },
 
   /**
-* 单个修改
-*/
+   * 单个修改
+   */
   singleUpdate: (data: any) => {
-    return NewRequest.postPut('/pdm/instance', data);
+    return NewRequest.postPut("/pdm/instance", data);
   },
   /**
-  * 批量创建实例结构
-  */
+   * 批量创建实例结构
+   */
   batchCreateStructure: (data: any) => {
-    return NewRequest.postPut('/pdm/instances/tab', data);
+    return NewRequest.postPut("/pdm/instances/tab", data);
   },
   /**
-  * 根据文件类型判断所对应的物料的类型
-  */
+   * 根据文件类型判断所对应的物料的类型
+   */
   getMaterialTypeMap: (params: { itemCode: string }) => {
-    return NewRequest.get('/pdm/objects', { ...params, tenantId: '719', pageNo: '1', pageSize: '500' });
+    return NewRequest.get("/pdm/objects", { ...params, tenantId: "719", pageNo: "1", pageSize: "500" });
   },
   /**
-  * 绑定物料和设计文件
-  */
+   * 绑定物料和设计文件
+   */
   bindFileAndMaterial: (data: any) => {
-    return NewRequest.postPut('/pdm/instances/bind/files', data);
+    return NewRequest.postPut("/pdm/instances/bind/files", data);
   },
   /**
-  * 实例页签的保存接口
-  */
+   * 实例页签的保存接口
+   */
   insatnceTabsave: (data: any) => {
-    return NewRequest.post('/pdm/replace/save', data);
+    return NewRequest.post("/pdm/replace/save", data);
   },
   /**
-  * 实施页签查询
-  */
+   * 实施页签查询
+   */
   queryInstanceTab: (data: any) => {
-    return NewRequest.post('/opendata/instance/tab', data);
+    return NewRequest.post("/opendata/instance/tab", data);
   },
   queryInsVersionOrder: (ids: string) => {
-    return NewRequest.get('/pdm/ins/versions', { tenantId: '719', ids: ids })
+    return NewRequest.get("/pdm/ins/versions", { tenantId: "719", ids: ids });
   },
   /**
-  * 上传附件
-  */
+   * 上传附件
+   */
   addInstanceAttributeAttachment: (data: any) => {
-    return NewRequest.post('/pdm/attachment/batchImportInstanceAttributeAttachment', data)
+    return NewRequest.post("/pdm/attachment/batchImportInstanceAttributeAttachment", data);
   },
   /**
    * 发送消息
    */
   sendMessage: (cmd: string, to: string, userId: string, message: string) => {
     return new Promise(async (resolve, reject) => {
-      const formData = new FormData()
-      formData.append("cmd", cmd)
-      formData.append("to", to)
-      formData.append("userId", userId)
-      formData.append("message", message)
-      const { tenantId: tenantId } = await getUrl("/sse")
-      resolve(NewRequest.postFormData(`/event/send/${tenantId}`, formData))
-    })
+      const formData = new FormData();
+      formData.append("cmd", cmd);
+      formData.append("to", to);
+      formData.append("userId", userId);
+      formData.append("message", message);
+      const { tenantId: tenantId } = await getUrl("/sse");
+      resolve(NewRequest.postFormData(`/event/send/${tenantId}`, formData));
+    });
   },
   /**
-  * 获取聊天数据
-  */
-  getChatData: (data: {
-    parInsId: string,
-    pageNo: string,
-    pageSize: string
-  }) => {
-    return NewRequest.get('/pdm/cad/msgs', data)
+   * 获取聊天数据
+   */
+  getChatData: (data: { parInsId: string; pageNo: string; pageSize: string }) => {
+    return NewRequest.get("/pdm/cad/msgs", data);
   },
 
   /**
-  * 添加聊天消息
-  */
-  postMessageData: (data: {
-    createBy: string,
-    msgContent: string,
-    msgStatus: boolean,
-    parInsId: string
-  }[]) => {
-    return NewRequest.post('/pdm/cad/msg', data)
+   * 添加聊天消息
+   */
+  postMessageData: (
+    data: {
+      createBy: string;
+      msgContent: string;
+      msgStatus: boolean;
+      parInsId: string;
+    }[]
+  ) => {
+    return NewRequest.post("/pdm/cad/msg", data);
   },
 
   /**
-  * 已读聊天消息
-  */
+   * 已读聊天消息
+   */
   readMessageData: (ids: string) => {
-    return NewRequest.put('/pdm/cad/msgs', { ids: ids })
+    return NewRequest.put("/pdm/cad/msgs", { ids: ids });
   },
 
   /**
-  * 删除聊天消息
-  */
+   * 删除聊天消息
+   */
   delMessageData: (ids: string) => {
-    return NewRequest.delete('/pdm/cad/msgs', { ids: ids })
+    return NewRequest.delete("/pdm/cad/msgs", { ids: ids });
   },
 
   /**
-  * 
-  */
+   *
+   */
   checkAuth: (insId: string, itemCode: string, userId: string) => {
-    return NewRequest.get('/opendata/instance/btns', { instanceId: insId, module: "instance", tabCode: '10002002', itemCode: itemCode, tenantId: sse.tenantId, userId: userId })
+    return NewRequest.get("/opendata/instance/btns", {
+      instanceId: insId,
+      module: "instance",
+      tabCode: "10002002",
+      itemCode: itemCode,
+      tenantId: sse.tenantId,
+      userId: userId,
+    });
   },
 
   //  /**

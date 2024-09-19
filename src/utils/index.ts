@@ -462,4 +462,14 @@ export class Utils {
     fn(options);
     return valueLabel;
   };
+  // 动态计算版次
+  public static computedNextRevision = (revision: string) => {
+    revision = String(revision)
+    // 判断当前已经是签出状态了
+    if(/\(|\)/.test(revision)) {
+      return revision.replace(/\(|\)/g, "");
+    } else {
+      return String(Number(revision.replace(/\(|\)/g, "")) + 1)
+    }
+  }
 }
