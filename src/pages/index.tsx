@@ -585,11 +585,6 @@ const index = () => {
     return normalizedObj;
   }
 
-  // 访问对象时，将键转换为小写
-  function getCaseInsensitive(obj: Record<string, any>, key: string) {
-    return obj[key.toLowerCase()];
-  }
-
   const dealCurrentBom = async (res?: any) => {
     // 判断有额外的生成文件
     if ((res.input_data.transformer || []).length > 1) {
@@ -775,7 +770,6 @@ const index = () => {
         const fileNameWithFormat = getFileNameWithFormat(item);
         const onChainAttrs = InstanceAttrsMap[rowKey].file.onChain;
         const pluginAttrs = InstanceAttrsMap[rowKey].file.plugin;
-
         const materialOnChainAttrs = InstanceAttrsMap[rowKey].material.onChain;
         const materialPluginAttrs = InstanceAttrsMap[rowKey].material.plugin;
         // 为每一个赋值id属性
@@ -788,6 +782,8 @@ const index = () => {
             onChainAttrs.insId = rowData.insId;
             onChainAttrs.flag = "exist";
             onChainAttrs.inChange = !!rowData?.affectedIn;
+            onChainAttrs.insBom = rowData.insBom
+            onChainAttrs.itemCode = BasicsItemCode.file;
             totalAttrs
               .filter((attr: any) => attr.status)
               .forEach((attr: any) => {
@@ -801,6 +797,8 @@ const index = () => {
           if (materialData) {
             materialOnChainAttrs.insId = materialData.insId;
             materialOnChainAttrs.rowId = materialData.rowId;
+            materialOnChainAttrs.insBom = materialData.insBom;
+            materialOnChainAttrs.itemCode = BasicsItemCode.material;
             materialOnChainAttrs.checkOut = materialData.checkOut;
             materialOnChainAttrs.flag = "exist";
             materialOnChainAttrs.isStandardPart = materialData.standardPartId;
@@ -816,6 +814,8 @@ const index = () => {
             materialOnChainAttrs.flag = "add";
             materialOnChainAttrs.isStandardPart = "";
             materialOnChainAttrs.inChange = false;
+            materialOnChainAttrs.insBom = false;
+            materialOnChainAttrs.itemCode = BasicsItemCode.material;
             totalMaterialAttrs
               .filter((attr: any) => attr.status)
               .forEach((attr: any) => {
@@ -828,6 +828,8 @@ const index = () => {
           onChainAttrs.insId = "";
           onChainAttrs.checkOut = "";
           onChainAttrs.inChange = false;
+          onChainAttrs.insBom = false
+          onChainAttrs.itemCode = BasicsItemCode.file;
           totalAttrs
             .filter((attr: any) => attr.status)
             .forEach((attr: any) => {
@@ -836,7 +838,9 @@ const index = () => {
             });
           materialOnChainAttrs.insId = "";
           materialOnChainAttrs.checkOut = "";
+          materialOnChainAttrs.insBom = false
           materialOnChainAttrs.flag = "add";
+          materialOnChainAttrs.itemCode = BasicsItemCode.material;
           materialOnChainAttrs.inChange = false;
           materialOnChainAttrs.isStandardPart = false;
           materialOnChainAttrs.isStandardPart = "";
@@ -1098,27 +1102,23 @@ const index = () => {
       dispatch(setLoading(false));
     } else {
       dispatch(setLoading(true));
+
+      const changeInstance = await getChangeIns(row);
       await API.checkout({
         checkoutBy: user.id,
         insId: row.insId,
         insSize: String(row.FileSize),
         insName: row[isMaterial ? "material" : "file"].onChain.Description,
-      });
-      const res: any = await API.getInstanceInfoById({
-        instanceId: row.insId,
-        authType: "read",
-        tabCode: "10002001",
-        userId: user.id,
-        tenantId: sse.tenantId || "719",
+        changeInsId: changeInstance.insId
       });
       const data = (isMaterial ? materialCenterData : centerData).find((item) => getRowKey(item) == getRowKey(row));
       if (!data) {
         return;
       }
-      data[isMaterial ? "material" : "file"].onChain.checkOut = res.result.readInstanceVo.checkOut;
-      data[isMaterial ? "material" : "file"].onChain.Revision = res.result.readInstanceVo.insVersionOrder;
-      data[isMaterial ? "material" : "file"].onChain.rowId = res.result.readInstanceVo.rowId;
-
+      const originOnChainData = data[isMaterial ? "material" : "file"].onChain
+      originOnChainData.checkOut = true;
+      originOnChainData.Revision = Utils.computedNextRevision(originOnChainData.Revision);
+      originOnChainData.rowId = row.rowId;
       if (isMaterial) {
         await originCheckInMaterial(data);
       } else {
@@ -1144,6 +1144,7 @@ const index = () => {
     return authMap;
   };
 
+  /**查询文件的变更编号 */
   const getChangeIns = async (row: any) => {
     let changeIns: any;
     if (row.inChange) {
@@ -1160,6 +1161,136 @@ const index = () => {
       changeIns = readInstanceVo;
     }
     return changeIns;
+  };
+
+  /**查询实例指定页签的数据 */
+  const getInsTabData = async ({ row, tabCode }: { row: any; tabCode: string }) => {
+    let recordsData: any = [];
+    const onChainMap = row[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain;
+    try {
+      const {
+        result: { records },
+      }: any = await API.queryInstanceTab({
+        instanceId: onChainMap.insId,
+        itemCode: row.itemCode,
+        pageNo: "1",
+        pageSize: "10000",
+        tabCode: tabCode,
+        tabCodes: tabCode,
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+        version: row.Version,
+        versionOrder: onChainMap.Revision,
+      });
+      recordsData = records;
+    } catch (error) {
+      throw error;
+    }
+    return recordsData;
+  };
+
+  /**实例指定页签的数据 */
+  const updateTabData = async ({
+    row,
+    tabCode,
+    OnChainRecords = [],
+  }: {
+    row: any;
+    tabCode: string;
+    OnChainRecords: Record<string, any>[];
+  }) => {
+    if (!row.insBom) {
+      return;
+    }
+    const updateRecords = uniqBy(InstanceAttrsMap[getRowKey(row)].origin.children || [], (item) => {
+      return getRowKey(item);
+    }).filter((item: any) => {
+      return getRowKey(item) != getRowKey(row);
+    });
+    const onChainMap = row[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain;
+    // 获取页签属性
+    const {
+      result: { records: tabAttrs },
+    }: any = await API.getInstanceAttrs({
+      itemCode: row.itemCode,
+      tabCode: tabCode,
+    });
+
+    const OnChainRecordsMap = Utils.transformArrayToMap(OnChainRecords, "insId");
+
+    const rowKey = getRowKey(row);
+
+    const countMap = groupBy(InstanceAttrsMap[rowKey].origin.children || [], (item) => {
+      return getRowKey(item);
+    });
+
+    let deleteRows = [];
+    const updateRows: any = [];
+    const addRows: any = [];
+    const OnChainExistInsIdSets = new Set(Object.keys(OnChainRecordsMap));
+    const qtyAttr = tabAttrs.find((v: any) => v.apicode === "Qty");
+    updateRecords.forEach((item: any) => {
+      const newRowRecord = OnChainRecordsMap[item[ItemCode.isMaterial(row.itemCode) ? "material" : "file"]];
+      // 如果判断老的有值，则要判断是否有其他的属性变化
+      if (newRowRecord?.onChain?.insId) {
+        const OnChainRecordItem = OnChainRecordsMap[newRowRecord?.onChain?.insId];
+        // 判断老和新的数量不相等,则插入更新数据
+        if (countMap[getRowKey(item)].length != OnChainRecordItem?.attributes[qtyAttr.id]) {
+          updateRows.push({
+            rowId: OnChainRecordItem.rowId,
+            id: qtyAttr.id,
+            value: countMap[getRowKey(item)].length,
+            apicode: qtyAttr.apicode,
+            number: OnChainRecordItem.number,
+          });
+        }
+        OnChainExistInsIdSets.delete(newRowRecord?.onChain?.insId);
+      } else {
+        const setVal = (row: any, col: any) => {
+          if (col.apicode === "ID") {
+            return row[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain.insId;
+          } else if (col.apicode === "Qty") {
+            return countMap[getRowKey(row)].length || "";
+          } else {
+            return "";
+          }
+        };
+        addRows.push({
+          insAttrs: tabAttrs
+            .filter((attr: any) => {
+              return ["ID", "Qty"].includes(attr.apicode);
+            })
+            .map((attr: any) => {
+              return {
+                apicode: attr.apicode,
+                id: attr.id,
+                valueType: attr.valueType,
+                value: setVal(item, attr),
+              };
+            }),
+        });
+      }
+    });
+    const OnChainExistIns = Array.from(OnChainExistInsIdSets).map((item) => OnChainRecordsMap[item]);
+    deleteRows = OnChainExistIns || [];
+    if (deleteRows.length || addRows.length || updateRows.length) {
+      const params = {
+        id: onChainMap.insId,
+        itemCode: onChainMap.itemCode,
+        tabCode: tabCode,
+        deleteAffectedInstanceIds: deleteRows.length ? deleteRows.map((item: any) => item.insId).join(",") : "",
+        deleteRowIds: deleteRows.length ? deleteRows.map((item: any) => item.rowId).join(",") : "",
+        addRows,
+        updateRows,
+        tenantId: sse.tenantId || "719",
+        userId: user.id,
+        versionNumber: row.Version,
+      };
+      console.log(deleteRows, "删除");
+      console.warn(addRows, "更新");
+      console.warn(updateRows, "删除");
+      await API.insatnceTabsave(params);
+    }
   };
 
   // 按钮签出单独签出实例
@@ -1183,9 +1314,7 @@ const index = () => {
       dispatch(setLoading(false));
       return;
     }
-
     dispatch(setLoading(true));
-
     try {
       const changeInstance = await getChangeIns(row);
       await API.checkout({
@@ -1242,99 +1371,9 @@ const index = () => {
   const originCheckIn = async (row: any) => {
     await updateCadAttr([row]);
     // 签入需要更新当前的附件，以及相对应的属性，以及结构
-    const {
-      result: { records },
-    }: any = await API.queryInstanceTab({
-      instanceId: row.file.onChain.insId,
-      itemCode: BasicsItemCode.file,
-      pageNo: "1",
-      pageSize: "1000",
-      tabCode: "10002016",
-      tabCodes: "10002016",
-      tenantId: sse.tenantId || "719",
-      userId: user.id,
-      version: row.Version,
-      versionOrder: row.file.onChain.Revision,
-    });
-    console.log(records, "records");
+    const records = await getInsTabData({ row, tabCode: "10002016" });
+    await updateTabData({ row, tabCode: "10002016", OnChainRecords: records });
 
-    if ((records || []).length) {
-      const params = {
-        id: row.file.onChain.insId,
-        itemCode: BasicsItemCode.file,
-        tabCode: "10002016",
-        deleteAffectedInstanceIds: records.map((item: any) => item.insId).join(","),
-        deleteRowIds: records.map((item: any) => item.rowId),
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-        versionNumber: row.Version,
-      };
-      console.log(params, "删除结构参数");
-      const result = await API.insatnceTabsave(params);
-      console.log(result, "删除结构");
-    }
-    // //更新当前的第一级结构
-    const {
-      result: { records: tabAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.file,
-      tabCode: "10002016",
-    });
-
-    const rowKey = getRowKey(row);
-
-    const countMap = groupBy(InstanceAttrsMap[rowKey].origin.children || [], (item) => {
-      return getRowKey(item);
-    });
-
-    console.log(countMap, "countMap");
-
-    const setVal = (row: any, col: any) => {
-      if (col.apicode === "ID") {
-        return row.file.onChain.insId;
-      } else if (col.apicode === "Qty") {
-        console.log(row.file.plugin.Description, "");
-        return countMap[getRowKey(row)].length || "";
-      } else {
-        return "";
-      }
-    };
-
-    const flattenData = uniqBy(InstanceAttrsMap[getRowKey(row)].origin.children || [], (item) => {
-      return getRowKey(item);
-    }).filter((item: any) => {
-      return getRowKey(item) != getRowKey(row);
-    });
-
-    // 需要过滤掉所有的内部零件以及
-    const dealParams = flattenData.map((item: any) => {
-      return {
-        insAttrs: tabAttrs
-          .filter((attr: any) => {
-            return ["ID", "Qty"].includes(attr.apicode);
-          })
-          .map((attr: any) => {
-            return {
-              apicode: attr.apicode,
-              id: attr.id,
-              valueType: attr.valueType,
-              value: setVal(item, attr),
-            };
-          }),
-      };
-    });
-    console.log(dealParams, "dealParams");
-    if (dealParams.length) {
-      await API.insatnceTabsave({
-        itemCode: BasicsItemCode.file,
-        tabCode: "10002016",
-        rowList: dealParams,
-        id: row.file.onChain.insId,
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-        versionNumber: row.Version,
-      });
-    }
     const nameFileUrlMap = await uploadFile([
       {
         name: getFileNameWithFormat(row),
@@ -1411,32 +1450,20 @@ const index = () => {
         ]);
       });
     }
-
+    const changeInstance = await getChangeIns(row);
     await API.checkIn({
       insId: row.insId,
       insUrl: "",
       insSize: String(row.FileSize),
       insName: row.file.onChain.Description,
+      changeInsId: changeInstance.insId
     }).catch(() => {
       dispatch(setLoading(false));
     });
     setFileSelectRows([]);
     setMaterialSelectRows([]);
 
-    const {
-      result: { records: recordsCopy },
-    }: any = await API.queryInstanceTab({
-      instanceId: row.file.onChain.insId,
-      itemCode: BasicsItemCode.file,
-      pageNo: "1",
-      pageSize: "500",
-      tabCode: "10002009",
-      tabCodes: "10002009",
-      tenantId: sse.tenantId || "719",
-      userId: user.id,
-      // version: row.Version,
-      // versionOrder: row.file.onChain.Revision,
-    });
+    const recordsCopy = await getInsTabData({ row, tabCode: "10002009" });
 
     const revision = row.file.onChain.Revision.replace("(", "").replace(")", "");
 
@@ -1471,96 +1498,8 @@ const index = () => {
 
   const originCheckInMaterial = async (row: any) => {
     // 签入需要更新当前的附件，以及相对应的属性，以及结构
-    const {
-      result: { records },
-    }: any = await API.queryInstanceTab({
-      instanceId: row.material.onChain.insId,
-      itemCode: BasicsItemCode.material,
-      pageNo: "1",
-      pageSize: "500",
-      tabCode: "10002003",
-      tabCodes: "10002003",
-      tenantId: sse.tenantId || "719",
-      userId: user.id,
-      version: row.material.onChain.Version,
-      versionOrder: row.material.onChain.Revision,
-    });
-    console.log(records, "records");
-
-    if ((records || []).length) {
-      const params = {
-        id: row.material.onChain.insId,
-        itemCode: BasicsItemCode.material,
-        tabCode: "10002003",
-        deleteAffectedInstanceIds: records.map((item: any) => item.insId).join(","),
-        deleteRowIds: records.map((item: any) => item.rowId),
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-        versionNumber: row.material.onChain.Version,
-      };
-      console.log(params, "删除结构参数");
-      const result = await API.insatnceTabsave(params);
-      console.log(result, "删除结构");
-    }
-    // //更新当前的第一级结构
-    const {
-      result: { records: tabAttrs },
-    }: any = await API.getInstanceAttrs({
-      itemCode: BasicsItemCode.material,
-      tabCode: "10002003",
-    });
-
-    const rowKey = getRowKey(row);
-
-    const countMap = groupBy(InstanceAttrsMap[rowKey].origin.children || [], (item) => {
-      return getRowKey(item);
-    });
-
-    const setVal = (row: any, col: any) => {
-      if (col.apicode === "ID") {
-        return row.material.onChain.insId;
-      } else if (col.apicode === "Qty") {
-        return countMap[getRowKey(row)].length || "";
-      } else {
-        return "";
-      }
-    };
-
-    const flattenData = uniqBy(InstanceAttrsMap[getRowKey(row)].origin.children || [], (item) => {
-      return getRowKey(item);
-    }).filter((item: any) => {
-      return getRowKey(item) != getRowKey(row);
-    });
-
-    // 需要过滤掉所有的内部零件以及
-    const dealParams = flattenData.map((item: any) => {
-      return {
-        insAttrs: tabAttrs
-          .filter((attr: any) => {
-            return ["ID", "Qty"].includes(attr.apicode);
-          })
-          .map((attr: any) => {
-            return {
-              apicode: attr.apicode,
-              id: attr.id,
-              valueType: attr.valueType,
-              value: setVal(item, attr),
-            };
-          }),
-      };
-    });
-    console.log(dealParams, "dealParams");
-    if (dealParams.length) {
-      await API.insatnceTabsave({
-        itemCode: BasicsItemCode.material,
-        tabCode: "10002003",
-        rowList: dealParams,
-        id: row.material.onChain.insId,
-        tenantId: sse.tenantId || "719",
-        userId: user.id,
-        versionNumber: row.material.onChain.Version,
-      });
-    }
+    const records = await getInsTabData({ row, tabCode: "10002003" });
+    await updateTabData({ row, tabCode: "10002003", OnChainRecords: records });
 
     //批量更新文件地址
     const updateInstance = {
@@ -1587,7 +1526,6 @@ const index = () => {
         dispatch(setLoading(false));
       });
     }
-
     warpperSetLog(() => {
       setLogData([
         ...lastestLogData.current,
@@ -1598,13 +1536,14 @@ const index = () => {
         },
       ]);
     });
+    const changeInstance = await getChangeIns(row);
     await API.checkIn({
       insId: row.insId,
+      changeInsId: changeInstance.insId
     });
-
+    await updateSingleData(row, true);
     setFileSelectRows([]);
     setMaterialSelectRows([]);
-    await updateSingleData(row, true);
     dispatch(setLoading(false));
   };
 

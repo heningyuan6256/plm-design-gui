@@ -270,17 +270,19 @@ const API = {
     insSize,
     insName,
     insUrl,
+    changeInsId
   }: {
     insId: string;
     insSize?: string;
     insName?: string;
+    changeInsId?:string;
     insUrl?: string;
   }) => {
     return NewRequest.put(
       "/pdm/affected/checkin",
       insSize
-        ? { tenantId: "719", insId: insId, insSize: insSize, insName: insName, insUrl: insUrl }
-        : { tenantId: "719", insId: insId }
+        ? { tenantId: "719", insId: insId, insSize: insSize, insName: insName, insUrl: insUrl,changeInsId }
+        : { tenantId: "719", insId: insId,changeInsId }
     );
   },
 
