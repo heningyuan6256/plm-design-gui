@@ -2160,7 +2160,7 @@ const index = () => {
     const existNet = await exists(networkAddr)
     const networkAddress = existNet ? await readTextFile(networkAddr) : '';
 
-    let tusUrl = `${networkAddress}/files`
+    let tusUrl = `${networkAddress}/api/plm/files`
     // if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TusUrl) {
     //   tusUrl = INIData['ONCHAIN'].TusUrl
     // }

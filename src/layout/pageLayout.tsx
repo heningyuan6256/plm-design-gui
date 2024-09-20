@@ -185,7 +185,7 @@ export const openDesign = async ({
               console.log(v,v.attributes,'v.attributes')
               excutePromise.push(new Promise(async (resolve) => {
                 const response: any = await client.get(
-                  `http://${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
+                  `${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
                   {
                     // the expected response type
                     responseType: ResponseType.Binary,
@@ -224,7 +224,7 @@ export const openDesign = async ({
             const loop = async (data: any) => {
               for (let i = 0; i < data.length; i++) {
                 const response: any = await client.get(
-                  `http://${network}/api/plm${data[i].attributes[attrMap["FileUrl"]].split("/plm")[1]
+                  `${network}/api/plm${data[i].attributes[attrMap["FileUrl"]].split("/plm")[1]
                   }`,
                   {
                     // the expected response type
@@ -256,7 +256,7 @@ export const openDesign = async ({
                   excutePromise.push(new Promise(async (resolve) => {
                     console.log(v,v.attributes,'vvvv')
                     const response: any = await client.get(
-                      `http://${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
+                      `${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
                       {
                         // the expected response type
                         responseType: ResponseType.Binary,
