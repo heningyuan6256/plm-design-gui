@@ -2149,21 +2149,27 @@ const index = () => {
       debug: false,
       autoProceed: true,
     });
-    const path = await resolveResource('Config.ini')
+    // const path = await resolveResource('Config.ini')
 
-    const config = await readTextFile(path)
+    // const config = await readTextFile(path)
 
-    const INIData = Utils.parseINIString(config)
-    let tusUrl = BasicConfig.TusUrl
-    if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TusUrl) {
-      tusUrl = INIData['ONCHAIN'].TusUrl
-    }
+    // const INIData = Utils.parseINIString(config)
+    //@ts-ignore
+    const homeDirPath = await homeDir();
+    const networkAddr = `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
+    const existNet = await exists(networkAddr)
+    const networkAddress = existNet ? await readTextFile(networkAddr) : '';
+
+    let tusUrl = `${networkAddress}/files`
+    // if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TusUrl) {
+    //   tusUrl = INIData['ONCHAIN'].TusUrl
+    // }
 
     uppy
       .use(Tus, {
         endpoint: tusUrl,
         headers: {
-          // "Access-Control-Allow-Origin": "*"
+          "Access-Control-Allow-Origin": "*"
           // Authorization: `${StorageController.token.get()}`,
         },
         chunkSize: 1 * 1024 * 1024,
@@ -2638,6 +2644,8 @@ const index = () => {
   const getDrwFileAddr = async ({ filterCenterData }: { filterCenterData: Record<string, any>[] }) => {
     const defaultSetting = await getDefaultSetting()
     const drwFormat = defaultSetting?.drwFormat || ''
+    const suffixDrwName = defaultSetting?.suffixDrwName || ''
+    const prefixDrwName = defaultSetting?.prefixDrwName || ''
     // 判断假如要工程图
     if (drwFormat) {
       const selected = await openDialog({
@@ -2660,7 +2668,7 @@ const index = () => {
         filterCenterData.forEach(item => {
           const fileNameWithFormat = getRowKey(item)
           const fileNameWithOutFormat = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
-          item[`${drwFormat}_path`] = entryListMap[`${fileNameWithOutFormat}.${drwFormat}`] || entryListMap[`${fileNameWithOutFormat}.${drwFormat.toUpperCase()}`]
+          item[`${drwFormat}_path`] = entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat}`] || entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat.toUpperCase()}`]
         })
       }
     }
@@ -2699,7 +2707,10 @@ const index = () => {
       }
     }
 
-    if (partSaveas.length) {
+    console.log(transferNode,'要转成step的节点')
+    console.log(transformer,'要转换的格式')
+
+    if (partSaveas.length || mqttClient.publishTopic === 'nx' && transferNode.length) {
       const drwFileList = drwFormat && transformer.includes('pdf') ? filterCenterData.filter(item => item[`${drwFormat}_path`]).map(item => item[`${drwFormat}_path`]) : []
       console.log(drwFileList, 'drwFileList');
 
@@ -3367,7 +3378,7 @@ const index = () => {
                   <div className="text_line" onClick={async () => {
                     if (item.apicode === 'Number' && item.itemCode == 10001001) {
                       await open(
-                        `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                        `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
                       );
                     }
                   }}>
@@ -3414,7 +3425,7 @@ const index = () => {
                     <div className="text_line" onClick={async () => {
                       if (item.apicode === 'Number' && item.itemCode == 10001001) {
                         await open(
-                          `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                          `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
                         );
                       }
                     }}>
@@ -3435,7 +3446,7 @@ const index = () => {
                 <div onClick={async () => {
                   if (item.apicode === 'Number' && item.itemCode == 10001001) {
                     await open(
-                      `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                      `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
                     );
                   }
                 }}>
@@ -3455,7 +3466,7 @@ const index = () => {
                 <div onClick={async () => {
                   if (item.apicode === 'Number' && item.itemCode == 10001001) {
                     await open(
-                      `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                      `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
                     );
                   }
                 }}>
@@ -3854,7 +3865,7 @@ const index = () => {
                         onClick={async () => {
                           if (record.flag === "exist") {
                             await open(
-                              `http://${network}/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`
+                              `${network}/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`
                             );
                           }
                         }}
