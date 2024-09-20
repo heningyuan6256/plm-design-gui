@@ -47,7 +47,7 @@
           Value="x1gp6lk1ws008RRH+72fLgAAAAAAAAAAAAA=" 
         />
 
-        <IniFile
+        <!-- <IniFile
           Id="Ini5"
           Action="createLine"
           Directory="INSTALLDIR"
@@ -65,7 +65,7 @@
           Name="Config.ini"
           Key="TusUrl"
           Value="http://[IPPART1].[IPPART2].[IPPART3].[IPPART4]:1080/plm/files" 
-        />
+        /> -->
 
       </Component>
     </DirectoryRef>
@@ -79,14 +79,14 @@
     </Control>
 
     <!-- 服务器IP地址输入 -->
-    <Control Id="IPLabel" Type="Text" X="48" Y="30" Width="280" Height="16" Transparent="yes" Text="请输入服务器IP地址:" />
+    <!-- <Control Id="IPLabel" Type="Text" X="48" Y="30" Width="280" Height="16" Transparent="yes" Text="请输入服务器IP地址:" />
     <Control Id="IPPart1" Type="Edit" X="48" Y="50" Width="40" Height="18" Property="IPPART1" />
     <Control Id="Dot1" Type="Text" X="90" Y="50" Width="10" Height="18" Transparent="yes" Text="." />
     <Control Id="IPPart2" Type="Edit" X="100" Y="50" Width="40" Height="18" Property="IPPART2" />
     <Control Id="Dot2" Type="Text" X="142" Y="50" Width="10" Height="18" Transparent="yes" Text="." />
     <Control Id="IPPart3" Type="Edit" X="152" Y="50" Width="40" Height="18" Property="IPPART3" />
     <Control Id="Dot3" Type="Text" X="194" Y="50" Width="10" Height="18" Transparent="yes" Text="." />
-    <Control Id="IPPart4" Type="Edit" X="204" Y="50" Width="40" Height="18" Property="IPPART4" />
+    <Control Id="IPPart4" Type="Edit" X="204" Y="50" Width="40" Height="18" Property="IPPART4" /> -->
 
 
     <!-- 中间件IP地址输入 -->
@@ -104,10 +104,10 @@
               <Show Dialog="EnterIpDialog" Before="ProgressDlg">10</Show>
           </InstallUISequence>
       </UI>
-      <Property Id="IPPART1" Value="124" />
+      <!-- <Property Id="IPPART1" Value="124" />
         <Property Id="IPPART2" Value="71" />
         <Property Id="IPPART3" Value="151" />
-        <Property Id="IPPART4" Value="153" />
+        <Property Id="IPPART4" Value="153" /> -->
 
         <Property Id="IPPART5" Value="124" />
         <Property Id="IPPART6" Value="71" />
