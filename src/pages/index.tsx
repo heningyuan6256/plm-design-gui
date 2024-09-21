@@ -139,6 +139,7 @@ const index = () => {
   const location = useLocation();
   const [designData, setDesignData] = useState({});
   const [selectedCell, setSelectedCell] = useState<any>({});
+  const transferFilesMap = useRef<any>({})
 
   const selectedCellLatest = useLatest(selectedCell);
 
@@ -577,9 +578,29 @@ const index = () => {
   }
 
   const dealCurrentBom = async (res?: any) => {
+    const transformer = (res.input_data.transformer || []).filter((v:any) => v != 'image' && v != 'pdf')
     // 判断有额外的生成文件
     if ((res.input_data.transformer || []).length > 1) {
-      generateExtraFile.current = true;
+      const loop = (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          if(data[i].file_path) {
+            const rowKey = getRowKey(data[i]);
+            transformer.forEach((v:any) => {
+              if(data[i][`${v}_path`])
+              transferFilesMap.current[rowKey] = data[i][`${v}_path`]
+            })
+          }
+          
+          if (data[i].children && data[i].children.length) {
+            loop(data[i].children);
+          }
+        }
+      };
+      console.log(transferFilesMap.current,'transferFilesMap')
+
+      loop([res.output_data]);
+      
+      generateExtraFile.current = true
       warpperSetLog(() => {
         setLogData([
           ...lastestLogData.current,
@@ -2179,21 +2200,27 @@ const index = () => {
       debug: false,
       autoProceed: true,
     });
-    const path = await resolveResource("Config.ini");
+    // const path = await resolveResource('Config.ini')
 
-    const config = await readTextFile(path);
+    // const config = await readTextFile(path)
 
-    const INIData = Utils.parseINIString(config);
-    let tusUrl = BasicConfig.TusUrl;
-    if (INIData && INIData["ONCHAIN"] && INIData["ONCHAIN"].TusUrl) {
-      tusUrl = INIData["ONCHAIN"].TusUrl;
-    }
+    // const INIData = Utils.parseINIString(config)
+    //@ts-ignore
+    const homeDirPath = await homeDir();
+    const networkAddr = `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
+    const existNet = await exists(networkAddr)
+    const networkAddress = existNet ? await readTextFile(networkAddr) : '';
+
+    let tusUrl = `${networkAddress}/api/plm/files`
+    // if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TusUrl) {
+    //   tusUrl = INIData['ONCHAIN'].TusUrl
+    // }
 
     uppy
       .use(Tus, {
         endpoint: tusUrl,
         headers: {
-          // "Access-Control-Allow-Origin": "*"
+          "Access-Control-Allow-Origin": "*"
           // Authorization: `${StorageController.token.get()}`,
         },
         chunkSize: 1 * 1024 * 1024,
@@ -2632,12 +2659,9 @@ const index = () => {
   const judgeAttachExistPromise = (item: any, format: string, drwFormat: string) => {
     return new Promise(async (resolve) => {
       // pdf step dwg drw
-      const filePathWithOutFormat =
-        format === "pdf"
-          ? item[`${drwFormat}_path`]?.substring(0, item[`${drwFormat}_path`].lastIndexOf("."))
-          : item.file_path.substring(0, item.file_path.lastIndexOf("."));
-      const data_path = item[`${format}_path`] || `${filePathWithOutFormat}.${format}`;
-      const existFile = await exists(data_path);
+    const filePathWithOutFormat = format === 'pdf' ? item[`${drwFormat}_path`]?.substring(0, item[`${drwFormat}_path`].lastIndexOf('.')) : item.file_path.substring(0, item.file_path.lastIndexOf('.'))
+      const data_path = format === 'step' && transferFilesMap.current[getRowKey(item)] || item[`${format}_path`] || `${filePathWithOutFormat}.${format}`
+      const existFile = await exists(data_path)
       if (existFile) {
         item[`${format}_path`] = data_path;
         resolve(data_path);
@@ -2657,10 +2681,10 @@ const index = () => {
 
   // 获取工程图的地址
   const getDrwFileAddr = async ({ filterCenterData }: { filterCenterData: Record<string, any>[] }) => {
-    const defaultSetting = await getDefaultSetting();
-    const drwFormat = defaultSetting?.drwFormat || "";
-    const prefixDrwName = defaultSetting?.prefixDrwName || "";
-    const suffixDrwName = defaultSetting?.suffixDrwName || "";
+    const defaultSetting = await getDefaultSetting()
+    const drwFormat = defaultSetting?.drwFormat || ''
+    const suffixDrwName = defaultSetting?.suffixDrwName || ''
+    const prefixDrwName = defaultSetting?.prefixDrwName || ''
     // 判断假如要工程图
     if (drwFormat) {
       const selected = await openDialog({
@@ -2673,23 +2697,21 @@ const index = () => {
             : "",
         title: "请选择要上传的工程图目录",
       });
-      console.log(selected, "selectedselected");
-
-      if (selected && typeof selected === "string") {
-        console.log("dir");
-        const entryList = await readDir(selected, { recursive: false });
-        console.log(entryList, "entryList");
-
-        const entryListMap = Utils.transformArrayToMap(entryList, "name", "path");
-        console.log(entryListMap, "entryListMap");
-
-        filterCenterData.forEach((item) => {
-          const fileNameWithFormat = getRowKey(item);
-          const fileNameWithOutFormat = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf("."));
-          item[`${drwFormat}_path`] =
-            entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat}`] ||
-            entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat.toUpperCase()}`];
-        });
+      console.log(selected,'selectedselected');
+      
+      if (selected && typeof selected === 'string') {
+        console.log('dir')
+        const entryList = await readDir(selected, { recursive: false })
+        console.log(entryList,'entryList');
+        
+        const entryListMap = Utils.transformArrayToMap(entryList, 'name', 'path')
+        console.log(entryListMap,'entryListMap');
+        
+        filterCenterData.forEach(item => {
+          const fileNameWithFormat = getRowKey(item)
+          const fileNameWithOutFormat = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
+          item[`${drwFormat}_path`] = entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat}`] || entryListMap[`${prefixDrwName}${fileNameWithOutFormat}${suffixDrwName}.${drwFormat.toUpperCase()}`]
+        })
       }
     }
   };
@@ -2732,19 +2754,23 @@ const index = () => {
       }
     }
 
-    if (partSaveas.length) {
-      const drwFileList =
-        drwFormat && transformer.includes("pdf")
-          ? filterCenterData.filter((item) => item[`${drwFormat}_path`]).map((item) => item[`${drwFormat}_path`])
-          : [];
-      console.log(drwFileList, "drwFileList");
+    console.log(transferNode,'要转成step的节点')
+    console.log(transformer,'要转换的格式')
 
-      if (drwFileList.length && mqttClient.publishTopic === "sw") {
-        const command = Command.sidecar("binaries/swextension", ["-pdf", ...drwFileList], { encoding: "GBK" });
-        command.stdout.on("data", (line) => console.log(`command stdout: "${line}"`));
-        command.stderr.on("data", (line) => console.log(`command stderr: "${line}"`));
+    if (partSaveas.length || mqttClient.publishTopic === 'nx' && transferNode.length) {
+      const drwFileList = drwFormat && transformer.includes('pdf') ? filterCenterData.filter(item => item[`${drwFormat}_path`]).map(item => item[`${drwFormat}_path`]) : []
+      console.log(drwFileList, 'drwFileList');
 
-        await command.execute();
+      if (drwFileList.length && mqttClient.publishTopic === 'sw') {
+        const command = Command.sidecar(
+          "binaries/swextension",
+          ['-pdf',...drwFileList],
+          { encoding: "GBK" }
+        );
+        command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
+        command.stderr.on('data', line => console.log(`command stderr: "${line}"`));
+
+        await command.execute()
       }
 
       // 先判断是否有需要生成的文件
@@ -2787,6 +2813,7 @@ const index = () => {
     });
     await Promise.all(executePromiseArr);
 
+    console.log(filterCenterData,needUploadFormat,'needUploadFormatneedUploadFormat')
     for (let item of filterCenterData) {
       needUploadFormat.forEach((v: any) => {
         if (item[`${v}_path`]) {
@@ -3380,16 +3407,13 @@ const index = () => {
               // 如果判断设计工具的值为空，onChain有值则显示一条横杠线
               if (pluginValue == "" && onChainValue && readPermission(onChainValue)) {
                 return (
-                  <div
-                    className="text_line"
-                    onClick={async () => {
-                      if (item.apicode === "Number" && item.itemCode == 10001001) {
-                        await open(
-                          `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
-                        );
-                      }
-                    }}
-                  >
+                  <div className="text_line" onClick={async () => {
+                    if (item.apicode === 'Number' && item.itemCode == 10001001) {
+                      await open(
+                        `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                      );
+                    }
+                  }}>
                     {renderIsPlmMosaic({
                       value: onChainValue,
                       children: Utils.renderReadonlyItem({
@@ -3430,16 +3454,13 @@ const index = () => {
                         }),
                       })}
                     </div>
-                    <div
-                      className="text_line"
-                      onClick={async () => {
-                        if (item.apicode === "Number" && item.itemCode == 10001001) {
-                          await open(
-                            `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
-                          );
-                        }
-                      }}
-                    >
+                    <div className="text_line" onClick={async () => {
+                      if (item.apicode === 'Number' && item.itemCode == 10001001) {
+                        await open(
+                          `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                        );
+                      }
+                    }}>
                       {renderIsPlmMosaic({
                         value: onChainValue,
                         children: Utils.renderReadonlyItem({
@@ -3454,15 +3475,13 @@ const index = () => {
               }
 
               return (
-                <div
-                  onClick={async () => {
-                    if (item.apicode === "Number" && item.itemCode == 10001001) {
-                      await open(
-                        `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
-                      );
-                    }
-                  }}
-                >
+                <div onClick={async () => {
+                  if (item.apicode === 'Number' && item.itemCode == 10001001) {
+                    await open(
+                      `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                    );
+                  }
+                }}>
                   {renderIsPlmMosaic({
                     value: onChainValue,
                     children: Utils.renderReadonlyItem({
@@ -3475,15 +3494,13 @@ const index = () => {
               );
             } else {
               return (
-                <div
-                  onClick={async () => {
-                    if (item.apicode === "Number" && item.itemCode == 10001001) {
-                      await open(
-                        `http://${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
-                      );
-                    }
-                  }}
-                >
+                <div onClick={async () => {
+                  if (item.apicode === 'Number' && item.itemCode == 10001001) {
+                    await open(
+                      `${network}/front/product/${selectProduct}/product-data/instance/${record.material.onChain.insId}/BasicAttrs`
+                    );
+                  }
+                }}>
                   {renderIsPlmMosaic({
                     value: onChainValue,
                     children: Utils.renderReadonlyItem({
@@ -3768,7 +3785,7 @@ const index = () => {
                         onClick={async () => {
                           if (record.flag === "exist") {
                             await open(
-                              `http://${network}/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`
+                              `${network}/front/product/${selectProduct}/product-data/instance/${record.file.onChain.insId}/BasicAttrs`
                             );
                           }
                         }}

@@ -863,6 +863,19 @@ img {
   background: #ffffff !important;
 }
 
+.attr.ant-input.ant-input-disabled{
+  border: 1px solid #ecedf0 !important;
+  color: #B2B2B6 !important;
+  background: #ffffff !important;
+  padding: 0px 7px;
+  font-size: 12px !important;
+}
+.attr.ant-input{
+  height: 24px !important;
+  line-height: 24px !important;
+  font-size: 12px !important;
+}
+
 .anticon-caret-right,
 .anticon-caret-down,
 .anticon-caret-up {

@@ -229,7 +229,7 @@ const query: FC = () => {
           return <div draggable
            onClick={() => {
             open(
-              `http://${network}/front/instance/${record.insId}/BasicAttrs`
+              `${network}/front/instance/${record.insId}/BasicAttrs`
             );
           }} onDragStart={() => {
             startDrag({ item: ['E:\\swmodel\\BZCP0119-M03超速空气罐\\模型\\支架.SLDPRT'], icon: '/logo2.svg' })

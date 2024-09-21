@@ -1,7 +1,7 @@
 //  request.js
 import { http } from "@tauri-apps/api";
-import { readTextFile } from "@tauri-apps/api/fs";
-import { resolveResource } from "@tauri-apps/api/path";
+import { exists, readTextFile } from "@tauri-apps/api/fs";
+import { homeDir, resolveResource } from "@tauri-apps/api/path";
 import { Utils } from ".";
 import { BasicConfig } from "../constant/config";
 import { sse } from "./SSEService";
@@ -12,16 +12,21 @@ import { getCurrent } from "@tauri-apps/api/window";
 const noAuthMessage = '验证超时，请重新登陆！'
 
 export const getUrl = async (str: string) => {
-    const path = await resolveResource('Config.ini')
+    // const path = await resolveResource('Config.ini')
 
-    const config = await readTextFile(path)
+    // const config = await readTextFile(path)
 
-    const INIData = Utils.parseINIString(config)
-    let severUrl = BasicConfig.ServerUrl
+    // const INIData = Utils.parseINIString(config)
+    const homeDirPath = await homeDir();
+    const networkAddr = `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
+    const existNet = await exists(networkAddr)
+    const networkAddress = existNet ? await readTextFile(networkAddr) : '';
+    //@ts-ignore
+    let severUrl = `${networkAddress}/api/plm`
     let tenantId = sse.tenantId || BasicConfig.TenantId
-    if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].ServerUrl) {
-        severUrl = INIData['ONCHAIN'].ServerUrl
-    }
+    // if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].ServerUrl) {
+    //     severUrl = INIData['ONCHAIN'].ServerUrl
+    // }
     // if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].TenantId) {
     //     tenantId = INIData['ONCHAIN'].TenantId
     // }
@@ -53,7 +58,8 @@ class Request {
     }
 
     interceptors = {
-        baseURL: BasicConfig.ServerUrl,
+        //@ts-ignore
+        baseURL: window.onchain_network + '/api/plm',
         token: '',
         request: {
             headers: {

@@ -44,6 +44,16 @@ export default function login() {
       password: psw,
       userAgent: "OnChain-DesingFusion",
     };
+    const homeDirPath = await homeDir()
+    const dir = `${homeDirPath}/${BasicConfig.APPCacheFolder}`
+    await createDir(
+      `${dir}`,
+      { recursive: true }
+    )
+    await writeFile(
+      `${dir}/${BasicConfig.NetworkCache}`,
+      address
+    );
     API.login(user)
       .then(async (res: any) => {
         mqttClient.publish({
@@ -103,6 +113,10 @@ export default function login() {
           required: true,
           message: "地址不能为空",
         },
+        {
+          pattern: /^https?:\/\//,
+          message: '请以http或者https开头'
+        }
       ],
     },
     {

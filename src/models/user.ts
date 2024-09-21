@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import API from "../utils/api";
-import { readTextFile, writeFile } from "@tauri-apps/api/fs";
+import { exists, readTextFile, writeFile } from "@tauri-apps/api/fs";
 import { homeDir, resolveResource } from "@tauri-apps/api/path";
 import { BasicConfig } from "../constant/config";
 import { sse } from "../utils/SSEService";
@@ -18,16 +18,19 @@ export const fetchUserByToken = createAsyncThunk<any, string>(
       );
       sse.userId = response.result.id
       sse.token = token
-      const path = await resolveResource('Config.ini')
+      // const path = await resolveResource('Config.ini')
 
-      const config = await readTextFile(path)
-  
-      const INIData = Utils.parseINIString(config)
-      let severUrl = BasicConfig.ServerUrl
-      if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].ServerUrl) {
-          severUrl = INIData['ONCHAIN'].ServerUrl
-      }
-      const sseUrl = `${severUrl}/event/pull/${response.result.orgCode.split('-')[0]}/${response.result.id}`
+      // const config = await readTextFile(path)
+
+      // const INIData = Utils.parseINIString(config)
+      // let severUrl = BasicConfig.ServerUrl
+      // if (INIData && INIData['ONCHAIN'] && INIData['ONCHAIN'].ServerUrl) {
+      //     severUrl = INIData['ONCHAIN'].ServerUrl
+      // }
+      const networkAddr = `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.NetworkCache}`
+      const existNet = await exists(networkAddr)
+      const networkAddress = existNet ? await readTextFile(networkAddr) : '';
+      const sseUrl = `${networkAddress}/api/plm/event/pull/${response.result.orgCode.split('-')[0]}/${response.result.id}`
       sse.tenantId = response.result.orgCode.split('-')[0]
       sse.connect(sseUrl)
       return response.result;
@@ -57,8 +60,8 @@ export const userSlice = createSlice({
     // 并不是真正的改变状态值，因为它使用了 Immer 库
     // 可以检测到“草稿状态“ 的变化并且基于这些变化生产全新的
     // 不可变的状态
-    logIn: (state, action) => {},
-    logOut: (state) => {},
+    logIn: (state, action) => { },
+    logOut: (state) => { },
   },
   extraReducers: (builder) => {
     builder
