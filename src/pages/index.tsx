@@ -773,6 +773,8 @@ const index = () => {
         itemCodes: [BasicsItemCode.file],
         userId: user.id,
       });
+      console.log(judgeFileResult,'judgeFileResult');
+      
       const nameInstanceMap = Utils.transformArrayToMap(judgeFileResult.result || [], "seqId");
       const PromiseData: any[] = [];
       const PromiseImgData: any[] = [];
@@ -792,6 +794,7 @@ const index = () => {
             onChainAttrs.rowId = rowData.rowId;
             onChainAttrs.checkOut = rowData.checkOut;
             onChainAttrs.insId = rowData.insId;
+            onChainAttrs.insVersionUnbound = rowData.insVersionUnbound;
             onChainAttrs.flag = "exist";
             onChainAttrs.inChange = !!rowData?.affectedIn;
             onChainAttrs.insBom = rowData.insBom;
@@ -812,6 +815,7 @@ const index = () => {
             materialOnChainAttrs.insBom = materialData.insBom;
             materialOnChainAttrs.itemCode = BasicsItemCode.material;
             materialOnChainAttrs.checkOut = materialData.checkOut;
+            materialOnChainAttrs.insVersionUnbound = materialData.insVersionUnbound;
             materialOnChainAttrs.flag = "exist";
             materialOnChainAttrs.isStandardPart = materialData.standardPartId;
             materialOnChainAttrs.inChange = !!rowData?.affectedIn;
@@ -826,6 +830,7 @@ const index = () => {
             materialOnChainAttrs.flag = "add";
             materialOnChainAttrs.isStandardPart = "";
             materialOnChainAttrs.inChange = false;
+            materialOnChainAttrs.insVersionUnbound = ''
             materialOnChainAttrs.insBom = false;
             materialOnChainAttrs.itemCode = BasicsItemCode.material;
             totalMaterialAttrs
@@ -839,6 +844,7 @@ const index = () => {
           onChainAttrs.flag = "add";
           onChainAttrs.insId = "";
           onChainAttrs.checkOut = "";
+          onChainAttrs.insVersionUnbound = ''
           onChainAttrs.inChange = false;
           onChainAttrs.insBom = false;
           onChainAttrs.itemCode = BasicsItemCode.file;
@@ -851,6 +857,7 @@ const index = () => {
           materialOnChainAttrs.insId = "";
           materialOnChainAttrs.checkOut = "";
           materialOnChainAttrs.insBom = false;
+          materialOnChainAttrs.insVersionUnbound = ''
           materialOnChainAttrs.flag = "add";
           materialOnChainAttrs.itemCode = BasicsItemCode.material;
           materialOnChainAttrs.inChange = false;
@@ -1158,11 +1165,19 @@ const index = () => {
   const getChangeIns = async (row: any) => {
     let changeIns: any;
     if (row.inChange) {
-      const changeNumber = String(row.Version).split(" ")[1];
+      const {
+        result: {
+          [row?.insId]: { orderPreVersionMap,  },
+        },
+      }:any = await API.getInstanceVersion({ids: row.insId})
+      console.log(orderPreVersionMap,'orderVersionMap')
+
+      const changeNumber = String(orderPreVersionMap[row.Revision]).split(" ")[1];
+
       const {
         result: { readInstanceVo },
       }: any = await API.getInstanceInfoById({
-        Number: changeNumber,
+        number: changeNumber,
         authType: "read",
         tabCode: "10002001",
         userId: user.id,
@@ -1170,6 +1185,8 @@ const index = () => {
       });
       changeIns = readInstanceVo;
     }
+    console.log(changeIns,'changeIns');
+    
     return changeIns;
   };
 
@@ -1185,6 +1202,8 @@ const index = () => {
   }) => {
     let recordsData: any = [];
     const onChainMap = row[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain;
+    console.log(row,onChainMap,'onChainMap')
+
     try {
       if (row.inChange) {
         const {
@@ -1199,15 +1218,19 @@ const index = () => {
           version: onChainMap.Version,
           versionOrder: onChainMap.Revision,
           id: changeInstance?.insId,
-          affectedInstanceIds: onChainMap.insId,
+          affectInsId: onChainMap.insId,
           itemCode: changeInstance?.itemCode,
           instanceId: changeInstance.id,
         });
         recordsData = records.map((v: any) => {
-          if (v.inProcess) {
+          if(v.optType ==='none') {
+            return v
+          } else if(v.optType === 'update') {
+            return { ...v, ...v.inProcess };
+          } else if (v.optType === 'add') {
             return { ...v, ...v.inProcess };
           } else {
-            return v;
+            return v
           }
         });
       } else {
@@ -1276,32 +1299,34 @@ const index = () => {
     const OnChainExistInsIdSets = new Set(Object.keys(OnChainRecordsMap));
     const qtyAttr = tabAttrs.find((v: any) => v.apicode === "Qty");
     updateRecords.forEach((item: any) => {
-      const newRowRecord = OnChainRecordsMap[item[ItemCode.isMaterial(row.itemCode) ? "material" : "file"]];
+      const newRowRecord = OnChainRecordsMap[item[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain.insId];
+      console.log(item,newRowRecord,'newRowRecordnewRowRecord')
       // 如果判断老的有值，则要判断是否有其他的属性变化
-      if (newRowRecord?.onChain?.insId) {
-        const OnChainRecordItem = OnChainRecordsMap[newRowRecord?.onChain?.insId];
+      if (newRowRecord) {
+        // const OnChainRecordItem = OnChainRecordsMap[newRowRecord?.onChain?.insId];
         // 判断老和新的数量不相等,则插入更新数据
-        if (countMap[getRowKey(item)].length != OnChainRecordItem?.attributes[qtyAttr.id]) {
+        if (countMap[getRowKey(item)].length != newRowRecord?.attributes[qtyAttr.id]) {
           updateRows.push({
-            rowId: OnChainRecordItem.rowId,
+            rowId: newRowRecord.rowId,
             id: qtyAttr.id,
             value: countMap[getRowKey(item)].length,
             apicode: qtyAttr.apicode,
-            number: OnChainRecordItem.number,
+            number: newRowRecord.number,
           });
         }
-        OnChainExistInsIdSets.delete(newRowRecord?.onChain?.insId);
+        OnChainExistInsIdSets.delete(newRowRecord?.insId);
       } else {
-        const setVal = (row: any, col: any) => {
+        const setVal = (v: any, col: any) => {
           if (col.apicode === "ID") {
-            return row[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain.insId;
+            return v[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain.insId;
           } else if (col.apicode === "Qty") {
-            return countMap[getRowKey(row)].length || "";
+            return countMap[getRowKey(v)].length || "";
           } else {
             return "";
           }
         };
         addRows.push({
+          insId: item[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain.insId,
           insAttrs: tabAttrs
             .filter((attr: any) => {
               return ["ID", "Qty"].includes(attr.apicode);
@@ -1325,16 +1350,17 @@ const index = () => {
         itemCode: onChainMap.itemCode,
         tabCode: tabCode,
         deleteAffectedInstanceIds: deleteRows.length ? deleteRows.map((item: any) => item.insId).join(",") : "",
-        deleteRowIds: deleteRows.length ? deleteRows.map((item: any) => item.rowId).join(",") : "",
-        addRows,
-        updateRows,
+        affectedInstanceIds: addRows.length ? addRows.map((item: any) => item.insId).join(",") : "",
+        deleteRowIds: deleteRows.length ? deleteRows.map((item: any) => item.rowId): [],
+        rowList:addRows,
+        updateRowList:updateRows,
         tenantId: sse.tenantId || "719",
         userId: user.id,
         versionNumber: row.Version,
       };
       console.log(deleteRows, "删除");
-      console.warn(addRows, "更新");
-      console.warn(updateRows, "删除");
+      console.warn(addRows, "添加");
+      console.warn(updateRows, "更新");
 
       if (changeInstance?.insId) {
         Object.assign(params, {

@@ -45,11 +45,7 @@ export default function AttrMap() {
     sldasm: '',
     catpart: '',
     catproduct: '',
-<<<<<<< HEAD
     prefixDrwName: '',
-=======
-    prefixDrwName:'',
->>>>>>> master
     suffixDrwName: '',
     partSaveas: [],
     partUploads: [],
@@ -493,25 +489,10 @@ export default function AttrMap() {
 
             <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
               <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
-<<<<<<< HEAD
-              <div style={{ width: '150px' }}>工程图名称前缀:</div>
-              <Input onChange={(e) => {
-                setFileAddress({ ...fileAddress, prefixDrwName: e })
-              }} size={'small'}></Input>
-            </div>
-
-            <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
-              <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
-              <div style={{ width: '150px' }}>工程图名称后缀:</div>
-              <Input onChange={(e) => {
-                setFileAddress({ ...fileAddress, suffixDrwName: e })
-              }} size={'small'}></Input>
-=======
               <div style={{ width: '150px' }}>指定工程图格式:</div>
               <Select allowClear onChange={(e) => {
                 setFileAddress({ ...fileAddress, drwFormat: e })
               }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.drwFormat} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }, { label: 'PRT', value: 'prt' }]} size={'small'}></Select>
->>>>>>> master
             </div>
 
             <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>

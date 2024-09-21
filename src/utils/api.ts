@@ -69,6 +69,15 @@ const API = {
     });
   },
 
+   /**
+   * 查询实例的把呢不能
+   * */
+   getInstanceVersion: (data: Record<string, any>) => {
+    return NewRequest.get("/pdm/ins/versions", data).catch((e) => {
+      console.log(e);
+    });
+  },
+
   /**
    * 获取搜索页面左侧文件夹
    * */
