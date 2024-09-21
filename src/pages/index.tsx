@@ -1229,6 +1229,8 @@ const index = () => {
             return { ...v, ...v.inProcess };
           } else if (v.optType === 'add') {
             return { ...v, ...v.inProcess };
+          } else if (v.optType === 'replace') {
+            return { ...v, ...v.inProcess };
           } else {
             return v
           }
