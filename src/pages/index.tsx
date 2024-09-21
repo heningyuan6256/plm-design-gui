@@ -163,6 +163,7 @@ const index = () => {
   const location = useLocation();
   const [designData, setDesignData] = useState({});
   const [selectedCell, setSelectedCell] = useState<any>({});
+  const transferFilesMap = useRef<any>({})
 
   const selectedCellLatest = useLatest(selectedCell);
 
@@ -613,8 +614,28 @@ const index = () => {
 
 
   const dealCurrentBom = async (res?: any) => {
+    const transformer = (res.input_data.transformer || []).filter((v:any) => v != 'image' && v != 'pdf')
     // 判断有额外的生成文件
     if ((res.input_data.transformer || []).length > 1) {
+      const loop = (data: any) => {
+        for (let i = 0; i < data.length; i++) {
+          if(data[i].file_path) {
+            const rowKey = getRowKey(data[i]);
+            transformer.forEach((v:any) => {
+              if(data[i][`${v}_path`])
+              transferFilesMap.current[rowKey] = data[i][`${v}_path`]
+            })
+          }
+          
+          if (data[i].children && data[i].children.length) {
+            loop(data[i].children);
+          }
+        }
+      };
+      console.log(transferFilesMap.current,'transferFilesMap')
+
+      loop([res.output_data]);
+      
       generateExtraFile.current = true
       warpperSetLog(() => {
         setLogData([
@@ -2621,7 +2642,7 @@ const index = () => {
     return new Promise(async (resolve) => {
       // pdf step dwg drw
     const filePathWithOutFormat = format === 'pdf' ? item[`${drwFormat}_path`]?.substring(0, item[`${drwFormat}_path`].lastIndexOf('.')) : item.file_path.substring(0, item.file_path.lastIndexOf('.'))
-      const data_path = item[`${format}_path`] || `${filePathWithOutFormat}.${format}`
+      const data_path = format === 'step' && transferFilesMap.current[getRowKey(item)] || item[`${format}_path`] || `${filePathWithOutFormat}.${format}`
       const existFile = await exists(data_path)
       if (existFile) {
         item[`${format}_path`] = data_path
@@ -2763,6 +2784,7 @@ const index = () => {
     })
     await Promise.all(executePromiseArr)
 
+    console.log(filterCenterData,needUploadFormat,'needUploadFormatneedUploadFormat')
     for (let item of filterCenterData) {
       needUploadFormat.forEach((v: any) => {
         if (item[`${v}_path`]) {
