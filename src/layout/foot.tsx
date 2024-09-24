@@ -9,7 +9,7 @@ import userSvg from "../assets/image/user.svg";
 import { useSelector } from "react-redux";
 import { Dropdown, MenuProps } from "antd";
 import { mqttClient } from "../utils/MqttService";
-const defaultMap:any = {'sw': 'SolidWorks', 'catia': 'CATIA', 'nx': 'NX'}
+const defaultMap:any = {'sw': 'SolidWorks', 'catia': 'CATIA', 'nx': 'NX', 'zw3d':'ZW'}
 
 const Foot: FC = () => {
   const [pid, setPid] = useState(mqttClient.pid)
