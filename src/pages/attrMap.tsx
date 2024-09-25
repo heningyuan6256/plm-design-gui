@@ -492,13 +492,13 @@ export default function AttrMap() {
               <div style={{ width: '150px' }}>指定工程图格式:</div>
               <Select allowClear onChange={(e) => {
                 setFileAddress({ ...fileAddress, drwFormat: e })
-              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.drwFormat} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }, { label: 'PRT', value: 'prt' }]} size={'small'}></Select>
+              }} suffixIcon={<PlmIcon style={{ fontSize: '10px', scale: '0.5' }} name="dropdown"></PlmIcon>} className="attr" value={fileAddress.drwFormat} disabled={!isEdited} style={{ width: '440px' }} options={[{ label: 'DWG', value: 'dwg' }, { label: 'DRW', value: 'drw' }, { label: 'SLDDRW', value: 'slddrw' }, { label: 'PRT', value: 'prt' }, { label: 'Z3DRW', value: 'z3drw' }]} size={'small'}></Select>
             </div>
 
             <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
               <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
               <div style={{ width: '150px' }}>工程图名称前缀:</div>
-              <Input  className="attr" style={{ width: '440px' }} disabled={!isEdited} onChange={(e) => {
+              <Input value={fileAddress.prefixDrwName} className="attr" style={{ width: '440px' }} disabled={!isEdited} onChange={(e) => {
                 setFileAddress({ ...fileAddress, prefixDrwName: e.target.value })
               }} size={'small'}></Input>
             </div>
@@ -506,7 +506,7 @@ export default function AttrMap() {
             <div style={{ height: '40px', display: 'flex', alignItems: 'center' }}>
               <div className='h-3 bg-primary' style={{ width: '2px', marginRight: '6px' }}></div>
               <div style={{ width: '150px' }}>工程图名称后缀:</div>
-              <Input  className="attr" style={{ width: '440px' }} disabled={!isEdited} onChange={(e) => {
+              <Input value={fileAddress.suffixDrwName} className="attr" style={{ width: '440px' }} disabled={!isEdited} onChange={(e) => {
                 setFileAddress({ ...fileAddress, suffixDrwName: e.target.value })
               }} size={'small'}></Input>
             </div>

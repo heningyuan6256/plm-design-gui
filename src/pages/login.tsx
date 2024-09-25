@@ -182,6 +182,7 @@ export default function login() {
       const inputString = onchainUrl.match(regex);
       if (inputString) {
         let [matchUrl, address, token, itemCode, insId] = inputString
+        address = `http://${address}`
         token = decodeURIComponent(token)
         dispatch(writeNetWork(address));
         // 写入address

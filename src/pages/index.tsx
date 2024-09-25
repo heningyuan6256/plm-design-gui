@@ -1490,7 +1490,7 @@ const index = () => {
       tabCode: "10002001",
       // rowId: row.file.onChain.rowId,
       insAttrs: Attrs.filter(
-        (item) => item.status && ((item.readonly != "3" && item.readonly != "4") || item.apicode === "FileFormat")
+        (item) => item.status && ((item.readonly != "3" && item.readonly != "4") || item.apicode === 'Thumbnail'|| item.apicode === 'FileFormat' || item.apicode === 'FileUrl')
       ).map((attr) => {
         const generateAttr = {
           id: attr.id,
@@ -1505,7 +1505,7 @@ const index = () => {
           }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${
             row.file.plugin?.FileFormat
           }${
-            ["nx", "zw"].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(row)]
+            ["nx", "zw3d"].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(row)]
               ? `&modalUrl=${stepPathMap[getRowKey(row)]}`
               : ""
           }`;
@@ -2744,33 +2744,30 @@ const index = () => {
     }
   };
 
-  const updoadAttachMent = async ({
-    filterCenterData,
-    nameNumberMap,
-  }: {
-    filterCenterData: Record<string, any>[];
-    nameNumberMap?: Record<string, any>;
-  }) => {
-    const defaultSetting = await getDefaultSetting();
-    const partSaveas = defaultSetting?.partSaveas || [];
-    const drwFormat = defaultSetting?.drwFormat || "";
-    let transferNode = filterCenterData.map((item) => item.node_name);
-    let transformer = [...partSaveas, "image"];
+  const updoadAttachMent = async ({ filterCenterData, nameNumberMap }: { filterCenterData: Record<string, any>[], nameNumberMap?: Record<string, any> }) => {
+    console.log(filterCenterData,'filterCenterData');
+    
+    const defaultSetting = await getDefaultSetting()
+    const partSaveas = defaultSetting?.partSaveas || []
+    const drwFormat = defaultSetting?.drwFormat || ''
+    let transferNode = filterCenterData.map(item => item.node_name)
+    let transformer = [...partSaveas, 'image']
     // nx
     if (mqttClient.publishTopic === "nx") {
       // 1. 如果当前没有配置需要转换成step
       if (!transformer.includes("step")) {
         transformer = [...partSaveas, "image", "step"];
         // 只需要转装配体
-        transferNode = transferNode.filter((item) => item.children);
+        transferNode = filterCenterData.filter(item => InstanceAttrsMap[getRowKey(item)].origin.children && InstanceAttrsMap[getRowKey(item)].origin.children.length ).map(item => item.node_name)
       }
     }
 
     // 中望
-    if (mqttClient.publishTopic === "zw") {
+    if (mqttClient.publishTopic === 'zw3d') {
       // 1. 如果当前没有配置需要转换成step
       if (!transformer.includes("step")) {
-        transformer = [...partSaveas, "image", "step"];
+        transformer = [...partSaveas, 'image', 'step']
+        transferNode = filterCenterData.filter(item => item.children).map(item => item.node_name)
       }
     }
 
@@ -2835,15 +2832,16 @@ const index = () => {
     const needUploadFormat = defaultSetting?.partUploads || [];
 
     // 遍历所有的对象，判断下面是否有对应的文件，然后放入对象中
-    const executePromiseArr: any = [];
+    const finalNeedUploadFormat = ['nx','zw3d'].includes(mqttClient.publishTopic) ? ['step',...needUploadFormat]: needUploadFormat
+    const executePromiseArr: any = []
     filterCenterData.forEach((item: any) => {
-      needUploadFormat.forEach((v: any) => executePromiseArr.push(judgeAttachExistPromise(item, v, drwFormat)));
-    });
-    await Promise.all(executePromiseArr);
+      finalNeedUploadFormat.forEach((v: any) => executePromiseArr.push(judgeAttachExistPromise(item, v, drwFormat)))
+    })
+    await Promise.all(executePromiseArr)
 
     console.log(filterCenterData,needUploadFormat,'needUploadFormatneedUploadFormat')
     for (let item of filterCenterData) {
-      needUploadFormat.forEach((v: any) => {
+      finalNeedUploadFormat.forEach((v: any) => {
         if (item[`${v}_path`]) {
           FileArray.push(
             new Promise(async (resolve, reject) => {
@@ -2918,8 +2916,19 @@ const index = () => {
 
     const stepPathMap: Record<string, any> = {};
     filterCenterData.forEach((v) => {
-      stepPathMap[getRowKey(v)] = v.step_path ? v.step_path.split("/plm/files")[1] : "";
-    });
+      if(v.step_path) {
+        const nameWidthFormat = `${v[`step_path`].substring(
+          v[`step_path`].lastIndexOf("\\") + 1
+        )}`;
+        stepPathMap[getRowKey(v)] = nameFileUrlMap[nameWidthFormat] ? `${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
+            "/plm/files"
+          )[1]
+            }`: ''
+      }
+    })
+
+    console.log(stepPathMap,'stepPathMap');
+    
 
     if (addAttachmentParams.length) {
       const attchmentResult = await API.addInstanceAttributeAttachment({
@@ -3208,42 +3217,36 @@ const index = () => {
             Object.assign(nameThumbMap, localImageMap);
 
             //批量更新文件地址 如果shiprt每次更新文件地址的时候需要上传prt的地址到后面
-            const updateInstances = filterCenterData.map((item) => {
-              return {
-                id: nameNumberMap[getRowKey(item)]?.instanceId,
-                itemCode: BasicsItemCode.file,
-                tabCode: "10002001",
-                // rowId: nameNumberMap[getRowKey(item)]?.rowId,
-                insAttrs: Attrs.filter((attr) =>
-                  (mqttClient.publishTopic !== "Tribon" ? ["FileUrl", "Thumbnail"] : ["FileUrl"]).includes(attr.apicode)
-                ).map((attr) => {
-                  if (attr.apicode === "FileUrl") {
-                    return {
-                      ...attr,
-                      value:
-                        mqttClient.publishTopic !== "Tribon"
-                          ? `/plm/files${
-                              nameFileUrlMap[getFileNameWithFormat(item)].response.uploadURL.split("/plm/files")[1]
-                            }?name=${item.file.plugin?.fileNameWithFormat}&size=${
-                              item.file.plugin?.FileSize
-                            }&extension=${item.file.plugin?.FileFormat}${
-                              ["nx", "zw"].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(item)]
-                                ? `&modalUrl=${stepPathMap[getRowKey(item)]}`
-                                : ""
-                            }`
-                          : `/plm/files/ba8ad0cb2f63dbd396ab35de7e6738cb+528d612f-580e-44d5-9510-c11630179a5c?name=${item.file.plugin?.fileNameWithFormat}&size=10247&extension=pdf`,
-                    };
-                  } else {
-                    return {
-                      ...attr,
-                      value: `data:image/png;base64,${nameThumbMap[item.file_path]}`,
-                    };
-                  }
-                }),
-                tenantId: sse.tenantId || "719",
-              };
-            });
-            console.log(updateInstances, "updateInstances");
+            const updateInstances = filterCenterData
+              .map((item) => {
+                return {
+                  id: nameNumberMap[getRowKey(item)]?.instanceId,
+                  itemCode: BasicsItemCode.file,
+                  tabCode: "10002001",
+                  // rowId: nameNumberMap[getRowKey(item)]?.rowId,
+                  insAttrs: Attrs.filter((attr) =>
+                    (mqttClient.publishTopic !== 'Tribon' ? ["FileUrl", "Thumbnail"] : ['FileUrl']).includes(attr.apicode)
+                  ).map((attr) => {
+                    if (attr.apicode === "FileUrl") {
+                      return {
+                        ...attr,
+                        value: mqttClient.publishTopic !== 'Tribon' ? `/plm/files${nameFileUrlMap[
+                          getFileNameWithFormat(item)
+                        ].response.uploadURL.split("/plm/files")[1]
+                          }?name=${item.file.plugin?.fileNameWithFormat}&size=${item.file.plugin?.FileSize
+                          }&extension=${item.file.plugin?.FileFormat}${(['nx', 'zw3d'].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(item)]) ? `&modalUrl=${stepPathMap[getRowKey(item)]}` : ''}` : `/plm/files/ba8ad0cb2f63dbd396ab35de7e6738cb+528d612f-580e-44d5-9510-c11630179a5c?name=${item.file.plugin?.fileNameWithFormat}&size=10247&extension=pdf`,
+                      };
+                    } else {
+                      return {
+                        ...attr,
+                        value: `data:image/png;base64,${nameThumbMap[item.file_path]}`,
+                      };
+                    }
+                  }),
+                  tenantId: sse.tenantId || "719",
+                };
+              });
+            console.log(updateInstances, 'updateInstances');
 
             if (updateInstances.length) {
               await API.batchUpdate({
