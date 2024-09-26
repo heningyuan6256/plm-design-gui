@@ -578,28 +578,28 @@ const index = () => {
   }
 
   const dealCurrentBom = async (res?: any) => {
-    const transformer = (res.input_data.transformer || []).filter((v:any) => v != 'image' && v != 'pdf')
+    const transformer = (res.input_data.transformer || []).filter((v: any) => v != 'image' && v != 'pdf')
     // 判断有额外的生成文件
     if ((res.input_data.transformer || []).length > 1) {
       const loop = (data: any) => {
         for (let i = 0; i < data.length; i++) {
-          if(data[i].file_path) {
+          if (data[i].file_path) {
             const rowKey = getRowKey(data[i]);
-            transformer.forEach((v:any) => {
-              if(data[i][`${v}_path`])
-              transferFilesMap.current[rowKey] = data[i][`${v}_path`]
+            transformer.forEach((v: any) => {
+              if (data[i][`${v}_path`])
+                transferFilesMap.current[rowKey] = data[i][`${v}_path`]
             })
           }
-          
+
           if (data[i].children && data[i].children.length) {
             loop(data[i].children);
           }
         }
       };
-      console.log(transferFilesMap.current,'transferFilesMap')
+      console.log(transferFilesMap.current, 'transferFilesMap')
 
       loop([res.output_data]);
-      
+
       generateExtraFile.current = true
       warpperSetLog(() => {
         setLogData([
@@ -773,8 +773,8 @@ const index = () => {
         itemCodes: [BasicsItemCode.file],
         userId: user.id,
       });
-      console.log(judgeFileResult,'judgeFileResult');
-      
+      console.log(judgeFileResult, 'judgeFileResult');
+
       const nameInstanceMap = Utils.transformArrayToMap(judgeFileResult.result || [], "seqId");
       const PromiseData: any[] = [];
       const PromiseImgData: any[] = [];
@@ -878,9 +878,9 @@ const index = () => {
           new Promise((resolve, reject) => {
             item.file_path && mqttClient.publishTopic !== "Tribon"
               ? readBinaryFile(item.file_path).then((contents) => {
-                  pluginAttrs["FileSize"] = contents.length;
-                  resolve({});
-                })
+                pluginAttrs["FileSize"] = contents.length;
+                resolve({});
+              })
               : resolve({});
           })
         );
@@ -1167,10 +1167,10 @@ const index = () => {
     if (row.inChange) {
       const {
         result: {
-          [row?.insId]: { orderPreVersionMap,  },
+          [row?.insId]: { orderPreVersionMap, },
         },
-      }:any = await API.getInstanceVersion({ids: row.insId})
-      console.log(orderPreVersionMap,'orderVersionMap')
+      }: any = await API.getInstanceVersion({ ids: row.insId })
+      console.log(orderPreVersionMap, 'orderVersionMap')
 
       const changeNumber = String(orderPreVersionMap[row.Revision]).split(" ")[1];
 
@@ -1185,8 +1185,8 @@ const index = () => {
       });
       changeIns = readInstanceVo;
     }
-    console.log(changeIns,'changeIns');
-    
+    console.log(changeIns, 'changeIns');
+
     return changeIns;
   };
 
@@ -1202,7 +1202,7 @@ const index = () => {
   }) => {
     let recordsData: any = [];
     const onChainMap = row[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain;
-    console.log(row,onChainMap,'onChainMap')
+    console.log(row, onChainMap, 'onChainMap')
 
     try {
       if (row.inChange) {
@@ -1223,9 +1223,9 @@ const index = () => {
           instanceId: changeInstance.id,
         });
         recordsData = records.map((v: any) => {
-          if(v.optType ==='none') {
+          if (v.optType === 'none') {
             return v
-          } else if(v.optType === 'update') {
+          } else if (v.optType === 'update') {
             return { ...v, ...v.inProcess };
           } else if (v.optType === 'add') {
             return { ...v, ...v.inProcess };
@@ -1302,7 +1302,6 @@ const index = () => {
     const qtyAttr = tabAttrs.find((v: any) => v.apicode === "Qty");
     updateRecords.forEach((item: any) => {
       const newRowRecord = OnChainRecordsMap[item[ItemCode.isMaterial(row.itemCode) ? "material" : "file"].onChain.insId];
-      console.log(item,newRowRecord,'newRowRecordnewRowRecord')
       // 如果判断老的有值，则要判断是否有其他的属性变化
       if (newRowRecord) {
         // const OnChainRecordItem = OnChainRecordsMap[newRowRecord?.onChain?.insId];
@@ -1353,9 +1352,9 @@ const index = () => {
         tabCode: tabCode,
         deleteAffectedInstanceIds: deleteRows.length ? deleteRows.map((item: any) => item.insId).join(",") : "",
         affectedInstanceIds: addRows.length ? addRows.map((item: any) => item.insId).join(",") : "",
-        deleteRowIds: deleteRows.length ? deleteRows.map((item: any) => item.rowId): [],
-        rowList:addRows,
-        updateRowList:updateRows,
+        deleteRowIds: deleteRows.length ? deleteRows.map((item: any) => item.rowId) : [],
+        rowList: addRows,
+        updateRowList: updateRows,
         tenantId: sse.tenantId || "719",
         userId: user.id,
         versionNumber: row.Version,
@@ -1483,14 +1482,14 @@ const index = () => {
 
     const stepPathMap = await updoadAttachMent({ filterCenterData: [row] });
 
-    const updateRowList:any = [];
+    const updateRowList: any = [];
     const updateInstance = {
       id: row.file.onChain.insId,
       itemCode: BasicsItemCode.file,
       tabCode: "10002001",
       // rowId: row.file.onChain.rowId,
       insAttrs: Attrs.filter(
-        (item) => item.status && ((item.readonly != "3" && item.readonly != "4") || item.apicode === 'Thumbnail'|| item.apicode === 'FileFormat' || item.apicode === 'FileUrl')
+        (item) => item.status && ((item.readonly != "3" && item.readonly != "4") || item.apicode === 'Thumbnail' || item.apicode === 'FileFormat' || item.apicode === 'FileUrl')
       ).map((attr) => {
         const generateAttr = {
           id: attr.id,
@@ -1500,15 +1499,12 @@ const index = () => {
           apicode: attr.apicode,
         };
         if (attr.apicode === "FileUrl") {
-          const value = `/plm/files${
-            nameFileUrlMap[getFileNameWithFormat(row)].response.uploadURL.split("/plm/files")[1]
-          }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${
-            row.file.plugin?.FileFormat
-          }${
-            ["nx", "zw3d"].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(row)]
+          const value = `/plm/files${nameFileUrlMap[getFileNameWithFormat(row)].response.uploadURL.split("/plm/files")[1]
+            }?name=${row.file.plugin?.fileNameWithFormat}&size=${row.file.plugin?.FileSize}&extension=${row.file.plugin?.FileFormat
+            }${["nx", "zw3d"].includes(mqttClient.publishTopic) && stepPathMap[getRowKey(row)]
               ? `&modalUrl=${stepPathMap[getRowKey(row)]}`
               : ""
-          }`;
+            }`;
           updateRowList.push({ ...generateAttr, value: value });
           return {
             ...attr,
@@ -1533,7 +1529,7 @@ const index = () => {
       tenantId: sse.tenantId || "719",
     };
 
-    console.log(updateInstance,updateRowList, "updateInstance");
+    console.log(updateInstance, updateRowList, "updateInstance");
 
     if (updateInstance.id) {
       if (changeInstance.insId) {
@@ -1610,7 +1606,7 @@ const index = () => {
     const records = await getInsTabData({ row, tabCode: "10002003", changeInstance });
     await updateTabData({ row, tabCode: "10002003", OnChainRecords: records, changeInstance });
 
-    const updateRowList:any = [];
+    const updateRowList: any = [];
     //批量更新文件地址
     const updateInstance = {
       id: row.material.onChain.insId,
@@ -1637,7 +1633,7 @@ const index = () => {
     };
 
     if (updateInstance.id) {
-      if(changeInstance.insId) {
+      if (changeInstance.insId) {
         await API.insatnceProcessTabsave({
           id: changeInstance?.insId,
           tabCode: '10002001',
@@ -2118,10 +2114,12 @@ const index = () => {
     nameNumberMap,
     itemCode,
     tabCode,
+    tree
   }: {
     nameNumberMap?: any;
     itemCode: string;
     tabCode: string;
+    tree: Record<string, any>[]
   }) => {
     // // 批量创建文件结构
     // // 查找公有属性
@@ -2132,7 +2130,7 @@ const index = () => {
       tabCode: tabCode,
     });
     const structureAttrsMap = Utils.transformArrayToMap(structureAttrs, "apicode", "id");
-    const structureData = cloneDeep(leftData);
+    const structureData = cloneDeep(tree);
 
     // 复写获取rowkey的方法
     const getRowKeyOverWrite = (data: any) => {
@@ -2309,9 +2307,8 @@ const index = () => {
         } else if (col.apicode === "Product") {
           return selectProduct;
         } else if (col.apicode === "FileUrl") {
-          return `/plm/files${nameFileUrlMap[row.name].response.uploadURL.split("/plm/files")[1]}?name=${
-            row.name
-          }&size=${row.size}&extension=${row.name.substring(row.name.lastIndexOf(".") + 1)}`;
+          return `/plm/files${nameFileUrlMap[row.name].response.uploadURL.split("/plm/files")[1]}?name=${row.name
+            }&size=${row.size}&extension=${row.name.substring(row.name.lastIndexOf(".") + 1)}`;
         } else if (col.apicode === "Thumbnail") {
           return "";
         } else if (col.apicode === "FileFormat") {
@@ -2687,7 +2684,7 @@ const index = () => {
   const judgeAttachExistPromise = (item: any, format: string, drwFormat: string) => {
     return new Promise(async (resolve) => {
       // pdf step dwg drw
-    const filePathWithOutFormat = format === 'pdf' ? item[`${drwFormat}_path`]?.substring(0, item[`${drwFormat}_path`].lastIndexOf('.')) : item.file_path.substring(0, item.file_path.lastIndexOf('.'))
+      const filePathWithOutFormat = format === 'pdf' ? item[`${drwFormat}_path`]?.substring(0, item[`${drwFormat}_path`].lastIndexOf('.')) : item.file_path.substring(0, item.file_path.lastIndexOf('.'))
       const data_path = format === 'step' && transferFilesMap.current[getRowKey(item)] || item[`${format}_path`] || `${filePathWithOutFormat}.${format}`
       const existFile = await exists(data_path)
       if (existFile) {
@@ -2707,6 +2704,38 @@ const index = () => {
     });
   };
 
+  /**
+  * 
+  * @param nodes 
+  * @param ids 
+  * @returns 
+  */
+  function filterTreeByIds(nodes: Record<string, any>, ids: any[]) {
+    return nodes
+      .map((node: any) => {
+        // 递归筛选子节点
+        let filteredChildren = [];
+        if (node.children && node.children.length > 0) {
+          filteredChildren = filterTreeByIds(node.children, ids);
+        }
+
+        // 如果当前节点在筛选的id数组中，或其子节点符合条件，保留该节点
+        if (ids.includes(getRowKey(node))) {
+          return { ...node };
+        }
+
+        // 如果当前节点不符合条件，但其子节点符合条件，直接返回子节点（移除父节点）
+        if (filteredChildren.length > 0) {
+          return filteredChildren;
+        }
+
+        // 否则，返回null（即不保留此节点）
+        return null;
+      })
+      .flat()  // 展开多层嵌套的数组结构
+      .filter(Boolean); // 过滤掉null节点
+  }
+
   // 获取工程图的地址
   const getDrwFileAddr = async ({ filterCenterData }: { filterCenterData: Record<string, any>[] }) => {
     const defaultSetting = await getDefaultSetting()
@@ -2725,16 +2754,16 @@ const index = () => {
             : "",
         title: "请选择要上传的工程图目录",
       });
-      console.log(selected,'selectedselected');
-      
+      console.log(selected, 'selectedselected');
+
       if (selected && typeof selected === 'string') {
         console.log('dir')
         const entryList = await readDir(selected, { recursive: false })
-        console.log(entryList,'entryList');
-        
+        console.log(entryList, 'entryList');
+
         const entryListMap = Utils.transformArrayToMap(entryList, 'name', 'path')
-        console.log(entryListMap,'entryListMap');
-        
+        console.log(entryListMap, 'entryListMap');
+
         filterCenterData.forEach(item => {
           const fileNameWithFormat = getRowKey(item)
           const fileNameWithOutFormat = fileNameWithFormat.substring(0, fileNameWithFormat.lastIndexOf('.'))
@@ -2745,8 +2774,8 @@ const index = () => {
   };
 
   const updoadAttachMent = async ({ filterCenterData, nameNumberMap }: { filterCenterData: Record<string, any>[], nameNumberMap?: Record<string, any> }) => {
-    console.log(filterCenterData,'filterCenterData');
-    
+    console.log(filterCenterData, 'filterCenterData');
+
     const defaultSetting = await getDefaultSetting()
     const partSaveas = defaultSetting?.partSaveas || []
     const drwFormat = defaultSetting?.drwFormat || ''
@@ -2758,7 +2787,7 @@ const index = () => {
       if (!transformer.includes("step")) {
         transformer = [...partSaveas, "image", "step"];
         // 只需要转装配体
-        transferNode = filterCenterData.filter(item => InstanceAttrsMap[getRowKey(item)].origin.children && InstanceAttrsMap[getRowKey(item)].origin.children.length ).map(item => item.node_name)
+        transferNode = filterCenterData.filter(item => InstanceAttrsMap[getRowKey(item)].origin.children && InstanceAttrsMap[getRowKey(item)].origin.children.length).map(item => item.node_name)
       }
     }
 
@@ -2779,8 +2808,8 @@ const index = () => {
       }
     }
 
-    console.log(transferNode,'要转成step的节点')
-    console.log(transformer,'要转换的格式')
+    console.log(transferNode, '要转成step的节点')
+    console.log(transformer, '要转换的格式')
 
     if (partSaveas.length || mqttClient.publishTopic === 'nx' && transferNode.length) {
       const drwFileList = drwFormat && transformer.includes('pdf') ? filterCenterData.filter(item => item[`${drwFormat}_path`]).map(item => item[`${drwFormat}_path`]) : []
@@ -2789,7 +2818,7 @@ const index = () => {
       if (drwFileList.length && mqttClient.publishTopic === 'sw') {
         const command = Command.sidecar(
           "binaries/swextension",
-          ['-pdf',...drwFileList],
+          ['-pdf', ...drwFileList],
           { encoding: "GBK" }
         );
         command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
@@ -2832,14 +2861,14 @@ const index = () => {
     const needUploadFormat = defaultSetting?.partUploads || [];
 
     // 遍历所有的对象，判断下面是否有对应的文件，然后放入对象中
-    const finalNeedUploadFormat = ['nx','zw3d'].includes(mqttClient.publishTopic) ? ['step',...needUploadFormat]: needUploadFormat
+    const finalNeedUploadFormat = ['nx', 'zw3d'].includes(mqttClient.publishTopic) ? ['step', ...needUploadFormat] : needUploadFormat
     const executePromiseArr: any = []
     filterCenterData.forEach((item: any) => {
       finalNeedUploadFormat.forEach((v: any) => executePromiseArr.push(judgeAttachExistPromise(item, v, drwFormat)))
     })
     await Promise.all(executePromiseArr)
 
-    console.log(filterCenterData,needUploadFormat,'needUploadFormatneedUploadFormat')
+    console.log(filterCenterData, needUploadFormat, 'needUploadFormatneedUploadFormat')
     for (let item of filterCenterData) {
       finalNeedUploadFormat.forEach((v: any) => {
         if (item[`${v}_path`]) {
@@ -2916,19 +2945,19 @@ const index = () => {
 
     const stepPathMap: Record<string, any> = {};
     filterCenterData.forEach((v) => {
-      if(v.step_path) {
+      if (v.step_path) {
         const nameWidthFormat = `${v[`step_path`].substring(
           v[`step_path`].lastIndexOf("\\") + 1
         )}`;
         stepPathMap[getRowKey(v)] = nameFileUrlMap[nameWidthFormat] ? `${nameFileUrlMap[nameWidthFormat]?.response.uploadURL.split(
-            "/plm/files"
-          )[1]
-            }`: ''
+          "/plm/files"
+        )[1]
+          }` : ''
       }
     })
 
-    console.log(stepPathMap,'stepPathMap');
-    
+    console.log(stepPathMap, 'stepPathMap');
+
 
     if (addAttachmentParams.length) {
       const attchmentResult = await API.addInstanceAttributeAttachment({
@@ -2977,139 +3006,139 @@ const index = () => {
             ]);
           });
           // tribon重新写接口，首先需要创建文件，再然后需要创建物料
-          if (mqttClient.publishTopic === "Tribon") {
-            setLogVisbile(true);
-            dispatch(setLoading(true));
-            // 创建实例
-            const nameNumberMap: any = await createInstance({
-              itemCode: BasicsItemCode.material,
-            });
+          // if (mqttClient.publishTopic === "Tribon") {
+          //   setLogVisbile(true);
+          //   dispatch(setLoading(true));
+          //   // 创建实例
+          //   const nameNumberMap: any = await createInstance({
+          //     itemCode: BasicsItemCode.material,
+          //   });
 
-            if (!Object.keys(nameNumberMap).length) {
-              dispatch(setLoading(false));
-              return;
-            }
+          //   if (!Object.keys(nameNumberMap).length) {
+          //     dispatch(setLoading(false));
+          //     return;
+          //   }
 
-            await createStructure({
-              nameNumberMap,
-              itemCode: BasicsItemCode.material,
-              tabCode: "10002003",
-            });
-            dispatch(setLoading(false));
+          //   await createStructure({
+          //     nameNumberMap,
+          //     itemCode: BasicsItemCode.material,
+          //     tabCode: "10002003",
+          //   });
+          //   dispatch(setLoading(false));
 
-            // const pdfData = [...rightData[0].children, ...rightData[1].children, ...rightData[2].children, ...rightData[3].children]
-            // const FileArray = []
-            // for (let i = 0; i < pdfData.length; i++) {
-            //   FileArray.push(
-            //     new Promise(async (resolve, reject) => {
-            //       const arrayBufferData = await readBinaryFile(pdfData[i].path);
-            //       resolve({
-            //         name: pdfData[i].name,
-            //         data: new Blob([arrayBufferData]),
-            //         source: "Local",
-            //         isRemote: false,
-            //         type: pdfData[i].type,
-            //       });
-            //     })
-            //   );
-            // }
+          //   // const pdfData = [...rightData[0].children, ...rightData[1].children, ...rightData[2].children, ...rightData[3].children]
+          //   // const FileArray = []
+          //   // for (let i = 0; i < pdfData.length; i++) {
+          //   //   FileArray.push(
+          //   //     new Promise(async (resolve, reject) => {
+          //   //       const arrayBufferData = await readBinaryFile(pdfData[i].path);
+          //   //       resolve({
+          //   //         name: pdfData[i].name,
+          //   //         data: new Blob([arrayBufferData]),
+          //   //         source: "Local",
+          //   //         isRemote: false,
+          //   //         type: pdfData[i].type,
+          //   //       });
+          //   //     })
+          //   //   );
+          //   // }
 
-            // Promise.all(FileArray).then(async (res) => {
-            //   console.log(res, 'FileArray')
+          //   // Promise.all(FileArray).then(async (res) => {
+          //   //   console.log(res, 'FileArray')
 
-            //   const nameFileUrlMap = await uploadFile(res)
+          //   //   const nameFileUrlMap = await uploadFile(res)
 
-            //   console.log(nameFileUrlMap, 'nameFileUrlMap')
-            //   // 根据所选的产品去查询第一个型谱的id
-            //   const spectrumReturnV: any = await API.getProductSpectrumList(
-            //     selectProduct
-            //   );
+          //   //   console.log(nameFileUrlMap, 'nameFileUrlMap')
+          //   //   // 根据所选的产品去查询第一个型谱的id
+          //   //   const spectrumReturnV: any = await API.getProductSpectrumList(
+          //   //     selectProduct
+          //   //   );
 
-            //   const fileTypeMap: any = {
-            //     '扁钢手工下料图': '1725740831471722497',
-            //     '扁钢数控下料图': '1725740752593641474',
-            //     '曲型加工图': '1725740960031334402',
-            //     '型材下料图': '1725741029036023809',
-            //     '组立装配图': '1725741077094359042'
-            //   }
-            //   const Category = '1459426710323851265'
+          //   //   const fileTypeMap: any = {
+          //   //     '扁钢手工下料图': '1725740831471722497',
+          //   //     '扁钢数控下料图': '1725740752593641474',
+          //   //     '曲型加工图': '1725740960031334402',
+          //   //     '型材下料图': '1725741029036023809',
+          //   //     '组立装配图': '1725741077094359042'
+          //   //   }
+          //   //   const Category = '1459426710323851265'
 
-            //   const spectrum = spectrumReturnV.result[0].id;
+          //   //   const spectrum = spectrumReturnV.result[0].id;
 
-            //   const setVal = (row: any, col: any) => {
-            //     if (col.apicode === "ProductModel") {
-            //       return spectrum;
-            //     } else if (col.apicode === "Product") {
-            //       return selectProduct;
-            //     }
-            //     else if (col.apicode === "FileUrl") {
-            //       return `/plm/files${(nameFileUrlMap[
-            //         row.name
-            //       ]).response.uploadURL.split("/plm/files")[1]
-            //         }?name=${row.name}&size=10020&extension=pdf`;
-            //     }
-            //     else if (col.apicode === "Thumbnail") {
-            //       return "";
-            //     } else if (col.apicode === "FileFormat") {
-            //       return 'pdf';
-            //     } else if (col.apicode === "FileSize") {
-            //       return '10020';
-            //     } else if (col.apicode === "Category") {
-            //       return fileTypeMap[row.type] || Category;
-            //     } else if (col.apicode === "Description") {
-            //       return row.name.split('.')[0];
-            //     } else {
-            //       return "";
-            //     }
-            //   };
+          //   //   const setVal = (row: any, col: any) => {
+          //   //     if (col.apicode === "ProductModel") {
+          //   //       return spectrum;
+          //   //     } else if (col.apicode === "Product") {
+          //   //       return selectProduct;
+          //   //     }
+          //   //     else if (col.apicode === "FileUrl") {
+          //   //       return `/plm/files${(nameFileUrlMap[
+          //   //         row.name
+          //   //       ]).response.uploadURL.split("/plm/files")[1]
+          //   //         }?name=${row.name}&size=10020&extension=pdf`;
+          //   //     }
+          //   //     else if (col.apicode === "Thumbnail") {
+          //   //       return "";
+          //   //     } else if (col.apicode === "FileFormat") {
+          //   //       return 'pdf';
+          //   //     } else if (col.apicode === "FileSize") {
+          //   //       return '10020';
+          //   //     } else if (col.apicode === "Category") {
+          //   //       return fileTypeMap[row.type] || Category;
+          //   //     } else if (col.apicode === "Description") {
+          //   //       return row.name.split('.')[0];
+          //   //     } else {
+          //   //       return "";
+          //   //     }
+          //   //   };
 
-            //   const dealData = res
-            //     .map((item: any, index) => {
-            //       return {
-            //         fileIndex: index,
-            //         itemCode: '10001006',
-            //         objectId: fileTypeMap[item.type] || Category,
-            //         workspaceId: selectProduct,
-            //         node_name: item.name,
-            //         file_path: item.path,
-            //         tenantId: sse.tenantId || "719",
-            //         verifyCode: "200",
-            //         user: user.id,
-            //         insAttrs: (Attrs)
-            //           .filter((item) => item.status)
-            //           .map((v) => {
-            //             return {
-            //               ...v,
-            //               value: setVal(item, v),
-            //             };
-            //           }),
-            //       };
-            //     });
+          //   //   const dealData = res
+          //   //     .map((item: any, index) => {
+          //   //       return {
+          //   //         fileIndex: index,
+          //   //         itemCode: '10001006',
+          //   //         objectId: fileTypeMap[item.type] || Category,
+          //   //         workspaceId: selectProduct,
+          //   //         node_name: item.name,
+          //   //         file_path: item.path,
+          //   //         tenantId: sse.tenantId || "719",
+          //   //         verifyCode: "200",
+          //   //         user: user.id,
+          //   //         insAttrs: (Attrs)
+          //   //           .filter((item) => item.status)
+          //   //           .map((v) => {
+          //   //             return {
+          //   //               ...v,
+          //   //               value: setVal(item, v),
+          //   //             };
+          //   //           }),
+          //   //       };
+          //   //     });
 
-            //   console.log(dealData, "创建参数");
-            //   const successInstances: any = await API.createInstances(dealData);
-            //   console.log(successInstances, "创建返回");
+          //   //   console.log(dealData, "创建参数");
+          //   //   const successInstances: any = await API.createInstances(dealData);
+          //   //   console.log(successInstances, "创建返回");
 
-            //   const createLogArray: logItemType[] = [];
-            //   successInstances.result.forEach((item: any) => {
-            //     if (item && item.name) {
-            //       createLogArray.push({
-            //         log: `${item.name} 创建成功， 编号:${item.number}`,
-            //         dateTime: getCurrentTime(),
-            //         id: Utils.generateSnowId(),
-            //       });
-            //     }
-            //   });
-            //   dispatch(setLoading(false))
-            //   setMaterialCenterData(materialCenterData)
+          //   //   const createLogArray: logItemType[] = [];
+          //   //   successInstances.result.forEach((item: any) => {
+          //   //     if (item && item.name) {
+          //   //       createLogArray.push({
+          //   //         log: `${item.name} 创建成功， 编号:${item.number}`,
+          //   //         dateTime: getCurrentTime(),
+          //   //         id: Utils.generateSnowId(),
+          //   //       });
+          //   //     }
+          //   //   });
+          //   //   dispatch(setLoading(false))
+          //   //   setMaterialCenterData(materialCenterData)
 
-            //   warpperSetLog(() => {
-            //     setLogData([...lastestLogData.current, ...createLogArray]);
-            //   });
+          //   //   warpperSetLog(() => {
+          //   //     setLogData([...lastestLogData.current, ...createLogArray]);
+          //   //   });
 
-            // })
-            return;
-          }
+          //   // })
+          //   return;
+          // }
 
           setLogVisbile(true);
           dispatch(setLoading(true));
@@ -3126,13 +3155,23 @@ const index = () => {
           );
           await getDrwFileAddr({ filterCenterData });
 
-          console.log(nameNumberMap, "nameNumberMapnameNumberMap");
-          // // 批量创建文件结构
-          createStructure({
+          console.log(nameNumberMap, "nameNumberMap");
+
+          const trees = filterTreeByIds(leftData, filterCenterData.map(item => getRowKey(item)))
+
+          await Promise.all(trees.map((tree: any) => createStructure({
             nameNumberMap,
             itemCode: BasicsItemCode.file,
             tabCode: "10002016",
-          });
+            tree: tree
+          })))
+
+          // for (let index = 0; index < trees.length; index++) {
+          //   const element = trees[index];
+          //   // // 批量创建文件结构
+
+          // }
+
           // const nameThumbMap = await uploadFile(FileThumbArray)
           if (mqttClient.publishTopic != "Tribon") {
             await updateCadAttr(filterCenterData, nameNumberMap);
@@ -3935,6 +3974,16 @@ const index = () => {
                   }
                   setLeftData([...leftData]);
                 } else if (item.tag === "createBom") {
+                  // if (!(materialCenterData || []).find((item) => item.flag !== "exist")) {
+                  //   message.warning("没有需要创建的物料")
+                  //   // await dealCurrentBom(designData);
+                  //   // await createStructure({
+                  //   //   itemCode: BasicsItemCode.material,
+                  //   //   tabCode: "10002003",
+                  //   // });
+                  //   return;
+                  // }
+
                   // dispatch(setLoading(true));
                   setLogVisbile(true);
                   // 增加判断，所有的必填校验
@@ -3946,15 +3995,7 @@ const index = () => {
                   console.log(requiredColumns, "requiredColumns");
 
                   let requiredMsgList: Record<string, any>[] = [];
-                  if (!(materialCenterData || []).find((item) => item.flag !== "exist")) {
-                    // message.warning("没有需要创建的物料")
-                    await dealCurrentBom(designData);
-                    await createStructure({
-                      itemCode: BasicsItemCode.material,
-                      tabCode: "10002003",
-                    });
-                    return;
-                  }
+
                   materialCenterData.forEach((item) => {
                     requiredColumns.forEach((childItem: any) => {
                       if (!item[childItem.dataIndex]) {
@@ -3987,6 +4028,7 @@ const index = () => {
                     console.log(successInstances, "successInstancessuccessInstances");
 
                     if (!Object.keys(successInstances).length) {
+                      message.warning("物料创建失败")
                       dispatch(setLoading(false));
                       return;
                     }
@@ -4040,10 +4082,14 @@ const index = () => {
                     }).then(async (res) => {
                       // // 批量创建Bom结构
                       await dealCurrentBom(designData);
-                      await createStructure({
-                        itemCode: BasicsItemCode.material,
-                        tabCode: "10002003",
-                      });
+                      const trees = filterTreeByIds(leftData, materialCenterData.map(item => getRowKey(item)))
+
+                      await Promise.all(trees.map((tree: any) => createStructure({
+                        nameNumberMap:successInstances,
+                        itemCode: BasicsItemCode.file,
+                        tabCode: "10002016",
+                        tree: tree
+                      })))
                       setLogVisbile(false);
                       setLogData([]);
                       dispatch(setLoading(false));
@@ -4218,8 +4264,8 @@ const index = () => {
         .join("\n") as any,
       path: `${selPath}`,
     })
-      .then((res) => {})
-      .catch((err) => {});
+      .then((res) => { })
+      .catch((err) => { });
   };
 
   {
@@ -4228,7 +4274,7 @@ const index = () => {
   const BaseAttrInfo = (
     <div
       className="bg-white border-outBorder w-full h-full pt-2.5 px-4 pb-5 flex flex-col overflow-auto border-t border-b border-r"
-      // style={{ width: "478px" }}
+    // style={{ width: "478px" }}
     >
       <div>
         <div className="text-primary mb-1" style={{ fontSize: "13px", fontWeight: 500 }}>
@@ -4289,9 +4335,9 @@ const index = () => {
                     placeholder="请输入编号或描述"
                     // value={selectVal}
                     style={{ width: "360px" }}
-                    // onChange={(e) => {
-                    //   setSelectVal(e.target.value);
-                    // }}
+                  // onChange={(e) => {
+                  //   setSelectVal(e.target.value);
+                  // }}
                   ></Input>
                   <div className="w-7 h-7 cursor-pointer rounded-sm border-outBorder border flex items-center justify-center bg-white">
                     <PlmIcon
@@ -4310,9 +4356,9 @@ const index = () => {
                     placeholder="请输入编号或描述"
                     // value={selectVal}
                     style={{ width: "360px" }}
-                    // onChange={(e) => {
-                    //   setSelectVal(e.target.value);
-                    // }}
+                  // onChange={(e) => {
+                  //   setSelectVal(e.target.value);
+                  // }}
                   ></Input>
                   <div className="w-7 h-7 cursor-pointer rounded-sm border-outBorder border flex items-center justify-center bg-white">
                     <PlmIcon
@@ -4636,9 +4682,8 @@ const index = () => {
                     render: (text, record: Record<string, any>) => {
                       return (
                         <div
-                          className={`w-full gap-1 inline-flex overflow-hidden items-center cursor-pointer ${
-                            !(record.children && record.children.length) ? "ml-3" : ""
-                          }`}
+                          className={`w-full gap-1 inline-flex overflow-hidden items-center cursor-pointer ${!(record.children && record.children.length) ? "ml-3" : ""
+                            }`}
                           onClick={() => {
                             setSelectNode(record);
                           }}
@@ -4751,11 +4796,11 @@ const index = () => {
                     ...(mqttClient.publishTopic === "Tribon"
                       ? {}
                       : {
-                          expandedRowKeys: expandedKeys,
-                          onExpandedRowsChange: (expandedKeys) => {
-                            setExpandedKeys(expandedKeys);
-                          },
-                        }),
+                        expandedRowKeys: expandedKeys,
+                        onExpandedRowsChange: (expandedKeys) => {
+                          setExpandedKeys(expandedKeys);
+                        },
+                      }),
                   }}
                   rowSelection={{
                     columnWidth: 0,
@@ -4777,9 +4822,8 @@ const index = () => {
                         }
                         return (
                           <div
-                            className={`gap-1 inline-flex overflow-hidden items-center ${
-                              !(record.children && record.children.length) ? "ml-3" : ""
-                            }`}
+                            className={`gap-1 inline-flex overflow-hidden items-center ${!(record.children && record.children.length) ? "ml-3" : ""
+                              }`}
                           >
                             <img width={14} src={(record.children || []).length ? cubeSvg : materialSvg} alt="" />
                             <div className="overflow-hidden text-ellipsis w-full">
