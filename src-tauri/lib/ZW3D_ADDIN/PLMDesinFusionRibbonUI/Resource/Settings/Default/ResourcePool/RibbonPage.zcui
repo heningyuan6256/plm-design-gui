@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RibbonPages>
+	<RibbonPage name="OnChainPLMRibbon" text="OnChain PLM" visible="true">
+		<RibbonGroup name="RIBBON_PAGE1_GROUP1" text = "PLM" visible="true">
+			<GroupPanel name="RIBBON_PAGE1_GROUP1_PANEL1">
+				<Control action="ID_~OnChainPLM_Login" visible="true" buttonStyle="4" />
+				<Control action="ID_~OnChainPLM_Setting" visible="true" buttonStyle="4" />
+				<Control action="ID_~OnChainPLM_Search" visible="true" buttonStyle="4" />
+				<Control action="ID_~OnChainPLM_Option" visible="true" buttonStyle="4" />
+				<Control action="ID_~OnChainPLM_Upload" visible="true" buttonStyle="4" />
+				<Control action="ID_~OnChainPLM_Quit" visible="true" buttonStyle="4" />
+				<Control action="ID_~OnChainPLM_About" visible="true" buttonStyle="4" />
+			</GroupPanel>
+		</RibbonGroup>
+	</RibbonPage>
+</RibbonPages>

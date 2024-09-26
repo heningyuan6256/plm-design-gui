@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Actions system="false">
+	<Action name="ID_~OnChainPLM_Login" type="button">
+		<Form />
+		<Text>
+				<Ribbon>登录</Ribbon>
+				<Menu>登录</Menu>
+		</Text>
+			<Icon>OnChain_Login.png</Icon>
+			<Hint />
+		<Help />
+		<Desc />
+			<Script>~OnChainPLM_Login</Script>
+	</Action>
+		<Action name="ID_~OnChainPLM_Setting" type="button">
+		<Form />
+		<Text>
+				<Ribbon>首选项</Ribbon>
+				<Menu>首选项</Menu>
+		</Text>
+			<Icon>OnChain_Setting.png</Icon>
+			<Hint />
+			<Help />
+			<Desc />
+			<Script>~OnChainPLM_Setting</Script>
+		</Action>
+		<Action name="ID_~OnChainPLM_Search" type="button">
+			<Form />
+			<Text>
+				<Ribbon>查找图纸</Ribbon>
+				<Menu>查找图纸</Menu>
+			</Text>
+			<Icon>OnChain_Search.png</Icon>
+			<Hint />
+			<Help></Help>
+			<Desc />
+			<Script>~OnChainPLM_Search</Script>
+		</Action>
+		<Action name="ID_~OnChainPLM_Option" type="button">
+			<Form />
+			<Text>
+				<Ribbon>标准件</Ribbon>
+				<Menu>标准件</Menu>
+			</Text>
+			<Icon>OnChain_Option.png</Icon>
+			<Hint />
+		<Help />
+		<Desc />
+			<Script>~OnChainPLM_Option</Script>
+	</Action>
+		<Action name="ID_~OnChainPLM_Upload" type="button">
+		<Form />
+		<Text>
+				<Ribbon>上传</Ribbon>
+				<Menu>上传</Menu>
+		</Text>
+			<Icon>OnChain_Upload.png</Icon>
+			<Hint />
+		<Help />
+		<Desc />
+			<Script>~OnChainPLM_Upload</Script>
+	</Action>
+		<Action name="ID_~OnChainPLM_Quit" type="button">
+        <Form />
+        <Text>
+				<Ribbon>退出</Ribbon>
+				<Menu>退出</Menu>
+        </Text>
+			<Icon>OnChain_Quit.png</Icon>
+			<Hint />
+        <Help />
+        <Desc />
+			<Script>~OnChainPLM_Quit</Script>
+		</Action>
+		<Action name="ID_~OnChainPLM_About" type="button">
+			<Form />
+			<Text>
+				<Ribbon>关于</Ribbon>
+				<Menu>关于</Menu>
+			</Text>
+			<Icon>OnChain_About.png</Icon>
+			<Hint />
+			<Help>about</Help>
+			<Desc />
+			<Script>~OnChainPLM_About</Script>
+	</Action>
+</Actions>

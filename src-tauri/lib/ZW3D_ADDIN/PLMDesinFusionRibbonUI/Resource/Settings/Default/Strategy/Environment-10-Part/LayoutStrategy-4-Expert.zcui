@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Strategy profileType="UIProfile" environment="10" role="4-Expert">
+	<DefaultCustomizations>
+		<Insert type="RibbonPage" name="OnChainPLMRibbon" topCollection="Layout_10_Part" leftSibling="#InsertAtLast" />
+	</DefaultCustomizations>
+</Strategy>
