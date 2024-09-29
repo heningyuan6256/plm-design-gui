@@ -94,8 +94,8 @@
           "language": "zh-CN",
           "bannerPath": "./banner.bmp",
           "dialogImagePath":"./dialogImage.bmp",
-          "fragmentPaths": ["solidworks_addIn.wxs"],
-          "componentRefs": ["MyFragmentRegistryEntries"]
+          "fragmentPaths": ["solidworks_addIn.wxs","registry.wxs"],
+          "componentRefs": ["MyFragmentRegistryEntries","ZW3D"]
         },
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",

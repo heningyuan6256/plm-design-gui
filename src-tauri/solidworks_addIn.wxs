@@ -124,6 +124,15 @@
         Directory="INSTALLDIR">
     </CustomAction>
 
+    <!-- <CustomAction 
+        Id="ZW3D_ADDIN" 
+        Execute="deferred" 
+        Return="ignore"             
+        Impersonate="no" 
+        ExeCommand="&quot;[SystemFolder]cmd.exe&quot; /c &quot;[INSTALLDIR]/lib/ZW3D_ADDIN/register.bat&quot;"
+        Directory="INSTALLDIR">
+    </CustomAction> -->
+
      <!-- <CustomAction 
         Id="NX_ADDIN" 
         Execute="deferred" 
@@ -134,6 +143,7 @@
     </CustomAction> -->
     <InstallExecuteSequence>
       <Custom Action="SolidWorks_ADDIN" Before="InstallFinalize" />
+      <!-- <Custom Action="ZW3D_ADDIN" Before="InstallFinalize" /> -->
       <!-- <Custom Action="NX_ADDIN" Before="InstallFinalize" /> -->
       <!-- <Custom Action="UpdateIniFile" Before="InstallFinalize"></Custom> -->
     </InstallExecuteSequence>

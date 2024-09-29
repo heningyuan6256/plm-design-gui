@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <!-- these registry entries should be installed
+         to the target user's machine -->
+    <DirectoryRef Id="TARGETDIR">
+      <!-- groups together the registry entries to be installed -->
+      <!-- Note the unique `Id` we provide here -->
+      <Component Id="ZW3D" Guid="*">
+        <!-- the registry keys for the application -->
+        <RegistryKey
+          Root="HKCU"
+          Key="SOFTWARE\ZWSOFT\ZW3D\ZW3D 29.00\zh_CN\Plugin_x64\PLMDesinFusion_ZW"
+          Action="createAndRemoveOnUninstall"
+        >
+          <RegistryValue
+            Type="string"
+            Name="Application"
+            Value="PLMDesinFusion_ZW.dll"
+            KeyPath="yes"
+          />
+          <RegistryValue Type="string" Name="Load" Value="7" />
+          <RegistryValue Type="string" Name="Location" Value="[INSTALLDIR]lib\ZW3D_ADDIN" />
+          <RegistryValue Type="string" Name="Resource" Value="" />
+        </RegistryKey>
+        <RegistryKey
+          Root="HKCU"
+          Key="SOFTWARE\ZWSOFT\ZW3D\ZW3D 29.00\en_US\Plugin_x64\PLMDesinFusion_ZW"
+          Action="createAndRemoveOnUninstall"
+        >
+          <RegistryValue
+            Type="string"
+            Name="Application"
+            Value="PLMDesinFusion_ZW.dll"
+          />
+          <RegistryValue Type="string" Name="Load" Value="7" />
+          <RegistryValue Type="string" Name="Location" Value="[INSTALLDIR]lib\ZW3D_ADDIN" />
+          <RegistryValue Type="string" Name="Resource" Value="" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>
