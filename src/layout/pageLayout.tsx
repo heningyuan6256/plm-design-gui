@@ -163,47 +163,47 @@ export const openDesign = async ({
 
             const insVersionOrderUnbound = ins.result.readInstanceVo.insVersionOrderUnbound
 
-            const {
-              result: { records: attachmentRecords },
-            }: any = await API.queryInstanceTab({
-              instanceId: insId,
-              itemCode: BasicsItemCode.file,
-              pageNo: "1",
-              pageSize: "1000",
-              tabCode: "10002008",
-              tabCodes: "10002008",
-              tenantId: sse.tenantId || "719",
-              userId: userId,
-              versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound.replace('(','').replace(')','')) - 1 : insVersionOrderUnbound,
-            }).catch(() => {
-              cancelLoading();
-            });
+            // const {
+            //   result: { records: attachmentRecords },
+            // }: any = await API.queryInstanceTab({
+            //   instanceId: insId,
+            //   itemCode: BasicsItemCode.file,
+            //   pageNo: "1",
+            //   pageSize: "1000",
+            //   tabCode: "10002008",
+            //   tabCodes: "10002008",
+            //   tenantId: sse.tenantId || "719",
+            //   userId: userId,
+            //   versionOrder: insVersionOrderUnbound.indexOf('(') != -1 ? parseInt(insVersionOrderUnbound.replace('(','').replace(')','')) - 1 : insVersionOrderUnbound,
+            // }).catch(() => {
+            //   cancelLoading();
+            // });
 
-            const excutePromise: any = []
+            // const excutePromise: any = []
 
-            attachmentRecords.forEach((v: any) => {
-              console.log(v,v.attributes,'v.attributes')
-              excutePromise.push(new Promise(async (resolve) => {
-                const response: any = await client.get(
-                  `${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
-                  {
-                    // the expected response type
-                    responseType: ResponseType.Binary,
-                  }
-                ).catch(() => {
-                  cancelLoading();
-                });
-                await writeBinaryFile({
-                  path: `${downloadFolder}\\${fileName}\\${v.attributes[tabAttrsApicodeMap['FileName']]}`,
-                  contents: response.data,
-                }).catch(() => {
-                  cancelLoading();
-                });;
-                resolve({})
-              }))
-            })
+            // attachmentRecords.forEach((v: any) => {
+            //   console.log(v,v.attributes,'v.attributes')
+            //   excutePromise.push(new Promise(async (resolve) => {
+            //     const response: any = await client.get(
+            //       `${network}/api/plm${v.attributes[tabAttrsApicodeMap['FileUrl']].split("/plm")[1]}`,
+            //       {
+            //         // the expected response type
+            //         responseType: ResponseType.Binary,
+            //       }
+            //     ).catch(() => {
+            //       cancelLoading();
+            //     });
+            //     await writeBinaryFile({
+            //       path: `${downloadFolder}\\${fileName}\\${v.attributes[tabAttrsApicodeMap['FileName']]}`,
+            //       contents: response.data,
+            //     }).catch(() => {
+            //       cancelLoading();
+            //     });;
+            //     resolve({})
+            //   }))
+            // })
 
-            await Promise.all(excutePromise)
+            // await Promise.all(excutePromise)
 
             const {
               result: { records },

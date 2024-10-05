@@ -1,5 +1,6 @@
 export enum BasicConfig {
   APPCacheFolder = ".onChain",
+  Location="location",
   NetworkCache = "network.txt",
   Active = "active",
   TokenCache = "token.txt",

@@ -472,4 +472,54 @@ export class Utils {
       return String(Number(revision.replace(/\(|\)/g, "")) + 1)
     }
   }
+
+  /**
+   * 移除图片的背景
+   * @param src 图片的访问地址
+   * @returns 
+   */
+  public static removeImgBg(src: any) {
+    const img = document.createElement("img");
+    img.src = src;
+    img.style.position = "absolute";
+    img.style.opacity = "0";
+    img.style.left = "-100000px";
+    document.body.appendChild(img);
+
+    //背景颜色  白色
+    const rgba = [255, 255, 255, 255];
+    // 容差大小
+    const tolerance = 100;
+
+    var imgData = null;
+    const [r0, g0, b0, a0] = rgba;
+    var r, g, b, a;
+    const canvas = document.createElement("canvas");
+    const context: any = canvas.getContext("2d");
+    const w = img.width || 400;
+    const h = img.height || 400;
+    canvas.width = w;
+    canvas.height = h;
+    context.drawImage(img, 0, 0);
+    imgData = context.getImageData(0, 0, w, h);
+
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      r = imgData.data[i];
+      g = imgData.data[i + 1];
+      b = imgData.data[i + 2];
+      a = imgData.data[i + 3];
+      const t = Math.sqrt((r - r0) ** 2 + (g - g0) ** 2 + (b - b0) ** 2 + (a - a0) ** 2);
+      if (t <= tolerance) {
+        imgData.data[i] = 0;
+        imgData.data[i + 1] = 0;
+        imgData.data[i + 2] = 0;
+        imgData.data[i + 3] = 0;
+      }
+    }
+    context.putImageData(imgData, 0, 0);
+    const newBase64 = canvas.toDataURL("image/png");
+    document.body.removeChild(img);
+    // img.src = newBase64;
+    return newBase64;
+  }
 }
