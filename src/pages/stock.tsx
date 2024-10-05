@@ -3,8 +3,6 @@
  * Date: 2023/03/02 14:44:05
  * Description: 库
  */
-import Foot from "../layout/foot";
-import Head from "../layout/head";
 import PlmIcon from "../components/PlmIcon";
 import { OnChainSelect, OnChainTable } from "onchain-ui";
 import { Fragment, useEffect, useState } from "react";
@@ -19,6 +17,9 @@ import { useDispatch } from "react-redux";
 import { setLoading } from "../models/loading";
 import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 import { invoke } from "@tauri-apps/api";
+import PlmStockCard from "../components/PlmStockCard";
+import { Card, List } from 'antd';
+import { Utils } from "../utils";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
@@ -35,16 +36,26 @@ const stock = () => {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value } = useSelector((state: any) => state.user);
   const { value: network } = useSelector((state: any) => state.network);
+  const [userMap,setUserMap] = useState({})
+
+  useEffect(() => {
+    // 获取所有的创建人，用于回显
+    const getAllCreator = async() => {
+      const data:any = await API.getList([{code:'10005155'}])
+      const userList = data.result[0].listItems
+      setUserMap(Utils.transformArrayToMap(userList.map((v:any) => {return {label:v.name,value:v.id}}),'value','label'))
+    }
+    getAllCreator()
+  }, [])
 
   const { run, loading } = useRequest((data) => API.getStockByType(data), {
     manual: true,
     onSuccess(data: any) {
       setTableSelectedRows([]);
-      console.log(data.result.records,'data.result')
       setTableData(
         data.result.records.filter((item: any) => {
           return (
-          (item.number || '').indexOf(selectVal) != -1 ||
+            (item.number || '').indexOf(selectVal) != -1 ||
             (item.insDesc || '').indexOf(selectVal) != -1
           );
         })
@@ -286,7 +297,12 @@ const stock = () => {
               ></PlmIcon>
             </div>
           </div>
-          <div
+          <div className="bg-white w-full border-outBorder border flex overflow-y-auto" style={{ height: 'calc(100% - 85px)', padding: '17px 9px', flexWrap: 'wrap' }}>
+            {tableData.map((item) => {
+              return <PlmStockCard instance={item} userMap={userMap}></PlmStockCard>
+            })}
+          </div>
+          {/* <div
             style={{
               background: "linear-gradient(180deg,#f1f1f1 0%, #cdcdcd 100%)",
             }}
@@ -423,7 +439,7 @@ const stock = () => {
                 record: {},
               }}
             ></OnChainTable>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
