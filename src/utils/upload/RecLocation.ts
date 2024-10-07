@@ -2,14 +2,14 @@ import { createDir, exists, readDir, readTextFile, writeTextFile } from "@tauri-
 import { homeDir } from "@tauri-apps/api/path";
 import { BasicConfig } from "../../constant/config";
 import { omit } from "lodash";
-import { JsonToIni } from "../ini";
+import { InitToJson, JsonToIni } from "../ini";
 
 
 export interface LocationItemStruct {
     /**
      * 实例ID
      */
-    insId:string,
+    insId: string,
     /**
      * 文件名称
      */
@@ -17,7 +17,7 @@ export interface LocationItemStruct {
     /**
      * 文件本地位置
      */
-    location:string,
+    location: string,
     /**
      * 当前本地文件的版次
      */
@@ -25,7 +25,7 @@ export interface LocationItemStruct {
     /**
      * 最后一次修改的时间
      */
-    lastModified: string 
+    lastModified: string
 }
 
 /**
@@ -37,7 +37,7 @@ class RecLocation {
         const path = `${homeDirPath}${BasicConfig.APPCacheFolder}/${BasicConfig.Location}`
         const judgeExist = await exists(path);
         if (!judgeExist) {
-           await createDir(path)
+            await createDir(path)
         }
         return path
     }
@@ -63,8 +63,33 @@ class RecLocation {
      */
     public static modefiedLocation = async (params: LocationItemStruct) => {
         const dir = await RecLocation.judgeLoationDirExist()
-        const iniData = JsonToIni({[params.fileName]:omit(params, ['fileName'])})
+        const iniData = JsonToIni({ [params.fileName]: omit(params, ['fileName']) })
+        console.log(params,iniData,'iniData')
         await writeTextFile(`${dir}\\${params.insId}`, iniData)
+    }
+
+    /**
+     * 查询记录
+     */
+    public static getLocation = async (insId: string): Promise<LocationItemStruct | false> => {
+        const dir = await RecLocation.judgeLoationDirExist()
+        if (await exists(`${dir}\\${insId}`)) {
+            let result:boolean | LocationItemStruct;
+            try {
+                const text = InitToJson(await readTextFile(`${dir}\\${insId}`))
+                const data:LocationItemStruct = text[Object.keys(text)[0]]
+                if (data) {
+                    result = data
+                } else {
+                    result = false
+                }
+            } catch (error) {
+                result = false
+            }
+            return result
+        } else {
+            return false
+        }
     }
     // /**
     //  * 修改记录

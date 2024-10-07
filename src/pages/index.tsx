@@ -2863,7 +2863,7 @@ const index = () => {
             await updateCadAttr(filterCenterData, nameNumberMap);
             for (let item of filterCenterData) {
               if (item.file_path) {
-                RecLocation.modefiedLocation({
+                await RecLocation.modefiedLocation({
                   fileName: getRowKey(item),
                   lastModified: getCurrentTime(),
                   location: item.file_path,
