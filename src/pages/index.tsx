@@ -1176,8 +1176,8 @@ const index = () => {
           tabCodes: tabCode,
           tenantId: sse.tenantId || "719",
           userId: user.id,
-          // version: onChainMap.Version,
-          // versionOrder: Number(onChainMap.Revision) == 1 ? '1' : `(${(Number(onChainMap.Revision) - 1)})`,
+          version: onChainMap.Version,
+          versionOrder: Number(onChainMap.Revision) == 1 ? '1' : `(${Number(onChainMap.Revision)})`,
         });
         recordsData = records || [];
       }
