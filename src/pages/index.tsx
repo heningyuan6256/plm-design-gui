@@ -1055,7 +1055,7 @@ const index = () => {
         insId: row.insId,
         insSize: String(row.FileSize),
         insName: row[isMaterial ? "material" : "file"].onChain.Description,
-        changeInsId: changeInstance.insId,
+        changeInsId: changeInstance?.insId,
       });
       const data = (isMaterial ? materialCenterData : centerData).find((item) => getRowKey(item) == getRowKey(row));
       if (!data) {
@@ -1145,11 +1145,11 @@ const index = () => {
           tenantId: sse.tenantId || "719",
           userId: user.id,
           version: onChainMap.Version,
-          versionOrder: onChainMap.Revision,
+          versionOrder:  onChainMap.Revision,
           id: changeInstance?.insId,
           affectInsId: onChainMap.insId,
           itemCode: changeInstance?.itemCode,
-          instanceId: changeInstance.id,
+          instanceId: changeInstance?.id,
         });
         recordsData = records.map((v: any) => {
           if (v.optType === 'none') {
@@ -1166,7 +1166,7 @@ const index = () => {
         });
       } else {
         const {
-          result: { records = [] },
+          result: { records },
         }: any = await API.queryInstanceTab({
           instanceId: onChainMap.insId,
           itemCode: row.itemCode,
@@ -1176,10 +1176,10 @@ const index = () => {
           tabCodes: tabCode,
           tenantId: sse.tenantId || "719",
           userId: user.id,
-          version: onChainMap.Version,
-          versionOrder: onChainMap.Revision,
+          // version: onChainMap.Version,
+          // versionOrder: Number(onChainMap.Revision) == 1 ? '1' : `(${(Number(onChainMap.Revision) - 1)})`,
         });
-        recordsData = records;
+        recordsData = records || [];
       }
     } catch (error) {
       throw error;
@@ -1215,6 +1215,8 @@ const index = () => {
       itemCode: row.itemCode,
       tabCode: tabCode,
     });
+
+    console.log(OnChainRecords,'OnChainRecords')
 
     const OnChainRecordsMap = Utils.transformArrayToMap(OnChainRecords, "insId");
 
@@ -1336,7 +1338,7 @@ const index = () => {
         insId: row.insId,
         insSize: String(row.FileSize),
         insName: row[isMaterial ? "material" : "file"].onChain.Description,
-        changeInsId: changeInstance.insId,
+        changeInsId: changeInstance?.insId,
       });
       const rowKey = getRowKey(row);
       const OnChainMap = InstanceAttrsMap[rowKey][isMaterial ? "material" : "file"].onChain;
@@ -1372,7 +1374,7 @@ const index = () => {
     dispatch(setLoading(true));
     try {
       const changeInstance = await getChangeIns(row);
-      await API.cancelCheckout({ insId: row.insId, changeInsId: changeInstance.insId });
+      await API.cancelCheckout({ insId: row.insId, changeInsId: changeInstance?.insId });
       await updateSingleData(row, isMaterial);
       setFileSelectRows([]);
       setMaterialSelectRows([]);
@@ -1461,7 +1463,7 @@ const index = () => {
     console.log(updateInstance, updateRowList, "updateInstance");
 
     if (updateInstance.id) {
-      if (changeInstance.insId) {
+      if (changeInstance?.insId) {
         await API.insatnceProcessTabsave({
           id: changeInstance?.insId,
           tabCode: '10002001',
@@ -1490,7 +1492,7 @@ const index = () => {
       insUrl: "",
       insSize: String(row.FileSize),
       insName: row.file.onChain.Description,
-      changeInsId: changeInstance.insId,
+      changeInsId: changeInstance?.insId,
     }).catch(() => {
       dispatch(setLoading(false));
     });
@@ -1562,7 +1564,7 @@ const index = () => {
     };
 
     if (updateInstance.id) {
-      if (changeInstance.insId) {
+      if (changeInstance?.insId) {
         await API.insatnceProcessTabsave({
           id: changeInstance?.insId,
           tabCode: '10002001',
@@ -1590,7 +1592,7 @@ const index = () => {
     });
     await API.checkIn({
       insId: row.insId,
-      changeInsId: changeInstance.insId,
+      changeInsId: changeInstance?.insId,
     });
     await updateSingleData(row, true);
     setFileSelectRows([]);
