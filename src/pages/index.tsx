@@ -58,7 +58,7 @@ import { confirm } from "@tauri-apps/api/dialog";
 import { openDesign } from "../layout/pageLayout";
 import PlmMosaic, { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 import { fetchMessageData } from "../models/message";
-import RecLocation from "../utils/upload/recLocation";
+import RecLocation from "../utils/upload/RecLocation";
 
 // import * as crypto from 'crypto';
 // import { dealMaterialData } from 'plm-wasm'
