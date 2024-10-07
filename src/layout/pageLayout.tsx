@@ -29,7 +29,7 @@ import { useAsyncEffect, useMemoizedFn, useMount } from "ahooks";
 import { invoke } from "@tauri-apps/api";
 import { fetchMessageData } from "../models/message";
 import { readPermission } from "../components/PlmMosaic";
-import RecLocation from "../utils/upload/recLocation";
+import RecLocation from "../utils/upload/RecLocation";
 import { confirm } from "@tauri-apps/api/dialog";
 interface LayoutProps {
   children?: React.ReactNode;
