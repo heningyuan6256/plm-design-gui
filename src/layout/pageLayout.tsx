@@ -29,6 +29,7 @@ import { useAsyncEffect, useMemoizedFn, useMount } from "ahooks";
 import { invoke } from "@tauri-apps/api";
 import { fetchMessageData } from "../models/message";
 import { readPermission } from "../components/PlmMosaic";
+//@ts-ignore
 import RecLocation from "../utils/upload/RecLocation";
 import { confirm } from "@tauri-apps/api/dialog";
 interface LayoutProps {
@@ -81,19 +82,19 @@ export const openDesign = async ({
   await currentWindow.unminimize();
 
   currentWindow.setFocus();
-  const versionOrderResult: any = await API.queryInsVersionOrder(insId).catch(() => {
-    cancelLoading();
-  });
-  const orders = versionOrderResult.result[insId].orders;
-  const versions = versionOrderResult.result[insId].versions;
+  // const versionOrderResult: any = await API.queryInsVersionOrder(insId).catch(() => {
+  //   cancelLoading();
+  // });
+  // const orders = versionOrderResult.result[insId].orders;
+  // const versions = versionOrderResult.result[insId].versions;
   API.getInstanceInfoById({
     instanceId: insId,
     authType: "read",
     tabCode: "10002001",
     tenantId: sse.tenantId || "719",
     userId: userId,
-    versionOrder: orders[orders.length - 1],
-    version: versions[versions.length - 1],
+    // versionOrder: orders[orders.length - 1],
+    // version: versions[versions.length - 1],
   })
     .then(async (ins: any) => {
       const attrMap = Utils.transformArrayToMap(
