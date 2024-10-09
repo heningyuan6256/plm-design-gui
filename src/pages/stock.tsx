@@ -36,14 +36,14 @@ const stock = () => {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value } = useSelector((state: any) => state.user);
   const { value: network } = useSelector((state: any) => state.network);
-  const [userMap,setUserMap] = useState({})
+  const [userMap, setUserMap] = useState({})
 
   useEffect(() => {
     // 获取所有的创建人，用于回显
-    const getAllCreator = async() => {
-      const data:any = await API.getList([{code:'10005155'}])
+    const getAllCreator = async () => {
+      const data: any = await API.getList([{ code: '10005155' }])
       const userList = data.result[0].listItems
-      setUserMap(Utils.transformArrayToMap(userList.map((v:any) => {return {label:v.name,value:v.id}}),'value','label'))
+      setUserMap(Utils.transformArrayToMap(userList.map((v: any) => { return { label: v.name, value: v.id } }), 'value', 'label'))
     }
     getAllCreator()
   }, [])
@@ -93,7 +93,7 @@ const stock = () => {
         tenantId: "719",
         itemCode: BasicsItemCode.material,
         userId: value.id,
-        isAll: false,
+        isAll: true,
         fields: [{}],
       };
       run(data);
@@ -279,22 +279,37 @@ const stock = () => {
               <></>
             )}
           </div>
-          <div className="mb-4 flex gap-2">
-            <Input
-              placeholder="请输入编号或描述"
-              value={selectVal}
-              style={{ width: "360px" }}
-              onChange={(e) => {
-                setSelectVal(e.target.value);
-              }}
-            ></Input>
-            <div className="w-7 h-7 cursor-pointer rounded-sm bg-white border-outBorder border flex items-center justify-center">
-              <PlmIcon
-                onClick={() => {
-                  setSelectedRows([...selectedRows]);
+          <div className="mb-4 flex justify-between">
+            <div className="flex gap-2">
+              <Input
+                placeholder="请输入编号或描述"
+                value={selectVal}
+                style={{ width: "360px" }}
+                onChange={(e) => {
+                  setSelectVal(e.target.value);
                 }}
-                name="search"
-              ></PlmIcon>
+                allowClear
+              ></Input>
+              <div className="w-7 h-7 cursor-pointer rounded-sm bg-white border-primary border flex items-center justify-center">
+                <PlmIcon
+                  onClick={() => {
+                    setSelectedRows([...selectedRows]);
+                  }}
+                  name="search"
+                ></PlmIcon>
+              </div>
+            </div>
+
+            <div
+              style={{ height: "30px" }}
+              onClick={() => {
+                // 获取当前所有对象没有地址的
+                const noSyncTableData = tableData.filter(item => !item.location)
+                // noSyncTableData.find(item => item)
+              }}
+              className="text-xs rounded-sm border border-primary transition-all cursor-pointer bg-white  flex items-center justify-center w-16"
+            >
+              同步
             </div>
           </div>
           <div className="bg-white w-full border-outBorder border flex overflow-y-auto" style={{ height: 'calc(100% - 85px)', padding: '17px 9px', flexWrap: 'wrap' }}>

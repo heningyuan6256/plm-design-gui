@@ -863,14 +863,15 @@ img {
   background: #ffffff !important;
 }
 
-.attr.ant-input.ant-input-disabled{
+.attr.ant-input.ant-input-disabled {
   border: 1px solid #ecedf0 !important;
   color: #B2B2B6 !important;
   background: #ffffff !important;
   padding: 0px 7px;
   font-size: 12px !important;
 }
-.attr.ant-input{
+
+.attr.ant-input {
   height: 24px !important;
   line-height: 24px !important;
   font-size: 12px !important;
@@ -978,6 +979,33 @@ img {
   border-end-end-radius: 0px !important;
 }
 
-.main .table_footer{
+.main .table_footer {
   padding: 6px 0px;
+}
+
+.stock_card:hover {
+  border: 1px solid #0563B2 !important;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.ant-dropdown {
+  width: 56px;
+  padding: 0px;
+  border-radius: 2px;
+  background: #FFFFFF;
+  box-shadow: -5px 0px 15px 0px rgba(0, 0, 0, 0.05);
+  font-size: 12px;
+}
+
+.ant-dropdown-menu-item {
+  padding: 0px !important;
+}
+.ant-dropdown-menu-title-content{
+  display: flex;
+  justify-content: center;
+}
+
+.ant-dropdown-menu-item-divider{
+  background: #E8E8E8 !important;
 }
