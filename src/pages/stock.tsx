@@ -18,8 +18,13 @@ import { setLoading } from "../models/loading";
 import { readPermission, renderIsPlmMosaic } from "../components/PlmMosaic";
 import { invoke } from "@tauri-apps/api";
 import PlmStockCard from "../components/PlmStockCard";
-import { Card, List } from 'antd';
+import { Card, List } from "antd";
 import { Utils } from "../utils";
+import { homeDir } from "@tauri-apps/api/path";
+import { exists } from "../utils/fs_extra";
+import { BasicConfig } from "../constant/config";
+import { createDir, readTextFile, writeBinaryFile } from "@tauri-apps/api/fs";
+import { getClient, ResponseType } from "@tauri-apps/api/http";
 // import { dealMaterialData } from 'plm-wasm'
 
 const stock = () => {
@@ -29,54 +34,97 @@ const stock = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState<any>([]);
   const [leftTreeLoading, setLeftTreeLoading] = useState<boolean>(false);
   const { value: user } = useSelector((state: any) => state.user);
-  const [tableSelectedRows, setTableSelectedRows] = useState<
-    Record<string, any>[]
-  >([]);
+  const [tableSelectedRows, setTableSelectedRows] = useState<Record<string, any>[]>([]);
   const dispatch = useDispatch();
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const { value } = useSelector((state: any) => state.user);
   const { value: network } = useSelector((state: any) => state.network);
-  const [userMap, setUserMap] = useState({})
+  const [userMap, setUserMap] = useState({});
 
   useEffect(() => {
     // 获取所有的创建人，用于回显
     const getAllCreator = async () => {
-      const data: any = await API.getList([{ code: '10005155' }])
-      const userList = data.result[0].listItems
-      setUserMap(Utils.transformArrayToMap(userList.map((v: any) => { return { label: v.name, value: v.id } }), 'value', 'label'))
+      const data: any = await API.getList([{ code: "10005155" }]);
+      const userList = data.result[0].listItems;
+      setUserMap(
+        Utils.transformArrayToMap(
+          userList.map((v: any) => {
+            return { label: v.name, value: v.id };
+          }),
+          "value",
+          "label"
+        )
+      );
+    };
+    getAllCreator();
+  }, []);
+  // 利用递归，将tree转化成数组结构来操作
+  const getPathById = (tree: any[], id: string, path?: any[]) => {
+    tree = Array.isArray(tree) ? tree : [tree];
+    if (!path) {
+      path = [];
     }
-    getAllCreator()
-  }, [])
+    for (let i = 0, len = tree.length; i < len; i++) {
+      let tempPath = [...path];
+      tempPath.push(tree[i].name);
+      if (tree[i].id == id) {
+        return tempPath;
+      }
+      if (tree[i].children) {
+        return getPathById(tree[i].children, id, tempPath);
+      }
+    }
+  };
 
   const { run, loading } = useRequest((data) => API.getStockByType(data), {
     manual: true,
-    onSuccess(data: any) {
+    async onSuccess(data: any) {
+      let downloadFolder = await Utils.getDefaultDownloadAddr();
       setTableSelectedRows([]);
-      setTableData(
-        data.result.records.filter((item: any) => {
-          return (
-            (item.number || '').indexOf(selectVal) != -1 ||
-            (item.insDesc || '').indexOf(selectVal) != -1
-          );
-        })
-      );
+      const records = data.result.records.filter((item: any) => {
+        return (item.number || "").indexOf(selectVal) != -1 || (item.insDesc || "").indexOf(selectVal) != -1;
+      });
+      selectedRows[0].id;
+      leftTreeData;
+      // 处理数据的FileUrl以及Location
+      for (let index = 0; index < records.length; index++) {
+        const element = records[index];
+        const fileObj = element?.tabCodeInsMap?.["10002008"]?.[0];
+        // 如果有关联的设计文件
+        if (fileObj) {
+          element.fileUrl = fileObj?.attributes?.["1550678931940118530"] || "";
+          const arr = getPathById(leftTreeData, records[index].standardPartId);
+          const downloadAddr = `${downloadFolder}\\${arr?.join("\\")}\\${element.insDesc}`;
+          const exist = await exists(downloadAddr);
+          element.location = exist ? downloadAddr : "";
+          // const fileContents: any = await client.get(`${network}/api/plm${element.fileUrl.split("/plm")[1]}`, {
+          //   responseType: ResponseType.Binary,
+          // });
+          // if (!(await exists(downloadAddr))) {
+          //   await createDir(downloadAddr, { recursive: true });
+          // }
+        }
+      }
+      setTableData(records);
     },
   });
 
   useEffect(() => {
-    setLeftTreeLoading(true)
-    API.getStock("719").then((res: any) => {
-      const result = res.result.filter((item: any) => {
-        return item.apicode === "ItemAdministrator";
+    setLeftTreeLoading(true);
+    API.getStock("719")
+      .then((res: any) => {
+        const result = res.result.filter((item: any) => {
+          return item.apicode === "ItemAdministrator";
+        });
+        setLeftTreeLoading(false);
+        setLeftTreeData(result);
+        if (result.length > 0) {
+          setSelectedRows([result[0]]);
+        }
+      })
+      .catch(() => {
+        setLeftTreeLoading(false);
       });
-      setLeftTreeLoading(false)
-      setLeftTreeData(result);
-      if (result.length > 0) {
-        setSelectedRows([result[0]]);
-      }
-    }).catch(() => {
-      setLeftTreeLoading(false)
-    });
   }, []);
   useKeyPress("enter", () => {
     setSelectedRows([...selectedRows]);
@@ -106,11 +154,7 @@ const stock = () => {
         <div style={{ width: "254px" }} className="h-full">
           <div className="pb-1.5 flex flex-col h-full">
             <div className="flex justify-between items-center h-6 mb-1.5">
-              <OnChainSelect
-                size="small"
-                value={"物料库"}
-                clearIcon={false}
-              ></OnChainSelect>
+              <OnChainSelect size="small" value={"物料库"} clearIcon={false}></OnChainSelect>
             </div>
             {/* 
             <div className="h-10 flex justify-between items-center">
@@ -148,7 +192,7 @@ const stock = () => {
                     type: "Input",
                   },
                   sorter: true,
-                  render: (text, record: any) => {
+                  render: (text: string, record: any) => {
                     return (
                       <div
                         className="cursor-pointer w-full overflow-hidden text-ellipsis flex items-center"
@@ -158,11 +202,7 @@ const stock = () => {
                       >
                         <PlmIcon
                           className={"text-primary text-base mr-1"}
-                          name={
-                            record.apicode === "ItemAdministrator"
-                              ? "a-Materialwarehouse"
-                              : "file"
-                          }
+                          name={record.apicode === "ItemAdministrator" ? "a-Materialwarehouse" : "file"}
                         ></PlmIcon>
                         {text}
                       </div>
@@ -174,7 +214,7 @@ const stock = () => {
                   dataIndex: "tool",
                   width: 72,
                   sorter: true,
-                  render: (text, record: any) => {
+                  render: (text: string, record: any) => {
                     if (record?.apicode == "ItemAdministrator") {
                       return (
                         <div
@@ -183,19 +223,14 @@ const stock = () => {
                             const ids: any = [];
                             const loop = (data: any) => {
                               for (let i = 0; i < data.length; i++) {
-                                if (
-                                  data[i]["children"] &&
-                                  data[i]["children"].length
-                                ) {
+                                if (data[i]["children"] && data[i]["children"].length) {
                                   ids.push(data[i]["id"]);
                                   loop(data[i]["children"]);
                                 }
                               }
                             };
                             loop([record] || []);
-                            setExpandedRowKeys(
-                              new Set([...expandedRowKeys, ...ids])
-                            );
+                            setExpandedRowKeys(new Set([...expandedRowKeys, ...ids]));
                           }}
                         >
                           <PlmIcon
@@ -269,11 +304,9 @@ const stock = () => {
             className="w-full h-6 text-xs flex items-center pl-2.5 mb-4"
           >
             <span className="mr-1">物料库</span>
-            {selectedRows[0] &&
-              selectedRows[0]?.apicode != "ItemAdministrator" ? (
+            {selectedRows[0] && selectedRows[0]?.apicode != "ItemAdministrator" ? (
               <Fragment>
-                <span className="mr-1">/</span>{" "}
-                <span className="text-primary">{selectedRows[0].name}</span>
+                <span className="mr-1">/</span> <span className="text-primary">{selectedRows[0].name}</span>
               </Fragment>
             ) : (
               <></>
@@ -302,19 +335,44 @@ const stock = () => {
 
             <div
               style={{ height: "30px" }}
-              onClick={() => {
+              onClick={async () => {
+                const client = await getClient();
                 // 获取当前所有对象没有地址的
-                const noSyncTableData = tableData.filter(item => !item.location)
-                // noSyncTableData.find(item => item)
+                let downloadFolder = await Utils.getDefaultDownloadAddr();
+                for (let index = 0; index < tableData.length; index++) {
+                  const element = tableData[index];
+                  if (!element.fileUrl && element.location) {
+                    const arr = getPathById(leftTreeData, element.standardPartId);
+                    const downloadAddr = `${downloadFolder}\\${arr?.join("\\")}\\${element.insDesc}`;
+                    const fileContents: any = await client.get(
+                      `${network}/api/plm${element.fileUrl.split("/plm")[1]}`,
+                      {
+                        responseType: ResponseType.Binary,
+                      }
+                    );
+                    if (!(await exists(downloadAddr))) {
+                      await createDir(downloadAddr, { recursive: true });
+                    }
+                    await writeBinaryFile({
+                      path: downloadAddr,
+                      contents: fileContents,
+                    });
+                    element.locationi = downloadAddr;
+                  }
+                }
+                setTableData([...tableData]);
               }}
               className="text-xs rounded-sm border border-primary transition-all cursor-pointer bg-white  flex items-center justify-center w-16"
             >
               同步
             </div>
           </div>
-          <div className="bg-white w-full border-outBorder border flex overflow-y-auto" style={{ height: 'calc(100% - 85px)', padding: '17px 9px', flexWrap: 'wrap' }}>
+          <div
+            className="bg-white w-full border-outBorder border flex overflow-y-auto"
+            style={{ height: "calc(100% - 85px)", padding: "17px 9px", flexWrap: "wrap" }}
+          >
             {tableData.map((item) => {
-              return <PlmStockCard instance={item} userMap={userMap}></PlmStockCard>
+              return <PlmStockCard instance={item} userMap={userMap}></PlmStockCard>;
             })}
           </div>
           {/* <div
